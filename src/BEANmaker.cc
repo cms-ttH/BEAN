@@ -2020,7 +2020,12 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      // }
 
      //if( filt == electronTriggerFilter_.encode() ) {
-     if( (filt.find("Electron")!=std::string::npos) && !(filt.find("Double")!=std::string::npos) ){
+     if( ( (filt.find("Electron")!=std::string::npos) ||
+	   (filt.find("hltL3IsoL1sMu")!=std::string::npos) ||
+	   (filt.find("hltL3fL1sMu")!=std::string::npos) ||
+	   (filt.find("hltEle32WP70PFMT50PFMTFilter")!=std::string::npos) ||
+	   (filt.find("HLTEle65CaloIdVTTrkIdTSequence")!=std::string::npos) )
+	 && !(filt.find("Double")!=std::string::npos) ){
        const trigger::size_type filtIndex = hltHandle->filterIndex(filterTag);
        const std::vector<trigger::size_type>& theseKeys = hltHandle->filterKeys(filtIndex);
        int numKeys = theseKeys.size();
