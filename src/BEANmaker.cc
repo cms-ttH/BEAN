@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.26 2010/10/04 14:05:34 puigh Exp $
+// $Id: BEANmaker.cc,v 1.2 2011/10/05 01:28:37 puigh Exp $
 //
 //
 
@@ -32,9 +32,14 @@
 #include "FWCore/Common/interface/TriggerNames.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
+#include "DataFormats/Luminosity/interface/LumiDetails.h"
+#include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
+#include "JetMETCorrections/Objects/interface/JetCorrectionsRecord.h"
 
 #include "ProductArea/BNcollections/interface/BNelectron.h"
 #include "ProductArea/BNcollections/interface/BNevent.h"
@@ -46,7 +51,7 @@
 #include "ProductArea/BNcollections/interface/BNsupercluster.h"
 #include "ProductArea/BNcollections/interface/BNtrack.h"
 #include "ProductArea/BNcollections/interface/BNtrigger.h"
-#include "ProductArea/BNcollections/interface/BNskimbits.h"
+#include "ProductArea/BNcollections/interface/BNbxlumi.h"
 #include "ProductArea/BNcollections/interface/BNtrigobj.h"
 #include "ProductArea/BNcollections/interface/BNprimaryvertex.h"
 
@@ -79,6 +84,8 @@
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackExtra.h"
 #include "DataFormats/EgammaReco/interface/SuperCluster.h"
+
+#include "DataFormats/METReco/interface/BeamHaloSummary.h"
 
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
@@ -143,7 +150,6 @@ class BEANmaker : public edm::EDProducer {
   edm::InputTag eleTag_;
   edm::InputTag calojetTag_;
   edm::InputTag pfjetTag_;
-  edm::InputTag jptjetTag_;
   edm::InputTag calometTag_;
   edm::InputTag pfmetTag_;
   edm::InputTag tcmetTag_;
@@ -171,7 +177,7 @@ class BEANmaker : public edm::EDProducer {
   double minSCEt_;
   double minPhotonEt_;
   int sample_;
-  int minNDOF_;
+  double minNDOF_;
   double maxAbsZ_;
   double maxd0_;
   int numtrack_;
@@ -201,7 +207,7 @@ typedef std::vector<BNphoton>       BNphotonCollection;
 typedef std::vector<BNsupercluster> BNsuperclusterCollection;
 typedef std::vector<BNtrack>        BNtrackCollection;
 typedef std::vector<BNtrigger>      BNtriggerCollection;
-typedef std::vector<BNskimbit>      BNskimbitCollection;
+typedef std::vector<BNbxlumi>      BNbxlumiCollection;
 typedef std::vector<BNtrigobj>      BNtrigobjCollection;
 typedef std::vector<BNprimaryvertex> BNprimaryvertexCollection;
 
@@ -212,7 +218,7 @@ static const char* kSC        = "corHybridSCandMulti5x5WithPreshower";
 static const char* kTrigger   = "HLT";
 static const char* kTriggerL1Talgo = "L1Talgo";
 static const char* kTriggerL1Ttech = "L1Ttech";
-static const char* kSkimBits  = "SkimBits";
+static const char* kBXlumi    = "BXlumi";
 static const char* kMCpar     = "MCstatus3";
 static const char* kMCele     = "MCeleStatus1";
 static const char* kMCmu      = "MCmuStatus1";
@@ -228,7 +234,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   minSCEt_(iConfig.getParameter<double>("minSCEt")),
   minPhotonEt_(iConfig.getParameter<double>("minPhotonEt")),
   sample_(iConfig.getParameter<int>("sample")),
-  minNDOF_(iConfig.getUntrackedParameter<int>("minNDOF",4)),
+  minNDOF_(iConfig.getUntrackedParameter<double>("minNDOF",4)),
   maxAbsZ_(iConfig.getUntrackedParameter<double>("maxAbsZ",15)),
   maxd0_(iConfig.getUntrackedParameter<double>("maxd0",2)),
   numtrack_(iConfig.getUntrackedParameter<int>("numtrack",10)),
@@ -240,7 +246,6 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   eleTag_ = iConfig.getParameter<edm::InputTag>("eleTag");
   calojetTag_ = iConfig.getParameter<edm::InputTag>("calojetTag");
   pfjetTag_ = iConfig.getParameter<edm::InputTag>("pfjetTag");
-  jptjetTag_ = iConfig.getParameter<edm::InputTag>("jptjetTag");
   calometTag_ = iConfig.getParameter<edm::InputTag>("calometTag");
   pfmetTag_ = iConfig.getParameter<edm::InputTag>("pfmetTag");
   tcmetTag_ = iConfig.getParameter<edm::InputTag>("tcmetTag");
@@ -267,7 +272,6 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   produces<BNelectronCollection>(eleTag_.label()).setBranchAlias("electrons");
   produces<BNjetCollection>(calojetTag_.label()).setBranchAlias("calojets");
   produces<BNjetCollection>(pfjetTag_.label()).setBranchAlias("pfjets");
-  produces<BNjetCollection>(jptjetTag_.label()).setBranchAlias("jptjets");
   produces<BNmetCollection>(calometTag_.label()).setBranchAlias("calomet");
   produces<BNmetCollection>(pfmetTag_.label()).setBranchAlias("pfmet");
   produces<BNmetCollection>(tcmetTag_.label()).setBranchAlias("tcmet");
@@ -278,7 +282,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   produces<BNtriggerCollection>(kTrigger).setBranchAlias("trigger");
   produces<BNtriggerCollection>(kTriggerL1Talgo).setBranchAlias("L1Talgo");
   produces<BNtriggerCollection>(kTriggerL1Ttech).setBranchAlias("L1Ttech");
-  produces<BNskimbitsCollection>(kSkimBits).setBranchAlias("skimbits");
+  produces<BNbxlumiCollection>(kBXlumi).setBranchAlias("bxlumi");
   produces<BNmcparticleCollection>(kMCpar).setBranchAlias("mcparticles");
   produces<BNmcparticleCollection>(kMCele).setBranchAlias("mcelectrons");
   produces<BNmcparticleCollection>(kMCmu).setBranchAlias("mcmuons");
@@ -325,12 +329,6 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.getByLabel(pfjetTag_,pfjetHandle);
    edm::View<pat::Jet> pfjets = *pfjetHandle;
 
-   /*
-   edm::Handle<edm::View<pat::Jet> > jptjetHandle;
-   iEvent.getByLabel(jptjetTag_,jptjetHandle);
-   edm::View<pat::Jet> jptjets = *jptjetHandle;
-   */
-
    edm::Handle<edm::View<pat::MET> > calometHandle;
    iEvent.getByLabel(calometTag_,calometHandle);
 
@@ -365,13 +363,13 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
    // // remove all cluster tools for now
-   // EcalClusterLazyTools lazyTools( iEvent, iSetup, reducedBarrelRecHitCollection_, reducedEndcapRecHitCollection_ );
-   // Handle<EcalRecHitCollection> Brechit;//barrel
-   // Handle<EcalRecHitCollection> Erechit;//endcap
-   // iEvent.getByLabel(reducedBarrelRecHitCollection_,Brechit);
-   // iEvent.getByLabel(reducedEndcapRecHitCollection_,Erechit);
-   // const EcalRecHitCollection* barrelRecHits= Brechit.product();
-   // const EcalRecHitCollection* endcapRecHits= Erechit.product();
+   EcalClusterLazyTools lazyTools( iEvent, iSetup, reducedBarrelRecHitCollection_, reducedEndcapRecHitCollection_ );
+   Handle<EcalRecHitCollection> Brechit;//barrel
+   Handle<EcalRecHitCollection> Erechit;//endcap
+   iEvent.getByLabel(reducedBarrelRecHitCollection_,Brechit);
+   iEvent.getByLabel(reducedEndcapRecHitCollection_,Erechit);
+   const EcalRecHitCollection* barrelRecHits= Brechit.product();
+   const EcalRecHitCollection* endcapRecHits= Erechit.product();
 
 
    // Get Trigger and Event Handles
@@ -379,14 +377,85 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iSetup.get<L1GtTriggerMenuRcd>().get(menuRcd) ;
    const L1GtTriggerMenu* menu = menuRcd.product();
 
-   edm::Handle<reco::BeamSpot> bsHandle;
-   iEvent.getByLabel("offlineBeamSpot",bsHandle);
-
    // Get DCS information
    edm::Handle<DcsStatusCollection> dcsHandle;
    bool gotDCSinfo = iEvent.getByLabel(dcsTag_, dcsHandle);
 
    double evt_bField;
+
+
+   ///  Luminosity information
+   double instLumi = -1;
+   double bxLumi = -1;
+
+   std::auto_ptr<BNbxlumiCollection> bnbxlumis(new BNbxlumiCollection);
+
+   edm::Handle<LumiDetails> d;
+   iEvent.getLuminosityBlock().getByLabel("lumiProducer",d); 
+   if( (d.isValid()) ){
+
+     instLumi = 0;
+
+     bxLumi = d->lumiValue(LumiDetails::kOCC1,iEvent.bunchCrossing())*6.37;
+     //calibrated here, but not corrected in Hz/ub
+
+     for( int i=0;i<3564;++i ){// Loop on bunch crossings
+
+       BNbxlumi MyBXlumi;
+
+       //calibrated here but not corrected, in Hz/ub
+       double bx_LUMI_now = d->lumiValue(LumiDetails::kOCC1,i)*6.37;
+
+       MyBXlumi.bx_B1_now = d->lumiBeam1Intensity(i);
+       MyBXlumi.bx_B2_now = d->lumiBeam2Intensity(i);
+       MyBXlumi.bx_LUMI_now= bx_LUMI_now;
+
+       instLumi += bx_LUMI_now;
+
+       bnbxlumis->push_back(MyBXlumi);
+     }
+   }
+
+
+
+   Handle<std::vector< PileupSummaryInfo > >  PupInfo;
+   iEvent.getByLabel(edm::InputTag("addPileupInfo"), PupInfo);
+
+   std::vector<PileupSummaryInfo>::const_iterator PVI;
+
+   int npv = -1;
+   float sum_nvtx = 0;
+   int nm1 = -1; int n0 = -1; int np1 = -1;
+
+   if( (PupInfo.isValid()) ){
+
+     for(PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI) {
+
+       int BX = PVI->getBunchCrossing();
+
+       npv = PVI->getPU_NumInteractions();
+
+       sum_nvtx += float(npv);
+
+       if(BX == -1) { 
+	 nm1 = PVI->getPU_NumInteractions();
+       }
+       if(BX == 0) { 
+	 n0 = PVI->getPU_NumInteractions();
+       }
+       if(BX == 1) { 
+	 np1 = PVI->getPU_NumInteractions();
+       }
+
+     }
+
+     std::cout << "\t nm1 = " << nm1 << std::endl;
+     std::cout << "\t n0  = " << n0  << std::endl;
+     std::cout << "\t np1 = " << np1 << std::endl;
+
+     std::cout << "\t sum_nvtx = " << sum_nvtx << std::endl;
+   }
+
 
 
    if( gotDCSinfo && sample_<0 && dcsHandle->size()>0 ){
@@ -404,7 +473,11 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      evt_bField = magneticField->inTesla(GlobalPoint(0.,0.,0.)).z();
    }
    
+   math::XYZPoint beamSpotPosition;
+   beamSpotPosition.SetCoordinates(0,0,0);
 
+   edm::Handle<reco::BeamSpot> bsHandle;
+   iEvent.getByLabel("offlineBeamSpot",bsHandle);
 
    double BSx=0,BSy=0,BSz=0;
    if( (bsHandle.isValid()) ){
@@ -412,6 +485,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      BSx = bs.x0();
      BSy = bs.y0();
      BSz = bs.z0();
+     beamSpotPosition = bsHandle->position();
    }
 
 
@@ -432,11 +506,68 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
 
 
-   /*
-   Handle<HcalNoiseSummary> handle;
-   iEvent.getByLabel("hcalnoise", handle);
-   const HcalNoiseSummary summary = *handle;
-   */
+   Handle< bool > hcalNoiseFilterHandle;
+   iEvent.getByLabel("HBHENoiseFilterResultProducer","HBHENoiseFilterResult", hcalNoiseFilterHandle);
+
+   Bool_t hcalNoiseFilter = false;
+   if( hcalNoiseFilterHandle.isValid() ) hcalNoiseFilter = (Bool_t)(*hcalNoiseFilterHandle);
+   else std::cout << " NoiseFilter =====> hcalNoiseFilterHandle.isValid()==false " << std::endl;
+
+
+   Handle<HcalNoiseSummary> HcalNoiseSummaryHandle;
+   iEvent.getByLabel("hcalnoise", HcalNoiseSummaryHandle);
+
+   bool passLooseNoiseFilter=false, passTightNoiseFilter=false;
+   if( HcalNoiseSummaryHandle.isValid() ){
+     passLooseNoiseFilter = HcalNoiseSummaryHandle->passLooseNoiseFilter();
+     passTightNoiseFilter = HcalNoiseSummaryHandle->passTightNoiseFilter();
+   }
+   else std::cout << " NoiseFilter =====> HcalNoiseSummaryHandle.isValid()==false " << std::endl;
+
+
+
+   // Get BeamHaloSummary 
+   edm::Handle<BeamHaloSummary> TheBeamHaloSummary ;
+   iEvent.getByLabel("BeamHaloSummary", TheBeamHaloSummary) ;
+
+   bool passCSCLooseHaloId=false, passCSCTightHaloId=false, passEcalLooseHaloId=false, passEcalTightHaloId=false, passHcalLooseHaloId=false;
+   bool passHcalTightHaloId=false, passGlobalLooseHaloId=false, passGlobalTightHaloId=false, passLooseId=false, passTightId=false;
+   if( TheBeamHaloSummary.isValid() ) {
+     const BeamHaloSummary TheSummary = (*TheBeamHaloSummary.product() );
+
+     if( TheSummary.CSCLooseHaloId() ) passCSCLooseHaloId = true;
+     if( TheSummary.CSCTightHaloId() ) passCSCTightHaloId = true;
+     if( TheSummary.EcalLooseHaloId() ) passEcalLooseHaloId = true;
+     if( TheSummary.EcalTightHaloId() ) passEcalTightHaloId = true;
+     if( TheSummary.HcalLooseHaloId() ) passHcalLooseHaloId = true;
+     if( TheSummary.HcalTightHaloId() ) passHcalTightHaloId = true;
+     if( TheSummary.GlobalLooseHaloId() ) passGlobalLooseHaloId = true;
+     if( TheSummary.GlobalTightHaloId() ) passGlobalTightHaloId = true;
+     if( TheSummary.LooseId() ) passLooseId = true;
+     if( TheSummary.TightId() ) passTightId = true;
+
+   }
+   else std::cout << " NoiseFilter =====> TheBeamHaloSummary.isValid()==false " << std::endl;
+
+
+   // std::cout << "\t hcalNoiseFilter = " << hcalNoiseFilter << std::endl;
+   // std::cout << "" << std::endl;
+
+   // std::cout << "\t passLooseNoiseFilter = " << passLooseNoiseFilter << std::endl;
+   // std::cout << "\t passTightNoiseFilter = " << passTightNoiseFilter << std::endl;
+   // std::cout << "" << std::endl;
+
+   // std::cout << "\t passCSCLooseHaloId = " << passCSCLooseHaloId << std::endl;
+   // std::cout << "\t passCSCTightHaloId = " << passCSCTightHaloId << std::endl;
+   // std::cout << "\t passEcalLooseHaloId = " << passEcalLooseHaloId << std::endl;
+   // std::cout << "\t passEcalTightHaloId = " << passEcalTightHaloId << std::endl;
+   // std::cout << "\t passHcalLooseHaloId = " << passHcalLooseHaloId << std::endl;
+   // std::cout << "\t passHcalTightHaloId = " << passHcalTightHaloId << std::endl;
+   // std::cout << "\t passGlobalLooseHaloId = " << passGlobalLooseHaloId << std::endl;
+   // std::cout << "\t passGlobalTightHaloId = " << passGlobalTightHaloId << std::endl;
+   // std::cout << "\t passLooseId = " << passLooseId << std::endl;
+   // std::cout << "\t passTightId = " << passTightId << std::endl;
+
 
    edm::Handle<reco::VertexCollection> vtxHandle;
    iEvent.getByLabel(pvTag_,vtxHandle);
@@ -446,10 +577,14 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    bool GoodVertex = false;
 
    int numPVs = 0;
+   double PVz = 0;
+   math::XYZPoint vertexPosition;
+   vertexPosition.SetCoordinates(0,0,0);
    std::auto_ptr<BNprimaryvertexCollection> bnpvs(new BNprimaryvertexCollection);
    if( (vtxHandle.isValid()) ){
      numPVs = vtxHandle->size();
 
+     bool firstPV = true;
      for( reco::VertexCollection::const_iterator vtx = vtxs.begin(); vtx!=vtxs.end(); ++vtx ){
 
        BNprimaryvertex MyPV;
@@ -469,10 +604,22 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyPV.ndof = vtx->ndof();
        MyPV.rho  = vtx->position().rho();
 
+       bool isGood = false;
        if( vtx->ndof() > minNDOF_ &&
 	   ( (maxAbsZ_ <= 0) || fabs(vtx->z()) <= maxAbsZ_ ) &&
 	   ( (maxd0_ <= 0) || fabs(vtx->position().rho()) <= maxd0_ )
-	   ) GoodVertex = true;
+	   ){
+	 GoodVertex = true;
+	 isGood = true;
+       }
+
+       MyPV.isGood = ( isGood ) ? 1 : 0;
+
+       if( firstPV && isGood ){
+	 vertexPosition = vtx->position();
+	 PVz = vtx->z();
+	 firstPV = false;
+       }
 
        bnpvs->push_back(MyPV);
      }
@@ -525,10 +672,11 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      MyElectron.fbrem = fabs(elePin-elePout)/elePin;
      MyElectron.delPhiIn = ele->deltaPhiSuperClusterTrackAtVtx();
      MyElectron.delEtaIn = ele->deltaEtaSuperClusterTrackAtVtx();
-     MyElectron.IDRobustLoose = ele->electronID("eidRobustLoose");
-     MyElectron.IDRobustTight = ele->electronID("eidRobustTight");
-     MyElectron.IDLoose = ele->electronID("eidLoose");
-     MyElectron.IDTight = ele->electronID("eidTight");
+     MyElectron.eidRobustHighEnergy = ele->electronID("eidRobustHighEnergy");
+     MyElectron.eidRobustLoose = ele->electronID("eidRobustLoose");
+     MyElectron.eidRobustTight = ele->electronID("eidRobustTight");
+     MyElectron.eidLoose = ele->electronID("eidLoose");
+     MyElectron.eidTight = ele->electronID("eidTight");
 
      MyElectron.trackIso = ele->trackIso();
      MyElectron.ecalIso = ele->ecalIso();
@@ -567,23 +715,23 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      double caloenergy = -1;
 
      if( (ele->superCluster().isAvailable()) ){
-       // double eMax    = lazyTools.eMax(    *(ele->superCluster()) );
-       // double eLeft   = lazyTools.eLeft(   *(ele->superCluster()) );
-       // double eRight  = lazyTools.eRight(  *(ele->superCluster()) );
-       // double eTop    = lazyTools.eTop(    *(ele->superCluster()) );
-       // double eBottom = lazyTools.eBottom( *(ele->superCluster()) );
-       // double e3x3    = lazyTools.e3x3(    *(ele->superCluster()) );
-       // double swissCross = -99;
+       double eMax    = lazyTools.eMax(    *(ele->superCluster()) );
+       double eLeft   = lazyTools.eLeft(   *(ele->superCluster()) );
+       double eRight  = lazyTools.eRight(  *(ele->superCluster()) );
+       double eTop    = lazyTools.eTop(    *(ele->superCluster()) );
+       double eBottom = lazyTools.eBottom( *(ele->superCluster()) );
+       double e3x3    = lazyTools.e3x3(    *(ele->superCluster()) );
+       double swissCross = -99;
 
-       // if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
+       if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
 
-       // MyElectron.eMax = eMax;
-       // MyElectron.eLeft = eLeft;
-       // MyElectron.eRight = eRight;
-       // MyElectron.eTop = eTop;
-       // MyElectron.eBottom = eBottom;
-       // MyElectron.e3x3 = e3x3;
-       // MyElectron.swissCross = swissCross;
+       MyElectron.eMax = eMax;
+       MyElectron.eLeft = eLeft;
+       MyElectron.eRight = eRight;
+       MyElectron.eTop = eTop;
+       MyElectron.eBottom = eBottom;
+       MyElectron.e3x3 = e3x3;
+       MyElectron.swissCross = swissCross;
 
        caloenergy = ele->caloEnergy();
 
@@ -593,41 +741,29 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyElectron.scPhi = ele->superCluster()->position().phi();
        MyElectron.scZ = ele->superCluster()->position().Z();
 
-       // double seedE = -999, seedTime = -999, swissCrossNoI85 = -999, swissCrossI85 = -999, e2overe9NoI85 = -999, e2overe9I85 = -999;
-       // int seedRecoFlag = -999;
+       double seedE = -999, seedTime = -999;
+       int seedRecoFlag = -999;
        
-       // if( (ele->isEB()) ){
-       // 	 DetId idEB = EcalClusterTools::getMaximum( ele->superCluster()->hitsAndFractions(), &(*barrelRecHits) ).first;
-       // 	 EcalRecHitCollection::const_iterator thisHitEB = barrelRecHits->find(idEB);
+       if( (ele->isEB()) ){
+       	 DetId idEB = EcalClusterTools::getMaximum( ele->superCluster()->hitsAndFractions(), &(*barrelRecHits) ).first;
+       	 EcalRecHitCollection::const_iterator thisHitEB = barrelRecHits->find(idEB);
 
-       // 	 seedE = thisHitEB->energy();
-       // 	 seedTime = thisHitEB->time();
-       // 	 seedRecoFlag = thisHitEB->recoFlag();
+       	 seedE = thisHitEB->energy();
+       	 seedTime = thisHitEB->time();
+       	 seedRecoFlag = thisHitEB->recoFlag();
+       }
+       else if( (ele->isEE()) ){
+       	 DetId idEE = EcalClusterTools::getMaximum( ele->superCluster()->hitsAndFractions(), &(*endcapRecHits) ).first;
+       	 EcalRecHitCollection::const_iterator thisHitEE = endcapRecHits->find(idEE);
 
-       // 	 swissCrossNoI85 = EcalSeverityLevelAlgo::swissCross( idEB, (*barrelRecHits), 5., true);
-       // 	 swissCrossI85   = EcalSeverityLevelAlgo::swissCross( idEB, (*barrelRecHits), 5., false);
+       	 seedE = thisHitEE->energy();
+       	 seedTime = thisHitEE->time();
+       	 seedRecoFlag = thisHitEE->recoFlag();
+       }
 
-       // 	 e2overe9NoI85 = EcalSeverityLevelAlgo::E2overE9( idEB, (*barrelRecHits), 10.0 , 1.0 , true, true );
-       // 	 e2overe9I85   = EcalSeverityLevelAlgo::E2overE9( idEB, (*barrelRecHits), 10.0 , 1.0 , false, true );
-       // }
-       // else if( (ele->isEE()) ){
-       // 	 DetId idEE = EcalClusterTools::getMaximum( ele->superCluster()->hitsAndFractions(), &(*endcapRecHits) ).first;
-       // 	 EcalRecHitCollection::const_iterator thisHitEE = endcapRecHits->find(idEE);
-
-       // 	 seedE = thisHitEE->energy();
-       // 	 seedTime = thisHitEE->time();
-       // 	 seedRecoFlag = thisHitEE->recoFlag();
-
-       // 	 swissCrossNoI85 = EcalSeverityLevelAlgo::swissCross( idEE, (*endcapRecHits), 5., true);
-       // 	 swissCrossI85   = EcalSeverityLevelAlgo::swissCross( idEE, (*endcapRecHits), 5., false);
-
-       // 	 e2overe9NoI85 = EcalSeverityLevelAlgo::E2overE9( idEE, (*endcapRecHits), 10.0 , 1.0 , true, true );
-       // 	 e2overe9I85   = EcalSeverityLevelAlgo::E2overE9( idEE, (*endcapRecHits), 10.0 , 1.0 , false, true );
-       // }
-
-       // MyElectron.seedEnergy   = seedE;
-       // MyElectron.seedTime     = seedTime;
-       // MyElectron.seedRecoFlag = seedRecoFlag;
+       MyElectron.seedEnergy   = seedE;
+       MyElectron.seedTime     = seedTime;
+       MyElectron.seedRecoFlag = seedRecoFlag;
 
        // MyElectron.swissCrossNoI85 = swissCrossNoI85;
        // MyElectron.swissCrossI85   = swissCrossI85;
@@ -657,6 +793,9 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyElectron.tkD0err = ele->gsfTrack()->d0Error();
        MyElectron.tkNumValidHits = ele->gsfTrack()->numberOfValidHits();
        MyElectron.gsfCharge = ele->gsfTrack()->charge();
+
+       MyElectron.correctedD0 = ele->gsfTrack()->dxy(beamSpotPosition);
+       MyElectron.correctedDZ = ele->gsfTrack()->dz(vertexPosition);
      }
 
      MyElectron.isEB = ele->isEB();
@@ -771,60 +910,15 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    double UDeltaPy = 0;
    double USumET = 0;
 
-   //  Setup jet ID
-   JetIDSelectionFunctor jetIDMinimal( JetIDSelectionFunctor::PURE09,
-   				       JetIDSelectionFunctor::MINIMAL );
-   JetIDSelectionFunctor jetIDLooseAOD( JetIDSelectionFunctor::PURE09,
-   					JetIDSelectionFunctor::LOOSE_AOD );
-   JetIDSelectionFunctor jetIDLoose( JetIDSelectionFunctor::PURE09,
-   				     JetIDSelectionFunctor::LOOSE );
-   JetIDSelectionFunctor jetIDTight( JetIDSelectionFunctor::PURE09,
-   				     JetIDSelectionFunctor::TIGHT );
-
-   pat::strbitset ret = jetIDLoose.getBitTemplate();
-   std::string const & str_MINIMAL_EMF = "MINIMAL_EMF";
-   std::string const & str_LOOSE_AOD_fHPD = "LOOSE_AOD_fHPD";
-   std::string const & str_LOOSE_AOD_N90Hits = "LOOSE_AOD_N90Hits";
-   std::string const & str_LOOSE_AOD_EMF = "LOOSE_AOD_EMF";
-   std::string const & str_LOOSE_fHPD = "LOOSE_fHPD";
-   std::string const & str_LOOSE_N90Hits = "LOOSE_N90Hits";
-   std::string const & str_LOOSE_EMF = "LOOSE_EMF";
-   std::string const & str_TIGHT_fHPD = "TIGHT_fHPD";
-   std::string const & str_TIGHT_EMF = "TIGHT_EMF";
 
 
-   /*
-   // //  Setup jet corrector
-   std::string JEC_PATH_calo("CondFormats/JetMETObjects/data/");
-   edm::FileInPath fipL2_calo(JEC_PATH_calo+"Spring10_L2Relative_AK5Calo.txt");
-   edm::FileInPath fipL3_calo(JEC_PATH_calo+"Spring10_L3Absolute_AK5Calo.txt");
-   edm::FileInPath fipRes_calo(JEC_PATH_calo+"Spring10DataV2_L2L3Residual_AK5Calo.txt");
-   JetCorrectorParameters *L2JetCorPar_calo = new JetCorrectorParameters(fipL2_calo.fullPath());
-   JetCorrectorParameters *L3JetCorPar_calo = new JetCorrectorParameters(fipL3_calo.fullPath());
-   JetCorrectorParameters *ResJetCorPar_calo = new JetCorrectorParameters(fipRes_calo.fullPath());
-   std::vector<JetCorrectorParameters> vParam_L2_calo;
-   vParam_L2_calo.push_back(*L2JetCorPar_calo);
-   std::vector<JetCorrectorParameters> vParam_L2L3_calo;
-   vParam_L2L3_calo.push_back(*L2JetCorPar_calo);
-   vParam_L2L3_calo.push_back(*L3JetCorPar_calo);
-   std::vector<JetCorrectorParameters> vParam_L2L3res_calo;
-   vParam_L2L3res_calo.push_back(*L2JetCorPar_calo);
-   vParam_L2L3res_calo.push_back(*L3JetCorPar_calo);
-   vParam_L2L3res_calo.push_back(*ResJetCorPar_calo);
-   std::vector<JetCorrectorParameters> vParam_res_calo;
-   vParam_res_calo.push_back(*ResJetCorPar_calo);
-   FactorizedJetCorrector *JEC_L2_calo = new FactorizedJetCorrector(vParam_L2_calo);
-   FactorizedJetCorrector *JEC_L2L3_calo = new FactorizedJetCorrector(vParam_L2L3_calo);
-   FactorizedJetCorrector *JEC_L2L3res_calo = new FactorizedJetCorrector(vParam_L2L3res_calo);
-   FactorizedJetCorrector *JEC_res_calo = new FactorizedJetCorrector(vParam_res_calo);
+   edm::ESHandle<JetCorrectorParametersCollection> JetCorParColl_Calo;
+   iSetup.get<JetCorrectionsRecord>().get("AK5Calo",JetCorParColl_Calo); 
+   JetCorrectorParameters const & JetCorPar_Calo = (*JetCorParColl_Calo)["Uncertainty"];
+   JetCorrectionUncertainty *jecUnc_Calo = new JetCorrectionUncertainty(JetCorPar_Calo);
 
-
-   edm::FileInPath fip_unc_calo(JEC_PATH_calo+"Spring10DataV2_Uncertainty_AK5Calo.txt");
-   JetCorrectionUncertainty *jecUnc_calo = new JetCorrectionUncertainty(fip_unc_calo.fullPath());
-   */
 
    //  Fill the calojet collection
-   int numcalojet=0;
    std::auto_ptr<BNjetCollection> bncalojets(new BNjetCollection);
    for( edm::View<pat::Jet>::const_iterator calojet = calojets.begin(); calojet != calojets.end(); ++ calojet ) {
 
@@ -856,11 +950,6 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      double L2L3jetpx = calojet->px();
      double L2L3jetpy = calojet->py();
  
-     jecUnc_calo->setJetEta(calojet->eta());
-     jecUnc_calo->setJetPt(respt);// the uncertainty is a function of the corrected pt
-     double unc = jecUnc_calo->getUncertainty(true);
-
-
      // Criteria on jets to be included in met correction
      if( Rawjetpt>1 && RawjetEMF<0.9 && (fabs(calojet->eta())>2.6 || RawjetEMF>0.01) ){
        metJES1corrPx += -(L2L3jetpx - Rawjetpx);
@@ -874,6 +963,11 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        }
      }
      */
+
+     jecUnc_Calo->setJetEta(calojet->eta());
+     jecUnc_Calo->setJetPt(calojet->pt());// the uncertainty is a function of the corrected pt
+     double unc = jecUnc_Calo->getUncertainty(true);
+
 
      BNjet MyCalojet;
 
@@ -925,8 +1019,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      MyCalojet.L2L3pt = L2L3jetpt;
      MyCalojet.L2L3respt = L2L3resjetpt;
      MyCalojet.respt = respt;
-     MyCalojet.JESunc = unc;
      */
+     MyCalojet.JESunc = unc;
 
      if( (calojet->genJet()) ){ // if there is a matched genjet, fill variables
        MyCalojet.genJetET = calojet->genJet()->et();
@@ -945,7 +1039,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      }
 
 
-
+     // std::cout << " jet
      /*
      // // Get jet ID results
      //const pat::Jet& ijet = *calojet;
@@ -973,41 +1067,20 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
      bncalojets->push_back(MyCalojet);
-
-     /*
-     if( (calojet->pt()>40 && fabs(calojet->eta())<3.0 && loose ) ) numcalojet++;
-     */
    }
 
 
 
-   /*
-   // //  Setup jet corrector
-   std::string JEC_PATH_pf("CondFormats/JetMETObjects/data/");
-   edm::FileInPath fipRes_pf(JEC_PATH_pf+"Spring10DataV2_L2L3Residual_AK5PF.txt");
-   JetCorrectorParameters *ResJetCorPar_pf = new JetCorrectorParameters(fipRes_pf.fullPath());
-   std::vector<JetCorrectorParameters> vParam_res_pf;
-   vParam_res_pf.push_back(*ResJetCorPar_pf);
-   FactorizedJetCorrector *JEC_res_pf = new FactorizedJetCorrector(vParam_res_pf);
 
-
-   edm::FileInPath fip_unc_pf(JEC_PATH_pf+"Spring10DataV2_Uncertainty_AK5PF.txt");
-   JetCorrectionUncertainty *jecUnc_pf = new JetCorrectionUncertainty(fip_unc_pf.fullPath());
-
-
-   double metJet1corrPx_pf = 0;
-   double metJet1corrPy_pf = 0;
-   double metJet6corrPx_pf = 0;
-   double metJet6corrPy_pf = 0;
-   double metJet10corrPx_pf = 0;
-   double metJet10corrPy_pf = 0;
-
-   */
+   edm::ESHandle<JetCorrectorParametersCollection> JetCorParColl_PF;
+   iSetup.get<JetCorrectionsRecord>().get("AK5PF",JetCorParColl_PF); 
+   JetCorrectorParameters const & JetCorPar_PF = (*JetCorParColl_PF)["Uncertainty"];
+   JetCorrectionUncertainty *jecUnc_PF = new JetCorrectionUncertainty(JetCorPar_PF);
 
    //  Fill the pfjet collection
-   int numpfjet=0;
    std::auto_ptr<BNjetCollection> bnpfjets(new BNjetCollection);
    for( edm::View<pat::Jet>::const_iterator pfjet = pfjets.begin(); pfjet != pfjets.end(); ++ pfjet ) {
+
 
      /*
      // Get uncorrected/raw jets
@@ -1034,14 +1107,11 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
      if( !(pfjet->pt()>minJetPt_) ) continue;
 
-     /*
-     JEC_res_pf->setJetEta(pfjet->eta()); JEC_res_pf->setJetPt(pfjet->pt());
-     double respt = pfjet->pt() * JEC_res_pf->getCorrection();
 
-     jecUnc_pf->setJetEta(pfjet->eta());
-     jecUnc_pf->setJetPt(respt);// the uncertainty is a function of the corrected pt
-     double unc = jecUnc_pf->getUncertainty(true);
-     */
+     jecUnc_PF->setJetEta(pfjet->eta());
+     jecUnc_PF->setJetPt(pfjet->pt()); // here you must use the CORRECTED jet pt
+     double unc = jecUnc_PF->getUncertainty(true);
+
 
      BNjet MyPfjet;
 
@@ -1086,8 +1156,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      // MyPfjet.L2pt = L2jetpt;
      // MyPfjet.L2L3pt = L2L3jetpt;
      MyPfjet.respt = respt;
-     MyPfjet.JESunc = unc;
      */
+     MyPfjet.JESunc = unc;
 
      if( (pfjet->genJet()) ){ // if there is a matched genjet, fill variables
        MyPfjet.genJetET = pfjet->genJet()->et();
@@ -1117,130 +1187,26 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      MyPfjet.nconstituents = pfjet->numberOfDaughters();
 
 
-     bool loose = false;
+     bool loose = (
+		   pfjet->neutralHadronEnergyFraction() < 0.99 &&
+		   pfjet->chargedEmEnergyFraction() < 0.99 &&
+		   pfjet->neutralEmEnergyFraction() < 0.99 &&
+		   pfjet->numberOfDaughters() > 1
+		   );
 
      if( fabs(pfjet->eta())<2.4 ){
-       loose = (
-		pfjet->chargedHadronEnergyFraction() > 0.0 &&
-		pfjet->neutralHadronEnergyFraction() < 0.99 &&
-		pfjet->chargedEmEnergyFraction() < 0.99 &&
-		pfjet->neutralEmEnergyFraction() < 0.99 &&
-		pfjet->chargedMultiplicity() > 0 &&
-		pfjet->numberOfDaughters() > 1
-		);
+       loose = ( loose &&
+		 pfjet->chargedHadronEnergyFraction() > 0.0 &&
+		 pfjet->chargedMultiplicity() > 0
+		 );
      }
-     else {
-       loose = (
-		pfjet->neutralHadronEnergyFraction() < 0.99 &&
-		pfjet->neutralEmEnergyFraction() < 0.99 &&
-		pfjet->numberOfDaughters() > 1
-		);
-     }
+
      MyPfjet.jetIDLoose = (loose) ? 1 : 0;
 
-
      bnpfjets->push_back(MyPfjet);
-
-     if( (pfjet->pt()>40 && fabs(pfjet->eta())<3.0 && loose ) ) numpfjet++;
    }
 
 
-
-   /*
-   // //  Setup jet corrector
-   std::string JEC_PATH_jpt("CondFormats/JetMETObjects/data/");
-   edm::FileInPath fipRes_jpt(JEC_PATH_jpt+"Spring10DataV2_L2L3Residual_AK5JPT.txt");
-   JetCorrectorParameters *ResJetCorPar_jpt = new JetCorrectorParameters(fipRes_jpt.fullPath());
-   std::vector<JetCorrectorParameters> vParam_res_jpt;
-   vParam_res_jpt.push_back(*ResJetCorPar_jpt);
-   FactorizedJetCorrector *JEC_res_jpt = new FactorizedJetCorrector(vParam_res_jpt);
-
-   edm::FileInPath fip_unc_jpt(JEC_PATH_jpt+"Spring10DataV2_Uncertainty_AK5JPT.txt");
-   JetCorrectionUncertainty *jecUnc_jpt = new JetCorrectionUncertainty(fip_unc_jpt.fullPath());
-   */
-
-   int numjptjet=0;
-   /*
-   //  Fill the jptjet collection
-   int numjptjet=0;
-   std::auto_ptr<BNjetCollection> bnjptjets(new BNjetCollection);
-   for( edm::View<pat::Jet>::const_iterator jptjet = jptjets.begin(); jptjet != jptjets.end(); ++ jptjet ) {
-
-     if( !(jptjet->pt()>minJetPt_) ) continue;
-
-     // JEC_res_jpt->setJetEta(jptjet->eta()); JEC_res_jpt->setJetPt(jptjet->pt());
-     // double respt = jptjet->pt() * JEC_res_jpt->getCorrection();
-
-     // jecUnc_jpt->setJetEta(jptjet->eta());
-     // jecUnc_jpt->setJetPt(respt);// the uncertainty is a function of the corrected pt
-     // double unc = jecUnc_jpt->getUncertainty(true);
-
-     BNjet MyJptjet;
-
-     // general kinematic variables
-     MyJptjet.energy = jptjet->energy();
-     MyJptjet.et = jptjet->et();
-     MyJptjet.pt = jptjet->pt();
-     MyJptjet.px = jptjet->px();
-     MyJptjet.py = jptjet->py();
-     MyJptjet.pz = jptjet->pz();
-     MyJptjet.phi = jptjet->phi();
-     MyJptjet.eta = jptjet->eta();
-     MyJptjet.theta = jptjet->theta();
-
-     //MyJptjet.EMfrac = jptjet->emEnergyFraction();
-     //MyJptjet.Hadfrac = jptjet->energyFractionHadronic();
-     MyJptjet.charge = jptjet->jetCharge();
-     MyJptjet.mass = jptjet->mass();
-     //MyJptjet.area = jptjet->towersArea();
-     MyJptjet.fHPD = jptjet->jetID().fHPD;
-     MyJptjet.flavour = jptjet->partonFlavour();
-     MyJptjet.Nconst = jptjet->nConstituents();
-     MyJptjet.n90Hits = jptjet->jetID().n90Hits;
-     MyJptjet.approximatefHPD = jptjet->jetID().approximatefHPD;
-     MyJptjet.hitsInN90 = jptjet->jetID().hitsInN90;
-
-     // btag variables
-     MyJptjet.btagTChighPur = jptjet->bDiscriminator("trackCountingHighPurBJetTags");
-     MyJptjet.btagTChighEff = jptjet->bDiscriminator("trackCountingHighEffBJetTags");
-     MyJptjet.btagJetProb = jptjet->bDiscriminator("jetProbabilityBJetTags");
-     MyJptjet.btagJetBProb = jptjet->bDiscriminator("jetBProbabilityBJetTags");
-     MyJptjet.btagSoftEle = jptjet->bDiscriminator("softElectronBJetTags");
-     MyJptjet.btagSoftMuon = jptjet->bDiscriminator("softMuonBJetTags");
-     MyJptjet.btagSoftMuonNoIP = jptjet->bDiscriminator("softMuonNoIPBJetTags");
-     MyJptjet.btagSecVertex = jptjet->bDiscriminator("simpleSecondaryVertexBJetTags");
-     MyJptjet.btagSecVertexHighEff = jptjet->bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
-     MyJptjet.btagSecVertexHighPur = jptjet->bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
-
-     // // // MyJptjet.Upt = Rawjetpt;
-     // // // MyJptjet.L2pt = L2jetpt;
-     // // // MyJptjet.L2L3pt = L2L3jetpt;
-     // MyJptjet.respt = respt;
-     // MyJptjet.JESunc = unc;
-
-     if( (jptjet->genJet()) ){ // if there is a matched genjet, fill variables
-       MyJptjet.genJetET = jptjet->genJet()->et();
-       MyJptjet.genJetPT = jptjet->genJet()->pt();
-       MyJptjet.genJetEta = jptjet->genJet()->eta();
-       MyJptjet.genJetPhi = jptjet->genJet()->phi();
-     }
-     if( (jptjet->genParton()) ){ // if there is a matched parton, fill variables
-       MyJptjet.genPartonET = jptjet->genParton()->et();
-       MyJptjet.genPartonPT = jptjet->genParton()->pt();
-       MyJptjet.genPartonEta = jptjet->genParton()->eta();
-       MyJptjet.genPartonPhi = jptjet->genParton()->phi();
-       MyJptjet.genPartonId = jptjet->genParton()->pdgId();
-       MyJptjet.genPartonMotherId = jptjet->genParton()->mother()->pdgId();
-       MyJptjet.genPartonGrandMotherId = jptjet->genParton()->mother()->pdgId();
-     }
-
-
-
-     bnjptjets->push_back(MyJptjet);
-
-     if( (jptjet->pt()>40 && fabs(jptjet->eta())<3.0 ) ) numjptjet++;
-   }
-   */
 
 
    //  Fill the muon collection
@@ -1297,8 +1263,32 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      //MyMuon.ecalE = muon->ecalIsoDeposit()->candEnergy();
 
 
-     MyMuon.IDGMPTight = muon->isGood("GlobalMuonPromptTight");
+     MyMuon.IDGMPTight = ( muon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
 
+     MyMuon.isGlobalMuon = ( muon->isGlobalMuon() ) ? 1 : 0;
+     MyMuon.isTrackerMuon = ( muon->isTrackerMuon() ) ? 1 : 0;
+     MyMuon.isStandAloneMuon = ( muon->isStandAloneMuon() ) ? 1 : 0;
+     MyMuon.isGlobalMuonPromptTight = ( muon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
+
+     MyMuon.numberOfMatches = muon->numberOfMatches();
+     MyMuon.numberOfMatchedStations = muon->numberOfMatchedStations();
+
+     MyMuon.dVzPVz = muon->vz() - PVz;
+     MyMuon.dB = muon->dB();
+
+     if( (muon->globalTrack().isAvailable()) ){
+       MyMuon.normalizedChi2 = muon->globalTrack()->normalizedChi2();
+       MyMuon.numberOfValidMuonHits = muon->globalTrack()->hitPattern().numberOfValidMuonHits();
+       MyMuon.numberOfValidTrackerHits = muon->globalTrack()->hitPattern().numberOfValidTrackerHits();
+       MyMuon.ptErr = muon->globalTrack()->ptError();
+     }
+     if( (muon->innerTrack().isAvailable()) ){
+       MyMuon.numberOfValidTrackerHitsInnerTrack = muon->innerTrack()->numberOfValidHits();
+       MyMuon.pixelLayersWithMeasurement = muon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
+
+       MyMuon.correctedD0 = muon->innerTrack()->dxy(beamSpotPosition);
+       MyMuon.correctedDZ = muon->innerTrack()->dz(vertexPosition);
+     }
 
      // Get track muon info
      if( (muon->track().isAvailable()) ){
@@ -1440,23 +1430,23 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
      // Get photon supercluster information
      if( (photon->superCluster().isAvailable()) ){
-       // double eMax    = lazyTools.eMax(    *(photon->superCluster()) );
-       // double eLeft   = lazyTools.eLeft(   *(photon->superCluster()) );
-       // double eRight  = lazyTools.eRight(  *(photon->superCluster()) );
-       // double eTop    = lazyTools.eTop(    *(photon->superCluster()) );
-       // double eBottom = lazyTools.eBottom( *(photon->superCluster()) );
-       // double e3x3    = lazyTools.e3x3(    *(photon->superCluster()) );
-       // double swissCross = -99;
+       double eMax    = lazyTools.eMax(    *(photon->superCluster()) );
+       double eLeft   = lazyTools.eLeft(   *(photon->superCluster()) );
+       double eRight  = lazyTools.eRight(  *(photon->superCluster()) );
+       double eTop    = lazyTools.eTop(    *(photon->superCluster()) );
+       double eBottom = lazyTools.eBottom( *(photon->superCluster()) );
+       double e3x3    = lazyTools.e3x3(    *(photon->superCluster()) );
+       double swissCross = -99;
 
-       // if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
+       if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
 
-       // MyPhoton.eMax = eMax;
-       // MyPhoton.eLeft = eLeft;
-       // MyPhoton.eRight = eRight;
-       // MyPhoton.eTop = eTop;
-       // MyPhoton.eBottom = eBottom;
-       // MyPhoton.e3x3 = e3x3;
-       // MyPhoton.swissCross = swissCross;
+       MyPhoton.eMax = eMax;
+       MyPhoton.eLeft = eLeft;
+       MyPhoton.eRight = eRight;
+       MyPhoton.eTop = eTop;
+       MyPhoton.eBottom = eBottom;
+       MyPhoton.e3x3 = e3x3;
+       MyPhoton.swissCross = swissCross;
 
        MyPhoton.scEnergy = photon->superCluster()->energy();
        MyPhoton.scRawEnergy = photon->superCluster()->rawEnergy();
@@ -1464,41 +1454,29 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyPhoton.scPhi = photon->superCluster()->position().phi();
        MyPhoton.scZ = photon->superCluster()->position().Z();
 
-       double seedE = -999, seedTime = -999, swissCrossNoI85 = -999, swissCrossI85 = -999, e2overe9NoI85 = -999, e2overe9I85 = -999;
+       double seedE = -999, seedTime = -999;
        int seedRecoFlag = -999;
        
-       // if( (photon->isEB()) ){
-       // 	 DetId idEB = EcalClusterTools::getMaximum( photon->superCluster()->hitsAndFractions(), &(*barrelRecHits) ).first;
-       // 	 EcalRecHitCollection::const_iterator thisHitEB = barrelRecHits->find(idEB);
+       if( (photon->isEB()) ){
+       	 DetId idEB = EcalClusterTools::getMaximum( photon->superCluster()->hitsAndFractions(), &(*barrelRecHits) ).first;
+       	 EcalRecHitCollection::const_iterator thisHitEB = barrelRecHits->find(idEB);
 
-       // 	 seedE = thisHitEB->energy();
-       // 	 seedTime = thisHitEB->time();
-       // 	 seedRecoFlag = thisHitEB->recoFlag();
+       	 seedE = thisHitEB->energy();
+       	 seedTime = thisHitEB->time();
+       	 seedRecoFlag = thisHitEB->recoFlag();
+       }
+       else if( (photon->isEE()) ){
+       	 DetId idEE = EcalClusterTools::getMaximum( photon->superCluster()->hitsAndFractions(), &(*endcapRecHits) ).first;
+       	 EcalRecHitCollection::const_iterator thisHitEE = endcapRecHits->find(idEE);
 
-       // 	 swissCrossNoI85 = EcalSeverityLevelAlgo::swissCross( idEB, (*barrelRecHits), 5., true);
-       // 	 swissCrossI85   = EcalSeverityLevelAlgo::swissCross( idEB, (*barrelRecHits), 5., false);
+       	 seedE = thisHitEE->energy();
+       	 seedTime = thisHitEE->time();
+       	 seedRecoFlag = thisHitEE->recoFlag();
+       }
 
-       // 	 e2overe9NoI85 = EcalSeverityLevelAlgo::E2overE9( idEB, (*barrelRecHits), 10.0 , 1.0 , true, true );
-       // 	 e2overe9I85   = EcalSeverityLevelAlgo::E2overE9( idEB, (*barrelRecHits), 10.0 , 1.0 , false, true );
-       // }
-       // else if( (photon->isEE()) ){
-       // 	 DetId idEE = EcalClusterTools::getMaximum( photon->superCluster()->hitsAndFractions(), &(*endcapRecHits) ).first;
-       // 	 EcalRecHitCollection::const_iterator thisHitEE = endcapRecHits->find(idEE);
-
-       // 	 seedE = thisHitEE->energy();
-       // 	 seedTime = thisHitEE->time();
-       // 	 seedRecoFlag = thisHitEE->recoFlag();
-
-       // 	 swissCrossNoI85 = EcalSeverityLevelAlgo::swissCross( idEE, (*endcapRecHits), 5., true);
-       // 	 swissCrossI85   = EcalSeverityLevelAlgo::swissCross( idEE, (*endcapRecHits), 5., false);
-
-       // 	 e2overe9NoI85 = EcalSeverityLevelAlgo::E2overE9( idEE, (*endcapRecHits), 10.0 , 1.0 , true, true );
-       // 	 e2overe9I85   = EcalSeverityLevelAlgo::E2overE9( idEE, (*endcapRecHits), 10.0 , 1.0 , false, true );
-       // }
-
-       // MyPhoton.seedEnergy   = seedE;
-       // MyPhoton.seedTime     = seedTime;
-       // MyPhoton.seedRecoFlag = seedRecoFlag;
+       MyPhoton.seedEnergy   = seedE;
+       MyPhoton.seedTime     = seedTime;
+       MyPhoton.seedRecoFlag = seedRecoFlag;
 
        // MyPhoton.swissCrossNoI85 = swissCrossNoI85;
        // MyPhoton.swissCrossI85   = swissCrossI85;
@@ -1814,10 +1792,31 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    MyEvent.run = iEvent.id().run();
    MyEvent.evt = iEvent.id().event();
    MyEvent.lumi = iEvent.luminosityBlock();
+   MyEvent.instLumi = instLumi;
+   MyEvent.bxLumi   = bxLumi;
+
+   MyEvent.GoodVertex = ( GoodVertex ) ? 1 : 0;
+   MyEvent.FilterOutScraping = ( FilterOutScraping ) ? 1 : 0;
+   MyEvent.FilterOutScrapingFraction = FilterOutScrapingFraction;
+
    MyEvent.sample = sample_;
    MyEvent.numPV = numPVs;
-   //   MyEvent.hcalnoiseLoose = ( summary.passLooseNoiseFilter() ) ? 1 : 0;
-   //   MyEvent.hcalnoiseTight = ( summary.passTightNoiseFilter() ) ? 1 : 0;
+   MyEvent.hcalnoiseLoose = ( passLooseNoiseFilter ) ? 1 : 0;
+   MyEvent.hcalnoiseTight = ( passTightNoiseFilter ) ? 1 : 0;
+
+   MyEvent.HBHENoiseFilter = ( hcalNoiseFilter ) ? 1 : 0;
+
+   MyEvent.CSCLooseHaloId = ( passCSCLooseHaloId ) ? 1 : 0;
+   MyEvent.CSCTightHaloId = ( passCSCTightHaloId ) ? 1 : 0;
+   MyEvent.EcalLooseHaloId = ( passEcalLooseHaloId ) ? 1 : 0;
+   MyEvent.EcalTightHaloId = ( passEcalTightHaloId ) ? 1 : 0;
+   MyEvent.HcalLooseHaloId = ( passHcalLooseHaloId ) ? 1 : 0;
+   MyEvent.HcalTightHaloId = ( passHcalTightHaloId ) ? 1 : 0;
+   MyEvent.GlobalLooseHaloId = ( passGlobalLooseHaloId ) ? 1 : 0;
+   MyEvent.GlobalTightHaloId = ( passGlobalTightHaloId ) ? 1 : 0;
+   MyEvent.LooseId = ( passLooseId ) ? 1 : 0;
+   MyEvent.TightId = ( passTightId ) ? 1 : 0;
+
 
    MyEvent.bField = evt_bField;
 
@@ -1842,7 +1841,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    std::auto_ptr<BNmetCollection> bncalomet(new BNmetCollection);
    BNmet MyCalomet;
 
-   double calometPT = calometHandle->front().pt();
+   //double calometPT = calometHandle->front().pt();
    MyCalomet.pt = calometHandle->front().pt();
    MyCalomet.px = calometHandle->front().px();
    MyCalomet.py = calometHandle->front().py();
@@ -2021,11 +2020,15 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
      //if( filt == electronTriggerFilter_.encode() ) {
      if( ( (filt.find("Electron")!=std::string::npos) ||
+	   (filt.find("hltL1IsoL1sMu")!=std::string::npos) ||
+	   (filt.find("hltL2IsoL1sMu")!=std::string::npos) ||
 	   (filt.find("hltL3IsoL1sMu")!=std::string::npos) ||
+	   (filt.find("hltL1fL1sMu")!=std::string::npos) ||
+	   (filt.find("hltL2fL1sMu")!=std::string::npos) ||
 	   (filt.find("hltL3fL1sMu")!=std::string::npos) ||
 	   (filt.find("hltEle32WP70PFMT50PFMTFilter")!=std::string::npos) ||
 	   (filt.find("HLTEle65CaloIdVTTrkIdTSequence")!=std::string::npos) )
-	 && !(filt.find("Double")!=std::string::npos) ){
+	 ){
        const trigger::size_type filtIndex = hltHandle->filterIndex(filterTag);
        const std::vector<trigger::size_type>& theseKeys = hltHandle->filterKeys(filtIndex);
        int numKeys = theseKeys.size();
@@ -2057,13 +2060,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    edm::Handle<edm::TriggerResults> hltresults;
    iEvent.getByLabel(triggerResultsTag_,hltresults);
 
-   int pass_HLT_Ele15_LW_L1R=-1,pass_HLT_Jet15U=-1,pass_HLT_Jet30U=-1,pass_HLT_Jet50U=-1;
-   int pass_HLT_Ele15_SW_L1R=-1,pass_HLT_L1Jet15=-1,pass_HLT_Jet30=-1,pass_HLT_Jet50=-1;
-
    std::auto_ptr<BNtriggerCollection> bntrigger(new BNtriggerCollection);
-
-   bool passEG = false;
-   bool passJetMETTau = false;
 
    if(hltresults.isValid()){
 
@@ -2083,18 +2080,9 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyTrigger.prescale = prescale;
        MyTrigger.name = currentTrigName;
 
-       // std::cout << " =====>  name = " << currentTrigName << "\t prescale = " << prescale << "\t pass = " << accept << std::endl; 
+       //std::cout << " =====>  name = " << currentTrigName << "\t prescale = " << prescale << "\t pass = " << accept << std::endl; 
 
        bntrigger->push_back(MyTrigger);
-
-       if( currentTrigName=="HLT_Jet15U" ) pass_HLT_Jet15U = accept;
-       else if( currentTrigName=="HLT_Jet30U" ) pass_HLT_Jet30U = accept;
-       else if( currentTrigName=="HLT_Jet50U" ) pass_HLT_Jet50U = accept;
-       else if( currentTrigName=="HLT_Ele15_LW_L1R" ) pass_HLT_Ele15_LW_L1R = accept;
-       else if( currentTrigName=="HLT_L1Jet15" ) pass_HLT_L1Jet15 = accept;
-       else if( currentTrigName=="HLT_Jet30" ) pass_HLT_Jet30 = accept;
-       else if( currentTrigName=="HLT_Jet50" ) pass_HLT_Jet50 = accept;
-       else if( currentTrigName=="HLT_Ele15_SW_L1R" ) pass_HLT_Ele15_SW_L1R = accept;
 
      }
    }
@@ -2104,7 +2092,6 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    Handle<L1GlobalTriggerReadoutRecord> gtReadoutRecord;
    iEvent.getByLabel(gtSource_, gtReadoutRecord);
 
-   int pass_L1T_TechBit_032=0, pass_L1T_TechBit_033=0, pass_L1T_TechBit_040=0, pass_L1T_TechBit_041=0, pass_L1T_TechBit_032_to_043=0;
    std::auto_ptr<BNtriggerCollection> bntriggerl1talgo(new BNtriggerCollection);
    std::auto_ptr<BNtriggerCollection> bntriggerl1ttech(new BNtriggerCollection);
 
@@ -2145,27 +2132,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      for(GTtbitItr = gtTTWord.begin(); GTtbitItr != gtTTWord.end(); GTtbitItr++) {
        BNtrigger MyTriggerL1TTech;
        int pass_l1t_tech = 0;
-       if (*GTtbitItr) {
-	 pass_l1t_tech = 1;
-	 bool tb_range1=false;
-	 if( tbitNumber==32 ){
-	   pass_L1T_TechBit_032=1;
-	   tb_range1=true;
-	 }
-	 if( tbitNumber==33 ){
-	   pass_L1T_TechBit_033=1;
-	   tb_range1=true;
-	 }
-	 if( tbitNumber==40 ){
-	   pass_L1T_TechBit_040=1;
-	   tb_range1=true;
-	 }
-	 if( tbitNumber==41 ){
-	   pass_L1T_TechBit_041=1;
-	   tb_range1=true;
-	 }
-	 if( tb_range1 ) pass_L1T_TechBit_032_to_043=1;
-       }
+       if (*GTtbitItr) pass_l1t_tech = 1;
 
        sprintf(trigname, "L1_TechBit_%03d", tbitNumber);
 
@@ -2179,39 +2146,6 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
 
 
-   std::auto_ptr<BNskimbitCollection> bnskimbits(new BNskimbitCollection);
-
-   BNskimbit MySkimBit;
-
-   MySkimBit.EG = ( passEG ) ? 1 : 0;
-   MySkimBit.JetMETTau = ( passJetMETTau ) ? 1 : 0;
-   MySkimBit.HLT_Ele15_LW_L1R = pass_HLT_Ele15_LW_L1R;
-   MySkimBit.HLT_Jet15U = pass_HLT_Jet15U;
-   MySkimBit.HLT_Jet30U = pass_HLT_Jet30U;
-   MySkimBit.HLT_Jet50U = pass_HLT_Jet50U;
-   MySkimBit.HLT_Ele15_SW_L1R = pass_HLT_Ele15_SW_L1R;
-   MySkimBit.HLT_L1Jet15 = pass_HLT_L1Jet15;
-   MySkimBit.HLT_Jet30 = pass_HLT_Jet30;
-   MySkimBit.HLT_Jet50 = pass_HLT_Jet50;
-   MySkimBit.L1T_TechBit_032 = pass_L1T_TechBit_032;
-   MySkimBit.L1T_TechBit_033 = pass_L1T_TechBit_033;
-   MySkimBit.L1T_TechBit_040 = pass_L1T_TechBit_040;
-   MySkimBit.L1T_TechBit_041 = pass_L1T_TechBit_041;
-   MySkimBit.L1T_TechBit_032_to_043 = pass_L1T_TechBit_032_to_043;
-   MySkimBit.Ncalojet = numcalojet;
-   MySkimBit.Npfjet = numpfjet;
-   MySkimBit.Ntcjet = numjptjet;
-   MySkimBit.Nele = numele;
-   MySkimBit.MET30  = ( calometPT>30  ) ? 1 : 0;
-   MySkimBit.MET100 = ( calometPT>100 ) ? 1 : 0;
-   MySkimBit.MET150 = ( calometPT>150 ) ? 1 : 0;
-
-   MySkimBit.GoodVertex = ( GoodVertex ) ? 1 : 0;
-   MySkimBit.FilterOutScraping = ( FilterOutScraping ) ? 1 : 0;
-   MySkimBit.FilterOutScrapingFraction = FilterOutScrapingFraction;
-
-   bnskimbits->push_back(MySkimBit);
-
    if( GoodVertex ) numGoodVertexEvents++;
    if( FilterOutScraping ) numFilterOutScrapingEvents++;
 
@@ -2220,7 +2154,6 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.put(bnelectrons,eleTag_.label());
    iEvent.put(bncalojets,calojetTag_.label());
    iEvent.put(bnpfjets,pfjetTag_.label());
-   //iEvent.put(bnjptjets,jptjetTag_.label());
    iEvent.put(bncalomet,calometTag_.label());
    iEvent.put(bnpfmet,pfmetTag_.label());
    iEvent.put(bntcmet,tcmetTag_.label());
@@ -2229,7 +2162,6 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.put(bnsuperclusters,kSC);
    iEvent.put(bntracks,trackTag_.label());
    iEvent.put(bntrigger,kTrigger);
-   iEvent.put(bnskimbits,kSkimBits);
    iEvent.put(bnmcparticles,kMCpar);
    iEvent.put(bnmcelectrons,kMCele);
    iEvent.put(bnmcmuons,kMCmu);
@@ -2237,6 +2169,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.put(bntriggerl1ttech,kTriggerL1Ttech);
    iEvent.put(bntrigobjs);
    iEvent.put(bnpvs,pvTag_.label());
+
+   iEvent.put(bnbxlumis,kBXlumi);
 
    /*
    vParam_L2_calo.clear(); vParam_L2L3_calo.clear(); vParam_L2L3res_calo.clear();
@@ -2255,12 +2189,10 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    delete ResJetCorPar_pf;
    delete JEC_res_pf;
    delete jecUnc_pf;
-
-   vParam_res_jpt.clear();
-   delete ResJetCorPar_jpt;
-   delete JEC_res_jpt;
-   delete jecUnc_jpt;
    */
+
+   delete jecUnc_Calo;
+   delete jecUnc_PF;
 
 }
 
