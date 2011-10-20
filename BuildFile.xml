@@ -10,6 +10,7 @@
 <use   name="DataFormats/EgammaReco"/>
 <use   name="DataFormats/JetReco"/>
 <use   name="DataFormats/L1Trigger"/>
+<use   name="DataFormats/Luminosity"/>
 <use   name="DataFormats/Math"/>
 <use   name="DataFormats/METReco"/>
 <use   name="DataFormats/MuonReco"/>
@@ -22,6 +23,7 @@
 <use   name="PhysicsTools/Utilities"/>
 <use   name="DataFormats/L1GlobalTrigger"/>
 <use   name="clhep"/>
+<use   name="JetMETCorrections/Objects"/>
 <use   name="ProductArea/BNcollections"/>
 <use   name="CondFormats/DataRecord"/>
 <use   name="CondFormats/JetMETObjects"/>
