@@ -4,6 +4,11 @@
   <class pattern="edm::Wrapper<SampleProd>"/>
   <class name="edm::Wrapper<std::vector<SampleProd> >" />
 
+  <class name="BNbxlumi" />
+  <class name="std::vector<BNbxlumi>" />
+  <class pattern="edm::Wrapper<BNbxlumi>"/>
+  <class name="edm::Wrapper<std::vector<BNbxlumi> >" />
+
   <class name="BNelectron" />
   <class name="std::vector<BNelectron>" />
   <class pattern="edm::Wrapper<BNelectron>"/>

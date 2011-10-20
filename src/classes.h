@@ -2,6 +2,7 @@
 
 //Add includes for your classes here
 #include "ProductArea/BNcollections/interface/SampleProd.h"
+#include "ProductArea/BNcollections/interface/BNbxlumi.h"
 #include "ProductArea/BNcollections/interface/BNelectron.h"
 #include "ProductArea/BNcollections/interface/BNevent.h"
 #include "ProductArea/BNcollections/interface/BNjet.h"
@@ -24,6 +25,11 @@ namespace {
      edm::Wrapper<SampleProd> dummy1;
      std::vector<SampleProd> dummy2;
      edm::Wrapper<std::vector<SampleProd> > dummy3;
+
+     BNbxlumi bxlumidummy0;
+     edm::Wrapper<BNbxlumi> bxlumidummy1;
+     std::vector<BNbxlumi> bxlumidummy2;
+     edm::Wrapper<std::vector<BNbxlumi> > bxlumidummy3;
 
      BNelectron electrondummy0;
      edm::Wrapper<BNelectron> electrondummy1;
