@@ -26,12 +26,6 @@ process.goodOfflinePrimaryVertices = cms.EDFilter(
 # add pf met
 from PhysicsTools.PatAlgos.tools.metTools import *
 
-#if runOnMC == False:
-    # removing MC matching for standard PAT sequence
-    # for the PF2PAT+PAT sequence, it is done in the usePF2PAT function
-    #removeMCMatching(process, ['All'])
-    #removeMCMatchingPF2PAT( process, '' ) 
-
 # tag information not available in AOD (but discriminator there)
 process.patJets.addTagInfos = cms.bool(False)
 
@@ -48,6 +42,56 @@ if runOnMC == False:
     jetMetCorrections = cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual'])
     inputJetCorrLabelPF = ('AK5PF', jetMetCorrections)
     inputJetCorrLabelCalo = ('AK5Calo', jetMetCorrections)
+
+
+##################################
+#
+## load the PAT config
+#process.load("PhysicsTools.PatAlgos.patSequences_cff")
+#
+## Configure PAT to use PF2PAT instead of AOD sources
+## this function will modify the PAT sequences. It is currently 
+## not possible to run PF2PAT+PAT and standart PAT at the same time
+from PhysicsTools.PatAlgos.tools.pfTools import *
+#
+## An empty postfix means that only PF2PAT is run,
+## otherwise both standard PAT and PF2PAT are run. In the latter case PF2PAT
+## collections have standard names + postfix (e.g. patElectronPFlow)  
+#
+postfix = "PF"
+pfSuffix = 'PF'
+jetAlgo = "AK5"
+usePF2PAT(process,runPF2PAT=True, jetAlgo=jetAlgo, runOnMC=runOnMC, postfix=postfix, jetCorrections=('AK5PFchs', jetMetCorrections))
+
+
+if runOnMC == False:
+    # removing MC matching for standard PAT sequence
+    # for the PF2PAT+PAT sequence, it is done in the usePF2PAT function
+    removeMCMatching( process, ['All'] ) 
+    removeMCMatchingPF2PAT( process, '' ) 
+
+#addPfMET(process, 'PF')  ## included in PF2PAT
+addTcMET(process,'TC')
+process.patMETsAK5Calo = process.patMETs
+
+
+# addPfMET TypeI
+from JetMETCorrections.Type1MET.MetType1Corrections_cff import metJESCorAK5PFJet 
+process.metJESCorAK5PFTypeI = metJESCorAK5PFJet.clone( 
+    inputUncorJetsLabel = "patJetsPF", 
+    metType = "pat",                  
+    inputUncorMetLabel = "pfMet",
+    )
+process.patMETsTypeIPF = process.patMETsPF.clone(
+    metSource = cms.InputTag("metJESCorAK5PFTypeI")
+    )
+# Add to producersLayer1 sequence
+process.patDefaultSequencePF.replace(
+    process.patMETsPF,
+    process.patMETsPF+
+    process.metJESCorAK5PFTypeI+
+    process.patMETsTypeIPF
+    )
 
 
 # Add AK5 Calo jets
@@ -80,39 +124,6 @@ addJetCollection(process,cms.InputTag('ak5PFJets'),
                  doJetID      = True
                  )
 
-
-##################################
-#
-## load the PAT config
-#process.load("PhysicsTools.PatAlgos.patSequences_cff")
-#
-## Configure PAT to use PF2PAT instead of AOD sources
-## this function will modify the PAT sequences. It is currently 
-## not possible to run PF2PAT+PAT and standart PAT at the same time
-from PhysicsTools.PatAlgos.tools.pfTools import *
-#
-## An empty postfix means that only PF2PAT is run,
-## otherwise both standard PAT and PF2PAT are run. In the latter case PF2PAT
-## collections have standard names + postfix (e.g. patElectronPFlow)  
-#
-postfix = "PF"
-pfSuffix = 'PF'
-jetAlgo = "AK5"
-##usePF2PAT(process,runPF2PAT=True, jetAlgo=jetAlgo, runOnMC=runOnMC, postfix=postfix) 
-#usePF2PAT(process,runPF2PAT=True, jetAlgo=jetAlgo, runOnMC=runOnMC, postfix=postfix, jetCorrections=('AK5PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual']))
-usePF2PAT(process,runPF2PAT=True, jetAlgo=jetAlgo, runOnMC=runOnMC, postfix=postfix, jetCorrections=('AK5PFchs', jetMetCorrections))
-#usePF2PAT(process,runPF2PAT=True, jetAlgo="AK5", runOnMC=True, postfix="PF")
-#
-
-if runOnMC == False:
-    # removing MC matching for standard PAT sequence
-    # for the PF2PAT+PAT sequence, it is done in the usePF2PAT function
-    removeMCMatchingPF2PAT( process, '' ) 
-
-addPfMET(process, 'PF')
-addTcMET(process,'TC')
-process.patMETsAK5Calo = process.patMETs
-
 #
 ## to run second PF2PAT+PAT with differnt postfix uncomment the following lines
 ## and add it to path
@@ -134,7 +145,8 @@ usePFnoPU = True # before any top projection
 useNoMuon     = True # before electron top projection
 useNoElectron = True # before jet top projection
 useNoJet      = True # before tau top projection
-useNoTau      = True # before MET top projection
+#useNoTau      = True # before MET top projection
+useNoTau      = False # before MET top projection
 #
 pfVertices  = 'goodOfflinePrimaryVertices'
 pfD0Cut     = 0.2
@@ -173,26 +185,8 @@ if useL1FastJet:
     applyPostfix( process, 'pfJets', postfix ).doAreaFastjet = True
     applyPostfix( process, 'pfJets', postfix ).doRhoFastjet  = False
 
-#applyPostfix( process, 'pfMuonsFromVertex'    , postfix ).vertices = cms.InputTag( pfVertices )
-#applyPostfix( process, 'pfMuonsFromVertex'    , postfix ).d0Cut    = pfD0Cut
-#applyPostfix( process, 'pfMuonsFromVertex'    , postfix ).dzCut    = pfDzCut
-##applyPostfix( process, 'pfSelectedMuons'      , postfix ).cut = pfMuonSelectionCut
-##applyPostfix( process, 'isoValMuonWithCharged', postfix ).deposits[0].deltaR = pfMuonIsoConeR
-##applyPostfix( process, 'isoValMuonWithNeutral', postfix ).deposits[0].deltaR = pfMuonIsoConeR
-##applyPostfix( process, 'isoValMuonWithPhotons', postfix ).deposits[0].deltaR = pfMuonIsoConeR
-##applyPostfix( process, 'pfIsolatedMuons'      , postfix ).combinedIsolationCut = pfMuonCombIsoCut
-#applyPostfix( process, 'pfElectronsFromVertex'    , postfix ).vertices = cms.InputTag( pfVertices )
-#applyPostfix( process, 'pfElectronsFromVertex'    , postfix ).d0Cut    = pfD0Cut
-#applyPostfix( process, 'pfElectronsFromVertex'    , postfix ).dzCut    = pfDzCut
-##applyPostfix( process, 'pfSelectedElectrons'      , postfix ).cut = pfElectronSelectionCut
-##applyPostfix( process, 'isoValElectronWithCharged', postfix ).deposits[0].deltaR = pfElectronIsoConeR
-##applyPostfix( process, 'isoValElectronWithNeutral', postfix ).deposits[0].deltaR = pfElectronIsoConeR
-##applyPostfix( process, 'isoValElectronWithPhotons', postfix ).deposits[0].deltaR = pfElectronIsoConeR
-##applyPostfix( process, 'pfIsolatedElectrons'      , postfix ).combinedIsolationCut = pfElectronCombIsoCut
-#applyPostfix( process, 'patElectrons', postfix ).pvSrc = cms.InputTag( pfVertices )
-#applyPostfix( process, 'patMuons', postfix ).pvSrc = cms.InputTag( pfVertices )
-#
-#
+
+
 process.load('RecoJets.Configuration.RecoPFJets_cff')
 process.kt6PFJets.doRhoFastjet = True
 #    #process.kt6PFJets.Rho_EtaMax = cms.double(3.0)
@@ -210,31 +204,8 @@ process.pfJetsPF.doAreaFastjet = True
 #
 process.patDefaultSequence.replace(process.patJetCorrFactors,
                                    process.kt6PFJets + process.patJetCorrFactors)
-#
-#
-#process.patJetCorrFactors.useRho = True
-#getattr( process, 'patJetCorrFactors' + jetAlgo + pfSuffix ).useRho = True
-#
-#applyPostfix( process, 'patJetCorrFactors', postfix ).primaryVertices = cms.InputTag( pfVertices )
-##if usePFnoPU:
-###    kt6PFJetsPFChs = kt6PFJetsChs.clone( src = cms.InputTag( 'pfNoElectron' + postfix ) )
-##    setattr( process, 'kt6PFJetsChs' + postfix, kt6PFJetsPFChs )
-##    getattr( process, 'patPF2PATSequence' + postfix).replace( getattr( process, 'patJetCorrFactors' + postfix )
-##                                                            , getattr( process, 'kt6PFJetsChs' + postfix ) * getattr( process, 'patJetCorrFactors' + postfix )
-##                                                            )
-##    if useL1FastJet:
-##        applyPostfix( process, 'patJetCorrFactors', postfix ).rho = cms.InputTag( 'kt6PFJetsChs' + postfix, 'rho' )
-##
-#
-#    #-- Jet corrections -----------------------------------------------------------
-#    # L1 FastJet jet corrections
-#    # kt jets for fastjet corrections (needed for CMSSW < 4_2_0)
-#    #process.load('RecoJets.Configuration.RecoPFJets_cff')
-#    #process.kt6PFJets.doRhoFastjet = True
-#    #process.kt6PFJets.Rho_EtaMax = cms.double(3.0)
-#
-#
-#
+
+
 process.patMuons.usePV = cms.bool(False)
 process.patElectrons.usePV = cms.bool(False)
 #
@@ -296,14 +267,17 @@ process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
 
 process.BNproducer = cms.EDProducer('BEANmaker',
         calometTag = cms.InputTag("patMETsAK5Calo"), 
-        pfmetTag = cms.InputTag("patMETsPF"), 
+        pfmetTag = cms.InputTag("patMETsTypeIPF"), 
         tcmetTag = cms.InputTag("patMETsTC"), 
         eleTag = cms.InputTag("selectedPatElectrons"),
+        pfeleTag = cms.InputTag("selectedPatElectronsPF"),
         genParticleTag = cms.InputTag("genParticles"),
         calojetTag = cms.InputTag("selectedPatJetsAK5Calo"), 
         pfjetTag = cms.InputTag("selectedPatJetsAK5PF"), 
         jptjetTag = cms.InputTag("selectedPatJetsAK5JPT"), 
         muonTag = cms.InputTag("selectedPatMuons"),
+        pfmuonTag = cms.InputTag("selectedPatMuonsPF"),
+        cocktailmuonTag = cms.InputTag("refitMuons"),
         photonTag = cms.InputTag("selectedPatPhotons"),
         EBsuperclusterTag = cms.InputTag("correctedHybridSuperClusters"),
         EEsuperclusterTag = cms.InputTag("correctedMulti5x5SuperClustersWithPreshower"),
@@ -331,7 +305,9 @@ readFiles = cms.untracked.vstring()
 secFiles = cms.untracked.vstring()
 
 readFiles.extend( [
-	'/store/data/Run2011B/SingleMu/RECO/PromptReco-v1/000/178/479/EE0408B7-B8F8-E011-A4A9-001D09F244DE.root',
+
+        'file:/tmp/puigh/EE0408B7-B8F8-E011-A4A9-001D09F244DE.root',
+#	'/store/data/Run2011B/SingleMu/RECO/PromptReco-v1/000/178/479/EE0408B7-B8F8-E011-A4A9-001D09F244DE.root',
 #	'/store/data/Run2011B/SingleMu/AOD/PromptReco-v1/000/177/515/F6FFF2B0-F0EC-E011-9060-00215AEDFD98.root',
 
 #        'file:/tmp/puigh/8A118A9A-83AC-E011-8BA6-003048C69406.root'
@@ -360,18 +336,19 @@ process.p = cms.Path(
 #    #process.scrapingVeto*
 #    #process.primaryVertexFilter*
 ##    process.HBHENoiseFilter*
-#    process.goodOfflinePrimaryVertices*
+    process.goodOfflinePrimaryVertices*
     process.skimMuon*
     process.refitMuons*
     process.HBHENoiseFilterResultProducer*
-#    getattr(process,"patPF2PATSequence"+postfix)*
-    process.patDefaultSequence*
+    (getattr(process,"patPF2PATSequence"+postfix)+
+    process.patDefaultSequence)*
     process.BNproducer
     )
 
 
+
 # rename output file
-process.out.fileName = cms.untracked.string('reco_7TeV_426_BN_v2.root')
+process.out.fileName = cms.untracked.string('reco_7TeV_426_BN_v3.root')
 
 # reduce verbosity
 process.MessageLogger.cerr.FwkReport.reportEvery = cms.untracked.int32(1000)
@@ -387,5 +364,6 @@ process.out.outputCommands = [ 'drop *' ]
 
 process.out.outputCommands.extend( [ # BEAN Objects
                                     'keep *_BNproducer_*_*',
+				    #'keep *',
 				    #'keep recoMuons_refitMuons_*_*',
                                      ] )
