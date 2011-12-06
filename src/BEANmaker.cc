@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.4 2011/10/28 20:36:03 puigh Exp $
+// $Id: BEANmaker.cc,v 1.5 2011/12/06 14:29:17 puigh Exp $
 //
 //
 
@@ -557,7 +557,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    Bool_t hcalNoiseFilter = false;
    if( hcalNoiseFilterHandle.isValid() ) hcalNoiseFilter = (Bool_t)(*hcalNoiseFilterHandle);
-   else std::cout << " NoiseFilter =====> hcalNoiseFilterHandle.isValid()==false " << std::endl;
+   else if( sample_<0 ) std::cout << " NoiseFilter =====> hcalNoiseFilterHandle.isValid()==false " << std::endl;
 
 
    Handle<HcalNoiseSummary> HcalNoiseSummaryHandle;
@@ -568,7 +568,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      passLooseNoiseFilter = HcalNoiseSummaryHandle->passLooseNoiseFilter();
      passTightNoiseFilter = HcalNoiseSummaryHandle->passTightNoiseFilter();
    }
-   else std::cout << " NoiseFilter =====> HcalNoiseSummaryHandle.isValid()==false " << std::endl;
+   else if( sample_<0 ) std::cout << " NoiseFilter =====> HcalNoiseSummaryHandle.isValid()==false " << std::endl;
 
 
 
