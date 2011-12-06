@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.2 2011/10/05 01:28:37 puigh Exp $
+// $Id: BEANmaker.cc,v 1.4 2011/10/28 20:36:03 puigh Exp $
 //
 //
 
@@ -483,13 +483,11 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    int nm1 = -1; int n0 = -1; int np1 = -1;
 
    if( (PupInfo.isValid()) ){
-
      for(PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI) {
 
        int BX = PVI->getBunchCrossing();
 
        npv = PVI->getPU_NumInteractions();
-
        sum_nvtx += float(npv);
 
        if(BX == -1) { 
@@ -501,14 +499,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        if(BX == 1) { 
 	 np1 = PVI->getPU_NumInteractions();
        }
-
      }
-
-     std::cout << "\t nm1 = " << nm1 << std::endl;
-     std::cout << "\t n0  = " << n0  << std::endl;
-     std::cout << "\t np1 = " << np1 << std::endl;
-
-     std::cout << "\t sum_nvtx = " << sum_nvtx << std::endl;
    }
 
 
@@ -751,6 +742,9 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      MyElectron.scE2x5Max = ele->scE2x5Max();
      MyElectron.scE5x5 = ele->scE5x5();
      MyElectron.numClusters = ele->numberOfBrems();
+
+     MyElectron.IP = ele->dB(pat::Electron::PV3D);
+     MyElectron.IPError = ele->edB(pat::Electron::PV3D);
 
      double caloenergy = -1;
 
@@ -1018,6 +1012,9 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      MyPfelectron.scE2x5Max = pfele->scE2x5Max();
      MyPfelectron.scE5x5 = pfele->scE5x5();
      MyPfelectron.numClusters = pfele->numberOfBrems();
+
+     MyPfelectron.IP = pfele->dB(pat::Electron::PV3D);
+     MyPfelectron.IPError = pfele->edB(pat::Electron::PV3D);
 
      double caloenergy = -1;
 
@@ -1595,6 +1592,10 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      MyMuon.dVzPVz = muon->vz() - PVz;
      MyMuon.dB = muon->dB();
 
+     MyMuon.IP = muon->dB(pat::Muon::PV3D);
+     MyMuon.IPError = muon->edB(pat::Muon::PV3D);
+
+
      if( (muon->globalTrack().isAvailable()) ){
        MyMuon.normalizedChi2 = muon->globalTrack()->normalizedChi2();
        MyMuon.numberOfValidMuonHits = muon->globalTrack()->hitPattern().numberOfValidMuonHits();
@@ -1777,6 +1778,9 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
      MyPfmuon.dVzPVz = pfmuon->vz() - PVz;
      MyPfmuon.dB = pfmuon->dB();
+
+     MyPfmuon.IP = pfmuon->dB(pat::Muon::PV3D);
+     MyPfmuon.IPError = pfmuon->edB(pat::Muon::PV3D);
 
      if( (pfmuon->globalTrack().isAvailable()) ){
        MyPfmuon.normalizedChi2 = pfmuon->globalTrack()->normalizedChi2();
@@ -2321,8 +2325,10 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    std::auto_ptr<BNmcparticleCollection> bnmcmuons(new BNmcparticleCollection);
    std::vector<int> vecZdecay;
    std::vector<int> vecWdecay;
+   std::vector<int> vecHdecay;
    vecZdecay.clear();
    vecWdecay.clear();
+   vecHdecay.clear();
 
    if( (genParticles.isValid() && sample_>=0) ){
      for( size_t k = 0; k < genParticles->size(); k++ ){
@@ -2473,6 +2479,17 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	 vecWdecay.push_back(wdecay);
        }
+       else if( (abs(pdgId)==25 && numdgt>=2 && vecHdecay.size()<=2) ){
+	 int dId0 = abs(mcParticle.daughter(0)->pdgId());
+	 int dId1 = abs(mcParticle.daughter(1)->pdgId());
+
+	 int hdecay0 = 100*dId0 + dId1;
+	 int hdecay1 = 100*dId1 + dId0;
+
+	 int hdecay = ( hdecay0 < hdecay1 ) ? hdecay0 : hdecay1;
+
+	 vecHdecay.push_back(hdecay);
+       }
 
      }
    }
@@ -2530,6 +2547,11 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    MyEvent.LooseId = ( passLooseId ) ? 1 : 0;
    MyEvent.TightId = ( passTightId ) ? 1 : 0;
 
+   MyEvent.sumNVtx  = sum_nvtx;
+   MyEvent.numGenPV = npv;
+   MyEvent.nm1 = nm1;
+   MyEvent.n0  = n0;
+   MyEvent.np1 = np1;
 
    MyEvent.bField = evt_bField;
 
@@ -2539,10 +2561,16 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyEvent.W1decay = vecWdecay[1];
      }
    }
-   if( (vecZdecay.size()>0) ){
+    if( (vecZdecay.size()>0) ){
      MyEvent.Z0decay = vecZdecay[0];
      if( (vecZdecay.size()>1) ){
        MyEvent.Z1decay = vecZdecay[1];
+     }
+   }
+  if( (vecHdecay.size()>0) ){
+     MyEvent.H0decay = vecHdecay[0];
+     if( (vecHdecay.size()>1) ){
+       MyEvent.H1decay = vecHdecay[1];
      }
    }
 
