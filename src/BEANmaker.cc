@@ -478,26 +478,36 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    std::vector<PileupSummaryInfo>::const_iterator PVI;
 
-   int npv = -1;
-   float sum_nvtx = 0;
-   int nm1 = -1; int n0 = -1; int np1 = -1;
+   float sum_nvtx_gen = 0, sum_nvtx_true = 0;
+   int npv_gen = -1;
+   float npv_true = -1;
+   int nm1 = -1, n0 = -1, np1 = -1;
+   float nm1_true = -1, n0_true = -1, np1_true = -1;
 
    if( (PupInfo.isValid()) ){
      for(PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI) {
 
        int BX = PVI->getBunchCrossing();
 
-       npv = PVI->getPU_NumInteractions();
-       sum_nvtx += float(npv);
+       sum_nvtx_gen  += float(PVI->getPU_NumInteractions());
+       sum_nvtx_true += float(PVI->getTrueNumInteractions());
+
+       if( BX==0 ){
+	 npv_gen = PVI->getPU_NumInteractions();
+	 npv_true = PVI->getTrueNumInteractions();
+       }
 
        if(BX == -1) { 
 	 nm1 = PVI->getPU_NumInteractions();
+	 nm1_true = PVI->getTrueNumInteractions();
        }
-       if(BX == 0) { 
+       else if(BX == 0) { 
 	 n0 = PVI->getPU_NumInteractions();
+	 n0_true = PVI->getTrueNumInteractions();
        }
-       if(BX == 1) { 
+       else if(BX == 1) { 
 	 np1 = PVI->getPU_NumInteractions();
+	 np1_true = PVI->getTrueNumInteractions();
        }
      }
    }
@@ -703,11 +713,21 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      MyElectron.fbrem = fabs(elePin-elePout)/elePin;
      MyElectron.delPhiIn = ele->deltaPhiSuperClusterTrackAtVtx();
      MyElectron.delEtaIn = ele->deltaEtaSuperClusterTrackAtVtx();
+
      MyElectron.eidRobustHighEnergy = ele->electronID("eidRobustHighEnergy");
      MyElectron.eidRobustLoose = ele->electronID("eidRobustLoose");
      MyElectron.eidRobustTight = ele->electronID("eidRobustTight");
      MyElectron.eidLoose = ele->electronID("eidLoose");
      MyElectron.eidTight = ele->electronID("eidTight");
+     MyElectron.eidVeryLooseMC = ele->electronID("eidVeryLooseMC");
+     MyElectron.eidLooseMC = ele->electronID("eidLooseMC");
+     MyElectron.eidMediumMC = ele->electronID("eidMediumMC");
+     MyElectron.eidTightMC = ele->electronID("eidTightMC");
+     MyElectron.eidSuperTightMC = ele->electronID("eidSuperTightMC");
+     MyElectron.eidHyperTight1MC = ele->electronID("eidHyperTight1MC");
+     MyElectron.eidHyperTight2MC = ele->electronID("eidHyperTight2MC");
+     MyElectron.eidHyperTight3MC = ele->electronID("eidHyperTight3MC");
+     MyElectron.eidHyperTight4MC = ele->electronID("eidHyperTight4MC");
 
      MyElectron.trackIso = ele->trackIso();
      MyElectron.ecalIso = ele->ecalIso();
@@ -967,17 +987,37 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      MyPfelectron.fbrem = fabs(pfelePin-pfelePout)/pfelePin;
      MyPfelectron.delPhiIn = pfele->deltaPhiSuperClusterTrackAtVtx();
      MyPfelectron.delEtaIn = pfele->deltaEtaSuperClusterTrackAtVtx();
+
      MyPfelectron.eidRobustHighEnergy = pfele->electronID("eidRobustHighEnergy");
      MyPfelectron.eidRobustLoose = pfele->electronID("eidRobustLoose");
      MyPfelectron.eidRobustTight = pfele->electronID("eidRobustTight");
      MyPfelectron.eidLoose = pfele->electronID("eidLoose");
      MyPfelectron.eidTight = pfele->electronID("eidTight");
+     MyPfelectron.eidVeryLooseMC = pfele->electronID("eidVeryLooseMC");
+     MyPfelectron.eidLooseMC = pfele->electronID("eidLooseMC");
+     MyPfelectron.eidMediumMC = pfele->electronID("eidMediumMC");
+     MyPfelectron.eidTightMC = pfele->electronID("eidTightMC");
+     MyPfelectron.eidSuperTightMC = pfele->electronID("eidSuperTightMC");
+     MyPfelectron.eidHyperTight1MC = pfele->electronID("eidHyperTight1MC");
+     MyPfelectron.eidHyperTight2MC = pfele->electronID("eidHyperTight2MC");
+     MyPfelectron.eidHyperTight3MC = pfele->electronID("eidHyperTight3MC");
+     MyPfelectron.eidHyperTight4MC = pfele->electronID("eidHyperTight4MC");
 
      MyPfelectron.particleIso = pfele->particleIso();     
      MyPfelectron.chargedHadronIso = pfele->chargedHadronIso();     
      MyPfelectron.neutralHadronIso = pfele->neutralHadronIso();     
      MyPfelectron.photonIso = pfele->photonIso();     
      MyPfelectron.puChargedHadronIso = pfele->puChargedHadronIso();     
+
+     MyPfelectron.chargedHadronIsoDR03 = pfele->userIso(0);     
+     MyPfelectron.neutralHadronIsoDR03 = pfele->userIso(1);
+     MyPfelectron.photonIsoDR03 = pfele->userIso(2);
+     MyPfelectron.puChargedHadronIsoDR03 = pfele->userIso(3);
+
+     MyPfelectron.chargedHadronIsoDR04 = pfele->userIso(4);     
+     MyPfelectron.neutralHadronIsoDR04 = pfele->userIso(5);
+     MyPfelectron.photonIsoDR04 = pfele->userIso(6);
+     MyPfelectron.puChargedHadronIsoDR04 = pfele->userIso(7);
 
      MyPfelectron.trackIso = pfele->trackIso();
      MyPfelectron.ecalIso = pfele->ecalIso();
@@ -1227,49 +1267,10 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
      if( !(calojet->pt()>minJetPt_) ) continue;
 
-     /*
-     // Get uncorrected/raw jets
-     pat::Jet rawJet = calojet->correctedJet("raw");
-     double RawjetE = rawJet.energy();
-     double RawjetEt = rawJet.et();
-     double RawjetEta = rawJet.eta();
-     double Rawjetpt = rawJet.pt();
-     double Rawjetpx = rawJet.px();
-     double Rawjetpy = rawJet.py();
-     double RawjetEMF = rawJet.emEnergyFraction();
-
-
-     // Perform L2(relative) and L3(absolute) and residual corrections
-     JEC_L2_calo->setJetEta(RawjetEta);      JEC_L2_calo->setJetPt(Rawjetpt);
-     JEC_L2L3_calo->setJetEta(RawjetEta);    JEC_L2L3_calo->setJetPt(Rawjetpt);
-     JEC_L2L3res_calo->setJetEta(RawjetEta); JEC_L2L3res_calo->setJetPt(Rawjetpt);
-     JEC_res_calo->setJetEta(calojet->eta()); JEC_res_calo->setJetPt(calojet->pt());
-
-     double L2jetpt      = Rawjetpt * JEC_L2_calo->getCorrection();
-     double L2L3jetpt    = Rawjetpt * JEC_L2L3_calo->getCorrection();
-     double L2L3resjetpt = Rawjetpt * JEC_L2L3res_calo->getCorrection();
-     double respt = calojet->pt() * JEC_res_calo->getCorrection();
-
-     double L2L3jetpx = calojet->px();
-     double L2L3jetpy = calojet->py();
- 
-     // Criteria on jets to be included in met correction
-     if( Rawjetpt>1 && RawjetEMF<0.9 && (fabs(calojet->eta())>2.6 || RawjetEMF>0.01) ){
-       metJES1corrPx += -(L2L3jetpx - Rawjetpx);
-       metJES1corrPy += -(L2L3jetpy - Rawjetpy);
-       if( Rawjetpt>20 ){
-     	 metJES20corrPx += -(L2L3jetpx - Rawjetpx);
-     	 metJES20corrPy += -(L2L3jetpy - Rawjetpy);
-	 UDeltaPx += Rawjetpx;
-	 UDeltaPy += Rawjetpy;
-	 USumET -= RawjetEt;
-       }
-     }
-     */
-
      jecUnc_Calo->setJetEta(calojet->eta());
      jecUnc_Calo->setJetPt(calojet->pt());// the uncertainty is a function of the corrected pt
-     double unc = jecUnc_Calo->getUncertainty(true);
+     double unc = 1.; // JEC uncertainties only defined for jets with |eta| < 5.5 and pt > 9 GeV (2011 data)
+     if( calojet->pt()>9. && fabs(calojet->eta())<5.0 ) unc = jecUnc_Calo->getUncertainty(true);
 
 
      BNjet MyCalojet;
@@ -1314,15 +1315,14 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      MyCalojet.btagSecVertex = calojet->bDiscriminator("simpleSecondaryVertexBJetTags");
      MyCalojet.btagSecVertexHighEff = calojet->bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
      MyCalojet.btagSecVertexHighPur = calojet->bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
+     MyCalojet.btagCombinedSecVertex = calojet->bDiscriminator("combinedSecondaryVertexBJetTags");
+     MyCalojet.btagCombinedSecVertexMVA = calojet->bDiscriminator("combinedSecondaryVertexMVABJetTags");
+     MyCalojet.btagSoftMuonByPt = calojet->bDiscriminator("softMuonByPtBJetTags");
+     MyCalojet.btagSoftMuonByIP3 = calojet->bDiscriminator("softMuonByIP3dBJetTags");
+     MyCalojet.btagSoftElectronByPt = calojet->bDiscriminator("softElectronByPtBJetTags");
+     MyCalojet.btagSoftElectronByIP3 = calojet->bDiscriminator("softElectronByIP3dBJetTags");
 
-     /*
-     MyCalojet.Upt = Rawjetpt;
-     MyCalojet.Uenergy = RawjetE;
-     MyCalojet.L2pt = L2jetpt;
-     MyCalojet.L2L3pt = L2L3jetpt;
-     MyCalojet.L2L3respt = L2L3resjetpt;
-     MyCalojet.respt = respt;
-     */
+
      MyCalojet.JESunc = unc;
 
      if( (calojet->genJet()) ){ // if there is a matched genjet, fill variables
@@ -1340,33 +1340,6 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyCalojet.genPartonMotherId = calojet->genParton()->mother()->pdgId();
        MyCalojet.genPartonGrandMotherId = calojet->genParton()->mother()->pdgId();
      }
-
-
-     // std::cout << " jet
-     /*
-     // // Get jet ID results
-     //const pat::Jet& ijet = *calojet;
-     const pat::Jet& ijet = rawJet;
-
-     ret.set(false);
-     jetIDMinimal(ijet, ret);
-     bool minimal = ( ret[str_MINIMAL_EMF] );
-     ret.set(false);
-     jetIDLooseAOD(ijet, ret);
-     bool loose_aod = ( ret[str_LOOSE_AOD_fHPD] && ret[str_LOOSE_AOD_N90Hits] && ret[str_LOOSE_AOD_EMF] );
-     ret.set(false);
-     jetIDLoose(ijet, ret);
-     bool loose = ( ret[str_LOOSE_fHPD] && ret[str_LOOSE_N90Hits] && ret[str_LOOSE_EMF] );
-     ret.set(false);
-     jetIDTight(ijet, ret);
-     bool tight = ( ret[str_TIGHT_fHPD] && ret[str_TIGHT_EMF] );
-
-
-     MyCalojet.jetIDMinimal = (minimal) ? 1 : 0;
-     MyCalojet.jetIDLooseAOD = (loose_aod) ? 1 : 0;
-     MyCalojet.jetIDLoose = (loose) ? 1 : 0;
-     MyCalojet.jetIDTight = (tight) ? 1 : 0;
-     */
 
 
      bncalojets->push_back(MyCalojet);
@@ -1391,37 +1364,13 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    std::auto_ptr<BNjetCollection> bnpfjets(new BNjetCollection);
    for( edm::View<pat::Jet>::const_iterator pfjet = pfjets.begin(); pfjet != pfjets.end(); ++ pfjet ) {
 
-
-     /*
-     // Get uncorrected/raw jets
-     pat::Jet rawJet = pfjet->correctedJet("raw");
-     double Rawjetpt = rawJet.pt();
-     double Rawjetpx = rawJet.px();
-     double Rawjetpy = rawJet.py();
-
-     if( Rawjetpt>1. ){
-       metJet1corrPx_pf += -( pfjet->px() - Rawjetpx );
-       metJet1corrPy_pf += -( pfjet->py() - Rawjetpy );
-       
-       if( Rawjetpt>6. ){
-	 metJet6corrPx_pf += -( pfjet->px() - Rawjetpx );
-	 metJet6corrPy_pf += -( pfjet->py() - Rawjetpy );
-
-	 if( Rawjetpt>10. ){
-	   metJet10corrPx_pf += -( pfjet->px() - Rawjetpx );
-	   metJet10corrPy_pf += -( pfjet->py() - Rawjetpy );
-	 }
-       }
-     }
-     */
-
      if( !(pfjet->pt()>minJetPt_) ) continue;
 
 
      jecUnc_PF->setJetEta(pfjet->eta());
      jecUnc_PF->setJetPt(pfjet->pt()); // here you must use the CORRECTED jet pt
-     double unc = jecUnc_PF->getUncertainty(true);
-
+     double unc = 1.; // JEC uncertainties only defined for jets with |eta| < 5.5 and pt > 9 GeV (2011 data)
+     if( pfjet->pt()>9. && fabs(pfjet->eta())<5.0 ) unc = jecUnc_PF->getUncertainty(true);
 
      BNjet MyPfjet;
 
@@ -1460,13 +1409,13 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      MyPfjet.btagSecVertex = pfjet->bDiscriminator("simpleSecondaryVertexBJetTags");
      MyPfjet.btagSecVertexHighEff = pfjet->bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
      MyPfjet.btagSecVertexHighPur = pfjet->bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
+     MyPfjet.btagCombinedSecVertex = pfjet->bDiscriminator("combinedSecondaryVertexBJetTags");
+     MyPfjet.btagCombinedSecVertexMVA = pfjet->bDiscriminator("combinedSecondaryVertexMVABJetTags");
+     MyPfjet.btagSoftMuonByPt = pfjet->bDiscriminator("softMuonByPtBJetTags");
+     MyPfjet.btagSoftMuonByIP3 = pfjet->bDiscriminator("softMuonByIP3dBJetTags");
+     MyPfjet.btagSoftElectronByPt = pfjet->bDiscriminator("softElectronByPtBJetTags");
+     MyPfjet.btagSoftElectronByIP3 = pfjet->bDiscriminator("softElectronByIP3dBJetTags");
 
-     /*
-     // MyPfjet.Upt = Rawjetpt;
-     // MyPfjet.L2pt = L2jetpt;
-     // MyPfjet.L2L3pt = L2L3jetpt;
-     MyPfjet.respt = respt;
-     */
      MyPfjet.JESunc = unc;
 
      if( (pfjet->genJet()) ){ // if there is a matched genjet, fill variables
@@ -1577,6 +1526,26 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      ////   Investigate and uncomment in future.
      //MyMuon.hcalE = muon->hcalIsoDeposit()->candEnergy();
      //MyMuon.ecalE = muon->ecalIsoDeposit()->candEnergy();
+     
+     MyMuon.timeAtIpInOut = muon->time().timeAtIpInOut;
+     MyMuon.timeAtIpInOutErr = muon->time().timeAtIpInOutErr;
+     MyMuon.timeAtIpOutIn = muon->time().timeAtIpOutIn;
+     MyMuon.timeAtIpOutInErr = muon->time().timeAtIpOutInErr;
+     MyMuon.time_ndof = muon->time().nDof;
+
+     if( muon->isEnergyValid() ){
+       MyMuon.ecal_time = muon->calEnergy().ecal_time;
+       MyMuon.hcal_time = muon->calEnergy().hcal_time;
+       MyMuon.ecal_timeError = muon->calEnergy().ecal_timeError;
+       MyMuon.hcal_timeError = muon->calEnergy().hcal_timeError;
+       MyMuon.energy_ecal = muon->calEnergy().em;
+       MyMuon.energy_hcal = muon->calEnergy().had;
+       MyMuon.e3x3_ecal = muon->calEnergy().emS9;
+       MyMuon.e3x3_hcal = muon->calEnergy().hadS9;
+       MyMuon.energyMax_ecal = muon->calEnergy().emMax;
+       MyMuon.energyMax_hcal = muon->calEnergy().hadMax;
+     }
+
 
 
      MyMuon.IDGMPTight = ( muon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
@@ -1735,6 +1704,16 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      MyPfmuon.photonIso = pfmuon->photonIso();     
      MyPfmuon.puChargedHadronIso = pfmuon->puChargedHadronIso();     
 
+     MyPfmuon.chargedHadronIsoDR03 = pfmuon->userIso(0);     
+     MyPfmuon.neutralHadronIsoDR03 = pfmuon->userIso(1);
+     MyPfmuon.photonIsoDR03 = pfmuon->userIso(2);
+     MyPfmuon.puChargedHadronIsoDR03 = pfmuon->userIso(3);
+
+     MyPfmuon.chargedHadronIsoDR04 = pfmuon->userIso(4);     
+     MyPfmuon.neutralHadronIsoDR04 = pfmuon->userIso(5);
+     MyPfmuon.photonIsoDR04 = pfmuon->userIso(6);
+     MyPfmuon.puChargedHadronIsoDR04 = pfmuon->userIso(7);
+
      MyPfmuon.trackIso = pfmuon->trackIso();
      MyPfmuon.ecalIso = pfmuon->ecalIso();
      MyPfmuon.hcalIso = pfmuon->hcalIso();
@@ -1764,6 +1743,25 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      ////   Investigate and uncomment in future.
      //MyMuon.hcalE = muon->hcalIsoDeposit()->candEnergy();
      //MyMuon.ecalE = muon->ecalIsoDeposit()->candEnergy();
+
+     MyPfmuon.timeAtIpInOut = pfmuon->time().timeAtIpInOut;
+     MyPfmuon.timeAtIpInOutErr = pfmuon->time().timeAtIpInOutErr;
+     MyPfmuon.timeAtIpOutIn = pfmuon->time().timeAtIpOutIn;
+     MyPfmuon.timeAtIpOutInErr = pfmuon->time().timeAtIpOutInErr;
+     MyPfmuon.time_ndof = pfmuon->time().nDof;
+
+     if( pfmuon->isEnergyValid() ){
+       MyPfmuon.ecal_time = pfmuon->calEnergy().ecal_time;
+       MyPfmuon.hcal_time = pfmuon->calEnergy().hcal_time;
+       MyPfmuon.ecal_timeError = pfmuon->calEnergy().ecal_timeError;
+       MyPfmuon.hcal_timeError = pfmuon->calEnergy().hcal_timeError;
+       MyPfmuon.energy_ecal = pfmuon->calEnergy().em;
+       MyPfmuon.energy_hcal = pfmuon->calEnergy().had;
+       MyPfmuon.e3x3_ecal = pfmuon->calEnergy().emS9;
+       MyPfmuon.e3x3_hcal = pfmuon->calEnergy().hadS9;
+       MyPfmuon.energyMax_ecal = pfmuon->calEnergy().emMax;
+       MyPfmuon.energyMax_hcal = pfmuon->calEnergy().hadMax;
+     }
 
 
      MyPfmuon.IDGMPTight = ( pfmuon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
@@ -2547,11 +2545,16 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    MyEvent.LooseId = ( passLooseId ) ? 1 : 0;
    MyEvent.TightId = ( passTightId ) ? 1 : 0;
 
-   MyEvent.sumNVtx  = sum_nvtx;
-   MyEvent.numGenPV = npv;
+   MyEvent.sumNVtx     = sum_nvtx_gen;
+   MyEvent.sumTrueNVtx = sum_nvtx_true;
+   MyEvent.numGenPV = npv_gen;
    MyEvent.nm1 = nm1;
    MyEvent.n0  = n0;
    MyEvent.np1 = np1;
+   MyEvent.numTruePV = npv_true;
+   MyEvent.nm1_true = nm1_true;
+   MyEvent.n0_true  = n0_true;
+   MyEvent.np1_true = np1_true;
 
    MyEvent.bField = evt_bField;
 
