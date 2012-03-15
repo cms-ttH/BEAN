@@ -20,7 +20,7 @@ process = cms.Process( 'BEAN' )
 
 
 ### Data or MC?
-runOnMC = True
+runOnMC = False
 
 ### Standard and PF work flow
 
@@ -139,16 +139,16 @@ useType1Met = True
 useRelVals = False # if 'False', "inputFiles" is used
 inputFiles = [
   #  'file:test.root', #ttH120 sample
-  '/store/mc/Fall11/TTJets_TuneZ2_7TeV-madgraph-tauola/AODSIM/PU_S6_START42_V14B-v1/0000/FEE3E76C-1EFA-E011-BAF4-002618943864.root',
-  '/store/mc/Fall11/TTJets_TuneZ2_7TeV-madgraph-tauola/AODSIM/PU_S6_START42_V14B-v2/0000/0040932D-A80F-E111-BBF7-00304867BFAA.root',
-  '/store/mc/Fall11/TTJets_TuneZ2_7TeV-madgraph-tauola/AODSIM/PU_S6_START42_V14B-v2/0000/00583179-970F-E111-9C30-003048678BB8.root',
-  '/store/mc/Fall11/TTJets_TuneZ2_7TeV-madgraph-tauola/AODSIM/PU_S6_START42_V14B-v2/0000/00859C66-AD0F-E111-A82D-0018F3D096DE.root',
+  #'/store/mc/Fall11/TTJets_TuneZ2_7TeV-madgraph-tauola/AODSIM/PU_S6_START42_V14B-v1/0000/FEE3E76C-1EFA-E011-BAF4-002618943864.root',
+  #'/store/mc/Fall11/TTJets_TuneZ2_7TeV-madgraph-tauola/AODSIM/PU_S6_START42_V14B-v2/0000/0040932D-A80F-E111-BBF7-00304867BFAA.root',
+  #'/store/mc/Fall11/TTJets_TuneZ2_7TeV-madgraph-tauola/AODSIM/PU_S6_START42_V14B-v2/0000/00583179-970F-E111-9C30-003048678BB8.root',
+  #'/store/mc/Fall11/TTJets_TuneZ2_7TeV-madgraph-tauola/AODSIM/PU_S6_START42_V14B-v2/0000/00859C66-AD0F-E111-A82D-0018F3D096DE.root',
 
-  #  '/store/data/Run2011B/SingleMu/RECO/PromptReco-v1/000/175/832/10EBFA08-84DB-E011-9D72-003048D2C020.root',
+  '/store/data/Run2011B/SingleMu/RECO/PromptReco-v1/000/175/832/10EBFA08-84DB-E011-9D72-003048D2C020.root',
   ] # overwritten, if "useRelVals" is 'True'
 
 # maximum number of events
-maxInputEvents = 5000 # reduce for testing
+maxInputEvents = 100 # reduce for testing
 
 ### Conditions
 
@@ -159,7 +159,8 @@ globalTagMC   = 'START42_V17'
 ### Output
 
 # output file
-outputFile = 'TTJets_TuneZ2_7TeV_madgraph_tauola_Fall11_PU_S6_START42_V14B_v2_BEAN_V05.root'
+#outputFile = 'TTJets_TuneZ2_7TeV_madgraph_tauola_Fall11_PU_S6_START42_V14B_v2_BEAN_V05.root'
+outputFile = 'SingleMu_2011B_PromptReco_v1_BEAN_V05.root'
 
 # event frequency of Fwk report
 fwkReportEvery = 10000 # reduce for testing
@@ -793,15 +794,26 @@ if runPF2PAT:
   setattr(process,'selectedPatElectronsLoose'+postfix,selectedPatElectronsLoose)
 
 
-  process.looseLeptonSequence = cms.Sequence(
-    getattr(process, 'pfIsolatedMuonsLoose'+postfix) +
-    getattr(process, 'muonMatchLoose'+postfix) +
-    getattr(process, 'patMuonsLoose'+postfix) +
-    getattr(process, 'selectedPatMuonsLoose'+postfix) +
-    getattr(process, 'pfIsolatedElectronsLoose'+postfix) +
-    getattr(process, 'patElectronsLoose'+postfix) +
-    getattr(process, 'selectedPatElectronsLoose'+postfix)
-    )
+  if not runOnMC:
+    process.looseLeptonSequence = cms.Sequence(
+      getattr(process, 'pfIsolatedMuonsLoose'+postfix) +
+      getattr(process, 'patMuonsLoose'+postfix) +
+      getattr(process, 'selectedPatMuonsLoose'+postfix) +
+      getattr(process, 'pfIsolatedElectronsLoose'+postfix) +
+      getattr(process, 'patElectronsLoose'+postfix) +
+      getattr(process, 'selectedPatElectronsLoose'+postfix)
+      )
+
+  if runOnMC:
+    process.looseLeptonSequence = cms.Sequence(
+      getattr(process, 'pfIsolatedMuonsLoose'+postfix) +
+      getattr(process, 'muonMatchLoose'+postfix) +
+      getattr(process, 'patMuonsLoose'+postfix) +
+      getattr(process, 'selectedPatMuonsLoose'+postfix) +
+      getattr(process, 'pfIsolatedElectronsLoose'+postfix) +
+      getattr(process, 'patElectronsLoose'+postfix) +
+      getattr(process, 'selectedPatElectronsLoose'+postfix)
+      )
 
 
 ###
@@ -839,7 +851,7 @@ process.BNproducer = cms.EDProducer('BEANmaker',
         minJetPt = cms.double(10),
         minTrackPt = cms.double(10),
         verbose = cms.bool(True),
-        sample = cms.int32(2500)
+        sample = cms.int32(-2500)
 )
 
 
