@@ -16,6 +16,7 @@
 #include "ProductArea/BNcollections/interface/BNskimbits.h"
 #include "ProductArea/BNcollections/interface/BNtrigobj.h"
 #include "ProductArea/BNcollections/interface/BNprimaryvertex.h"
+#include "ProductArea/BNcollections/interface/BNgenjet.h"
 #include <vector>
 
 namespace {
@@ -95,6 +96,11 @@ namespace {
      edm::Wrapper<BNprimaryvertex> primaryvertexdummy1;
      std::vector<BNprimaryvertex> primaryvertexdummy2;
      edm::Wrapper<std::vector<BNprimaryvertex> > primaryvertexdummy3;
+
+     BNgenjet genjetdummy0;
+     edm::Wrapper<BNgenjet> genjetdummy1;
+     std::vector<BNgenjet> genjetdummy2;
+     edm::Wrapper<std::vector<BNgenjet> > genjetdummy3;
 
 /*
     These classes are commented out because they are used more rarely. If you need them, move them
