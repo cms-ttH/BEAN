@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.5 2011/12/06 14:29:17 puigh Exp $
+// $Id: BEANmaker.cc,v 1.7 2012/02/23 22:20:13 puigh Exp $
 //
 //
 
@@ -44,6 +44,7 @@
 #include "ProductArea/BNcollections/interface/BNelectron.h"
 #include "ProductArea/BNcollections/interface/BNevent.h"
 #include "ProductArea/BNcollections/interface/BNjet.h"
+#include "ProductArea/BNcollections/interface/BNgenjet.h"
 #include "ProductArea/BNcollections/interface/BNmcparticle.h"
 #include "ProductArea/BNcollections/interface/BNmet.h"
 #include "ProductArea/BNcollections/interface/BNmuon.h"
@@ -164,6 +165,7 @@ class BEANmaker : public edm::EDProducer {
   edm::InputTag pfeleTag_;
   edm::InputTag calojetTag_;
   edm::InputTag pfjetTag_;
+  edm::InputTag genjetTag_;
   edm::InputTag calometTag_;
   edm::InputTag pfmetTag_;
   edm::InputTag tcmetTag_;
@@ -218,6 +220,7 @@ class BEANmaker : public edm::EDProducer {
 //
 typedef std::vector<BNelectron>     BNelectronCollection;
 typedef std::vector<BNjet>          BNjetCollection;
+typedef std::vector<BNgenjet>       BNgenjetCollection;
 typedef std::vector<BNevent>        BNeventCollection;
 typedef std::vector<BNmcparticle>   BNmcparticleCollection;
 typedef std::vector<BNmet>          BNmetCollection;
@@ -275,6 +278,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   pfeleTag_ = iConfig.getParameter<edm::InputTag>("pfeleTag");
   calojetTag_ = iConfig.getParameter<edm::InputTag>("calojetTag");
   pfjetTag_ = iConfig.getParameter<edm::InputTag>("pfjetTag");
+  genjetTag_ = iConfig.getParameter<edm::InputTag>("genjetTag");
   calometTag_ = iConfig.getParameter<edm::InputTag>("calometTag");
   pfmetTag_ = iConfig.getParameter<edm::InputTag>("pfmetTag");
   tcmetTag_ = iConfig.getParameter<edm::InputTag>("tcmetTag");
@@ -303,6 +307,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   produces<BNelectronCollection>(eleTag_.label()).setBranchAlias("electrons");
   produces<BNjetCollection>(calojetTag_.label()).setBranchAlias("calojets");
   produces<BNjetCollection>(pfjetTag_.label()).setBranchAlias("pfjets");
+  produces<BNgenjetCollection>(genjetTag_.label()).setBranchAlias("genjets");
   produces<BNmetCollection>(calometTag_.label()).setBranchAlias("calomet");
   produces<BNmetCollection>(pfmetTag_.label()).setBranchAlias("pfmet");
   produces<BNmetCollection>(tcmetTag_.label()).setBranchAlias("tcmet");
@@ -376,6 +381,10 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.getByLabel(pfjetTag_,pfjetHandle);
    edm::View<pat::Jet> pfjets = *pfjetHandle;
 
+   edm::Handle<reco::GenJetCollection > genjetHandle;
+   iEvent.getByLabel(genjetTag_,genjetHandle);
+   reco::GenJetCollection genjets = *genjetHandle;
+
    edm::Handle<edm::View<pat::MET> > calometHandle;
    iEvent.getByLabel(calometTag_,calometHandle);
 
@@ -415,6 +424,25 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    edm::Handle<reco::GenParticleCollection > genParticles;
    iEvent.getByLabel(genParticleTag_,genParticles);
+
+
+   bool produceElectron = ( (eleTag_.label() == "none") ) ? false : true;
+   bool producePFelectron = ( (pfeleTag_.label() == "none") ) ? false : true;
+   bool produceCaloJet = ( (calojetTag_.label() == "none") ) ? false : true;
+   bool producePFJet = ( (pfjetTag_.label() == "none") ) ? false : true;
+   bool produceGenJet = ( (genjetTag_.label() == "none") ) ? false : true;
+   bool produceCaloMET = ( (calometTag_.label() == "none") ) ? false : true;
+   bool producePFMET = ( (pfmetTag_.label() == "none") ) ? false : true;
+   bool produceTCMET = ( (tcmetTag_.label() == "none") ) ? false : true;
+   bool produceMuon = ( (muonTag_.label() == "none") ) ? false : true;
+   bool producePFMuon = ( (pfmuonTag_.label() == "none") ) ? false : true;
+   bool produceCocktailMuon = ( (cocktailmuonTag_.label() == "none") ) ? false : true;
+   bool producePhoton = ( (photonTag_.label() == "none") ) ? false : true;
+   bool produceSCsEB = ( (EBsuperclusterTag_.label() == "none") ) ? false : true;
+   bool produceSCsEE = ( (EEsuperclusterTag_.label() == "none") ) ? false : true;
+   bool produceTrack = ( (trackTag_.label() == "none") ) ? false : true;
+   bool produceGenParticle = ( (genParticleTag_.label() == "none") ) ? false : true;
+
 
 
    // // remove all cluster tools for now
@@ -683,270 +711,271 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    /////////////////////////////////////////////
 
    std::auto_ptr<BNelectronCollection> bnelectrons(new BNelectronCollection);
-   for( edm::View<pat::Electron>::const_iterator ele = electrons.begin(); ele!=electrons.end(); ++ele ){
+   if( produceElectron ){
+     for( edm::View<pat::Electron>::const_iterator ele = electrons.begin(); ele!=electrons.end(); ++ele ){
 
-     double elePin = ele->trackMomentumAtVtx().R();
-     double elePout = ele->trackMomentumOut().R();
+       double elePin = ele->trackMomentumAtVtx().R();
+       double elePout = ele->trackMomentumOut().R();
 
-     BNelectron MyElectron;
+       BNelectron MyElectron;
 
-     // general kinematic variables
-     MyElectron.energy = ele->energy();
-     MyElectron.gsfEt = ele->et();
-     MyElectron.pt = ele->pt();
-     MyElectron.px = ele->px();
-     MyElectron.py = ele->py();
-     MyElectron.pz = ele->pz();
-     MyElectron.phi = ele->phi();
-     MyElectron.eta = ele->eta();
-     MyElectron.theta = ele->theta();
+       // general kinematic variables
+       MyElectron.energy = ele->energy();
+       MyElectron.gsfEt = ele->et();
+       MyElectron.pt = ele->pt();
+       MyElectron.px = ele->px();
+       MyElectron.py = ele->py();
+       MyElectron.pz = ele->pz();
+       MyElectron.phi = ele->phi();
+       MyElectron.eta = ele->eta();
+       MyElectron.theta = ele->theta();
 
-     MyElectron.charge = ele->charge();
-     MyElectron.classification = ele->classification();
-     MyElectron.vx = ele->vx();
-     MyElectron.vy = ele->vy();
-     MyElectron.vz = ele->vz();
+       MyElectron.charge = ele->charge();
+       MyElectron.classification = ele->classification();
+       MyElectron.vx = ele->vx();
+       MyElectron.vy = ele->vy();
+       MyElectron.vz = ele->vz();
 
-     MyElectron.EscOverPin = ele->eSuperClusterOverP();
-     MyElectron.EseedOverPout = ele->eSeedClusterOverPout();
-     MyElectron.hadOverEm = ele->hadronicOverEm();
-     MyElectron.fbrem = fabs(elePin-elePout)/elePin;
-     MyElectron.delPhiIn = ele->deltaPhiSuperClusterTrackAtVtx();
-     MyElectron.delEtaIn = ele->deltaEtaSuperClusterTrackAtVtx();
+       MyElectron.EscOverPin = ele->eSuperClusterOverP();
+       MyElectron.EseedOverPout = ele->eSeedClusterOverPout();
+       MyElectron.hadOverEm = ele->hadronicOverEm();
+       MyElectron.fbrem = fabs(elePin-elePout)/elePin;
+       MyElectron.delPhiIn = ele->deltaPhiSuperClusterTrackAtVtx();
+       MyElectron.delEtaIn = ele->deltaEtaSuperClusterTrackAtVtx();
 
-     MyElectron.eidRobustHighEnergy = ele->electronID("eidRobustHighEnergy");
-     MyElectron.eidRobustLoose = ele->electronID("eidRobustLoose");
-     MyElectron.eidRobustTight = ele->electronID("eidRobustTight");
-     MyElectron.eidLoose = ele->electronID("eidLoose");
-     MyElectron.eidTight = ele->electronID("eidTight");
-     MyElectron.eidVeryLooseMC = ele->electronID("eidVeryLooseMC");
-     MyElectron.eidLooseMC = ele->electronID("eidLooseMC");
-     MyElectron.eidMediumMC = ele->electronID("eidMediumMC");
-     MyElectron.eidTightMC = ele->electronID("eidTightMC");
-     MyElectron.eidSuperTightMC = ele->electronID("eidSuperTightMC");
-     MyElectron.eidHyperTight1MC = ele->electronID("eidHyperTight1MC");
-     MyElectron.eidHyperTight2MC = ele->electronID("eidHyperTight2MC");
-     MyElectron.eidHyperTight3MC = ele->electronID("eidHyperTight3MC");
-     MyElectron.eidHyperTight4MC = ele->electronID("eidHyperTight4MC");
+       MyElectron.eidRobustHighEnergy = ele->electronID("eidRobustHighEnergy");
+       MyElectron.eidRobustLoose = ele->electronID("eidRobustLoose");
+       MyElectron.eidRobustTight = ele->electronID("eidRobustTight");
+       MyElectron.eidLoose = ele->electronID("eidLoose");
+       MyElectron.eidTight = ele->electronID("eidTight");
+       MyElectron.eidVeryLooseMC = ele->electronID("eidVeryLooseMC");
+       MyElectron.eidLooseMC = ele->electronID("eidLooseMC");
+       MyElectron.eidMediumMC = ele->electronID("eidMediumMC");
+       MyElectron.eidTightMC = ele->electronID("eidTightMC");
+       MyElectron.eidSuperTightMC = ele->electronID("eidSuperTightMC");
+       MyElectron.eidHyperTight1MC = ele->electronID("eidHyperTight1MC");
+       MyElectron.eidHyperTight2MC = ele->electronID("eidHyperTight2MC");
+       MyElectron.eidHyperTight3MC = ele->electronID("eidHyperTight3MC");
+       MyElectron.eidHyperTight4MC = ele->electronID("eidHyperTight4MC");
 
-     MyElectron.trackIso = ele->trackIso();
-     MyElectron.ecalIso = ele->ecalIso();
-     MyElectron.hcalIso = ele->hcalIso();
-     MyElectron.caloIso = ele->caloIso();
+       MyElectron.trackIso = ele->trackIso();
+       MyElectron.ecalIso = ele->ecalIso();
+       MyElectron.hcalIso = ele->hcalIso();
+       MyElectron.caloIso = ele->caloIso();
 
-     MyElectron.trackIsoDR03 = ele->dr03TkSumPt();
-     MyElectron.ecalIsoDR03 = ele->dr03EcalRecHitSumEt();
-     MyElectron.hcalIsoDR03 = ele->dr03HcalTowerSumEt();
-     MyElectron.hcalIsoDR03depth1 = ele->dr03HcalDepth1TowerSumEt();
-     MyElectron.hcalIsoDR03depth2 = ele->dr03HcalDepth2TowerSumEt();
-     MyElectron.caloIsoDR03 = ele->dr03EcalRecHitSumEt()+ele->dr03HcalTowerSumEt();
+       MyElectron.trackIsoDR03 = ele->dr03TkSumPt();
+       MyElectron.ecalIsoDR03 = ele->dr03EcalRecHitSumEt();
+       MyElectron.hcalIsoDR03 = ele->dr03HcalTowerSumEt();
+       MyElectron.hcalIsoDR03depth1 = ele->dr03HcalDepth1TowerSumEt();
+       MyElectron.hcalIsoDR03depth2 = ele->dr03HcalDepth2TowerSumEt();
+       MyElectron.caloIsoDR03 = ele->dr03EcalRecHitSumEt()+ele->dr03HcalTowerSumEt();
 
-     MyElectron.trackIsoDR04 = ele->dr04TkSumPt();
-     MyElectron.ecalIsoDR04 = ele->dr04EcalRecHitSumEt();
-     MyElectron.hcalIsoDR04 = ele->dr04HcalTowerSumEt();
-     MyElectron.hcalIsoDR04depth1 = ele->dr04HcalDepth1TowerSumEt();
-     MyElectron.hcalIsoDR04depth2 = ele->dr04HcalDepth2TowerSumEt();
-     MyElectron.caloIsoDR04 = ele->dr04EcalRecHitSumEt()+ele->dr04HcalTowerSumEt();
+       MyElectron.trackIsoDR04 = ele->dr04TkSumPt();
+       MyElectron.ecalIsoDR04 = ele->dr04EcalRecHitSumEt();
+       MyElectron.hcalIsoDR04 = ele->dr04HcalTowerSumEt();
+       MyElectron.hcalIsoDR04depth1 = ele->dr04HcalDepth1TowerSumEt();
+       MyElectron.hcalIsoDR04depth2 = ele->dr04HcalDepth2TowerSumEt();
+       MyElectron.caloIsoDR04 = ele->dr04EcalRecHitSumEt()+ele->dr04HcalTowerSumEt();
 
-     MyElectron.mva = ele->mva();
-     MyElectron.numberOfLostHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
-     MyElectron.numberOfExpectedInnerHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfHits();
-     MyElectron.numberOfValidPixelHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelHits();
-     MyElectron.numberOfValidPixelBarrelHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelBarrelHits();
-     MyElectron.numberOfValidPixelEndcapHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelEndcapHits();
+       MyElectron.mva = ele->mva();
+       MyElectron.numberOfLostHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
+       MyElectron.numberOfExpectedInnerHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfHits();
+       MyElectron.numberOfValidPixelHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelHits();
+       MyElectron.numberOfValidPixelBarrelHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelBarrelHits();
+       MyElectron.numberOfValidPixelEndcapHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelEndcapHits();
 
-     MyElectron.scEnergy = ele->caloEnergy();
-     MyElectron.scSigmaEtaEta = ele->scSigmaEtaEta();
-     MyElectron.scSigmaIEtaIEta = ele->scSigmaIEtaIEta();
-     MyElectron.scE1x5 = ele->scE1x5();
-     MyElectron.scE2x5Max = ele->scE2x5Max();
-     MyElectron.scE5x5 = ele->scE5x5();
-     MyElectron.numClusters = ele->numberOfBrems();
+       MyElectron.scEnergy = ele->caloEnergy();
+       MyElectron.scSigmaEtaEta = ele->scSigmaEtaEta();
+       MyElectron.scSigmaIEtaIEta = ele->scSigmaIEtaIEta();
+       MyElectron.scE1x5 = ele->scE1x5();
+       MyElectron.scE2x5Max = ele->scE2x5Max();
+       MyElectron.scE5x5 = ele->scE5x5();
+       MyElectron.numClusters = ele->numberOfBrems();
 
-     MyElectron.IP = ele->dB(pat::Electron::PV3D);
-     MyElectron.IPError = ele->edB(pat::Electron::PV3D);
+       MyElectron.IP = ele->dB(pat::Electron::PV3D);
+       MyElectron.IPError = ele->edB(pat::Electron::PV3D);
 
-     double caloenergy = -1;
+       double caloenergy = -1;
 
-     if( (ele->superCluster().isAvailable()) ){
-       double eMax    = lazyTools.eMax(    *(ele->superCluster()) );
-       double eLeft   = lazyTools.eLeft(   *(ele->superCluster()) );
-       double eRight  = lazyTools.eRight(  *(ele->superCluster()) );
-       double eTop    = lazyTools.eTop(    *(ele->superCluster()) );
-       double eBottom = lazyTools.eBottom( *(ele->superCluster()) );
-       double e3x3    = lazyTools.e3x3(    *(ele->superCluster()) );
-       double swissCross = -99;
+       if( (ele->superCluster().isAvailable()) ){
+	 double eMax    = lazyTools.eMax(    *(ele->superCluster()) );
+	 double eLeft   = lazyTools.eLeft(   *(ele->superCluster()) );
+	 double eRight  = lazyTools.eRight(  *(ele->superCluster()) );
+	 double eTop    = lazyTools.eTop(    *(ele->superCluster()) );
+	 double eBottom = lazyTools.eBottom( *(ele->superCluster()) );
+	 double e3x3    = lazyTools.e3x3(    *(ele->superCluster()) );
+	 double swissCross = -99;
 
-       if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
+	 if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
 
-       MyElectron.eMax = eMax;
-       MyElectron.eLeft = eLeft;
-       MyElectron.eRight = eRight;
-       MyElectron.eTop = eTop;
-       MyElectron.eBottom = eBottom;
-       MyElectron.e3x3 = e3x3;
-       MyElectron.swissCross = swissCross;
+	 MyElectron.eMax = eMax;
+	 MyElectron.eLeft = eLeft;
+	 MyElectron.eRight = eRight;
+	 MyElectron.eTop = eTop;
+	 MyElectron.eBottom = eBottom;
+	 MyElectron.e3x3 = e3x3;
+	 MyElectron.swissCross = swissCross;
 
-       caloenergy = ele->caloEnergy();
+	 caloenergy = ele->caloEnergy();
 
-       MyElectron.scEt = ele->caloEnergy() * sin( ele->superCluster()->position().theta() );
-       MyElectron.scRawEnergy = ele->superCluster()->rawEnergy();
-       MyElectron.scEta = ele->superCluster()->position().eta();
-       MyElectron.scPhi = ele->superCluster()->position().phi();
-       MyElectron.scZ = ele->superCluster()->position().Z();
+	 MyElectron.scEt = ele->caloEnergy() * sin( ele->superCluster()->position().theta() );
+	 MyElectron.scRawEnergy = ele->superCluster()->rawEnergy();
+	 MyElectron.scEta = ele->superCluster()->position().eta();
+	 MyElectron.scPhi = ele->superCluster()->position().phi();
+	 MyElectron.scZ = ele->superCluster()->position().Z();
 
-       double seedE = -999, seedTime = -999;
-       int seedRecoFlag = -999;
+	 double seedE = -999, seedTime = -999;
+	 int seedRecoFlag = -999;
        
-       if( (ele->isEB()) ){
-       	 DetId idEB = EcalClusterTools::getMaximum( ele->superCluster()->hitsAndFractions(), &(*barrelRecHits) ).first;
-       	 EcalRecHitCollection::const_iterator thisHitEB = barrelRecHits->find(idEB);
+	 if( (ele->isEB()) ){
+	   DetId idEB = EcalClusterTools::getMaximum( ele->superCluster()->hitsAndFractions(), &(*barrelRecHits) ).first;
+	   EcalRecHitCollection::const_iterator thisHitEB = barrelRecHits->find(idEB);
 
-       	 seedE = thisHitEB->energy();
-       	 seedTime = thisHitEB->time();
-       	 seedRecoFlag = thisHitEB->recoFlag();
-       }
-       else if( (ele->isEE()) ){
-       	 DetId idEE = EcalClusterTools::getMaximum( ele->superCluster()->hitsAndFractions(), &(*endcapRecHits) ).first;
-       	 EcalRecHitCollection::const_iterator thisHitEE = endcapRecHits->find(idEE);
-
-       	 seedE = thisHitEE->energy();
-       	 seedTime = thisHitEE->time();
-       	 seedRecoFlag = thisHitEE->recoFlag();
-       }
-
-       MyElectron.seedEnergy   = seedE;
-       MyElectron.seedTime     = seedTime;
-       MyElectron.seedRecoFlag = seedRecoFlag;
-
-       // MyElectron.swissCrossNoI85 = swissCrossNoI85;
-       // MyElectron.swissCrossI85   = swissCrossI85;
-       // MyElectron.E2overE9NoI85 = e2overe9NoI85;
-       // MyElectron.E2overE9I85 = e2overe9I85;
-     }
-
-     double heepEt = ( caloenergy<0 || ele->energy()==0. ) ? 0 : ele->et()/ele->energy()*caloenergy;
-     MyElectron.et = heepEt;
-
-     if( (ele->closestCtfTrackRef().isAvailable()) ) MyElectron.tkCharge = ele->closestCtfTrackRef()->charge();
-     if( (ele->gsfTrack().isAvailable()) ){
-       double tkvx = ele->gsfTrack()->vx();
-       double tkvy = ele->gsfTrack()->vy();
-       double tkpx = ele->gsfTrack()->px();
-       double tkpy = ele->gsfTrack()->py();
-       double tkpt = ele->gsfTrack()->pt();
-
-       double ndof = ele->gsfTrack()->ndof();
-       if( (ndof!=0) ) MyElectron.tkNormChi2 = ele->gsfTrack()->chi2()/ndof;
-       MyElectron.tkPT = ele->gsfTrack()->pt();
-       MyElectron.tkEta = ele->gsfTrack()->eta();
-       MyElectron.tkPhi = ele->gsfTrack()->phi();
-       MyElectron.tkDZ = ele->gsfTrack()->dz();
-       MyElectron.tkD0 = ele->gsfTrack()->d0();
-       MyElectron.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
-       MyElectron.tkD0err = ele->gsfTrack()->d0Error();
-       MyElectron.tkNumValidHits = ele->gsfTrack()->numberOfValidHits();
-       MyElectron.gsfCharge = ele->gsfTrack()->charge();
-
-       MyElectron.correctedD0 = ele->gsfTrack()->dxy(beamSpotPosition);
-       MyElectron.correctedDZ = ele->gsfTrack()->dz(vertexPosition);
-     }
-
-     MyElectron.isEB = ele->isEB();
-     MyElectron.isEE = ele->isEE();
-     MyElectron.isGap = ele->isGap();
-     MyElectron.isEBEEGap = ele->isEBEEGap();
-     MyElectron.isEBGap = ele->isEBGap();
-     MyElectron.isEEGap = ele->isEEGap();
-     MyElectron.isEcalDriven = ele->ecalDrivenSeed();
-     MyElectron.isTrackerDriven = ele->trackerDrivenSeed();
-
-     if( (ele->genLepton()) ){
-       MyElectron.genId = ele->genLepton()->pdgId();
-       MyElectron.genET = ele->genLepton()->et();
-       MyElectron.genPT = ele->genLepton()->pt();
-       MyElectron.genPhi = ele->genLepton()->phi();
-       MyElectron.genEta = ele->genLepton()->eta();
-       MyElectron.genCharge = ele->genLepton()->charge();
-
-       if( (ele->genLepton()->numberOfMothers()>0) ){
-	 const reco::Candidate *ElectronMother = ele->genLepton()->mother();
-	 bool staytrapped = true;
-	 while( (abs(ElectronMother->pdgId())==11 && staytrapped) ){
-	   if( ElectronMother->numberOfMothers()==1 ) ElectronMother = ElectronMother->mother();
-	   else staytrapped = false;
+	   seedE = thisHitEB->energy();
+	   seedTime = thisHitEB->time();
+	   seedRecoFlag = thisHitEB->recoFlag();
 	 }
-       
-	 MyElectron.genMotherId = ElectronMother->pdgId();
-	 MyElectron.genMotherET = ElectronMother->et();
-	 MyElectron.genMotherPT = ElectronMother->pt();
-	 MyElectron.genMotherPhi = ElectronMother->phi();
-	 MyElectron.genMotherEta = ElectronMother->eta();
-	 MyElectron.genMotherCharge = ElectronMother->charge();
+	 else if( (ele->isEE()) ){
+	   DetId idEE = EcalClusterTools::getMaximum( ele->superCluster()->hitsAndFractions(), &(*endcapRecHits) ).first;
+	   EcalRecHitCollection::const_iterator thisHitEE = endcapRecHits->find(idEE);
+
+	   seedE = thisHitEE->energy();
+	   seedTime = thisHitEE->time();
+	   seedRecoFlag = thisHitEE->recoFlag();
+	 }
+
+	 MyElectron.seedEnergy   = seedE;
+	 MyElectron.seedTime     = seedTime;
+	 MyElectron.seedRecoFlag = seedRecoFlag;
+
+	 // MyElectron.swissCrossNoI85 = swissCrossNoI85;
+	 // MyElectron.swissCrossI85   = swissCrossI85;
+	 // MyElectron.E2overE9NoI85 = e2overe9NoI85;
+	 // MyElectron.E2overE9I85 = e2overe9I85;
        }
-     }
 
-     ConversionFinder convFinder;
-     ConversionInfo convInfo = convFinder.getConversionInfo(*ele, trackHandle, evt_bField);
+       double heepEt = ( caloenergy<0 || ele->energy()==0. ) ? 0 : ele->et()/ele->energy()*caloenergy;
+       MyElectron.et = heepEt;
+
+       if( (ele->closestCtfTrackRef().isAvailable()) ) MyElectron.tkCharge = ele->closestCtfTrackRef()->charge();
+       if( (ele->gsfTrack().isAvailable()) ){
+	 double tkvx = ele->gsfTrack()->vx();
+	 double tkvy = ele->gsfTrack()->vy();
+	 double tkpx = ele->gsfTrack()->px();
+	 double tkpy = ele->gsfTrack()->py();
+	 double tkpt = ele->gsfTrack()->pt();
+
+	 double ndof = ele->gsfTrack()->ndof();
+	 if( (ndof!=0) ) MyElectron.tkNormChi2 = ele->gsfTrack()->chi2()/ndof;
+	 MyElectron.tkPT = ele->gsfTrack()->pt();
+	 MyElectron.tkEta = ele->gsfTrack()->eta();
+	 MyElectron.tkPhi = ele->gsfTrack()->phi();
+	 MyElectron.tkDZ = ele->gsfTrack()->dz();
+	 MyElectron.tkD0 = ele->gsfTrack()->d0();
+	 MyElectron.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
+	 MyElectron.tkD0err = ele->gsfTrack()->d0Error();
+	 MyElectron.tkNumValidHits = ele->gsfTrack()->numberOfValidHits();
+	 MyElectron.gsfCharge = ele->gsfTrack()->charge();
+
+	 MyElectron.correctedD0 = ele->gsfTrack()->dxy(beamSpotPosition);
+	 MyElectron.correctedDZ = ele->gsfTrack()->dz(vertexPosition);
+       }
+
+       MyElectron.isEB = ele->isEB();
+       MyElectron.isEE = ele->isEE();
+       MyElectron.isGap = ele->isGap();
+       MyElectron.isEBEEGap = ele->isEBEEGap();
+       MyElectron.isEBGap = ele->isEBGap();
+       MyElectron.isEEGap = ele->isEEGap();
+       MyElectron.isEcalDriven = ele->ecalDrivenSeed();
+       MyElectron.isTrackerDriven = ele->trackerDrivenSeed();
+
+       if( (ele->genLepton()) ){
+	 MyElectron.genId = ele->genLepton()->pdgId();
+	 MyElectron.genET = ele->genLepton()->et();
+	 MyElectron.genPT = ele->genLepton()->pt();
+	 MyElectron.genPhi = ele->genLepton()->phi();
+	 MyElectron.genEta = ele->genLepton()->eta();
+	 MyElectron.genCharge = ele->genLepton()->charge();
+
+	 if( (ele->genLepton()->numberOfMothers()>0) ){
+	   const reco::Candidate *ElectronMother = ele->genLepton()->mother();
+	   bool staytrapped = true;
+	   while( (abs(ElectronMother->pdgId())==11 && staytrapped) ){
+	     if( ElectronMother->numberOfMothers()==1 ) ElectronMother = ElectronMother->mother();
+	     else staytrapped = false;
+	   }
+       
+	   MyElectron.genMotherId = ElectronMother->pdgId();
+	   MyElectron.genMotherET = ElectronMother->et();
+	   MyElectron.genMotherPT = ElectronMother->pt();
+	   MyElectron.genMotherPhi = ElectronMother->phi();
+	   MyElectron.genMotherEta = ElectronMother->eta();
+	   MyElectron.genMotherCharge = ElectronMother->charge();
+	 }
+       }
+
+       ConversionFinder convFinder;
+       ConversionInfo convInfo = convFinder.getConversionInfo(*ele, trackHandle, evt_bField);
    
-     double dist = convInfo.dist();
-     double dcot = convInfo.dcot();
-     double convradius = convInfo.radiusOfConversion();
-     math::XYZPoint convPoint = convInfo.pointOfConversion();
+       double dist = convInfo.dist();
+       double dcot = convInfo.dcot();
+       double convradius = convInfo.radiusOfConversion();
+       math::XYZPoint convPoint = convInfo.pointOfConversion();
 
-     MyElectron.dist = dist;
-     MyElectron.dcot = dcot;
-     MyElectron.convradius = convradius;
-     MyElectron.convPointX = convPoint.x();
-     MyElectron.convPointY = convPoint.y();
-     MyElectron.convPointZ = convPoint.z();
+       MyElectron.dist = dist;
+       MyElectron.dcot = dcot;
+       MyElectron.convradius = convradius;
+       MyElectron.convPointX = convPoint.x();
+       MyElectron.convPointY = convPoint.y();
+       MyElectron.convPointZ = convPoint.z();
 
 
-     bool cutDelEta=false, cutDelPhi=false, cutSigIeta=false, cutE2x5=false, cutEMhad1=false, cutHad2=false, cutTrackIso=false;
+       bool cutDelEta=false, cutDelPhi=false, cutSigIeta=false, cutE2x5=false, cutEMhad1=false, cutHad2=false, cutTrackIso=false;
 
-     double absEta = fabs(ele->superCluster()->position().eta());
-     double EMhad1 = ele->dr03EcalRecHitSumEt() + ele->dr03HcalDepth1TowerSumEt();
-     bool EB = ( absEta < 1.442 );
-     bool EE = ( absEta > 1.560 && absEta < 2.5 );
+       double absEta = fabs(ele->superCluster()->position().eta());
+       double EMhad1 = ele->dr03EcalRecHitSumEt() + ele->dr03HcalDepth1TowerSumEt();
+       bool EB = ( absEta < 1.442 );
+       bool EE = ( absEta > 1.560 && absEta < 2.5 );
 
-     bool isECAL = ele->ecalDrivenSeed();
+       bool isECAL = ele->ecalDrivenSeed();
 
-     bool cutET = ( heepEt > 25. );
-     bool cutEta = ( EB || EE );
-     bool cutHoverE = ( ele->hadronicOverEm() < 0.05 );
+       bool cutET = ( heepEt > 25. );
+       bool cutEta = ( EB || EE );
+       bool cutHoverE = ( ele->hadronicOverEm() < 0.05 );
 
-     if( EB ){
-       cutDelEta = ( fabs(ele->deltaEtaSuperClusterTrackAtVtx())<0.005 );
-       cutDelPhi = ( fabs(ele->deltaPhiSuperClusterTrackAtVtx())<0.09 );
-       cutSigIeta = true;
-       cutE2x5 = ( (ele->scE2x5Max()/ele->scE5x5())>0.94 || (ele->scE1x5()/ele->scE5x5())>0.83 );
-       cutEMhad1 = ( EMhad1 < (2 + 0.03*heepEt) );
-       cutHad2 = true;
-       cutTrackIso = ( ele->dr03TkSumPt()<7.5 );
+       if( EB ){
+	 cutDelEta = ( fabs(ele->deltaEtaSuperClusterTrackAtVtx())<0.005 );
+	 cutDelPhi = ( fabs(ele->deltaPhiSuperClusterTrackAtVtx())<0.09 );
+	 cutSigIeta = true;
+	 cutE2x5 = ( (ele->scE2x5Max()/ele->scE5x5())>0.94 || (ele->scE1x5()/ele->scE5x5())>0.83 );
+	 cutEMhad1 = ( EMhad1 < (2 + 0.03*heepEt) );
+	 cutHad2 = true;
+	 cutTrackIso = ( ele->dr03TkSumPt()<7.5 );
+       }
+       else if( EE ){
+	 cutDelEta = ( fabs(ele->deltaEtaSuperClusterTrackAtVtx())<0.007 );
+	 cutDelPhi = ( fabs(ele->deltaPhiSuperClusterTrackAtVtx())<0.09 );
+	 cutSigIeta = ( ele->scSigmaIEtaIEta()<0.03 );
+	 cutE2x5 = true;
+	 if( heepEt<50 ) cutEMhad1 = ( EMhad1 < 2.5 );
+	 else cutEMhad1 = ( EMhad1 < (2.5 + 0.03*(heepEt-50)) );
+	 cutHad2 = ( ele->dr03HcalDepth2TowerSumEt()<0.5 );
+	 cutTrackIso = ( ele->dr03TkSumPt()<15. );
+       }
+
+       bool isHEEPnoEt = ( isECAL && cutEta && cutDelEta && cutDelPhi && cutHoverE &&  
+			   cutSigIeta && cutE2x5 && cutEMhad1 && cutHad2 && cutTrackIso );
+       bool isHEEP = ( isHEEPnoEt && cutET );
+
+
+       MyElectron.isHEEP = ( isHEEP ) ? 1 : 0;
+       MyElectron.isHEEPnoEt = ( isHEEPnoEt ) ? 1 : 0;
+
+       bnelectrons->push_back(MyElectron);
+
      }
-     else if( EE ){
-       cutDelEta = ( fabs(ele->deltaEtaSuperClusterTrackAtVtx())<0.007 );
-       cutDelPhi = ( fabs(ele->deltaPhiSuperClusterTrackAtVtx())<0.09 );
-       cutSigIeta = ( ele->scSigmaIEtaIEta()<0.03 );
-       cutE2x5 = true;
-       if( heepEt<50 ) cutEMhad1 = ( EMhad1 < 2.5 );
-       else cutEMhad1 = ( EMhad1 < (2.5 + 0.03*(heepEt-50)) );
-       cutHad2 = ( ele->dr03HcalDepth2TowerSumEt()<0.5 );
-       cutTrackIso = ( ele->dr03TkSumPt()<15. );
-     }
-
-     bool isHEEPnoEt = ( isECAL && cutEta && cutDelEta && cutDelPhi && cutHoverE &&  
-			 cutSigIeta && cutE2x5 && cutEMhad1 && cutHad2 && cutTrackIso );
-     bool isHEEP = ( isHEEPnoEt && cutET );
-
-
-     MyElectron.isHEEP = ( isHEEP ) ? 1 : 0;
-     MyElectron.isHEEPnoEt = ( isHEEPnoEt ) ? 1 : 0;
-
-     bnelectrons->push_back(MyElectron);
-
    }
-
 
 
 
@@ -957,286 +986,287 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    /////////////////////////////////////////////
 
    std::auto_ptr<BNelectronCollection> bnpfelectrons(new BNelectronCollection);
-   for( edm::View<pat::Electron>::const_iterator pfele = pfelectrons.begin(); pfele!=pfelectrons.end(); ++pfele ){
+   if( producePFelectron ){
+     for( edm::View<pat::Electron>::const_iterator pfele = pfelectrons.begin(); pfele!=pfelectrons.end(); ++pfele ){
 
-     double pfelePin = pfele->trackMomentumAtVtx().R();
-     double pfelePout = pfele->trackMomentumOut().R();
+       double pfelePin = pfele->trackMomentumAtVtx().R();
+       double pfelePout = pfele->trackMomentumOut().R();
 
-     BNelectron MyPfelectron;
+       BNelectron MyPfelectron;
 
-     // general kinematic variables
-     MyPfelectron.energy = pfele->energy();
-     MyPfelectron.gsfEt = pfele->et();
-     MyPfelectron.pt = pfele->pt();
-     MyPfelectron.px = pfele->px();
-     MyPfelectron.py = pfele->py();
-     MyPfelectron.pz = pfele->pz();
-     MyPfelectron.phi = pfele->phi();
-     MyPfelectron.eta = pfele->eta();
-     MyPfelectron.theta = pfele->theta();
+       // general kinematic variables
+       MyPfelectron.energy = pfele->energy();
+       MyPfelectron.gsfEt = pfele->et();
+       MyPfelectron.pt = pfele->pt();
+       MyPfelectron.px = pfele->px();
+       MyPfelectron.py = pfele->py();
+       MyPfelectron.pz = pfele->pz();
+       MyPfelectron.phi = pfele->phi();
+       MyPfelectron.eta = pfele->eta();
+       MyPfelectron.theta = pfele->theta();
 
-     MyPfelectron.charge = pfele->charge();
-     MyPfelectron.classification = pfele->classification();
-     MyPfelectron.vx = pfele->vx();
-     MyPfelectron.vy = pfele->vy();
-     MyPfelectron.vz = pfele->vz();
+       MyPfelectron.charge = pfele->charge();
+       MyPfelectron.classification = pfele->classification();
+       MyPfelectron.vx = pfele->vx();
+       MyPfelectron.vy = pfele->vy();
+       MyPfelectron.vz = pfele->vz();
 
-     MyPfelectron.EscOverPin = pfele->eSuperClusterOverP();
-     MyPfelectron.EseedOverPout = pfele->eSeedClusterOverPout();
-     MyPfelectron.hadOverEm = pfele->hadronicOverEm();
-     MyPfelectron.fbrem = fabs(pfelePin-pfelePout)/pfelePin;
-     MyPfelectron.delPhiIn = pfele->deltaPhiSuperClusterTrackAtVtx();
-     MyPfelectron.delEtaIn = pfele->deltaEtaSuperClusterTrackAtVtx();
+       MyPfelectron.EscOverPin = pfele->eSuperClusterOverP();
+       MyPfelectron.EseedOverPout = pfele->eSeedClusterOverPout();
+       MyPfelectron.hadOverEm = pfele->hadronicOverEm();
+       MyPfelectron.fbrem = fabs(pfelePin-pfelePout)/pfelePin;
+       MyPfelectron.delPhiIn = pfele->deltaPhiSuperClusterTrackAtVtx();
+       MyPfelectron.delEtaIn = pfele->deltaEtaSuperClusterTrackAtVtx();
 
-     MyPfelectron.eidRobustHighEnergy = pfele->electronID("eidRobustHighEnergy");
-     MyPfelectron.eidRobustLoose = pfele->electronID("eidRobustLoose");
-     MyPfelectron.eidRobustTight = pfele->electronID("eidRobustTight");
-     MyPfelectron.eidLoose = pfele->electronID("eidLoose");
-     MyPfelectron.eidTight = pfele->electronID("eidTight");
-     MyPfelectron.eidVeryLooseMC = pfele->electronID("eidVeryLooseMC");
-     MyPfelectron.eidLooseMC = pfele->electronID("eidLooseMC");
-     MyPfelectron.eidMediumMC = pfele->electronID("eidMediumMC");
-     MyPfelectron.eidTightMC = pfele->electronID("eidTightMC");
-     MyPfelectron.eidSuperTightMC = pfele->electronID("eidSuperTightMC");
-     MyPfelectron.eidHyperTight1MC = pfele->electronID("eidHyperTight1MC");
-     MyPfelectron.eidHyperTight2MC = pfele->electronID("eidHyperTight2MC");
-     MyPfelectron.eidHyperTight3MC = pfele->electronID("eidHyperTight3MC");
-     MyPfelectron.eidHyperTight4MC = pfele->electronID("eidHyperTight4MC");
+       MyPfelectron.eidRobustHighEnergy = pfele->electronID("eidRobustHighEnergy");
+       MyPfelectron.eidRobustLoose = pfele->electronID("eidRobustLoose");
+       MyPfelectron.eidRobustTight = pfele->electronID("eidRobustTight");
+       MyPfelectron.eidLoose = pfele->electronID("eidLoose");
+       MyPfelectron.eidTight = pfele->electronID("eidTight");
+       MyPfelectron.eidVeryLooseMC = pfele->electronID("eidVeryLooseMC");
+       MyPfelectron.eidLooseMC = pfele->electronID("eidLooseMC");
+       MyPfelectron.eidMediumMC = pfele->electronID("eidMediumMC");
+       MyPfelectron.eidTightMC = pfele->electronID("eidTightMC");
+       MyPfelectron.eidSuperTightMC = pfele->electronID("eidSuperTightMC");
+       MyPfelectron.eidHyperTight1MC = pfele->electronID("eidHyperTight1MC");
+       MyPfelectron.eidHyperTight2MC = pfele->electronID("eidHyperTight2MC");
+       MyPfelectron.eidHyperTight3MC = pfele->electronID("eidHyperTight3MC");
+       MyPfelectron.eidHyperTight4MC = pfele->electronID("eidHyperTight4MC");
 
-     MyPfelectron.particleIso = pfele->particleIso();     
-     MyPfelectron.chargedHadronIso = pfele->chargedHadronIso();     
-     MyPfelectron.neutralHadronIso = pfele->neutralHadronIso();     
-     MyPfelectron.photonIso = pfele->photonIso();     
-     MyPfelectron.puChargedHadronIso = pfele->puChargedHadronIso();     
+       MyPfelectron.particleIso = pfele->particleIso();     
+       MyPfelectron.chargedHadronIso = pfele->chargedHadronIso();     
+       MyPfelectron.neutralHadronIso = pfele->neutralHadronIso();     
+       MyPfelectron.photonIso = pfele->photonIso();     
+       MyPfelectron.puChargedHadronIso = pfele->puChargedHadronIso();     
 
-     MyPfelectron.chargedHadronIsoDR03 = pfele->userIso(0);     
-     MyPfelectron.neutralHadronIsoDR03 = pfele->userIso(1);
-     MyPfelectron.photonIsoDR03 = pfele->userIso(2);
-     MyPfelectron.puChargedHadronIsoDR03 = pfele->userIso(3);
+       MyPfelectron.chargedHadronIsoDR03 = pfele->userIso(0);     
+       MyPfelectron.neutralHadronIsoDR03 = pfele->userIso(1);
+       MyPfelectron.photonIsoDR03 = pfele->userIso(2);
+       MyPfelectron.puChargedHadronIsoDR03 = pfele->userIso(3);
 
-     MyPfelectron.chargedHadronIsoDR04 = pfele->userIso(4);     
-     MyPfelectron.neutralHadronIsoDR04 = pfele->userIso(5);
-     MyPfelectron.photonIsoDR04 = pfele->userIso(6);
-     MyPfelectron.puChargedHadronIsoDR04 = pfele->userIso(7);
+       MyPfelectron.chargedHadronIsoDR04 = pfele->userIso(4);     
+       MyPfelectron.neutralHadronIsoDR04 = pfele->userIso(5);
+       MyPfelectron.photonIsoDR04 = pfele->userIso(6);
+       MyPfelectron.puChargedHadronIsoDR04 = pfele->userIso(7);
 
-     MyPfelectron.trackIso = pfele->trackIso();
-     MyPfelectron.ecalIso = pfele->ecalIso();
-     MyPfelectron.hcalIso = pfele->hcalIso();
-     MyPfelectron.caloIso = pfele->caloIso();
+       MyPfelectron.trackIso = pfele->trackIso();
+       MyPfelectron.ecalIso = pfele->ecalIso();
+       MyPfelectron.hcalIso = pfele->hcalIso();
+       MyPfelectron.caloIso = pfele->caloIso();
 
-     MyPfelectron.trackIsoDR03 = pfele->dr03TkSumPt();
-     MyPfelectron.ecalIsoDR03 = pfele->dr03EcalRecHitSumEt();
-     MyPfelectron.hcalIsoDR03 = pfele->dr03HcalTowerSumEt();
-     MyPfelectron.hcalIsoDR03depth1 = pfele->dr03HcalDepth1TowerSumEt();
-     MyPfelectron.hcalIsoDR03depth2 = pfele->dr03HcalDepth2TowerSumEt();
-     MyPfelectron.caloIsoDR03 = pfele->dr03EcalRecHitSumEt()+pfele->dr03HcalTowerSumEt();
+       MyPfelectron.trackIsoDR03 = pfele->dr03TkSumPt();
+       MyPfelectron.ecalIsoDR03 = pfele->dr03EcalRecHitSumEt();
+       MyPfelectron.hcalIsoDR03 = pfele->dr03HcalTowerSumEt();
+       MyPfelectron.hcalIsoDR03depth1 = pfele->dr03HcalDepth1TowerSumEt();
+       MyPfelectron.hcalIsoDR03depth2 = pfele->dr03HcalDepth2TowerSumEt();
+       MyPfelectron.caloIsoDR03 = pfele->dr03EcalRecHitSumEt()+pfele->dr03HcalTowerSumEt();
 
-     MyPfelectron.trackIsoDR04 = pfele->dr04TkSumPt();
-     MyPfelectron.ecalIsoDR04 = pfele->dr04EcalRecHitSumEt();
-     MyPfelectron.hcalIsoDR04 = pfele->dr04HcalTowerSumEt();
-     MyPfelectron.hcalIsoDR04depth1 = pfele->dr04HcalDepth1TowerSumEt();
-     MyPfelectron.hcalIsoDR04depth2 = pfele->dr04HcalDepth2TowerSumEt();
-     MyPfelectron.caloIsoDR04 = pfele->dr04EcalRecHitSumEt()+pfele->dr04HcalTowerSumEt();
+       MyPfelectron.trackIsoDR04 = pfele->dr04TkSumPt();
+       MyPfelectron.ecalIsoDR04 = pfele->dr04EcalRecHitSumEt();
+       MyPfelectron.hcalIsoDR04 = pfele->dr04HcalTowerSumEt();
+       MyPfelectron.hcalIsoDR04depth1 = pfele->dr04HcalDepth1TowerSumEt();
+       MyPfelectron.hcalIsoDR04depth2 = pfele->dr04HcalDepth2TowerSumEt();
+       MyPfelectron.caloIsoDR04 = pfele->dr04EcalRecHitSumEt()+pfele->dr04HcalTowerSumEt();
 
-     MyPfelectron.mva = pfele->mva();
-     MyPfelectron.numberOfLostHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
-     MyPfelectron.numberOfExpectedInnerHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfHits();
-     MyPfelectron.numberOfValidPixelHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelHits();
-     MyPfelectron.numberOfValidPixelBarrelHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelBarrelHits();
-     MyPfelectron.numberOfValidPixelEndcapHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelEndcapHits();
+       MyPfelectron.mva = pfele->mva();
+       MyPfelectron.numberOfLostHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
+       MyPfelectron.numberOfExpectedInnerHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfHits();
+       MyPfelectron.numberOfValidPixelHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelHits();
+       MyPfelectron.numberOfValidPixelBarrelHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelBarrelHits();
+       MyPfelectron.numberOfValidPixelEndcapHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelEndcapHits();
 
-     MyPfelectron.scEnergy = pfele->caloEnergy();
-     MyPfelectron.scSigmaEtaEta = pfele->scSigmaEtaEta();
-     MyPfelectron.scSigmaIEtaIEta = pfele->scSigmaIEtaIEta();
-     MyPfelectron.scE1x5 = pfele->scE1x5();
-     MyPfelectron.scE2x5Max = pfele->scE2x5Max();
-     MyPfelectron.scE5x5 = pfele->scE5x5();
-     MyPfelectron.numClusters = pfele->numberOfBrems();
+       MyPfelectron.scEnergy = pfele->caloEnergy();
+       MyPfelectron.scSigmaEtaEta = pfele->scSigmaEtaEta();
+       MyPfelectron.scSigmaIEtaIEta = pfele->scSigmaIEtaIEta();
+       MyPfelectron.scE1x5 = pfele->scE1x5();
+       MyPfelectron.scE2x5Max = pfele->scE2x5Max();
+       MyPfelectron.scE5x5 = pfele->scE5x5();
+       MyPfelectron.numClusters = pfele->numberOfBrems();
 
-     MyPfelectron.IP = pfele->dB(pat::Electron::PV3D);
-     MyPfelectron.IPError = pfele->edB(pat::Electron::PV3D);
+       MyPfelectron.IP = pfele->dB(pat::Electron::PV3D);
+       MyPfelectron.IPError = pfele->edB(pat::Electron::PV3D);
 
-     double caloenergy = -1;
+       double caloenergy = -1;
 
-     if( (pfele->superCluster().isAvailable()) ){
-       double eMax    = lazyTools.eMax(    *(pfele->superCluster()) );
-       double eLeft   = lazyTools.eLeft(   *(pfele->superCluster()) );
-       double eRight  = lazyTools.eRight(  *(pfele->superCluster()) );
-       double eTop    = lazyTools.eTop(    *(pfele->superCluster()) );
-       double eBottom = lazyTools.eBottom( *(pfele->superCluster()) );
-       double e3x3    = lazyTools.e3x3(    *(pfele->superCluster()) );
-       double swissCross = -99;
+       if( (pfele->superCluster().isAvailable()) ){
+	 double eMax    = lazyTools.eMax(    *(pfele->superCluster()) );
+	 double eLeft   = lazyTools.eLeft(   *(pfele->superCluster()) );
+	 double eRight  = lazyTools.eRight(  *(pfele->superCluster()) );
+	 double eTop    = lazyTools.eTop(    *(pfele->superCluster()) );
+	 double eBottom = lazyTools.eBottom( *(pfele->superCluster()) );
+	 double e3x3    = lazyTools.e3x3(    *(pfele->superCluster()) );
+	 double swissCross = -99;
 
-       if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
+	 if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
 
-       MyPfelectron.eMax = eMax;
-       MyPfelectron.eLeft = eLeft;
-       MyPfelectron.eRight = eRight;
-       MyPfelectron.eTop = eTop;
-       MyPfelectron.eBottom = eBottom;
-       MyPfelectron.e3x3 = e3x3;
-       MyPfelectron.swissCross = swissCross;
+	 MyPfelectron.eMax = eMax;
+	 MyPfelectron.eLeft = eLeft;
+	 MyPfelectron.eRight = eRight;
+	 MyPfelectron.eTop = eTop;
+	 MyPfelectron.eBottom = eBottom;
+	 MyPfelectron.e3x3 = e3x3;
+	 MyPfelectron.swissCross = swissCross;
 
-       caloenergy = pfele->caloEnergy();
+	 caloenergy = pfele->caloEnergy();
 
-       MyPfelectron.scEt = pfele->caloEnergy() * sin( pfele->superCluster()->position().theta() );
-       MyPfelectron.scRawEnergy = pfele->superCluster()->rawEnergy();
-       MyPfelectron.scEta = pfele->superCluster()->position().eta();
-       MyPfelectron.scPhi = pfele->superCluster()->position().phi();
-       MyPfelectron.scZ = pfele->superCluster()->position().Z();
+	 MyPfelectron.scEt = pfele->caloEnergy() * sin( pfele->superCluster()->position().theta() );
+	 MyPfelectron.scRawEnergy = pfele->superCluster()->rawEnergy();
+	 MyPfelectron.scEta = pfele->superCluster()->position().eta();
+	 MyPfelectron.scPhi = pfele->superCluster()->position().phi();
+	 MyPfelectron.scZ = pfele->superCluster()->position().Z();
 
-       double seedE = -999, seedTime = -999;
-       int seedRecoFlag = -999;
+	 double seedE = -999, seedTime = -999;
+	 int seedRecoFlag = -999;
        
-       if( (pfele->isEB()) ){
-       	 DetId idEB = EcalClusterTools::getMaximum( pfele->superCluster()->hitsAndFractions(), &(*barrelRecHits) ).first;
-       	 EcalRecHitCollection::const_iterator thisHitEB = barrelRecHits->find(idEB);
+	 if( (pfele->isEB()) ){
+	   DetId idEB = EcalClusterTools::getMaximum( pfele->superCluster()->hitsAndFractions(), &(*barrelRecHits) ).first;
+	   EcalRecHitCollection::const_iterator thisHitEB = barrelRecHits->find(idEB);
 
-       	 seedE = thisHitEB->energy();
-       	 seedTime = thisHitEB->time();
-       	 seedRecoFlag = thisHitEB->recoFlag();
-       }
-       else if( (pfele->isEE()) ){
-       	 DetId idEE = EcalClusterTools::getMaximum( pfele->superCluster()->hitsAndFractions(), &(*endcapRecHits) ).first;
-       	 EcalRecHitCollection::const_iterator thisHitEE = endcapRecHits->find(idEE);
-
-       	 seedE = thisHitEE->energy();
-       	 seedTime = thisHitEE->time();
-       	 seedRecoFlag = thisHitEE->recoFlag();
-       }
-
-       MyPfelectron.seedEnergy   = seedE;
-       MyPfelectron.seedTime     = seedTime;
-       MyPfelectron.seedRecoFlag = seedRecoFlag;
-
-       // MyPfelectron.swissCrossNoI85 = swissCrossNoI85;
-       // MyPfelectron.swissCrossI85   = swissCrossI85;
-       // MyPfelectron.E2overE9NoI85 = e2overe9NoI85;
-       // MyPfelectron.E2overE9I85 = e2overe9I85;
-     }
-
-     double heepEt = ( caloenergy<0 || pfele->energy()==0. ) ? 0 : pfele->et()/pfele->energy()*caloenergy;
-     MyPfelectron.et = heepEt;
-
-     if( (pfele->closestCtfTrackRef().isAvailable()) ) MyPfelectron.tkCharge = pfele->closestCtfTrackRef()->charge();
-     if( (pfele->gsfTrack().isAvailable()) ){
-       double tkvx = pfele->gsfTrack()->vx();
-       double tkvy = pfele->gsfTrack()->vy();
-       double tkpx = pfele->gsfTrack()->px();
-       double tkpy = pfele->gsfTrack()->py();
-       double tkpt = pfele->gsfTrack()->pt();
-
-       double ndof = pfele->gsfTrack()->ndof();
-       if( (ndof!=0) ) MyPfelectron.tkNormChi2 = pfele->gsfTrack()->chi2()/ndof;
-       MyPfelectron.tkPT = pfele->gsfTrack()->pt();
-       MyPfelectron.tkEta = pfele->gsfTrack()->eta();
-       MyPfelectron.tkPhi = pfele->gsfTrack()->phi();
-       MyPfelectron.tkDZ = pfele->gsfTrack()->dz();
-       MyPfelectron.tkD0 = pfele->gsfTrack()->d0();
-       MyPfelectron.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
-       MyPfelectron.tkD0err = pfele->gsfTrack()->d0Error();
-       MyPfelectron.tkNumValidHits = pfele->gsfTrack()->numberOfValidHits();
-       MyPfelectron.gsfCharge = pfele->gsfTrack()->charge();
-
-       MyPfelectron.correctedD0 = pfele->gsfTrack()->dxy(beamSpotPosition);
-       MyPfelectron.correctedDZ = pfele->gsfTrack()->dz(vertexPosition);
-     }
-
-     MyPfelectron.isEB = pfele->isEB();
-     MyPfelectron.isEE = pfele->isEE();
-     MyPfelectron.isGap = pfele->isGap();
-     MyPfelectron.isEBEEGap = pfele->isEBEEGap();
-     MyPfelectron.isEBGap = pfele->isEBGap();
-     MyPfelectron.isEEGap = pfele->isEEGap();
-     MyPfelectron.isEcalDriven = pfele->ecalDrivenSeed();
-     MyPfelectron.isTrackerDriven = pfele->trackerDrivenSeed();
-
-     if( (pfele->genLepton()) ){
-       MyPfelectron.genId = pfele->genLepton()->pdgId();
-       MyPfelectron.genET = pfele->genLepton()->et();
-       MyPfelectron.genPT = pfele->genLepton()->pt();
-       MyPfelectron.genPhi = pfele->genLepton()->phi();
-       MyPfelectron.genEta = pfele->genLepton()->eta();
-       MyPfelectron.genCharge = pfele->genLepton()->charge();
-
-       if( (pfele->genLepton()->numberOfMothers()>0) ){
-	 const reco::Candidate *ElectronMother = pfele->genLepton()->mother();
-	 bool staytrapped = true;
-	 while( (abs(ElectronMother->pdgId())==11 && staytrapped) ){
-	   if( ElectronMother->numberOfMothers()==1 ) ElectronMother = ElectronMother->mother();
-	   else staytrapped = false;
+	   seedE = thisHitEB->energy();
+	   seedTime = thisHitEB->time();
+	   seedRecoFlag = thisHitEB->recoFlag();
 	 }
-       
-	 MyPfelectron.genMotherId = ElectronMother->pdgId();
-	 MyPfelectron.genMotherET = ElectronMother->et();
-	 MyPfelectron.genMotherPT = ElectronMother->pt();
-	 MyPfelectron.genMotherPhi = ElectronMother->phi();
-	 MyPfelectron.genMotherEta = ElectronMother->eta();
-	 MyPfelectron.genMotherCharge = ElectronMother->charge();
+	 else if( (pfele->isEE()) ){
+	   DetId idEE = EcalClusterTools::getMaximum( pfele->superCluster()->hitsAndFractions(), &(*endcapRecHits) ).first;
+	   EcalRecHitCollection::const_iterator thisHitEE = endcapRecHits->find(idEE);
+
+	   seedE = thisHitEE->energy();
+	   seedTime = thisHitEE->time();
+	   seedRecoFlag = thisHitEE->recoFlag();
+	 }
+
+	 MyPfelectron.seedEnergy   = seedE;
+	 MyPfelectron.seedTime     = seedTime;
+	 MyPfelectron.seedRecoFlag = seedRecoFlag;
+
+	 // MyPfelectron.swissCrossNoI85 = swissCrossNoI85;
+	 // MyPfelectron.swissCrossI85   = swissCrossI85;
+	 // MyPfelectron.E2overE9NoI85 = e2overe9NoI85;
+	 // MyPfelectron.E2overE9I85 = e2overe9I85;
        }
-     }
 
-     ConversionFinder convFinder;
-     ConversionInfo convInfo = convFinder.getConversionInfo(*pfele, trackHandle, evt_bField);
+       double heepEt = ( caloenergy<0 || pfele->energy()==0. ) ? 0 : pfele->et()/pfele->energy()*caloenergy;
+       MyPfelectron.et = heepEt;
+
+       if( (pfele->closestCtfTrackRef().isAvailable()) ) MyPfelectron.tkCharge = pfele->closestCtfTrackRef()->charge();
+       if( (pfele->gsfTrack().isAvailable()) ){
+	 double tkvx = pfele->gsfTrack()->vx();
+	 double tkvy = pfele->gsfTrack()->vy();
+	 double tkpx = pfele->gsfTrack()->px();
+	 double tkpy = pfele->gsfTrack()->py();
+	 double tkpt = pfele->gsfTrack()->pt();
+
+	 double ndof = pfele->gsfTrack()->ndof();
+	 if( (ndof!=0) ) MyPfelectron.tkNormChi2 = pfele->gsfTrack()->chi2()/ndof;
+	 MyPfelectron.tkPT = pfele->gsfTrack()->pt();
+	 MyPfelectron.tkEta = pfele->gsfTrack()->eta();
+	 MyPfelectron.tkPhi = pfele->gsfTrack()->phi();
+	 MyPfelectron.tkDZ = pfele->gsfTrack()->dz();
+	 MyPfelectron.tkD0 = pfele->gsfTrack()->d0();
+	 MyPfelectron.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
+	 MyPfelectron.tkD0err = pfele->gsfTrack()->d0Error();
+	 MyPfelectron.tkNumValidHits = pfele->gsfTrack()->numberOfValidHits();
+	 MyPfelectron.gsfCharge = pfele->gsfTrack()->charge();
+
+	 MyPfelectron.correctedD0 = pfele->gsfTrack()->dxy(beamSpotPosition);
+	 MyPfelectron.correctedDZ = pfele->gsfTrack()->dz(vertexPosition);
+       }
+
+       MyPfelectron.isEB = pfele->isEB();
+       MyPfelectron.isEE = pfele->isEE();
+       MyPfelectron.isGap = pfele->isGap();
+       MyPfelectron.isEBEEGap = pfele->isEBEEGap();
+       MyPfelectron.isEBGap = pfele->isEBGap();
+       MyPfelectron.isEEGap = pfele->isEEGap();
+       MyPfelectron.isEcalDriven = pfele->ecalDrivenSeed();
+       MyPfelectron.isTrackerDriven = pfele->trackerDrivenSeed();
+
+       if( (pfele->genLepton()) ){
+	 MyPfelectron.genId = pfele->genLepton()->pdgId();
+	 MyPfelectron.genET = pfele->genLepton()->et();
+	 MyPfelectron.genPT = pfele->genLepton()->pt();
+	 MyPfelectron.genPhi = pfele->genLepton()->phi();
+	 MyPfelectron.genEta = pfele->genLepton()->eta();
+	 MyPfelectron.genCharge = pfele->genLepton()->charge();
+
+	 if( (pfele->genLepton()->numberOfMothers()>0) ){
+	   const reco::Candidate *ElectronMother = pfele->genLepton()->mother();
+	   bool staytrapped = true;
+	   while( (abs(ElectronMother->pdgId())==11 && staytrapped) ){
+	     if( ElectronMother->numberOfMothers()==1 ) ElectronMother = ElectronMother->mother();
+	     else staytrapped = false;
+	   }
+       
+	   MyPfelectron.genMotherId = ElectronMother->pdgId();
+	   MyPfelectron.genMotherET = ElectronMother->et();
+	   MyPfelectron.genMotherPT = ElectronMother->pt();
+	   MyPfelectron.genMotherPhi = ElectronMother->phi();
+	   MyPfelectron.genMotherEta = ElectronMother->eta();
+	   MyPfelectron.genMotherCharge = ElectronMother->charge();
+	 }
+       }
+
+       ConversionFinder convFinder;
+       ConversionInfo convInfo = convFinder.getConversionInfo(*pfele, trackHandle, evt_bField);
    
-     double dist = convInfo.dist();
-     double dcot = convInfo.dcot();
-     double convradius = convInfo.radiusOfConversion();
-     math::XYZPoint convPoint = convInfo.pointOfConversion();
+       double dist = convInfo.dist();
+       double dcot = convInfo.dcot();
+       double convradius = convInfo.radiusOfConversion();
+       math::XYZPoint convPoint = convInfo.pointOfConversion();
 
-     MyPfelectron.dist = dist;
-     MyPfelectron.dcot = dcot;
-     MyPfelectron.convradius = convradius;
-     MyPfelectron.convPointX = convPoint.x();
-     MyPfelectron.convPointY = convPoint.y();
-     MyPfelectron.convPointZ = convPoint.z();
+       MyPfelectron.dist = dist;
+       MyPfelectron.dcot = dcot;
+       MyPfelectron.convradius = convradius;
+       MyPfelectron.convPointX = convPoint.x();
+       MyPfelectron.convPointY = convPoint.y();
+       MyPfelectron.convPointZ = convPoint.z();
 
 
-     bool cutDelEta=false, cutDelPhi=false, cutSigIeta=false, cutE2x5=false, cutEMhad1=false, cutHad2=false, cutTrackIso=false;
+       bool cutDelEta=false, cutDelPhi=false, cutSigIeta=false, cutE2x5=false, cutEMhad1=false, cutHad2=false, cutTrackIso=false;
 
-     double absEta = fabs(pfele->superCluster()->position().eta());
-     double EMhad1 = pfele->dr03EcalRecHitSumEt() + pfele->dr03HcalDepth1TowerSumEt();
-     bool EB = ( absEta < 1.442 );
-     bool EE = ( absEta > 1.560 && absEta < 2.5 );
+       double absEta = fabs(pfele->superCluster()->position().eta());
+       double EMhad1 = pfele->dr03EcalRecHitSumEt() + pfele->dr03HcalDepth1TowerSumEt();
+       bool EB = ( absEta < 1.442 );
+       bool EE = ( absEta > 1.560 && absEta < 2.5 );
 
-     bool isECAL = pfele->ecalDrivenSeed();
+       bool isECAL = pfele->ecalDrivenSeed();
 
-     bool cutET = ( heepEt > 25. );
-     bool cutEta = ( EB || EE );
-     bool cutHoverE = ( pfele->hadronicOverEm() < 0.05 );
+       bool cutET = ( heepEt > 25. );
+       bool cutEta = ( EB || EE );
+       bool cutHoverE = ( pfele->hadronicOverEm() < 0.05 );
 
-     if( EB ){
-       cutDelEta = ( fabs(pfele->deltaEtaSuperClusterTrackAtVtx())<0.005 );
-       cutDelPhi = ( fabs(pfele->deltaPhiSuperClusterTrackAtVtx())<0.09 );
-       cutSigIeta = true;
-       cutE2x5 = ( (pfele->scE2x5Max()/pfele->scE5x5())>0.94 || (pfele->scE1x5()/pfele->scE5x5())>0.83 );
-       cutEMhad1 = ( EMhad1 < (2 + 0.03*heepEt) );
-       cutHad2 = true;
-       cutTrackIso = ( pfele->dr03TkSumPt()<7.5 );
+       if( EB ){
+	 cutDelEta = ( fabs(pfele->deltaEtaSuperClusterTrackAtVtx())<0.005 );
+	 cutDelPhi = ( fabs(pfele->deltaPhiSuperClusterTrackAtVtx())<0.09 );
+	 cutSigIeta = true;
+	 cutE2x5 = ( (pfele->scE2x5Max()/pfele->scE5x5())>0.94 || (pfele->scE1x5()/pfele->scE5x5())>0.83 );
+	 cutEMhad1 = ( EMhad1 < (2 + 0.03*heepEt) );
+	 cutHad2 = true;
+	 cutTrackIso = ( pfele->dr03TkSumPt()<7.5 );
+       }
+       else if( EE ){
+	 cutDelEta = ( fabs(pfele->deltaEtaSuperClusterTrackAtVtx())<0.007 );
+	 cutDelPhi = ( fabs(pfele->deltaPhiSuperClusterTrackAtVtx())<0.09 );
+	 cutSigIeta = ( pfele->scSigmaIEtaIEta()<0.03 );
+	 cutE2x5 = true;
+	 if( heepEt<50 ) cutEMhad1 = ( EMhad1 < 2.5 );
+	 else cutEMhad1 = ( EMhad1 < (2.5 + 0.03*(heepEt-50)) );
+	 cutHad2 = ( pfele->dr03HcalDepth2TowerSumEt()<0.5 );
+	 cutTrackIso = ( pfele->dr03TkSumPt()<15. );
+       }
+
+       bool isHEEPnoEt = ( isECAL && cutEta && cutDelEta && cutDelPhi && cutHoverE &&  
+			   cutSigIeta && cutE2x5 && cutEMhad1 && cutHad2 && cutTrackIso );
+       bool isHEEP = ( isHEEPnoEt && cutET );
+
+
+       MyPfelectron.isHEEP = ( isHEEP ) ? 1 : 0;
+       MyPfelectron.isHEEPnoEt = ( isHEEPnoEt ) ? 1 : 0;
+
+       bnpfelectrons->push_back(MyPfelectron);
+
      }
-     else if( EE ){
-       cutDelEta = ( fabs(pfele->deltaEtaSuperClusterTrackAtVtx())<0.007 );
-       cutDelPhi = ( fabs(pfele->deltaPhiSuperClusterTrackAtVtx())<0.09 );
-       cutSigIeta = ( pfele->scSigmaIEtaIEta()<0.03 );
-       cutE2x5 = true;
-       if( heepEt<50 ) cutEMhad1 = ( EMhad1 < 2.5 );
-       else cutEMhad1 = ( EMhad1 < (2.5 + 0.03*(heepEt-50)) );
-       cutHad2 = ( pfele->dr03HcalDepth2TowerSumEt()<0.5 );
-       cutTrackIso = ( pfele->dr03TkSumPt()<15. );
-     }
-
-     bool isHEEPnoEt = ( isECAL && cutEta && cutDelEta && cutDelPhi && cutHoverE &&  
-			 cutSigIeta && cutE2x5 && cutEMhad1 && cutHad2 && cutTrackIso );
-     bool isHEEP = ( isHEEPnoEt && cutET );
-
-
-     MyPfelectron.isHEEP = ( isHEEP ) ? 1 : 0;
-     MyPfelectron.isHEEPnoEt = ( isHEEPnoEt ) ? 1 : 0;
-
-     bnpfelectrons->push_back(MyPfelectron);
-
    }
-
 
 
    double metJES1corrPx = 0;
@@ -1263,88 +1293,147 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    /////////////////////////////////////////////
 
    std::auto_ptr<BNjetCollection> bncalojets(new BNjetCollection);
-   for( edm::View<pat::Jet>::const_iterator calojet = calojets.begin(); calojet != calojets.end(); ++ calojet ) {
+   if( produceCaloJet ){
+     for( edm::View<pat::Jet>::const_iterator calojet = calojets.begin(); calojet != calojets.end(); ++ calojet ) {
 
-     if( !(calojet->pt()>minJetPt_) ) continue;
+       if( !(calojet->pt()>minJetPt_) ) continue;
 
-     jecUnc_Calo->setJetEta(calojet->eta());
-     jecUnc_Calo->setJetPt(calojet->pt());// the uncertainty is a function of the corrected pt
-     double unc = 1.; // JEC uncertainties only defined for jets with |eta| < 5.5 and pt > 9 GeV (2011 data)
-     if( calojet->pt()>9. && fabs(calojet->eta())<5.0 ) unc = jecUnc_Calo->getUncertainty(true);
+       double unc = 1., JECuncUp = 1., JECuncDown = 1.; // JEC uncertainties only defined for jets with |eta| < 5.5 and pt > 9 GeV (2011 data)
+       if( calojet->pt()>9. && fabs(calojet->eta())<5.0 ){
+	 jecUnc_Calo->setJetEta(calojet->eta());
+	 jecUnc_Calo->setJetPt(calojet->pt());// the uncertainty is a function of the corrected pt
+	 JECuncUp = jecUnc_Calo->getUncertainty(true); //up variation
+	 unc = JECuncUp;
+	 jecUnc_Calo->setJetEta(calojet->eta());
+	 jecUnc_Calo->setJetPt(calojet->pt());// the uncertainty is a function of the corrected pt
+	 JECuncDown = jecUnc_Calo->getUncertainty(false); //up variation
+       }
 
+       BNjet MyCalojet;
 
-     BNjet MyCalojet;
+       // general kinematic variables
+       MyCalojet.energy = calojet->energy();
+       MyCalojet.et = calojet->et();
+       MyCalojet.pt = calojet->pt();
+       MyCalojet.px = calojet->px();
+       MyCalojet.py = calojet->py();
+       MyCalojet.pz = calojet->pz();
+       MyCalojet.phi = calojet->phi();
+       MyCalojet.eta = calojet->eta();
+       MyCalojet.theta = calojet->theta();
 
-     // general kinematic variables
-     MyCalojet.energy = calojet->energy();
-     MyCalojet.et = calojet->et();
-     MyCalojet.pt = calojet->pt();
-     MyCalojet.px = calojet->px();
-     MyCalojet.py = calojet->py();
-     MyCalojet.pz = calojet->pz();
-     MyCalojet.phi = calojet->phi();
-     MyCalojet.eta = calojet->eta();
-     MyCalojet.theta = calojet->theta();
-
-     MyCalojet.EMfrac = calojet->emEnergyFraction();
-     MyCalojet.Hadfrac = calojet->energyFractionHadronic();
-     MyCalojet.charge = calojet->jetCharge();
-     MyCalojet.mass = calojet->mass();
-     MyCalojet.area = calojet->towersArea();
-     MyCalojet.fHPD = calojet->jetID().fHPD;
-     MyCalojet.flavour = calojet->partonFlavour();
-     MyCalojet.Nconst = calojet->nConstituents();
-     MyCalojet.n90Hits = calojet->jetID().n90Hits;
-     MyCalojet.approximatefHPD = calojet->jetID().approximatefHPD;
-     MyCalojet.hitsInN90 = calojet->jetID().hitsInN90;
-     MyCalojet.fLong = calojet->jetID().fLong;
-     MyCalojet.fShort = calojet->jetID().fShort;
-     MyCalojet.nHit = count_hits( calojet->getCaloConstituents() );
-     MyCalojet.etaetaMoment = calojet->etaetaMoment();
-     MyCalojet.phiphiMoment = calojet->phiphiMoment();
-
-
-     // btag variables
-     MyCalojet.btagTChighPur = calojet->bDiscriminator("trackCountingHighPurBJetTags");
-     MyCalojet.btagTChighEff = calojet->bDiscriminator("trackCountingHighEffBJetTags");
-     MyCalojet.btagJetProb = calojet->bDiscriminator("jetProbabilityBJetTags");
-     MyCalojet.btagJetBProb = calojet->bDiscriminator("jetBProbabilityBJetTags");
-     MyCalojet.btagSoftEle = calojet->bDiscriminator("softElectronBJetTags");
-     MyCalojet.btagSoftMuon = calojet->bDiscriminator("softMuonBJetTags");
-     MyCalojet.btagSoftMuonNoIP = calojet->bDiscriminator("softMuonNoIPBJetTags");
-     MyCalojet.btagSecVertex = calojet->bDiscriminator("simpleSecondaryVertexBJetTags");
-     MyCalojet.btagSecVertexHighEff = calojet->bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
-     MyCalojet.btagSecVertexHighPur = calojet->bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
-     MyCalojet.btagCombinedSecVertex = calojet->bDiscriminator("combinedSecondaryVertexBJetTags");
-     MyCalojet.btagCombinedSecVertexMVA = calojet->bDiscriminator("combinedSecondaryVertexMVABJetTags");
-     MyCalojet.btagSoftMuonByPt = calojet->bDiscriminator("softMuonByPtBJetTags");
-     MyCalojet.btagSoftMuonByIP3 = calojet->bDiscriminator("softMuonByIP3dBJetTags");
-     MyCalojet.btagSoftElectronByPt = calojet->bDiscriminator("softElectronByPtBJetTags");
-     MyCalojet.btagSoftElectronByIP3 = calojet->bDiscriminator("softElectronByIP3dBJetTags");
+       MyCalojet.EMfrac = calojet->emEnergyFraction();
+       MyCalojet.Hadfrac = calojet->energyFractionHadronic();
+       MyCalojet.charge = calojet->jetCharge();
+       MyCalojet.mass = calojet->mass();
+       MyCalojet.area = calojet->towersArea();
+       MyCalojet.fHPD = calojet->jetID().fHPD;
+       MyCalojet.flavour = calojet->partonFlavour();
+       MyCalojet.Nconst = calojet->nConstituents();
+       MyCalojet.n90Hits = calojet->jetID().n90Hits;
+       MyCalojet.approximatefHPD = calojet->jetID().approximatefHPD;
+       MyCalojet.hitsInN90 = calojet->jetID().hitsInN90;
+       MyCalojet.fLong = calojet->jetID().fLong;
+       MyCalojet.fShort = calojet->jetID().fShort;
+       MyCalojet.nHit = count_hits( calojet->getCaloConstituents() );
+       MyCalojet.etaetaMoment = calojet->etaetaMoment();
+       MyCalojet.phiphiMoment = calojet->phiphiMoment();
 
 
-     MyCalojet.JESunc = unc;
+       // btag variables
+       MyCalojet.btagTChighPur = calojet->bDiscriminator("trackCountingHighPurBJetTags");
+       MyCalojet.btagTChighEff = calojet->bDiscriminator("trackCountingHighEffBJetTags");
+       MyCalojet.btagJetProb = calojet->bDiscriminator("jetProbabilityBJetTags");
+       MyCalojet.btagJetBProb = calojet->bDiscriminator("jetBProbabilityBJetTags");
+       MyCalojet.btagSoftEle = calojet->bDiscriminator("softElectronBJetTags");
+       MyCalojet.btagSoftMuon = calojet->bDiscriminator("softMuonBJetTags");
+       MyCalojet.btagSoftMuonNoIP = calojet->bDiscriminator("softMuonNoIPBJetTags");
+       MyCalojet.btagSecVertex = calojet->bDiscriminator("simpleSecondaryVertexBJetTags");
+       MyCalojet.btagSecVertexHighEff = calojet->bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
+       MyCalojet.btagSecVertexHighPur = calojet->bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
+       MyCalojet.btagCombinedSecVertex = calojet->bDiscriminator("combinedSecondaryVertexBJetTags");
+       MyCalojet.btagCombinedSecVertexMVA = calojet->bDiscriminator("combinedSecondaryVertexMVABJetTags");
+       MyCalojet.btagSoftMuonByPt = calojet->bDiscriminator("softMuonByPtBJetTags");
+       MyCalojet.btagSoftMuonByIP3 = calojet->bDiscriminator("softMuonByIP3dBJetTags");
+       MyCalojet.btagSoftElectronByPt = calojet->bDiscriminator("softElectronByPtBJetTags");
+       MyCalojet.btagSoftElectronByIP3 = calojet->bDiscriminator("softElectronByIP3dBJetTags");
 
-     if( (calojet->genJet()) ){ // if there is a matched genjet, fill variables
-       MyCalojet.genJetET = calojet->genJet()->et();
-       MyCalojet.genJetPT = calojet->genJet()->pt();
-       MyCalojet.genJetEta = calojet->genJet()->eta();
-       MyCalojet.genJetPhi = calojet->genJet()->phi();
+
+       MyCalojet.JESunc = unc;
+       MyCalojet.JECuncUp = JECuncUp;
+       MyCalojet.JECuncDown = JECuncDown;
+
+       if( (calojet->genJet()) ){ // if there is a matched genjet, fill variables
+	 MyCalojet.genJetET = calojet->genJet()->et();
+	 MyCalojet.genJetPT = calojet->genJet()->pt();
+	 MyCalojet.genJetEta = calojet->genJet()->eta();
+	 MyCalojet.genJetPhi = calojet->genJet()->phi();
+       }
+       if( (calojet->genParton()) ){ // if there is a matched parton, fill variables
+	 MyCalojet.genPartonET = calojet->genParton()->et();
+	 MyCalojet.genPartonPT = calojet->genParton()->pt();
+	 MyCalojet.genPartonEta = calojet->genParton()->eta();
+	 MyCalojet.genPartonPhi = calojet->genParton()->phi();
+	 MyCalojet.genPartonId = calojet->genParton()->pdgId();
+
+	 int numberOfMothers = calojet->genParton()->numberOfMothers();
+	 if( numberOfMothers==1 ){
+	   MyCalojet.genPartonMotherId  = calojet->genParton()->mother()->pdgId();
+	   MyCalojet.genPartonMother0Id = calojet->genParton()->mother()->pdgId();
+	   int numberOfGrandMothers = calojet->genParton()->mother()->numberOfMothers();
+	   if( numberOfGrandMothers==1 ) MyCalojet.genPartonGrandMotherId = calojet->genParton()->mother()->mother()->pdgId();
+	   else if( numberOfGrandMothers>=2 ){
+	     MyCalojet.genPartonGrandMother00Id = calojet->genParton()->mother()->mother(0)->pdgId();
+	     MyCalojet.genPartonGrandMother01Id = calojet->genParton()->mother()->mother(1)->pdgId();
+	   }
+
+	   int pdgId = calojet->genParton()->pdgId();
+	   int motherId = calojet->genParton()->mother()->pdgId();
+
+	   int last_motherID = -99;
+	   int last_grandMotherID = -99;
+	   if( pdgId==motherId ){
+	     const reco::Candidate* new_mother = calojet->genParton()->mother();
+
+	     bool keepGoing = true;
+	     while( keepGoing ){
+	       int new_motherID = new_mother->pdgId();
+	       last_motherID = new_motherID;
+	       if( new_mother->numberOfMothers()>0 ){
+		 new_mother = new_mother->mother();
+		 last_grandMotherID = new_mother->pdgId();
+		 if( new_motherID!=pdgId ) keepGoing = false;
+	       }
+	       else keepGoing = false;
+	     }
+	   }
+
+	   if( last_motherID!=-99 ){
+	     MyCalojet.genPartonMother0Id = last_motherID;
+	     if( last_grandMotherID!=-99 ) MyCalojet.genPartonGrandMotherId = last_grandMotherID;
+	   }
+	 }
+	 else if( numberOfMothers>=2 ){
+	   MyCalojet.genPartonMother0Id = calojet->genParton()->mother(0)->pdgId();
+	   MyCalojet.genPartonMother1Id = calojet->genParton()->mother(1)->pdgId();
+
+	   if( calojet->genParton()->mother(0)->numberOfMothers()==1 ) MyCalojet.genPartonGrandMother00Id = calojet->genParton()->mother(0)->mother()->pdgId();
+	   else if( calojet->genParton()->mother(0)->numberOfMothers()>=2 ){
+	     MyCalojet.genPartonGrandMother00Id = calojet->genParton()->mother(0)->mother(0)->pdgId();
+	     MyCalojet.genPartonGrandMother01Id = calojet->genParton()->mother(0)->mother(1)->pdgId();
+	   }
+
+	   if( calojet->genParton()->mother(1)->numberOfMothers()==1 ) MyCalojet.genPartonGrandMother00Id = calojet->genParton()->mother(1)->mother()->pdgId();
+	   else if( calojet->genParton()->mother(1)->numberOfMothers()>=2 ){
+	     MyCalojet.genPartonGrandMother10Id = calojet->genParton()->mother(1)->mother(0)->pdgId();
+	     MyCalojet.genPartonGrandMother11Id = calojet->genParton()->mother(1)->mother(1)->pdgId();
+	   }
+	 }
+       }
+
+       bncalojets->push_back(MyCalojet);
      }
-     if( (calojet->genParton()) ){ // if there is a matched parton, fill variables
-       MyCalojet.genPartonET = calojet->genParton()->et();
-       MyCalojet.genPartonPT = calojet->genParton()->pt();
-       MyCalojet.genPartonEta = calojet->genParton()->eta();
-       MyCalojet.genPartonPhi = calojet->genParton()->phi();
-       MyCalojet.genPartonId = calojet->genParton()->pdgId();
-       MyCalojet.genPartonMotherId = calojet->genParton()->mother()->pdgId();
-       MyCalojet.genPartonGrandMotherId = calojet->genParton()->mother()->pdgId();
-     }
-
-
-     bncalojets->push_back(MyCalojet);
    }
-
 
 
 
@@ -1362,109 +1451,169 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    /////////////////////////////////////////////
 
    std::auto_ptr<BNjetCollection> bnpfjets(new BNjetCollection);
-   for( edm::View<pat::Jet>::const_iterator pfjet = pfjets.begin(); pfjet != pfjets.end(); ++ pfjet ) {
+   if( producePFJet ){
+     for( edm::View<pat::Jet>::const_iterator pfjet = pfjets.begin(); pfjet != pfjets.end(); ++ pfjet ) {
 
-     if( !(pfjet->pt()>minJetPt_) ) continue;
+       if( !(pfjet->pt()>minJetPt_) ) continue;
 
+       double unc = 1., JECuncUp = 1., JECuncDown = 1.; // JEC uncertainties only defined for jets with |eta| < 5.5 and pt > 9 GeV (2011 data)
+       if( pfjet->pt()>9. && fabs(pfjet->eta())<5.0 ){
+	 jecUnc_PF->setJetEta(pfjet->eta());
+	 jecUnc_PF->setJetPt(pfjet->pt());// the uncertainty is a function of the corrected pt
+	 JECuncUp = jecUnc_PF->getUncertainty(true); //up variation
+	 unc = JECuncUp;
+	 jecUnc_PF->setJetEta(pfjet->eta());
+	 jecUnc_PF->setJetPt(pfjet->pt());// the uncertainty is a function of the corrected pt
+	 JECuncDown = jecUnc_PF->getUncertainty(false); //up variation
+       }
 
-     jecUnc_PF->setJetEta(pfjet->eta());
-     jecUnc_PF->setJetPt(pfjet->pt()); // here you must use the CORRECTED jet pt
-     double unc = 1.; // JEC uncertainties only defined for jets with |eta| < 5.5 and pt > 9 GeV (2011 data)
-     if( pfjet->pt()>9. && fabs(pfjet->eta())<5.0 ) unc = jecUnc_PF->getUncertainty(true);
+       BNjet MyPfjet;
 
-     BNjet MyPfjet;
+       // general kinematic variables
+       MyPfjet.energy = pfjet->energy();
+       MyPfjet.et = pfjet->et();
+       MyPfjet.pt = pfjet->pt();
+       MyPfjet.px = pfjet->px();
+       MyPfjet.py = pfjet->py();
+       MyPfjet.pz = pfjet->pz();
+       MyPfjet.phi = pfjet->phi();
+       MyPfjet.eta = pfjet->eta();
+       MyPfjet.theta = pfjet->theta();
 
-     // general kinematic variables
-     MyPfjet.energy = pfjet->energy();
-     MyPfjet.et = pfjet->et();
-     MyPfjet.pt = pfjet->pt();
-     MyPfjet.px = pfjet->px();
-     MyPfjet.py = pfjet->py();
-     MyPfjet.pz = pfjet->pz();
-     MyPfjet.phi = pfjet->phi();
-     MyPfjet.eta = pfjet->eta();
-     MyPfjet.theta = pfjet->theta();
-
-     //MyPfjet.EMfrac = pfjet->emEnergyFraction();
-     //MyPfjet.Hadfrac = pfjet->energyFractionHadronic();
-     MyPfjet.charge = pfjet->jetCharge();
-     MyPfjet.mass = pfjet->mass();
-     //MyPfjet.area = pfjet->towersArea();
-     MyPfjet.fHPD = pfjet->jetID().fHPD;
-     MyPfjet.flavour = pfjet->partonFlavour();
-     MyPfjet.Nconst = pfjet->nConstituents();
-     MyPfjet.n90Hits = pfjet->jetID().n90Hits;
-     MyPfjet.approximatefHPD = pfjet->jetID().approximatefHPD;
-     MyPfjet.hitsInN90 = pfjet->jetID().hitsInN90;
-
-
-     // btag variables
-     MyPfjet.btagTChighPur = pfjet->bDiscriminator("trackCountingHighPurBJetTags");
-     MyPfjet.btagTChighEff = pfjet->bDiscriminator("trackCountingHighEffBJetTags");
-     MyPfjet.btagJetProb = pfjet->bDiscriminator("jetProbabilityBJetTags");
-     MyPfjet.btagJetBProb = pfjet->bDiscriminator("jetBProbabilityBJetTags");
-     MyPfjet.btagSoftEle = pfjet->bDiscriminator("softElectronBJetTags");
-     MyPfjet.btagSoftMuon = pfjet->bDiscriminator("softMuonBJetTags");
-     MyPfjet.btagSoftMuonNoIP = pfjet->bDiscriminator("softMuonNoIPBJetTags");
-     MyPfjet.btagSecVertex = pfjet->bDiscriminator("simpleSecondaryVertexBJetTags");
-     MyPfjet.btagSecVertexHighEff = pfjet->bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
-     MyPfjet.btagSecVertexHighPur = pfjet->bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
-     MyPfjet.btagCombinedSecVertex = pfjet->bDiscriminator("combinedSecondaryVertexBJetTags");
-     MyPfjet.btagCombinedSecVertexMVA = pfjet->bDiscriminator("combinedSecondaryVertexMVABJetTags");
-     MyPfjet.btagSoftMuonByPt = pfjet->bDiscriminator("softMuonByPtBJetTags");
-     MyPfjet.btagSoftMuonByIP3 = pfjet->bDiscriminator("softMuonByIP3dBJetTags");
-     MyPfjet.btagSoftElectronByPt = pfjet->bDiscriminator("softElectronByPtBJetTags");
-     MyPfjet.btagSoftElectronByIP3 = pfjet->bDiscriminator("softElectronByIP3dBJetTags");
-
-     MyPfjet.JESunc = unc;
-
-     if( (pfjet->genJet()) ){ // if there is a matched genjet, fill variables
-       MyPfjet.genJetET = pfjet->genJet()->et();
-       MyPfjet.genJetPT = pfjet->genJet()->pt();
-       MyPfjet.genJetEta = pfjet->genJet()->eta();
-       MyPfjet.genJetPhi = pfjet->genJet()->phi();
-     }
-     if( (pfjet->genParton()) ){ // if there is a matched parton, fill variables
-       MyPfjet.genPartonET = pfjet->genParton()->et();
-       MyPfjet.genPartonPT = pfjet->genParton()->pt();
-       MyPfjet.genPartonEta = pfjet->genParton()->eta();
-       MyPfjet.genPartonPhi = pfjet->genParton()->phi();
-       MyPfjet.genPartonId = pfjet->genParton()->pdgId();
-       MyPfjet.genPartonMotherId = pfjet->genParton()->mother()->pdgId();
-       MyPfjet.genPartonGrandMotherId = pfjet->genParton()->mother()->pdgId();
-     }
+       //MyPfjet.EMfrac = pfjet->emEnergyFraction();
+       //MyPfjet.Hadfrac = pfjet->energyFractionHadronic();
+       MyPfjet.charge = pfjet->jetCharge();
+       MyPfjet.mass = pfjet->mass();
+       //MyPfjet.area = pfjet->towersArea();
+       MyPfjet.fHPD = pfjet->jetID().fHPD;
+       MyPfjet.flavour = pfjet->partonFlavour();
+       MyPfjet.Nconst = pfjet->nConstituents();
+       MyPfjet.n90Hits = pfjet->jetID().n90Hits;
+       MyPfjet.approximatefHPD = pfjet->jetID().approximatefHPD;
+       MyPfjet.hitsInN90 = pfjet->jetID().hitsInN90;
 
 
-     // DataFormats/JetReco/interface/PFJet.h
-     // http://indico.cern.ch/getFile.py/access?contribId=8&resId=0&materialId=slides&confId=92249
-     MyPfjet.chargedHadronEnergyFraction = pfjet->chargedHadronEnergyFraction();
-     MyPfjet.neutralHadronEnergyFraction = pfjet->neutralHadronEnergyFraction();
-     MyPfjet.chargedEmEnergyFraction = pfjet->chargedEmEnergyFraction();
-     MyPfjet.neutralEmEnergyFraction = pfjet->neutralEmEnergyFraction();
-     MyPfjet.chargedMultiplicity = pfjet->chargedMultiplicity();
-     MyPfjet.neutralMultiplicity = pfjet->neutralMultiplicity();
-     MyPfjet.nconstituents = pfjet->numberOfDaughters();
+       // btag variables
+       MyPfjet.btagTChighPur = pfjet->bDiscriminator("trackCountingHighPurBJetTags");
+       MyPfjet.btagTChighEff = pfjet->bDiscriminator("trackCountingHighEffBJetTags");
+       MyPfjet.btagJetProb = pfjet->bDiscriminator("jetProbabilityBJetTags");
+       MyPfjet.btagJetBProb = pfjet->bDiscriminator("jetBProbabilityBJetTags");
+       MyPfjet.btagSoftEle = pfjet->bDiscriminator("softElectronBJetTags");
+       MyPfjet.btagSoftMuon = pfjet->bDiscriminator("softMuonBJetTags");
+       MyPfjet.btagSoftMuonNoIP = pfjet->bDiscriminator("softMuonNoIPBJetTags");
+       MyPfjet.btagSecVertex = pfjet->bDiscriminator("simpleSecondaryVertexBJetTags");
+       MyPfjet.btagSecVertexHighEff = pfjet->bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
+       MyPfjet.btagSecVertexHighPur = pfjet->bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
+       MyPfjet.btagCombinedSecVertex = pfjet->bDiscriminator("combinedSecondaryVertexBJetTags");
+       MyPfjet.btagCombinedSecVertexMVA = pfjet->bDiscriminator("combinedSecondaryVertexMVABJetTags");
+       MyPfjet.btagSoftMuonByPt = pfjet->bDiscriminator("softMuonByPtBJetTags");
+       MyPfjet.btagSoftMuonByIP3 = pfjet->bDiscriminator("softMuonByIP3dBJetTags");
+       MyPfjet.btagSoftElectronByPt = pfjet->bDiscriminator("softElectronByPtBJetTags");
+       MyPfjet.btagSoftElectronByIP3 = pfjet->bDiscriminator("softElectronByIP3dBJetTags");
+
+       MyPfjet.JESunc = unc;
+       MyPfjet.JECuncUp = JECuncUp;
+       MyPfjet.JECuncDown = JECuncDown;
+
+       if( (pfjet->genJet()) ){ // if there is a matched genjet, fill variables
+	 MyPfjet.genJetET = pfjet->genJet()->et();
+	 MyPfjet.genJetPT = pfjet->genJet()->pt();
+	 MyPfjet.genJetEta = pfjet->genJet()->eta();
+	 MyPfjet.genJetPhi = pfjet->genJet()->phi();
+       }
+       if( (pfjet->genParton()) ){ // if there is a matched parton, fill variables
+	 MyPfjet.genPartonET = pfjet->genParton()->et();
+	 MyPfjet.genPartonPT = pfjet->genParton()->pt();
+	 MyPfjet.genPartonEta = pfjet->genParton()->eta();
+	 MyPfjet.genPartonPhi = pfjet->genParton()->phi();
+	 MyPfjet.genPartonId = pfjet->genParton()->pdgId();
+
+	 int numberOfMothers = pfjet->genParton()->numberOfMothers();
+	 if( numberOfMothers==1 ){
+	   MyPfjet.genPartonMotherId  = pfjet->genParton()->mother()->pdgId();
+	   MyPfjet.genPartonMother0Id = pfjet->genParton()->mother()->pdgId();
+	   int numberOfGrandMothers = pfjet->genParton()->mother()->numberOfMothers();
+	   if( numberOfGrandMothers==1 ) MyPfjet.genPartonGrandMotherId = pfjet->genParton()->mother()->mother()->pdgId();
+	   else if( numberOfGrandMothers>=2 ){
+	     MyPfjet.genPartonGrandMother00Id = pfjet->genParton()->mother()->mother(0)->pdgId();
+	     MyPfjet.genPartonGrandMother01Id = pfjet->genParton()->mother()->mother(1)->pdgId();
+	   }
+
+	   int pdgId = pfjet->genParton()->pdgId();
+	   int motherId = pfjet->genParton()->mother()->pdgId();
+
+	   int last_motherID = -99;
+	   int last_grandMotherID = -99;
+	   if( pdgId==motherId ){
+	     const reco::Candidate* new_mother = pfjet->genParton()->mother();
+
+	     bool keepGoing = true;
+	     while( keepGoing ){
+	       int new_motherID = new_mother->pdgId();
+	       last_motherID = new_motherID;
+	       if( new_mother->numberOfMothers()>0 ){
+		 new_mother = new_mother->mother();
+		 last_grandMotherID = new_mother->pdgId();
+		 if( new_motherID!=pdgId ) keepGoing = false;
+	       }
+	       else keepGoing = false;
+	     }
+	   }
+
+	   if( last_motherID!=-99 ){
+	     MyPfjet.genPartonMother0Id = last_motherID;
+	     if( last_grandMotherID!=-99 ) MyPfjet.genPartonGrandMotherId = last_grandMotherID;
+	   }
+	 }
+	 else if( numberOfMothers>=2 ){
+	   MyPfjet.genPartonMother0Id = pfjet->genParton()->mother(0)->pdgId();
+	   MyPfjet.genPartonMother1Id = pfjet->genParton()->mother(1)->pdgId();
+
+	   if( pfjet->genParton()->mother(0)->numberOfMothers()==1 ) MyPfjet.genPartonGrandMother00Id = pfjet->genParton()->mother(0)->mother()->pdgId();
+	   else if( pfjet->genParton()->mother(0)->numberOfMothers()>=2 ){
+	     MyPfjet.genPartonGrandMother00Id = pfjet->genParton()->mother(0)->mother(0)->pdgId();
+	     MyPfjet.genPartonGrandMother01Id = pfjet->genParton()->mother(0)->mother(1)->pdgId();
+	   }
+
+	   if( pfjet->genParton()->mother(1)->numberOfMothers()==1 ) MyPfjet.genPartonGrandMother00Id = pfjet->genParton()->mother(1)->mother()->pdgId();
+	   else if( pfjet->genParton()->mother(1)->numberOfMothers()>=2 ){
+	     MyPfjet.genPartonGrandMother10Id = pfjet->genParton()->mother(1)->mother(0)->pdgId();
+	     MyPfjet.genPartonGrandMother11Id = pfjet->genParton()->mother(1)->mother(1)->pdgId();
+	   }
+	 }
+
+       }
+
+       // DataFormats/JetReco/interface/PFJet.h
+       // http://indico.cern.ch/getFile.py/access?contribId=8&resId=0&materialId=slides&confId=92249
+       MyPfjet.chargedHadronEnergyFraction = pfjet->chargedHadronEnergyFraction();
+       MyPfjet.neutralHadronEnergyFraction = pfjet->neutralHadronEnergyFraction();
+       MyPfjet.chargedEmEnergyFraction = pfjet->chargedEmEnergyFraction();
+       MyPfjet.neutralEmEnergyFraction = pfjet->neutralEmEnergyFraction();
+       MyPfjet.chargedMultiplicity = pfjet->chargedMultiplicity();
+       MyPfjet.neutralMultiplicity = pfjet->neutralMultiplicity();
+       MyPfjet.nconstituents = pfjet->numberOfDaughters();
 
 
-     bool loose = (
-		   pfjet->neutralHadronEnergyFraction() < 0.99 &&
-		   pfjet->chargedEmEnergyFraction() < 0.99 &&
-		   pfjet->neutralEmEnergyFraction() < 0.99 &&
-		   pfjet->numberOfDaughters() > 1
+       bool loose = (
+		     pfjet->neutralHadronEnergyFraction() < 0.99 &&
+		     pfjet->chargedEmEnergyFraction() < 0.99 &&
+		     pfjet->neutralEmEnergyFraction() < 0.99 &&
+		     pfjet->numberOfDaughters() > 1
+		     );
+
+       if( fabs(pfjet->eta())<2.4 ){
+	 loose = ( loose &&
+		   pfjet->chargedHadronEnergyFraction() > 0.0 &&
+		   pfjet->chargedMultiplicity() > 0
 		   );
+       }
 
-     if( fabs(pfjet->eta())<2.4 ){
-       loose = ( loose &&
-		 pfjet->chargedHadronEnergyFraction() > 0.0 &&
-		 pfjet->chargedMultiplicity() > 0
-		 );
+       MyPfjet.jetIDLoose = (loose) ? 1 : 0;
+
+       bnpfjets->push_back(MyPfjet);
      }
-
-     MyPfjet.jetIDLoose = (loose) ? 1 : 0;
-
-     bnpfjets->push_back(MyPfjet);
    }
-
 
 
 
@@ -1476,196 +1625,198 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    /////////////////////////////////////////////
 
    std::auto_ptr<BNmuonCollection> bnmuons(new BNmuonCollection);
-   for( edm::View<pat::Muon>::const_iterator muon = muons.begin(); muon!=muons.end(); ++muon ){
+   if( produceMuon ){
+     for( edm::View<pat::Muon>::const_iterator muon = muons.begin(); muon!=muons.end(); ++muon ){
 
-     BNmuon MyMuon;
+       BNmuon MyMuon;
 
-     // general kinematic variables
-     MyMuon.energy = muon->energy();
-     MyMuon.et = muon->et();
-     MyMuon.pt = muon->pt();
-     MyMuon.px = muon->px();
-     MyMuon.py = muon->py();
-     MyMuon.pz = muon->pz();
-     MyMuon.phi = muon->phi();
-     MyMuon.eta = muon->eta();
-     MyMuon.theta = muon->theta();
+       // general kinematic variables
+       MyMuon.energy = muon->energy();
+       MyMuon.et = muon->et();
+       MyMuon.pt = muon->pt();
+       MyMuon.px = muon->px();
+       MyMuon.py = muon->py();
+       MyMuon.pz = muon->pz();
+       MyMuon.phi = muon->phi();
+       MyMuon.eta = muon->eta();
+       MyMuon.theta = muon->theta();
 
 
-     MyMuon.charge = muon->charge();
-     MyMuon.vx = muon->vx();
-     MyMuon.vy = muon->vy();
-     MyMuon.vz = muon->vz();
+       MyMuon.charge = muon->charge();
+       MyMuon.vx = muon->vx();
+       MyMuon.vy = muon->vy();
+       MyMuon.vz = muon->vz();
 
-     MyMuon.trackIso = muon->trackIso();
-     MyMuon.ecalIso = muon->ecalIso();
-     MyMuon.hcalIso = muon->hcalIso();
-     MyMuon.caloIso = muon->caloIso();
+       MyMuon.trackIso = muon->trackIso();
+       MyMuon.ecalIso = muon->ecalIso();
+       MyMuon.hcalIso = muon->hcalIso();
+       MyMuon.caloIso = muon->caloIso();
 
-     MyMuon.trackIsoDR03 = muon->isolationR03().sumPt;
-     MyMuon.ecalIsoDR03 = muon->isolationR03().emEt;
-     MyMuon.hcalIsoDR03 = muon->isolationR03().hadEt;
-     MyMuon.caloIsoDR03 = muon->isolationR03().emEt + muon->isolationR03().hadEt;
+       MyMuon.trackIsoDR03 = muon->isolationR03().sumPt;
+       MyMuon.ecalIsoDR03 = muon->isolationR03().emEt;
+       MyMuon.hcalIsoDR03 = muon->isolationR03().hadEt;
+       MyMuon.caloIsoDR03 = muon->isolationR03().emEt + muon->isolationR03().hadEt;
 
-     MyMuon.trackVetoIsoDR03 = muon->isolationR03().trackerVetoPt;
-     MyMuon.ecalVetoIsoDR03 = muon->isolationR03().emVetoEt;
-     MyMuon.hcalVetoIsoDR03 = muon->isolationR03().hadVetoEt;
-     MyMuon.caloVetoIsoDR03 = muon->isolationR03().emVetoEt + muon->isolationR03().hadVetoEt;
+       MyMuon.trackVetoIsoDR03 = muon->isolationR03().trackerVetoPt;
+       MyMuon.ecalVetoIsoDR03 = muon->isolationR03().emVetoEt;
+       MyMuon.hcalVetoIsoDR03 = muon->isolationR03().hadVetoEt;
+       MyMuon.caloVetoIsoDR03 = muon->isolationR03().emVetoEt + muon->isolationR03().hadVetoEt;
 
-     MyMuon.trackIsoDR05 = muon->isolationR05().sumPt;
-     MyMuon.ecalIsoDR05 = muon->isolationR05().emEt;
-     MyMuon.hcalIsoDR05 = muon->isolationR05().hadEt;
-     MyMuon.caloIsoDR05 = muon->isolationR05().emEt + muon->isolationR05().hadEt;
+       MyMuon.trackIsoDR05 = muon->isolationR05().sumPt;
+       MyMuon.ecalIsoDR05 = muon->isolationR05().emEt;
+       MyMuon.hcalIsoDR05 = muon->isolationR05().hadEt;
+       MyMuon.caloIsoDR05 = muon->isolationR05().emEt + muon->isolationR05().hadEt;
 
-     MyMuon.trackVetoIsoDR05 = muon->isolationR05().trackerVetoPt;
-     MyMuon.ecalVetoIsoDR05 = muon->isolationR05().emVetoEt;
-     MyMuon.hcalVetoIsoDR05 = muon->isolationR05().hadVetoEt;
-     MyMuon.caloVetoIsoDR05 = muon->isolationR05().emVetoEt + muon->isolationR05().hadVetoEt;
+       MyMuon.trackVetoIsoDR05 = muon->isolationR05().trackerVetoPt;
+       MyMuon.ecalVetoIsoDR05 = muon->isolationR05().emVetoEt;
+       MyMuon.hcalVetoIsoDR05 = muon->isolationR05().hadVetoEt;
+       MyMuon.caloVetoIsoDR05 = muon->isolationR05().emVetoEt + muon->isolationR05().hadVetoEt;
 
-     ////   Removed due to not understood seg faults. Seems ok in bare ROOT.
-     ////   Investigate and uncomment in future.
-     //MyMuon.hcalE = muon->hcalIsoDeposit()->candEnergy();
-     //MyMuon.ecalE = muon->ecalIsoDeposit()->candEnergy();
+       ////   Removed due to not understood seg faults. Seems ok in bare ROOT.
+       ////   Investigate and uncomment in future.
+       //MyMuon.hcalE = muon->hcalIsoDeposit()->candEnergy();
+       //MyMuon.ecalE = muon->ecalIsoDeposit()->candEnergy();
      
-     MyMuon.timeAtIpInOut = muon->time().timeAtIpInOut;
-     MyMuon.timeAtIpInOutErr = muon->time().timeAtIpInOutErr;
-     MyMuon.timeAtIpOutIn = muon->time().timeAtIpOutIn;
-     MyMuon.timeAtIpOutInErr = muon->time().timeAtIpOutInErr;
-     MyMuon.time_ndof = muon->time().nDof;
+       MyMuon.timeAtIpInOut = muon->time().timeAtIpInOut;
+       MyMuon.timeAtIpInOutErr = muon->time().timeAtIpInOutErr;
+       MyMuon.timeAtIpOutIn = muon->time().timeAtIpOutIn;
+       MyMuon.timeAtIpOutInErr = muon->time().timeAtIpOutInErr;
+       MyMuon.time_ndof = muon->time().nDof;
 
-     if( muon->isEnergyValid() ){
-       MyMuon.ecal_time = muon->calEnergy().ecal_time;
-       MyMuon.hcal_time = muon->calEnergy().hcal_time;
-       MyMuon.ecal_timeError = muon->calEnergy().ecal_timeError;
-       MyMuon.hcal_timeError = muon->calEnergy().hcal_timeError;
-       MyMuon.energy_ecal = muon->calEnergy().em;
-       MyMuon.energy_hcal = muon->calEnergy().had;
-       MyMuon.e3x3_ecal = muon->calEnergy().emS9;
-       MyMuon.e3x3_hcal = muon->calEnergy().hadS9;
-       MyMuon.energyMax_ecal = muon->calEnergy().emMax;
-       MyMuon.energyMax_hcal = muon->calEnergy().hadMax;
-     }
-
-
-
-     MyMuon.IDGMPTight = ( muon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
-
-     MyMuon.isGlobalMuon = ( muon->isGlobalMuon() ) ? 1 : 0;
-     MyMuon.isTrackerMuon = ( muon->isTrackerMuon() ) ? 1 : 0;
-     MyMuon.isStandAloneMuon = ( muon->isStandAloneMuon() ) ? 1 : 0;
-     MyMuon.isGlobalMuonPromptTight = ( muon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
-
-     MyMuon.numberOfMatches = muon->numberOfMatches();
-     MyMuon.numberOfMatchedStations = muon->numberOfMatchedStations();
-
-     MyMuon.dVzPVz = muon->vz() - PVz;
-     MyMuon.dB = muon->dB();
-
-     MyMuon.IP = muon->dB(pat::Muon::PV3D);
-     MyMuon.IPError = muon->edB(pat::Muon::PV3D);
-
-
-     if( (muon->globalTrack().isAvailable()) ){
-       MyMuon.normalizedChi2 = muon->globalTrack()->normalizedChi2();
-       MyMuon.numberOfValidMuonHits = muon->globalTrack()->hitPattern().numberOfValidMuonHits();
-       MyMuon.numberOfValidTrackerHits = muon->globalTrack()->hitPattern().numberOfValidTrackerHits();
-       MyMuon.ptErr = muon->globalTrack()->ptError();
-     }
-     if( (muon->innerTrack().isAvailable()) ){
-       MyMuon.numberOfValidTrackerHitsInnerTrack = muon->innerTrack()->numberOfValidHits();
-       MyMuon.pixelLayersWithMeasurement = muon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
-
-       MyMuon.correctedD0 = muon->innerTrack()->dxy(beamSpotPosition);
-       MyMuon.correctedDZ = muon->innerTrack()->dz(vertexPosition);
-     }
-
-     // Get track muon info
-     if( (muon->track().isAvailable()) ){
-       double tkvx = muon->track()->vx();
-       double tkvy = muon->track()->vy();
-       double tkpx = muon->track()->px();
-       double tkpy = muon->track()->py();
-       double tkpt = muon->track()->pt();
-
-       double ndof = muon->track()->ndof();
-       if( (ndof!=0) ) MyMuon.tkNormChi2 = muon->track()->chi2()/ndof;
-       MyMuon.tkPT = muon->track()->pt();
-       MyMuon.tkEta = muon->track()->eta();
-       MyMuon.tkPhi = muon->track()->phi();
-       MyMuon.tkDZ = muon->track()->dz();
-       MyMuon.tkD0 = muon->track()->d0();
-       MyMuon.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
-       MyMuon.tkD0err = muon->track()->d0Error();
-       MyMuon.tkNumValidHits = muon->track()->numberOfValidHits();
-       MyMuon.tkCharge = muon->track()->charge();
-     }
-     // Get standalone muon info
-     if( (muon->standAloneMuon().isAvailable()) ){
-       double samvx = muon->standAloneMuon()->vx();
-       double samvy = muon->standAloneMuon()->vy();
-       double sampx = muon->standAloneMuon()->px();
-       double sampy = muon->standAloneMuon()->py();
-       double sampt = muon->standAloneMuon()->pt();
-
-       double ndof = muon->standAloneMuon()->ndof();
-       if( (ndof!=0) ) MyMuon.samNormChi2 = muon->standAloneMuon()->chi2()/ndof;
-       MyMuon.samPT = muon->standAloneMuon()->pt();
-       MyMuon.samEta = muon->standAloneMuon()->eta();
-       MyMuon.samPhi = muon->standAloneMuon()->phi();
-       MyMuon.samDZ = muon->standAloneMuon()->dz();
-       MyMuon.samD0 = muon->standAloneMuon()->d0();
-       MyMuon.samD0bs = (samvx-BSx)*sampy/sampt-(samvy-BSy)*sampx/sampt;
-       MyMuon.samD0err = muon->standAloneMuon()->d0Error();
-       MyMuon.samNumValidHits = muon->standAloneMuon()->numberOfValidHits();
-       MyMuon.samCharge = muon->standAloneMuon()->charge();
-     }
-     // Get global muon info
-     if( (muon->combinedMuon().isAvailable()) ){
-       double comvx = muon->combinedMuon()->vx();
-       double comvy = muon->combinedMuon()->vy();
-       double compx = muon->combinedMuon()->px();
-       double compy = muon->combinedMuon()->py();
-       double compt = muon->combinedMuon()->pt();
-
-       double ndof = muon->combinedMuon()->ndof();
-       if( (ndof!=0) ) MyMuon.comNormChi2 = muon->combinedMuon()->chi2()/ndof;
-       MyMuon.comPT = muon->combinedMuon()->pt();
-       MyMuon.comEta = muon->combinedMuon()->eta();
-       MyMuon.comPhi = muon->combinedMuon()->phi();
-       MyMuon.comDZ = muon->combinedMuon()->dz();
-       MyMuon.comD0 = muon->combinedMuon()->d0();
-       MyMuon.comD0bs = (comvx-BSx)*compy/compt-(comvy-BSy)*compx/compt;
-       MyMuon.comD0err = muon->combinedMuon()->d0Error();
-       MyMuon.comNumValidHits = muon->combinedMuon()->numberOfValidHits();
-       MyMuon.comCharge = muon->combinedMuon()->charge();
-     }
-
-     if( (muon->genLepton()) ){
-       MyMuon.genId = muon->genLepton()->pdgId();
-       MyMuon.genET = muon->genLepton()->et();
-       MyMuon.genPT = muon->genLepton()->pt();
-       MyMuon.genPhi = muon->genLepton()->phi();
-       MyMuon.genEta = muon->genLepton()->eta();
-       MyMuon.genCharge = muon->genLepton()->charge();
-
-       if( (muon->genLepton()->numberOfMothers()>0) ){
-	 const reco::Candidate *MuonMother = muon->genLepton()->mother();
-	 bool staytrapped = true;
-	 while( (abs(MuonMother->pdgId())==13 && staytrapped) ){
-	   if( MuonMother->numberOfMothers()==1 ) MuonMother = MuonMother->mother();
-	   else staytrapped = false;
-	 }
-       
-	 MyMuon.genMotherId = MuonMother->pdgId();
-	 MyMuon.genMotherET = MuonMother->et();
-	 MyMuon.genMotherPT = MuonMother->pt();
-	 MyMuon.genMotherPhi = MuonMother->phi();
-	 MyMuon.genMotherEta = MuonMother->eta();
-	 MyMuon.genMotherCharge = MuonMother->charge();
+       if( muon->isEnergyValid() ){
+	 MyMuon.ecal_time = muon->calEnergy().ecal_time;
+	 MyMuon.hcal_time = muon->calEnergy().hcal_time;
+	 MyMuon.ecal_timeError = muon->calEnergy().ecal_timeError;
+	 MyMuon.hcal_timeError = muon->calEnergy().hcal_timeError;
+	 MyMuon.energy_ecal = muon->calEnergy().em;
+	 MyMuon.energy_hcal = muon->calEnergy().had;
+	 MyMuon.e3x3_ecal = muon->calEnergy().emS9;
+	 MyMuon.e3x3_hcal = muon->calEnergy().hadS9;
+	 MyMuon.energyMax_ecal = muon->calEnergy().emMax;
+	 MyMuon.energyMax_hcal = muon->calEnergy().hadMax;
        }
-     }
 
-     bnmuons->push_back(MyMuon);
+
+
+       MyMuon.IDGMPTight = ( muon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
+
+       MyMuon.isGlobalMuon = ( muon->isGlobalMuon() ) ? 1 : 0;
+       MyMuon.isTrackerMuon = ( muon->isTrackerMuon() ) ? 1 : 0;
+       MyMuon.isStandAloneMuon = ( muon->isStandAloneMuon() ) ? 1 : 0;
+       MyMuon.isGlobalMuonPromptTight = ( muon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
+
+       MyMuon.numberOfMatches = muon->numberOfMatches();
+       MyMuon.numberOfMatchedStations = muon->numberOfMatchedStations();
+
+       MyMuon.dVzPVz = muon->vz() - PVz;
+       MyMuon.dB = muon->dB();
+
+       MyMuon.IP = muon->dB(pat::Muon::PV3D);
+       MyMuon.IPError = muon->edB(pat::Muon::PV3D);
+
+
+       if( (muon->globalTrack().isAvailable()) ){
+	 MyMuon.normalizedChi2 = muon->globalTrack()->normalizedChi2();
+	 MyMuon.numberOfValidMuonHits = muon->globalTrack()->hitPattern().numberOfValidMuonHits();
+	 MyMuon.numberOfValidTrackerHits = muon->globalTrack()->hitPattern().numberOfValidTrackerHits();
+	 MyMuon.ptErr = muon->globalTrack()->ptError();
+       }
+       if( (muon->innerTrack().isAvailable()) ){
+	 MyMuon.numberOfValidTrackerHitsInnerTrack = muon->innerTrack()->numberOfValidHits();
+	 MyMuon.pixelLayersWithMeasurement = muon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
+
+	 MyMuon.correctedD0 = muon->innerTrack()->dxy(beamSpotPosition);
+	 MyMuon.correctedDZ = muon->innerTrack()->dz(vertexPosition);
+       }
+
+       // Get track muon info
+       if( (muon->track().isAvailable()) ){
+	 double tkvx = muon->track()->vx();
+	 double tkvy = muon->track()->vy();
+	 double tkpx = muon->track()->px();
+	 double tkpy = muon->track()->py();
+	 double tkpt = muon->track()->pt();
+
+	 double ndof = muon->track()->ndof();
+	 if( (ndof!=0) ) MyMuon.tkNormChi2 = muon->track()->chi2()/ndof;
+	 MyMuon.tkPT = muon->track()->pt();
+	 MyMuon.tkEta = muon->track()->eta();
+	 MyMuon.tkPhi = muon->track()->phi();
+	 MyMuon.tkDZ = muon->track()->dz();
+	 MyMuon.tkD0 = muon->track()->d0();
+	 MyMuon.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
+	 MyMuon.tkD0err = muon->track()->d0Error();
+	 MyMuon.tkNumValidHits = muon->track()->numberOfValidHits();
+	 MyMuon.tkCharge = muon->track()->charge();
+       }
+       // Get standalone muon info
+       if( (muon->standAloneMuon().isAvailable()) ){
+	 double samvx = muon->standAloneMuon()->vx();
+	 double samvy = muon->standAloneMuon()->vy();
+	 double sampx = muon->standAloneMuon()->px();
+	 double sampy = muon->standAloneMuon()->py();
+	 double sampt = muon->standAloneMuon()->pt();
+
+	 double ndof = muon->standAloneMuon()->ndof();
+	 if( (ndof!=0) ) MyMuon.samNormChi2 = muon->standAloneMuon()->chi2()/ndof;
+	 MyMuon.samPT = muon->standAloneMuon()->pt();
+	 MyMuon.samEta = muon->standAloneMuon()->eta();
+	 MyMuon.samPhi = muon->standAloneMuon()->phi();
+	 MyMuon.samDZ = muon->standAloneMuon()->dz();
+	 MyMuon.samD0 = muon->standAloneMuon()->d0();
+	 MyMuon.samD0bs = (samvx-BSx)*sampy/sampt-(samvy-BSy)*sampx/sampt;
+	 MyMuon.samD0err = muon->standAloneMuon()->d0Error();
+	 MyMuon.samNumValidHits = muon->standAloneMuon()->numberOfValidHits();
+	 MyMuon.samCharge = muon->standAloneMuon()->charge();
+       }
+       // Get global muon info
+       if( (muon->combinedMuon().isAvailable()) ){
+	 double comvx = muon->combinedMuon()->vx();
+	 double comvy = muon->combinedMuon()->vy();
+	 double compx = muon->combinedMuon()->px();
+	 double compy = muon->combinedMuon()->py();
+	 double compt = muon->combinedMuon()->pt();
+
+	 double ndof = muon->combinedMuon()->ndof();
+	 if( (ndof!=0) ) MyMuon.comNormChi2 = muon->combinedMuon()->chi2()/ndof;
+	 MyMuon.comPT = muon->combinedMuon()->pt();
+	 MyMuon.comEta = muon->combinedMuon()->eta();
+	 MyMuon.comPhi = muon->combinedMuon()->phi();
+	 MyMuon.comDZ = muon->combinedMuon()->dz();
+	 MyMuon.comD0 = muon->combinedMuon()->d0();
+	 MyMuon.comD0bs = (comvx-BSx)*compy/compt-(comvy-BSy)*compx/compt;
+	 MyMuon.comD0err = muon->combinedMuon()->d0Error();
+	 MyMuon.comNumValidHits = muon->combinedMuon()->numberOfValidHits();
+	 MyMuon.comCharge = muon->combinedMuon()->charge();
+       }
+
+       if( (muon->genLepton()) ){
+	 MyMuon.genId = muon->genLepton()->pdgId();
+	 MyMuon.genET = muon->genLepton()->et();
+	 MyMuon.genPT = muon->genLepton()->pt();
+	 MyMuon.genPhi = muon->genLepton()->phi();
+	 MyMuon.genEta = muon->genLepton()->eta();
+	 MyMuon.genCharge = muon->genLepton()->charge();
+
+	 if( (muon->genLepton()->numberOfMothers()>0) ){
+	   const reco::Candidate *MuonMother = muon->genLepton()->mother();
+	   bool staytrapped = true;
+	   while( (abs(MuonMother->pdgId())==13 && staytrapped) ){
+	     if( MuonMother->numberOfMothers()==1 ) MuonMother = MuonMother->mother();
+	     else staytrapped = false;
+	   }
+       
+	   MyMuon.genMotherId = MuonMother->pdgId();
+	   MyMuon.genMotherET = MuonMother->et();
+	   MyMuon.genMotherPT = MuonMother->pt();
+	   MyMuon.genMotherPhi = MuonMother->phi();
+	   MyMuon.genMotherEta = MuonMother->eta();
+	   MyMuon.genMotherCharge = MuonMother->charge();
+	 }
+       }
+
+       bnmuons->push_back(MyMuon);
+     }
    }
 
 
@@ -1676,213 +1827,214 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    /////////////////////////////////////////////
 
    std::auto_ptr<BNmuonCollection> bnpfmuons(new BNmuonCollection);
-   for( edm::View<pat::Muon>::const_iterator pfmuon = pfmuons.begin(); pfmuon!=pfmuons.end(); ++pfmuon ){
+   if( producePFMuon ){
+     for( edm::View<pat::Muon>::const_iterator pfmuon = pfmuons.begin(); pfmuon!=pfmuons.end(); ++pfmuon ){
 
-     BNmuon MyPfmuon;
+       BNmuon MyPfmuon;
 
-     // general kinematic variables
-     MyPfmuon.energy = pfmuon->energy();
-     MyPfmuon.et = pfmuon->et();
-     MyPfmuon.pt = pfmuon->pt();
-     MyPfmuon.px = pfmuon->px();
-     MyPfmuon.py = pfmuon->py();
-     MyPfmuon.pz = pfmuon->pz();
-     MyPfmuon.phi = pfmuon->phi();
-     MyPfmuon.eta = pfmuon->eta();
-     MyPfmuon.theta = pfmuon->theta();
-
-
-     MyPfmuon.charge = pfmuon->charge();
-     MyPfmuon.vx = pfmuon->vx();
-     MyPfmuon.vy = pfmuon->vy();
-     MyPfmuon.vz = pfmuon->vz();
+       // general kinematic variables
+       MyPfmuon.energy = pfmuon->energy();
+       MyPfmuon.et = pfmuon->et();
+       MyPfmuon.pt = pfmuon->pt();
+       MyPfmuon.px = pfmuon->px();
+       MyPfmuon.py = pfmuon->py();
+       MyPfmuon.pz = pfmuon->pz();
+       MyPfmuon.phi = pfmuon->phi();
+       MyPfmuon.eta = pfmuon->eta();
+       MyPfmuon.theta = pfmuon->theta();
 
 
-     MyPfmuon.particleIso = pfmuon->particleIso();     
-     MyPfmuon.chargedHadronIso = pfmuon->chargedHadronIso();     
-     MyPfmuon.neutralHadronIso = pfmuon->neutralHadronIso();     
-     MyPfmuon.photonIso = pfmuon->photonIso();     
-     MyPfmuon.puChargedHadronIso = pfmuon->puChargedHadronIso();     
-
-     MyPfmuon.chargedHadronIsoDR03 = pfmuon->userIso(0);     
-     MyPfmuon.neutralHadronIsoDR03 = pfmuon->userIso(1);
-     MyPfmuon.photonIsoDR03 = pfmuon->userIso(2);
-     MyPfmuon.puChargedHadronIsoDR03 = pfmuon->userIso(3);
-
-     MyPfmuon.chargedHadronIsoDR04 = pfmuon->userIso(4);     
-     MyPfmuon.neutralHadronIsoDR04 = pfmuon->userIso(5);
-     MyPfmuon.photonIsoDR04 = pfmuon->userIso(6);
-     MyPfmuon.puChargedHadronIsoDR04 = pfmuon->userIso(7);
-
-     MyPfmuon.trackIso = pfmuon->trackIso();
-     MyPfmuon.ecalIso = pfmuon->ecalIso();
-     MyPfmuon.hcalIso = pfmuon->hcalIso();
-     MyPfmuon.caloIso = pfmuon->caloIso();
-
-     MyPfmuon.trackIsoDR03 = pfmuon->isolationR03().sumPt;
-     MyPfmuon.ecalIsoDR03 = pfmuon->isolationR03().emEt;
-     MyPfmuon.hcalIsoDR03 = pfmuon->isolationR03().hadEt;
-     MyPfmuon.caloIsoDR03 = pfmuon->isolationR03().emEt + pfmuon->isolationR03().hadEt;
-
-     MyPfmuon.trackVetoIsoDR03 = pfmuon->isolationR03().trackerVetoPt;
-     MyPfmuon.ecalVetoIsoDR03 = pfmuon->isolationR03().emVetoEt;
-     MyPfmuon.hcalVetoIsoDR03 = pfmuon->isolationR03().hadVetoEt;
-     MyPfmuon.caloVetoIsoDR03 = pfmuon->isolationR03().emVetoEt + pfmuon->isolationR03().hadVetoEt;
-
-     MyPfmuon.trackIsoDR05 = pfmuon->isolationR05().sumPt;
-     MyPfmuon.ecalIsoDR05 = pfmuon->isolationR05().emEt;
-     MyPfmuon.hcalIsoDR05 = pfmuon->isolationR05().hadEt;
-     MyPfmuon.caloIsoDR05 = pfmuon->isolationR05().emEt + pfmuon->isolationR05().hadEt;
-
-     MyPfmuon.trackVetoIsoDR05 = pfmuon->isolationR05().trackerVetoPt;
-     MyPfmuon.ecalVetoIsoDR05 = pfmuon->isolationR05().emVetoEt;
-     MyPfmuon.hcalVetoIsoDR05 = pfmuon->isolationR05().hadVetoEt;
-     MyPfmuon.caloVetoIsoDR05 = pfmuon->isolationR05().emVetoEt + pfmuon->isolationR05().hadVetoEt;
-
-     ////   Removed due to not understood seg faults. Seems ok in bare ROOT.
-     ////   Investigate and uncomment in future.
-     //MyMuon.hcalE = muon->hcalIsoDeposit()->candEnergy();
-     //MyMuon.ecalE = muon->ecalIsoDeposit()->candEnergy();
-
-     MyPfmuon.timeAtIpInOut = pfmuon->time().timeAtIpInOut;
-     MyPfmuon.timeAtIpInOutErr = pfmuon->time().timeAtIpInOutErr;
-     MyPfmuon.timeAtIpOutIn = pfmuon->time().timeAtIpOutIn;
-     MyPfmuon.timeAtIpOutInErr = pfmuon->time().timeAtIpOutInErr;
-     MyPfmuon.time_ndof = pfmuon->time().nDof;
-
-     if( pfmuon->isEnergyValid() ){
-       MyPfmuon.ecal_time = pfmuon->calEnergy().ecal_time;
-       MyPfmuon.hcal_time = pfmuon->calEnergy().hcal_time;
-       MyPfmuon.ecal_timeError = pfmuon->calEnergy().ecal_timeError;
-       MyPfmuon.hcal_timeError = pfmuon->calEnergy().hcal_timeError;
-       MyPfmuon.energy_ecal = pfmuon->calEnergy().em;
-       MyPfmuon.energy_hcal = pfmuon->calEnergy().had;
-       MyPfmuon.e3x3_ecal = pfmuon->calEnergy().emS9;
-       MyPfmuon.e3x3_hcal = pfmuon->calEnergy().hadS9;
-       MyPfmuon.energyMax_ecal = pfmuon->calEnergy().emMax;
-       MyPfmuon.energyMax_hcal = pfmuon->calEnergy().hadMax;
-     }
+       MyPfmuon.charge = pfmuon->charge();
+       MyPfmuon.vx = pfmuon->vx();
+       MyPfmuon.vy = pfmuon->vy();
+       MyPfmuon.vz = pfmuon->vz();
 
 
-     MyPfmuon.IDGMPTight = ( pfmuon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
+       MyPfmuon.particleIso = pfmuon->particleIso();     
+       MyPfmuon.chargedHadronIso = pfmuon->chargedHadronIso();     
+       MyPfmuon.neutralHadronIso = pfmuon->neutralHadronIso();     
+       MyPfmuon.photonIso = pfmuon->photonIso();     
+       MyPfmuon.puChargedHadronIso = pfmuon->puChargedHadronIso();     
 
-     MyPfmuon.isGlobalMuon = ( pfmuon->isGlobalMuon() ) ? 1 : 0;
-     MyPfmuon.isTrackerMuon = ( pfmuon->isTrackerMuon() ) ? 1 : 0;
-     MyPfmuon.isStandAloneMuon = ( pfmuon->isStandAloneMuon() ) ? 1 : 0;
-     MyPfmuon.isGlobalMuonPromptTight = ( pfmuon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
+       MyPfmuon.chargedHadronIsoDR03 = pfmuon->userIso(0);     
+       MyPfmuon.neutralHadronIsoDR03 = pfmuon->userIso(1);
+       MyPfmuon.photonIsoDR03 = pfmuon->userIso(2);
+       MyPfmuon.puChargedHadronIsoDR03 = pfmuon->userIso(3);
 
-     MyPfmuon.numberOfMatches = pfmuon->numberOfMatches();
-     MyPfmuon.numberOfMatchedStations = pfmuon->numberOfMatchedStations();
+       MyPfmuon.chargedHadronIsoDR04 = pfmuon->userIso(4);     
+       MyPfmuon.neutralHadronIsoDR04 = pfmuon->userIso(5);
+       MyPfmuon.photonIsoDR04 = pfmuon->userIso(6);
+       MyPfmuon.puChargedHadronIsoDR04 = pfmuon->userIso(7);
 
-     MyPfmuon.dVzPVz = pfmuon->vz() - PVz;
-     MyPfmuon.dB = pfmuon->dB();
+       MyPfmuon.trackIso = pfmuon->trackIso();
+       MyPfmuon.ecalIso = pfmuon->ecalIso();
+       MyPfmuon.hcalIso = pfmuon->hcalIso();
+       MyPfmuon.caloIso = pfmuon->caloIso();
 
-     MyPfmuon.IP = pfmuon->dB(pat::Muon::PV3D);
-     MyPfmuon.IPError = pfmuon->edB(pat::Muon::PV3D);
+       MyPfmuon.trackIsoDR03 = pfmuon->isolationR03().sumPt;
+       MyPfmuon.ecalIsoDR03 = pfmuon->isolationR03().emEt;
+       MyPfmuon.hcalIsoDR03 = pfmuon->isolationR03().hadEt;
+       MyPfmuon.caloIsoDR03 = pfmuon->isolationR03().emEt + pfmuon->isolationR03().hadEt;
 
-     if( (pfmuon->globalTrack().isAvailable()) ){
-       MyPfmuon.normalizedChi2 = pfmuon->globalTrack()->normalizedChi2();
-       MyPfmuon.numberOfValidMuonHits = pfmuon->globalTrack()->hitPattern().numberOfValidMuonHits();
-       MyPfmuon.numberOfValidTrackerHits = pfmuon->globalTrack()->hitPattern().numberOfValidTrackerHits();
-       MyPfmuon.ptErr = pfmuon->globalTrack()->ptError();
-     }
-     if( (pfmuon->innerTrack().isAvailable()) ){
-       MyPfmuon.numberOfValidTrackerHitsInnerTrack = pfmuon->innerTrack()->numberOfValidHits();
-       MyPfmuon.pixelLayersWithMeasurement = pfmuon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
+       MyPfmuon.trackVetoIsoDR03 = pfmuon->isolationR03().trackerVetoPt;
+       MyPfmuon.ecalVetoIsoDR03 = pfmuon->isolationR03().emVetoEt;
+       MyPfmuon.hcalVetoIsoDR03 = pfmuon->isolationR03().hadVetoEt;
+       MyPfmuon.caloVetoIsoDR03 = pfmuon->isolationR03().emVetoEt + pfmuon->isolationR03().hadVetoEt;
 
-       MyPfmuon.correctedD0 = pfmuon->innerTrack()->dxy(beamSpotPosition);
-       MyPfmuon.correctedDZ = pfmuon->innerTrack()->dz(vertexPosition);
-     }
+       MyPfmuon.trackIsoDR05 = pfmuon->isolationR05().sumPt;
+       MyPfmuon.ecalIsoDR05 = pfmuon->isolationR05().emEt;
+       MyPfmuon.hcalIsoDR05 = pfmuon->isolationR05().hadEt;
+       MyPfmuon.caloIsoDR05 = pfmuon->isolationR05().emEt + pfmuon->isolationR05().hadEt;
 
-     // Get track pfmuon info
-     if( (pfmuon->track().isAvailable()) ){
-       double tkvx = pfmuon->track()->vx();
-       double tkvy = pfmuon->track()->vy();
-       double tkpx = pfmuon->track()->px();
-       double tkpy = pfmuon->track()->py();
-       double tkpt = pfmuon->track()->pt();
+       MyPfmuon.trackVetoIsoDR05 = pfmuon->isolationR05().trackerVetoPt;
+       MyPfmuon.ecalVetoIsoDR05 = pfmuon->isolationR05().emVetoEt;
+       MyPfmuon.hcalVetoIsoDR05 = pfmuon->isolationR05().hadVetoEt;
+       MyPfmuon.caloVetoIsoDR05 = pfmuon->isolationR05().emVetoEt + pfmuon->isolationR05().hadVetoEt;
 
-       double ndof = pfmuon->track()->ndof();
-       if( (ndof!=0) ) MyPfmuon.tkNormChi2 = pfmuon->track()->chi2()/ndof;
-       MyPfmuon.tkPT = pfmuon->track()->pt();
-       MyPfmuon.tkEta = pfmuon->track()->eta();
-       MyPfmuon.tkPhi = pfmuon->track()->phi();
-       MyPfmuon.tkDZ = pfmuon->track()->dz();
-       MyPfmuon.tkD0 = pfmuon->track()->d0();
-       MyPfmuon.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
-       MyPfmuon.tkD0err = pfmuon->track()->d0Error();
-       MyPfmuon.tkNumValidHits = pfmuon->track()->numberOfValidHits();
-       MyPfmuon.tkCharge = pfmuon->track()->charge();
-     }
-     // Get standalone pfmuon info
-     if( (pfmuon->standAloneMuon().isAvailable()) ){
-       double samvx = pfmuon->standAloneMuon()->vx();
-       double samvy = pfmuon->standAloneMuon()->vy();
-       double sampx = pfmuon->standAloneMuon()->px();
-       double sampy = pfmuon->standAloneMuon()->py();
-       double sampt = pfmuon->standAloneMuon()->pt();
+       ////   Removed due to not understood seg faults. Seems ok in bare ROOT.
+       ////   Investigate and uncomment in future.
+       //MyMuon.hcalE = muon->hcalIsoDeposit()->candEnergy();
+       //MyMuon.ecalE = muon->ecalIsoDeposit()->candEnergy();
 
-       double ndof = pfmuon->standAloneMuon()->ndof();
-       if( (ndof!=0) ) MyPfmuon.samNormChi2 = pfmuon->standAloneMuon()->chi2()/ndof;
-       MyPfmuon.samPT = pfmuon->standAloneMuon()->pt();
-       MyPfmuon.samEta = pfmuon->standAloneMuon()->eta();
-       MyPfmuon.samPhi = pfmuon->standAloneMuon()->phi();
-       MyPfmuon.samDZ = pfmuon->standAloneMuon()->dz();
-       MyPfmuon.samD0 = pfmuon->standAloneMuon()->d0();
-       MyPfmuon.samD0bs = (samvx-BSx)*sampy/sampt-(samvy-BSy)*sampx/sampt;
-       MyPfmuon.samD0err = pfmuon->standAloneMuon()->d0Error();
-       MyPfmuon.samNumValidHits = pfmuon->standAloneMuon()->numberOfValidHits();
-       MyPfmuon.samCharge = pfmuon->standAloneMuon()->charge();
-     }
-     // Get global pfmuon info
-     if( (pfmuon->combinedMuon().isAvailable()) ){
-       double comvx = pfmuon->combinedMuon()->vx();
-       double comvy = pfmuon->combinedMuon()->vy();
-       double compx = pfmuon->combinedMuon()->px();
-       double compy = pfmuon->combinedMuon()->py();
-       double compt = pfmuon->combinedMuon()->pt();
+       MyPfmuon.timeAtIpInOut = pfmuon->time().timeAtIpInOut;
+       MyPfmuon.timeAtIpInOutErr = pfmuon->time().timeAtIpInOutErr;
+       MyPfmuon.timeAtIpOutIn = pfmuon->time().timeAtIpOutIn;
+       MyPfmuon.timeAtIpOutInErr = pfmuon->time().timeAtIpOutInErr;
+       MyPfmuon.time_ndof = pfmuon->time().nDof;
 
-       double ndof = pfmuon->combinedMuon()->ndof();
-       if( (ndof!=0) ) MyPfmuon.comNormChi2 = pfmuon->combinedMuon()->chi2()/ndof;
-       MyPfmuon.comPT = pfmuon->combinedMuon()->pt();
-       MyPfmuon.comEta = pfmuon->combinedMuon()->eta();
-       MyPfmuon.comPhi = pfmuon->combinedMuon()->phi();
-       MyPfmuon.comDZ = pfmuon->combinedMuon()->dz();
-       MyPfmuon.comD0 = pfmuon->combinedMuon()->d0();
-       MyPfmuon.comD0bs = (comvx-BSx)*compy/compt-(comvy-BSy)*compx/compt;
-       MyPfmuon.comD0err = pfmuon->combinedMuon()->d0Error();
-       MyPfmuon.comNumValidHits = pfmuon->combinedMuon()->numberOfValidHits();
-       MyPfmuon.comCharge = pfmuon->combinedMuon()->charge();
-     }
-
-     if( (pfmuon->genLepton()) ){
-       MyPfmuon.genId = pfmuon->genLepton()->pdgId();
-       MyPfmuon.genET = pfmuon->genLepton()->et();
-       MyPfmuon.genPT = pfmuon->genLepton()->pt();
-       MyPfmuon.genPhi = pfmuon->genLepton()->phi();
-       MyPfmuon.genEta = pfmuon->genLepton()->eta();
-       MyPfmuon.genCharge = pfmuon->genLepton()->charge();
-
-       if( (pfmuon->genLepton()->numberOfMothers()>0) ){
-	 const reco::Candidate *MuonMother = pfmuon->genLepton()->mother();
-	 bool staytrapped = true;
-	 while( (abs(MuonMother->pdgId())==13 && staytrapped) ){
-	   if( MuonMother->numberOfMothers()==1 ) MuonMother = MuonMother->mother();
-	   else staytrapped = false;
-	 }
-       
-	 MyPfmuon.genMotherId = MuonMother->pdgId();
-	 MyPfmuon.genMotherET = MuonMother->et();
-	 MyPfmuon.genMotherPT = MuonMother->pt();
-	 MyPfmuon.genMotherPhi = MuonMother->phi();
-	 MyPfmuon.genMotherEta = MuonMother->eta();
-	 MyPfmuon.genMotherCharge = MuonMother->charge();
+       if( pfmuon->isEnergyValid() ){
+	 MyPfmuon.ecal_time = pfmuon->calEnergy().ecal_time;
+	 MyPfmuon.hcal_time = pfmuon->calEnergy().hcal_time;
+	 MyPfmuon.ecal_timeError = pfmuon->calEnergy().ecal_timeError;
+	 MyPfmuon.hcal_timeError = pfmuon->calEnergy().hcal_timeError;
+	 MyPfmuon.energy_ecal = pfmuon->calEnergy().em;
+	 MyPfmuon.energy_hcal = pfmuon->calEnergy().had;
+	 MyPfmuon.e3x3_ecal = pfmuon->calEnergy().emS9;
+	 MyPfmuon.e3x3_hcal = pfmuon->calEnergy().hadS9;
+	 MyPfmuon.energyMax_ecal = pfmuon->calEnergy().emMax;
+	 MyPfmuon.energyMax_hcal = pfmuon->calEnergy().hadMax;
        }
+
+
+       MyPfmuon.IDGMPTight = ( pfmuon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
+
+       MyPfmuon.isGlobalMuon = ( pfmuon->isGlobalMuon() ) ? 1 : 0;
+       MyPfmuon.isTrackerMuon = ( pfmuon->isTrackerMuon() ) ? 1 : 0;
+       MyPfmuon.isStandAloneMuon = ( pfmuon->isStandAloneMuon() ) ? 1 : 0;
+       MyPfmuon.isGlobalMuonPromptTight = ( pfmuon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
+
+       MyPfmuon.numberOfMatches = pfmuon->numberOfMatches();
+       MyPfmuon.numberOfMatchedStations = pfmuon->numberOfMatchedStations();
+
+       MyPfmuon.dVzPVz = pfmuon->vz() - PVz;
+       MyPfmuon.dB = pfmuon->dB();
+
+       MyPfmuon.IP = pfmuon->dB(pat::Muon::PV3D);
+       MyPfmuon.IPError = pfmuon->edB(pat::Muon::PV3D);
+
+       if( (pfmuon->globalTrack().isAvailable()) ){
+	 MyPfmuon.normalizedChi2 = pfmuon->globalTrack()->normalizedChi2();
+	 MyPfmuon.numberOfValidMuonHits = pfmuon->globalTrack()->hitPattern().numberOfValidMuonHits();
+	 MyPfmuon.numberOfValidTrackerHits = pfmuon->globalTrack()->hitPattern().numberOfValidTrackerHits();
+	 MyPfmuon.ptErr = pfmuon->globalTrack()->ptError();
+       }
+       if( (pfmuon->innerTrack().isAvailable()) ){
+	 MyPfmuon.numberOfValidTrackerHitsInnerTrack = pfmuon->innerTrack()->numberOfValidHits();
+	 MyPfmuon.pixelLayersWithMeasurement = pfmuon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
+
+	 MyPfmuon.correctedD0 = pfmuon->innerTrack()->dxy(beamSpotPosition);
+	 MyPfmuon.correctedDZ = pfmuon->innerTrack()->dz(vertexPosition);
+       }
+
+       // Get track pfmuon info
+       if( (pfmuon->track().isAvailable()) ){
+	 double tkvx = pfmuon->track()->vx();
+	 double tkvy = pfmuon->track()->vy();
+	 double tkpx = pfmuon->track()->px();
+	 double tkpy = pfmuon->track()->py();
+	 double tkpt = pfmuon->track()->pt();
+
+	 double ndof = pfmuon->track()->ndof();
+	 if( (ndof!=0) ) MyPfmuon.tkNormChi2 = pfmuon->track()->chi2()/ndof;
+	 MyPfmuon.tkPT = pfmuon->track()->pt();
+	 MyPfmuon.tkEta = pfmuon->track()->eta();
+	 MyPfmuon.tkPhi = pfmuon->track()->phi();
+	 MyPfmuon.tkDZ = pfmuon->track()->dz();
+	 MyPfmuon.tkD0 = pfmuon->track()->d0();
+	 MyPfmuon.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
+	 MyPfmuon.tkD0err = pfmuon->track()->d0Error();
+	 MyPfmuon.tkNumValidHits = pfmuon->track()->numberOfValidHits();
+	 MyPfmuon.tkCharge = pfmuon->track()->charge();
+       }
+       // Get standalone pfmuon info
+       if( (pfmuon->standAloneMuon().isAvailable()) ){
+	 double samvx = pfmuon->standAloneMuon()->vx();
+	 double samvy = pfmuon->standAloneMuon()->vy();
+	 double sampx = pfmuon->standAloneMuon()->px();
+	 double sampy = pfmuon->standAloneMuon()->py();
+	 double sampt = pfmuon->standAloneMuon()->pt();
+
+	 double ndof = pfmuon->standAloneMuon()->ndof();
+	 if( (ndof!=0) ) MyPfmuon.samNormChi2 = pfmuon->standAloneMuon()->chi2()/ndof;
+	 MyPfmuon.samPT = pfmuon->standAloneMuon()->pt();
+	 MyPfmuon.samEta = pfmuon->standAloneMuon()->eta();
+	 MyPfmuon.samPhi = pfmuon->standAloneMuon()->phi();
+	 MyPfmuon.samDZ = pfmuon->standAloneMuon()->dz();
+	 MyPfmuon.samD0 = pfmuon->standAloneMuon()->d0();
+	 MyPfmuon.samD0bs = (samvx-BSx)*sampy/sampt-(samvy-BSy)*sampx/sampt;
+	 MyPfmuon.samD0err = pfmuon->standAloneMuon()->d0Error();
+	 MyPfmuon.samNumValidHits = pfmuon->standAloneMuon()->numberOfValidHits();
+	 MyPfmuon.samCharge = pfmuon->standAloneMuon()->charge();
+       }
+       // Get global pfmuon info
+       if( (pfmuon->combinedMuon().isAvailable()) ){
+	 double comvx = pfmuon->combinedMuon()->vx();
+	 double comvy = pfmuon->combinedMuon()->vy();
+	 double compx = pfmuon->combinedMuon()->px();
+	 double compy = pfmuon->combinedMuon()->py();
+	 double compt = pfmuon->combinedMuon()->pt();
+
+	 double ndof = pfmuon->combinedMuon()->ndof();
+	 if( (ndof!=0) ) MyPfmuon.comNormChi2 = pfmuon->combinedMuon()->chi2()/ndof;
+	 MyPfmuon.comPT = pfmuon->combinedMuon()->pt();
+	 MyPfmuon.comEta = pfmuon->combinedMuon()->eta();
+	 MyPfmuon.comPhi = pfmuon->combinedMuon()->phi();
+	 MyPfmuon.comDZ = pfmuon->combinedMuon()->dz();
+	 MyPfmuon.comD0 = pfmuon->combinedMuon()->d0();
+	 MyPfmuon.comD0bs = (comvx-BSx)*compy/compt-(comvy-BSy)*compx/compt;
+	 MyPfmuon.comD0err = pfmuon->combinedMuon()->d0Error();
+	 MyPfmuon.comNumValidHits = pfmuon->combinedMuon()->numberOfValidHits();
+	 MyPfmuon.comCharge = pfmuon->combinedMuon()->charge();
+       }
+
+       if( (pfmuon->genLepton()) ){
+	 MyPfmuon.genId = pfmuon->genLepton()->pdgId();
+	 MyPfmuon.genET = pfmuon->genLepton()->et();
+	 MyPfmuon.genPT = pfmuon->genLepton()->pt();
+	 MyPfmuon.genPhi = pfmuon->genLepton()->phi();
+	 MyPfmuon.genEta = pfmuon->genLepton()->eta();
+	 MyPfmuon.genCharge = pfmuon->genLepton()->charge();
+
+	 if( (pfmuon->genLepton()->numberOfMothers()>0) ){
+	   const reco::Candidate *MuonMother = pfmuon->genLepton()->mother();
+	   bool staytrapped = true;
+	   while( (abs(MuonMother->pdgId())==13 && staytrapped) ){
+	     if( MuonMother->numberOfMothers()==1 ) MuonMother = MuonMother->mother();
+	     else staytrapped = false;
+	   }
+       
+	   MyPfmuon.genMotherId = MuonMother->pdgId();
+	   MyPfmuon.genMotherET = MuonMother->et();
+	   MyPfmuon.genMotherPT = MuonMother->pt();
+	   MyPfmuon.genMotherPhi = MuonMother->phi();
+	   MyPfmuon.genMotherEta = MuonMother->eta();
+	   MyPfmuon.genMotherCharge = MuonMother->charge();
+	 }
+       }
+
+       bnpfmuons->push_back(MyPfmuon);
      }
-
-     bnpfmuons->push_back(MyPfmuon);
    }
-
 
 
    /////////////////////////////////////////////
@@ -1892,176 +2044,150 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    /////////////////////////////////////////////
 
    std::auto_ptr<BNmuonCollection> bncocktailmuons(new BNmuonCollection);
-   for( edm::View<reco::Muon>::const_iterator cocktailmuon = cocktailmuons.begin(); cocktailmuon!=cocktailmuons.end(); ++cocktailmuon ){
+   if( produceCocktailMuon ){
+     for( edm::View<reco::Muon>::const_iterator cocktailmuon = cocktailmuons.begin(); cocktailmuon!=cocktailmuons.end(); ++cocktailmuon ){
 
-     BNmuon MyCocktailmuon;
+       BNmuon MyCocktailmuon;
 
-     // general kinematic variables
-     MyCocktailmuon.energy = cocktailmuon->energy();
-     MyCocktailmuon.et = cocktailmuon->et();
-     MyCocktailmuon.pt = cocktailmuon->pt();
-     MyCocktailmuon.px = cocktailmuon->px();
-     MyCocktailmuon.py = cocktailmuon->py();
-     MyCocktailmuon.pz = cocktailmuon->pz();
-     MyCocktailmuon.phi = cocktailmuon->phi();
-     MyCocktailmuon.eta = cocktailmuon->eta();
-     MyCocktailmuon.theta = cocktailmuon->theta();
-
-
-     MyCocktailmuon.charge = cocktailmuon->charge();
-     MyCocktailmuon.vx = cocktailmuon->vx();
-     MyCocktailmuon.vy = cocktailmuon->vy();
-     MyCocktailmuon.vz = cocktailmuon->vz();
-
-     // MyCocktailmuon.trackIso = cocktailmuon->trackIso();
-     // MyCocktailmuon.ecalIso = cocktailmuon->ecalIso();
-     // MyCocktailmuon.hcalIso = cocktailmuon->hcalIso();
-     // MyCocktailmuon.caloIso = cocktailmuon->caloIso();
-
-     MyCocktailmuon.trackIsoDR03 = cocktailmuon->isolationR03().sumPt;
-     MyCocktailmuon.ecalIsoDR03 = cocktailmuon->isolationR03().emEt;
-     MyCocktailmuon.hcalIsoDR03 = cocktailmuon->isolationR03().hadEt;
-     MyCocktailmuon.caloIsoDR03 = cocktailmuon->isolationR03().emEt + cocktailmuon->isolationR03().hadEt;
-
-     MyCocktailmuon.trackVetoIsoDR03 = cocktailmuon->isolationR03().trackerVetoPt;
-     MyCocktailmuon.ecalVetoIsoDR03 = cocktailmuon->isolationR03().emVetoEt;
-     MyCocktailmuon.hcalVetoIsoDR03 = cocktailmuon->isolationR03().hadVetoEt;
-     MyCocktailmuon.caloVetoIsoDR03 = cocktailmuon->isolationR03().emVetoEt + cocktailmuon->isolationR03().hadVetoEt;
-
-     MyCocktailmuon.trackIsoDR05 = cocktailmuon->isolationR05().sumPt;
-     MyCocktailmuon.ecalIsoDR05 = cocktailmuon->isolationR05().emEt;
-     MyCocktailmuon.hcalIsoDR05 = cocktailmuon->isolationR05().hadEt;
-     MyCocktailmuon.caloIsoDR05 = cocktailmuon->isolationR05().emEt + cocktailmuon->isolationR05().hadEt;
-
-     MyCocktailmuon.trackVetoIsoDR05 = cocktailmuon->isolationR05().trackerVetoPt;
-     MyCocktailmuon.ecalVetoIsoDR05 = cocktailmuon->isolationR05().emVetoEt;
-     MyCocktailmuon.hcalVetoIsoDR05 = cocktailmuon->isolationR05().hadVetoEt;
-     MyCocktailmuon.caloVetoIsoDR05 = cocktailmuon->isolationR05().emVetoEt + cocktailmuon->isolationR05().hadVetoEt;
-
-     ////   Removed due to not understood seg faults. Seems ok in bare ROOT.
-     ////   Investigate and uncomment in future.
-     //MyCocktailmuon.hcalE = cocktailmuon->hcalIsoDeposit()->candEnergy();
-     //MyCocktailmuon.ecalE = cocktailmuon->ecalIsoDeposit()->candEnergy();
+       // general kinematic variables
+       MyCocktailmuon.energy = cocktailmuon->energy();
+       MyCocktailmuon.et = cocktailmuon->et();
+       MyCocktailmuon.pt = cocktailmuon->pt();
+       MyCocktailmuon.px = cocktailmuon->px();
+       MyCocktailmuon.py = cocktailmuon->py();
+       MyCocktailmuon.pz = cocktailmuon->pz();
+       MyCocktailmuon.phi = cocktailmuon->phi();
+       MyCocktailmuon.eta = cocktailmuon->eta();
+       MyCocktailmuon.theta = cocktailmuon->theta();
 
 
-     // MyCocktailmuon.IDGMPTight = ( cocktailmuon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
+       MyCocktailmuon.charge = cocktailmuon->charge();
+       MyCocktailmuon.vx = cocktailmuon->vx();
+       MyCocktailmuon.vy = cocktailmuon->vy();
+       MyCocktailmuon.vz = cocktailmuon->vz();
 
-     MyCocktailmuon.isGlobalMuon = ( cocktailmuon->isGlobalMuon() ) ? 1 : 0;
-     MyCocktailmuon.isTrackerMuon = ( cocktailmuon->isTrackerMuon() ) ? 1 : 0;
-     MyCocktailmuon.isStandAloneMuon = ( cocktailmuon->isStandAloneMuon() ) ? 1 : 0;
-     // MyCocktailmuon.isGlobalMuonPromptTight = ( cocktailmuon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
+       // MyCocktailmuon.trackIso = cocktailmuon->trackIso();
+       // MyCocktailmuon.ecalIso = cocktailmuon->ecalIso();
+       // MyCocktailmuon.hcalIso = cocktailmuon->hcalIso();
+       // MyCocktailmuon.caloIso = cocktailmuon->caloIso();
 
-     MyCocktailmuon.numberOfMatches = cocktailmuon->numberOfMatches();
-     MyCocktailmuon.numberOfMatchedStations = cocktailmuon->numberOfMatchedStations();
+       MyCocktailmuon.trackIsoDR03 = cocktailmuon->isolationR03().sumPt;
+       MyCocktailmuon.ecalIsoDR03 = cocktailmuon->isolationR03().emEt;
+       MyCocktailmuon.hcalIsoDR03 = cocktailmuon->isolationR03().hadEt;
+       MyCocktailmuon.caloIsoDR03 = cocktailmuon->isolationR03().emEt + cocktailmuon->isolationR03().hadEt;
 
-     MyCocktailmuon.dVzPVz = cocktailmuon->vz() - PVz;
-     //MyCocktailmuon.dB = cocktailmuon->dB();
+       MyCocktailmuon.trackVetoIsoDR03 = cocktailmuon->isolationR03().trackerVetoPt;
+       MyCocktailmuon.ecalVetoIsoDR03 = cocktailmuon->isolationR03().emVetoEt;
+       MyCocktailmuon.hcalVetoIsoDR03 = cocktailmuon->isolationR03().hadVetoEt;
+       MyCocktailmuon.caloVetoIsoDR03 = cocktailmuon->isolationR03().emVetoEt + cocktailmuon->isolationR03().hadVetoEt;
 
-     if( (cocktailmuon->globalTrack().isAvailable()) ){
-       MyCocktailmuon.normalizedChi2 = cocktailmuon->globalTrack()->normalizedChi2();
-       MyCocktailmuon.numberOfValidMuonHits = cocktailmuon->globalTrack()->hitPattern().numberOfValidMuonHits();
-       MyCocktailmuon.numberOfValidTrackerHits = cocktailmuon->globalTrack()->hitPattern().numberOfValidTrackerHits();
-       MyCocktailmuon.ptErr = cocktailmuon->globalTrack()->ptError();
-     }
-     if( (cocktailmuon->innerTrack().isAvailable()) ){
-       MyCocktailmuon.numberOfValidTrackerHitsInnerTrack = cocktailmuon->innerTrack()->numberOfValidHits();
-       MyCocktailmuon.pixelLayersWithMeasurement = cocktailmuon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
+       MyCocktailmuon.trackIsoDR05 = cocktailmuon->isolationR05().sumPt;
+       MyCocktailmuon.ecalIsoDR05 = cocktailmuon->isolationR05().emEt;
+       MyCocktailmuon.hcalIsoDR05 = cocktailmuon->isolationR05().hadEt;
+       MyCocktailmuon.caloIsoDR05 = cocktailmuon->isolationR05().emEt + cocktailmuon->isolationR05().hadEt;
 
-       MyCocktailmuon.correctedD0 = cocktailmuon->innerTrack()->dxy(beamSpotPosition);
-       MyCocktailmuon.correctedDZ = cocktailmuon->innerTrack()->dz(vertexPosition);
-     }
+       MyCocktailmuon.trackVetoIsoDR05 = cocktailmuon->isolationR05().trackerVetoPt;
+       MyCocktailmuon.ecalVetoIsoDR05 = cocktailmuon->isolationR05().emVetoEt;
+       MyCocktailmuon.hcalVetoIsoDR05 = cocktailmuon->isolationR05().hadVetoEt;
+       MyCocktailmuon.caloVetoIsoDR05 = cocktailmuon->isolationR05().emVetoEt + cocktailmuon->isolationR05().hadVetoEt;
 
-     // Get track cocktailmuon info
-     if( (cocktailmuon->track().isAvailable()) ){
-       double tkvx = cocktailmuon->track()->vx();
-       double tkvy = cocktailmuon->track()->vy();
-       double tkpx = cocktailmuon->track()->px();
-       double tkpy = cocktailmuon->track()->py();
-       double tkpt = cocktailmuon->track()->pt();
+       ////   Removed due to not understood seg faults. Seems ok in bare ROOT.
+       ////   Investigate and uncomment in future.
+       //MyCocktailmuon.hcalE = cocktailmuon->hcalIsoDeposit()->candEnergy();
+       //MyCocktailmuon.ecalE = cocktailmuon->ecalIsoDeposit()->candEnergy();
 
-       double ndof = cocktailmuon->track()->ndof();
-       if( (ndof!=0) ) MyCocktailmuon.tkNormChi2 = cocktailmuon->track()->chi2()/ndof;
-       MyCocktailmuon.tkPT = cocktailmuon->track()->pt();
-       MyCocktailmuon.tkEta = cocktailmuon->track()->eta();
-       MyCocktailmuon.tkPhi = cocktailmuon->track()->phi();
-       MyCocktailmuon.tkDZ = cocktailmuon->track()->dz();
-       MyCocktailmuon.tkD0 = cocktailmuon->track()->d0();
-       MyCocktailmuon.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
-       MyCocktailmuon.tkD0err = cocktailmuon->track()->d0Error();
-       MyCocktailmuon.tkNumValidHits = cocktailmuon->track()->numberOfValidHits();
-       MyCocktailmuon.tkCharge = cocktailmuon->track()->charge();
-     }
-     // Get standalone cocktailmuon info
-     if( (cocktailmuon->standAloneMuon().isAvailable()) ){
-       double samvx = cocktailmuon->standAloneMuon()->vx();
-       double samvy = cocktailmuon->standAloneMuon()->vy();
-       double sampx = cocktailmuon->standAloneMuon()->px();
-       double sampy = cocktailmuon->standAloneMuon()->py();
-       double sampt = cocktailmuon->standAloneMuon()->pt();
 
-       double ndof = cocktailmuon->standAloneMuon()->ndof();
-       if( (ndof!=0) ) MyCocktailmuon.samNormChi2 = cocktailmuon->standAloneMuon()->chi2()/ndof;
-       MyCocktailmuon.samPT = cocktailmuon->standAloneMuon()->pt();
-       MyCocktailmuon.samEta = cocktailmuon->standAloneMuon()->eta();
-       MyCocktailmuon.samPhi = cocktailmuon->standAloneMuon()->phi();
-       MyCocktailmuon.samDZ = cocktailmuon->standAloneMuon()->dz();
-       MyCocktailmuon.samD0 = cocktailmuon->standAloneMuon()->d0();
-       MyCocktailmuon.samD0bs = (samvx-BSx)*sampy/sampt-(samvy-BSy)*sampx/sampt;
-       MyCocktailmuon.samD0err = cocktailmuon->standAloneMuon()->d0Error();
-       MyCocktailmuon.samNumValidHits = cocktailmuon->standAloneMuon()->numberOfValidHits();
-       MyCocktailmuon.samCharge = cocktailmuon->standAloneMuon()->charge();
-     }
-     // Get global cocktailmuon info
-     if( (cocktailmuon->combinedMuon().isAvailable()) ){
-       double comvx = cocktailmuon->combinedMuon()->vx();
-       double comvy = cocktailmuon->combinedMuon()->vy();
-       double compx = cocktailmuon->combinedMuon()->px();
-       double compy = cocktailmuon->combinedMuon()->py();
-       double compt = cocktailmuon->combinedMuon()->pt();
+       // MyCocktailmuon.IDGMPTight = ( cocktailmuon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
 
-       double ndof = cocktailmuon->combinedMuon()->ndof();
-       if( (ndof!=0) ) MyCocktailmuon.comNormChi2 = cocktailmuon->combinedMuon()->chi2()/ndof;
-       MyCocktailmuon.comPT = cocktailmuon->combinedMuon()->pt();
-       MyCocktailmuon.comEta = cocktailmuon->combinedMuon()->eta();
-       MyCocktailmuon.comPhi = cocktailmuon->combinedMuon()->phi();
-       MyCocktailmuon.comDZ = cocktailmuon->combinedMuon()->dz();
-       MyCocktailmuon.comD0 = cocktailmuon->combinedMuon()->d0();
-       MyCocktailmuon.comD0bs = (comvx-BSx)*compy/compt-(comvy-BSy)*compx/compt;
-       MyCocktailmuon.comD0err = cocktailmuon->combinedMuon()->d0Error();
-       MyCocktailmuon.comNumValidHits = cocktailmuon->combinedMuon()->numberOfValidHits();
-       MyCocktailmuon.comCharge = cocktailmuon->combinedMuon()->charge();
-     }
+       MyCocktailmuon.isGlobalMuon = ( cocktailmuon->isGlobalMuon() ) ? 1 : 0;
+       MyCocktailmuon.isTrackerMuon = ( cocktailmuon->isTrackerMuon() ) ? 1 : 0;
+       MyCocktailmuon.isStandAloneMuon = ( cocktailmuon->isStandAloneMuon() ) ? 1 : 0;
+       // MyCocktailmuon.isGlobalMuonPromptTight = ( cocktailmuon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
 
-     /*
-     if( (cocktailmuon->genLepton()) ){
-       MyCocktailmuon.genId = cocktailmuon->genLepton()->pdgId();
-       MyCocktailmuon.genET = cocktailmuon->genLepton()->et();
-       MyCocktailmuon.genPT = cocktailmuon->genLepton()->pt();
-       MyCocktailmuon.genPhi = cocktailmuon->genLepton()->phi();
-       MyCocktailmuon.genEta = cocktailmuon->genLepton()->eta();
-       MyCocktailmuon.genCharge = cocktailmuon->genLepton()->charge();
+       MyCocktailmuon.numberOfMatches = cocktailmuon->numberOfMatches();
+       MyCocktailmuon.numberOfMatchedStations = cocktailmuon->numberOfMatchedStations();
 
-       if( (cocktailmuon->genLepton()->numberOfMothers()>0) ){
-	 const reco::Candidate *MuonMother = cocktailmuon->genLepton()->mother();
-	 bool staytrapped = true;
-	 while( (abs(MuonMother->pdgId())==13 && staytrapped) ){
-	   if( MuonMother->numberOfMothers()==1 ) MuonMother = MuonMother->mother();
-	   else staytrapped = false;
-	 }
-       
-	 MyCocktailmuon.genMotherId = MuonMother->pdgId();
-	 MyCocktailmuon.genMotherET = MuonMother->et();
-	 MyCocktailmuon.genMotherPT = MuonMother->pt();
-	 MyCocktailmuon.genMotherPhi = MuonMother->phi();
-	 MyCocktailmuon.genMotherEta = MuonMother->eta();
-	 MyCocktailmuon.genMotherCharge = MuonMother->charge();
+       MyCocktailmuon.dVzPVz = cocktailmuon->vz() - PVz;
+       //MyCocktailmuon.dB = cocktailmuon->dB();
+
+       if( (cocktailmuon->globalTrack().isAvailable()) ){
+	 MyCocktailmuon.normalizedChi2 = cocktailmuon->globalTrack()->normalizedChi2();
+	 MyCocktailmuon.numberOfValidMuonHits = cocktailmuon->globalTrack()->hitPattern().numberOfValidMuonHits();
+	 MyCocktailmuon.numberOfValidTrackerHits = cocktailmuon->globalTrack()->hitPattern().numberOfValidTrackerHits();
+	 MyCocktailmuon.ptErr = cocktailmuon->globalTrack()->ptError();
        }
+       if( (cocktailmuon->innerTrack().isAvailable()) ){
+	 MyCocktailmuon.numberOfValidTrackerHitsInnerTrack = cocktailmuon->innerTrack()->numberOfValidHits();
+	 MyCocktailmuon.pixelLayersWithMeasurement = cocktailmuon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
+
+	 MyCocktailmuon.correctedD0 = cocktailmuon->innerTrack()->dxy(beamSpotPosition);
+	 MyCocktailmuon.correctedDZ = cocktailmuon->innerTrack()->dz(vertexPosition);
+       }
+
+       // Get track cocktailmuon info
+       if( (cocktailmuon->track().isAvailable()) ){
+	 double tkvx = cocktailmuon->track()->vx();
+	 double tkvy = cocktailmuon->track()->vy();
+	 double tkpx = cocktailmuon->track()->px();
+	 double tkpy = cocktailmuon->track()->py();
+	 double tkpt = cocktailmuon->track()->pt();
+
+	 double ndof = cocktailmuon->track()->ndof();
+	 if( (ndof!=0) ) MyCocktailmuon.tkNormChi2 = cocktailmuon->track()->chi2()/ndof;
+	 MyCocktailmuon.tkPT = cocktailmuon->track()->pt();
+	 MyCocktailmuon.tkEta = cocktailmuon->track()->eta();
+	 MyCocktailmuon.tkPhi = cocktailmuon->track()->phi();
+	 MyCocktailmuon.tkDZ = cocktailmuon->track()->dz();
+	 MyCocktailmuon.tkD0 = cocktailmuon->track()->d0();
+	 MyCocktailmuon.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
+	 MyCocktailmuon.tkD0err = cocktailmuon->track()->d0Error();
+	 MyCocktailmuon.tkNumValidHits = cocktailmuon->track()->numberOfValidHits();
+	 MyCocktailmuon.tkCharge = cocktailmuon->track()->charge();
+       }
+       // Get standalone cocktailmuon info
+       if( (cocktailmuon->standAloneMuon().isAvailable()) ){
+	 double samvx = cocktailmuon->standAloneMuon()->vx();
+	 double samvy = cocktailmuon->standAloneMuon()->vy();
+	 double sampx = cocktailmuon->standAloneMuon()->px();
+	 double sampy = cocktailmuon->standAloneMuon()->py();
+	 double sampt = cocktailmuon->standAloneMuon()->pt();
+
+	 double ndof = cocktailmuon->standAloneMuon()->ndof();
+	 if( (ndof!=0) ) MyCocktailmuon.samNormChi2 = cocktailmuon->standAloneMuon()->chi2()/ndof;
+	 MyCocktailmuon.samPT = cocktailmuon->standAloneMuon()->pt();
+	 MyCocktailmuon.samEta = cocktailmuon->standAloneMuon()->eta();
+	 MyCocktailmuon.samPhi = cocktailmuon->standAloneMuon()->phi();
+	 MyCocktailmuon.samDZ = cocktailmuon->standAloneMuon()->dz();
+	 MyCocktailmuon.samD0 = cocktailmuon->standAloneMuon()->d0();
+	 MyCocktailmuon.samD0bs = (samvx-BSx)*sampy/sampt-(samvy-BSy)*sampx/sampt;
+	 MyCocktailmuon.samD0err = cocktailmuon->standAloneMuon()->d0Error();
+	 MyCocktailmuon.samNumValidHits = cocktailmuon->standAloneMuon()->numberOfValidHits();
+	 MyCocktailmuon.samCharge = cocktailmuon->standAloneMuon()->charge();
+       }
+       // Get global cocktailmuon info
+       if( (cocktailmuon->combinedMuon().isAvailable()) ){
+	 double comvx = cocktailmuon->combinedMuon()->vx();
+	 double comvy = cocktailmuon->combinedMuon()->vy();
+	 double compx = cocktailmuon->combinedMuon()->px();
+	 double compy = cocktailmuon->combinedMuon()->py();
+	 double compt = cocktailmuon->combinedMuon()->pt();
+
+	 double ndof = cocktailmuon->combinedMuon()->ndof();
+	 if( (ndof!=0) ) MyCocktailmuon.comNormChi2 = cocktailmuon->combinedMuon()->chi2()/ndof;
+	 MyCocktailmuon.comPT = cocktailmuon->combinedMuon()->pt();
+	 MyCocktailmuon.comEta = cocktailmuon->combinedMuon()->eta();
+	 MyCocktailmuon.comPhi = cocktailmuon->combinedMuon()->phi();
+	 MyCocktailmuon.comDZ = cocktailmuon->combinedMuon()->dz();
+	 MyCocktailmuon.comD0 = cocktailmuon->combinedMuon()->d0();
+	 MyCocktailmuon.comD0bs = (comvx-BSx)*compy/compt-(comvy-BSy)*compx/compt;
+	 MyCocktailmuon.comD0err = cocktailmuon->combinedMuon()->d0Error();
+	 MyCocktailmuon.comNumValidHits = cocktailmuon->combinedMuon()->numberOfValidHits();
+	 MyCocktailmuon.comCharge = cocktailmuon->combinedMuon()->charge();
+       }
+
+       bncocktailmuons->push_back(MyCocktailmuon);
      }
-     */
-
-     bncocktailmuons->push_back(MyCocktailmuon);
    }
-
 
 
 
@@ -2073,132 +2199,133 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    /////////////////////////////////////////////
 
    std::auto_ptr<BNphotonCollection> bnphotons(new BNphotonCollection);
-   for( edm::View<pat::Photon>::const_iterator photon = photons.begin(); photon!=photons.end(); ++photon ){
+   if( producePhoton ){
+     for( edm::View<pat::Photon>::const_iterator photon = photons.begin(); photon!=photons.end(); ++photon ){
 
-     if( !(photon->et()>minPhotonEt_) ) continue;
+       if( !(photon->et()>minPhotonEt_) ) continue;
 
-     BNphoton MyPhoton;
+       BNphoton MyPhoton;
 
-     // general kinematic variables
-     MyPhoton.energy = photon->energy();
-     MyPhoton.et = photon->et();
-     MyPhoton.pt = photon->pt();
-     MyPhoton.px = photon->px();
-     MyPhoton.py = photon->py();
-     MyPhoton.pz = photon->pz();
-     MyPhoton.phi = photon->phi();
-     MyPhoton.eta = photon->eta();
-     MyPhoton.theta = photon->theta();
+       // general kinematic variables
+       MyPhoton.energy = photon->energy();
+       MyPhoton.et = photon->et();
+       MyPhoton.pt = photon->pt();
+       MyPhoton.px = photon->px();
+       MyPhoton.py = photon->py();
+       MyPhoton.pz = photon->pz();
+       MyPhoton.phi = photon->phi();
+       MyPhoton.eta = photon->eta();
+       MyPhoton.theta = photon->theta();
 
-     MyPhoton.trackIso = photon->trackIso();
-     MyPhoton.ecalIso = photon->ecalIso();
-     MyPhoton.hcalIso = photon->hcalIso();
-     MyPhoton.caloIso = photon->caloIso();
+       MyPhoton.trackIso = photon->trackIso();
+       MyPhoton.ecalIso = photon->ecalIso();
+       MyPhoton.hcalIso = photon->hcalIso();
+       MyPhoton.caloIso = photon->caloIso();
 
-     MyPhoton.trackIsoHollowConeDR03 = photon->trkSumPtHollowConeDR03();
-     MyPhoton.trackIsoSolidConeDR03 = photon->trkSumPtSolidConeDR03();
-     MyPhoton.ecalIsoDR03 = photon->ecalRecHitSumEtConeDR03();
-     MyPhoton.hcalIsoDR03 = photon->hcalTowerSumEtConeDR03();
-     MyPhoton.caloIsoDR03 = photon->ecalRecHitSumEtConeDR03() + photon->hcalTowerSumEtConeDR03();
+       MyPhoton.trackIsoHollowConeDR03 = photon->trkSumPtHollowConeDR03();
+       MyPhoton.trackIsoSolidConeDR03 = photon->trkSumPtSolidConeDR03();
+       MyPhoton.ecalIsoDR03 = photon->ecalRecHitSumEtConeDR03();
+       MyPhoton.hcalIsoDR03 = photon->hcalTowerSumEtConeDR03();
+       MyPhoton.caloIsoDR03 = photon->ecalRecHitSumEtConeDR03() + photon->hcalTowerSumEtConeDR03();
 
-     MyPhoton.trackIsoHollowConeDR04 = photon->trkSumPtHollowConeDR04();
-     MyPhoton.trackIsoSolidConeDR04 = photon->trkSumPtSolidConeDR04();
-     MyPhoton.ecalIsoDR04 = photon->ecalRecHitSumEtConeDR04();
-     MyPhoton.hcalIsoDR04 = photon->hcalTowerSumEtConeDR04();
-     MyPhoton.caloIsoDR04 = photon->ecalRecHitSumEtConeDR04() + photon->hcalTowerSumEtConeDR04();
+       MyPhoton.trackIsoHollowConeDR04 = photon->trkSumPtHollowConeDR04();
+       MyPhoton.trackIsoSolidConeDR04 = photon->trkSumPtSolidConeDR04();
+       MyPhoton.ecalIsoDR04 = photon->ecalRecHitSumEtConeDR04();
+       MyPhoton.hcalIsoDR04 = photon->hcalTowerSumEtConeDR04();
+       MyPhoton.caloIsoDR04 = photon->ecalRecHitSumEtConeDR04() + photon->hcalTowerSumEtConeDR04();
 
-     MyPhoton.hadOverEm = photon->hadronicOverEm();
-     MyPhoton.sigmaEtaEta = photon->sigmaEtaEta();
-     MyPhoton.sigmaIetaIeta = photon->sigmaIetaIeta();
-     MyPhoton.r9 = photon->r9();
+       MyPhoton.hadOverEm = photon->hadronicOverEm();
+       MyPhoton.sigmaEtaEta = photon->sigmaEtaEta();
+       MyPhoton.sigmaIetaIeta = photon->sigmaIetaIeta();
+       MyPhoton.r9 = photon->r9();
 
-     MyPhoton.IDLooseEM = -1;
-     MyPhoton.IDLoose = -1;
-     MyPhoton.IDTight = -1;
+       MyPhoton.IDLooseEM = -1;
+       MyPhoton.IDLoose = -1;
+       MyPhoton.IDTight = -1;
 
-     MyPhoton.hasPixelSeed = ( photon->hasPixelSeed() ) ? 1 : 0;
+       MyPhoton.hasPixelSeed = ( photon->hasPixelSeed() ) ? 1 : 0;
 
-     // Get photon supercluster information
-     if( (photon->superCluster().isAvailable()) ){
-       double eMax    = lazyTools.eMax(    *(photon->superCluster()) );
-       double eLeft   = lazyTools.eLeft(   *(photon->superCluster()) );
-       double eRight  = lazyTools.eRight(  *(photon->superCluster()) );
-       double eTop    = lazyTools.eTop(    *(photon->superCluster()) );
-       double eBottom = lazyTools.eBottom( *(photon->superCluster()) );
-       double e3x3    = lazyTools.e3x3(    *(photon->superCluster()) );
-       double swissCross = -99;
+       // Get photon supercluster information
+       if( (photon->superCluster().isAvailable()) ){
+	 double eMax    = lazyTools.eMax(    *(photon->superCluster()) );
+	 double eLeft   = lazyTools.eLeft(   *(photon->superCluster()) );
+	 double eRight  = lazyTools.eRight(  *(photon->superCluster()) );
+	 double eTop    = lazyTools.eTop(    *(photon->superCluster()) );
+	 double eBottom = lazyTools.eBottom( *(photon->superCluster()) );
+	 double e3x3    = lazyTools.e3x3(    *(photon->superCluster()) );
+	 double swissCross = -99;
 
-       if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
+	 if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
 
-       MyPhoton.eMax = eMax;
-       MyPhoton.eLeft = eLeft;
-       MyPhoton.eRight = eRight;
-       MyPhoton.eTop = eTop;
-       MyPhoton.eBottom = eBottom;
-       MyPhoton.e3x3 = e3x3;
-       MyPhoton.swissCross = swissCross;
+	 MyPhoton.eMax = eMax;
+	 MyPhoton.eLeft = eLeft;
+	 MyPhoton.eRight = eRight;
+	 MyPhoton.eTop = eTop;
+	 MyPhoton.eBottom = eBottom;
+	 MyPhoton.e3x3 = e3x3;
+	 MyPhoton.swissCross = swissCross;
 
-       MyPhoton.scEnergy = photon->superCluster()->energy();
-       MyPhoton.scRawEnergy = photon->superCluster()->rawEnergy();
-       MyPhoton.scEta = photon->superCluster()->position().eta();
-       MyPhoton.scPhi = photon->superCluster()->position().phi();
-       MyPhoton.scZ = photon->superCluster()->position().Z();
+	 MyPhoton.scEnergy = photon->superCluster()->energy();
+	 MyPhoton.scRawEnergy = photon->superCluster()->rawEnergy();
+	 MyPhoton.scEta = photon->superCluster()->position().eta();
+	 MyPhoton.scPhi = photon->superCluster()->position().phi();
+	 MyPhoton.scZ = photon->superCluster()->position().Z();
 
-       double seedE = -999, seedTime = -999;
-       int seedRecoFlag = -999;
+	 double seedE = -999, seedTime = -999;
+	 int seedRecoFlag = -999;
        
-       if( (photon->isEB()) ){
-       	 DetId idEB = EcalClusterTools::getMaximum( photon->superCluster()->hitsAndFractions(), &(*barrelRecHits) ).first;
-       	 EcalRecHitCollection::const_iterator thisHitEB = barrelRecHits->find(idEB);
+	 if( (photon->isEB()) ){
+	   DetId idEB = EcalClusterTools::getMaximum( photon->superCluster()->hitsAndFractions(), &(*barrelRecHits) ).first;
+	   EcalRecHitCollection::const_iterator thisHitEB = barrelRecHits->find(idEB);
 
-       	 seedE = thisHitEB->energy();
-       	 seedTime = thisHitEB->time();
-       	 seedRecoFlag = thisHitEB->recoFlag();
+	   seedE = thisHitEB->energy();
+	   seedTime = thisHitEB->time();
+	   seedRecoFlag = thisHitEB->recoFlag();
+	 }
+	 else if( (photon->isEE()) ){
+	   DetId idEE = EcalClusterTools::getMaximum( photon->superCluster()->hitsAndFractions(), &(*endcapRecHits) ).first;
+	   EcalRecHitCollection::const_iterator thisHitEE = endcapRecHits->find(idEE);
+
+	   seedE = thisHitEE->energy();
+	   seedTime = thisHitEE->time();
+	   seedRecoFlag = thisHitEE->recoFlag();
+	 }
+
+	 MyPhoton.seedEnergy   = seedE;
+	 MyPhoton.seedTime     = seedTime;
+	 MyPhoton.seedRecoFlag = seedRecoFlag;
+
+	 // MyPhoton.swissCrossNoI85 = swissCrossNoI85;
+	 // MyPhoton.swissCrossI85   = swissCrossI85;
+	 // MyPhoton.E2overE9NoI85 = e2overe9NoI85;
+	 // MyPhoton.E2overE9I85 = e2overe9I85;
        }
-       else if( (photon->isEE()) ){
-       	 DetId idEE = EcalClusterTools::getMaximum( photon->superCluster()->hitsAndFractions(), &(*endcapRecHits) ).first;
-       	 EcalRecHitCollection::const_iterator thisHitEE = endcapRecHits->find(idEE);
 
-       	 seedE = thisHitEE->energy();
-       	 seedTime = thisHitEE->time();
-       	 seedRecoFlag = thisHitEE->recoFlag();
+       MyPhoton.isEB = photon->isEB();
+       MyPhoton.isEE = photon->isEE();
+       MyPhoton.isEBEEGap = photon->isEBEEGap();
+       MyPhoton.isEBGap = photon->isEBGap();
+       MyPhoton.isEEGap = photon->isEEGap();
+       MyPhoton.isGap = ( (photon->isEBEEGap()) || (photon->isEBGap()) || (photon->isEEGap()) );
+
+       if( (photon->genPhoton()) ){
+	 MyPhoton.genId = photon->genPhoton()->pdgId();
+	 MyPhoton.genET = photon->genPhoton()->et();
+	 MyPhoton.genPT = photon->genPhoton()->pt();
+	 MyPhoton.genPhi = photon->genPhoton()->phi();
+	 MyPhoton.genEta = photon->genPhoton()->eta();
+	 MyPhoton.genCharge = photon->genPhoton()->charge();
+	 MyPhoton.genMotherId = photon->genPhoton()->mother()->pdgId();
+	 MyPhoton.genMotherET = photon->genPhoton()->mother()->et();
+	 MyPhoton.genMotherPT = photon->genPhoton()->mother()->pt();
+	 MyPhoton.genMotherPhi = photon->genPhoton()->mother()->phi();
+	 MyPhoton.genMotherEta = photon->genPhoton()->mother()->eta();
+	 MyPhoton.genMotherCharge = photon->genPhoton()->mother()->charge();
        }
 
-       MyPhoton.seedEnergy   = seedE;
-       MyPhoton.seedTime     = seedTime;
-       MyPhoton.seedRecoFlag = seedRecoFlag;
-
-       // MyPhoton.swissCrossNoI85 = swissCrossNoI85;
-       // MyPhoton.swissCrossI85   = swissCrossI85;
-       // MyPhoton.E2overE9NoI85 = e2overe9NoI85;
-       // MyPhoton.E2overE9I85 = e2overe9I85;
+       bnphotons->push_back(MyPhoton);
      }
-
-     MyPhoton.isEB = photon->isEB();
-     MyPhoton.isEE = photon->isEE();
-     MyPhoton.isEBEEGap = photon->isEBEEGap();
-     MyPhoton.isEBGap = photon->isEBGap();
-     MyPhoton.isEEGap = photon->isEEGap();
-     MyPhoton.isGap = ( (photon->isEBEEGap()) || (photon->isEBGap()) || (photon->isEEGap()) );
-
-     if( (photon->genPhoton()) ){
-       MyPhoton.genId = photon->genPhoton()->pdgId();
-       MyPhoton.genET = photon->genPhoton()->et();
-       MyPhoton.genPT = photon->genPhoton()->pt();
-       MyPhoton.genPhi = photon->genPhoton()->phi();
-       MyPhoton.genEta = photon->genPhoton()->eta();
-       MyPhoton.genCharge = photon->genPhoton()->charge();
-       MyPhoton.genMotherId = photon->genPhoton()->mother()->pdgId();
-       MyPhoton.genMotherET = photon->genPhoton()->mother()->et();
-       MyPhoton.genMotherPT = photon->genPhoton()->mother()->pt();
-       MyPhoton.genMotherPhi = photon->genPhoton()->mother()->phi();
-       MyPhoton.genMotherEta = photon->genPhoton()->mother()->eta();
-       MyPhoton.genMotherCharge = photon->genPhoton()->mother()->charge();
-     }
-
-     bnphotons->push_back(MyPhoton);
    }
-
 
 
    int numhighpurity=0;
@@ -2211,38 +2338,39 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    /////////////////////////////////////////////
 
    std::auto_ptr<BNtrackCollection> bntracks(new BNtrackCollection);
-   for(reco::TrackCollection::const_iterator track = tracks.begin(); track!=tracks.end(); ++track ){
+   if( produceTrack ){
+     for(reco::TrackCollection::const_iterator track = tracks.begin(); track!=tracks.end(); ++track ){
 
-     if( track->quality(_trackQuality) ) numhighpurity++;
+       if( track->quality(_trackQuality) ) numhighpurity++;
 
-     if( !(track->pt()>minTrackPt_) ) continue;
+       if( !(track->pt()>minTrackPt_) ) continue;
 
-     BNtrack MyTrack;
+       BNtrack MyTrack;
 
-     MyTrack.pt = track->pt();
-     MyTrack.px = track->px();
-     MyTrack.py = track->py();
-     MyTrack.pz = track->pz();
-     MyTrack.phi = track->phi();
-     MyTrack.eta = track->eta();
-     MyTrack.theta = track->theta();
+       MyTrack.pt = track->pt();
+       MyTrack.px = track->px();
+       MyTrack.py = track->py();
+       MyTrack.pz = track->pz();
+       MyTrack.phi = track->phi();
+       MyTrack.eta = track->eta();
+       MyTrack.theta = track->theta();
 
-     MyTrack.vx = track->vx();
-     MyTrack.vy = track->vy();
-     MyTrack.vz = track->vz();
-     MyTrack.charge = track->charge();
-     MyTrack.numValidHits = track->numberOfValidHits();
+       MyTrack.vx = track->vx();
+       MyTrack.vy = track->vy();
+       MyTrack.vz = track->vz();
+       MyTrack.charge = track->charge();
+       MyTrack.numValidHits = track->numberOfValidHits();
 
-     MyTrack.dZ = track->dz();
-     MyTrack.d0 = track->d0();
-     MyTrack.d0err = track->d0Error();
-     double ndof = track->ndof();
-     if( (ndof!=0) ) MyTrack.normChi2 = track->chi2()/ndof;
+       MyTrack.dZ = track->dz();
+       MyTrack.d0 = track->d0();
+       MyTrack.d0err = track->d0Error();
+       double ndof = track->ndof();
+       if( (ndof!=0) ) MyTrack.normChi2 = track->chi2()/ndof;
 
 
-     bntracks->push_back(MyTrack);
+       bntracks->push_back(MyTrack);
+     }
    }
-
 
    bool FilterOutScraping = false;
    int tracksSize = int(tracks.size());
@@ -2262,53 +2390,56 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    /////////////////////////////////////////////
 
    std::auto_ptr<BNsuperclusterCollection> bnsuperclusters(new BNsuperclusterCollection);
-   for(reco::SuperClusterCollection::const_iterator supercluster = EBsuperclusters.begin(); supercluster!=EBsuperclusters.end(); ++supercluster ){
+   if( produceSCsEB ){
+     for(reco::SuperClusterCollection::const_iterator supercluster = EBsuperclusters.begin(); supercluster!=EBsuperclusters.end(); ++supercluster ){
 
-     double sctheta = 2.0*atan(exp(-supercluster->eta()));
-     double scet = supercluster->energy()*sin(sctheta);
+       double sctheta = 2.0*atan(exp(-supercluster->eta()));
+       double scet = supercluster->energy()*sin(sctheta);
 
-     if( !(scet>minSCEt_) ) continue;
+       if( !(scet>minSCEt_) ) continue;
 
-     BNsupercluster MySC;
+       BNsupercluster MySC;
 
-     MySC.energy = supercluster->energy();
-     MySC.phi = supercluster->phi();
-     MySC.eta = supercluster->eta();
+       MySC.energy = supercluster->energy();
+       MySC.phi = supercluster->phi();
+       MySC.eta = supercluster->eta();
 
-     MySC.theta = sctheta;
+       MySC.theta = sctheta;
 
-     MySC.et = supercluster->energy()*sin(sctheta);
-     MySC.ex = supercluster->energy()*sin(sctheta)*cos(supercluster->phi());
-     MySC.ey = supercluster->energy()*sin(sctheta)*sin(supercluster->phi());
-     MySC.ez = supercluster->energy()*cos(sctheta);
+       MySC.et = supercluster->energy()*sin(sctheta);
+       MySC.ex = supercluster->energy()*sin(sctheta)*cos(supercluster->phi());
+       MySC.ey = supercluster->energy()*sin(sctheta)*sin(supercluster->phi());
+       MySC.ez = supercluster->energy()*cos(sctheta);
 
 
-     bnsuperclusters->push_back(MySC);
+       bnsuperclusters->push_back(MySC);
+     }
    }
-   for(reco::SuperClusterCollection::const_iterator supercluster = EEsuperclusters.begin(); supercluster!=EEsuperclusters.end(); ++supercluster ){
+   if( produceSCsEE ){
+     for(reco::SuperClusterCollection::const_iterator supercluster = EEsuperclusters.begin(); supercluster!=EEsuperclusters.end(); ++supercluster ){
 
-     double sctheta = 2.0*atan(exp(-supercluster->eta()));
-     double scet = supercluster->energy()*sin(sctheta);
+       double sctheta = 2.0*atan(exp(-supercluster->eta()));
+       double scet = supercluster->energy()*sin(sctheta);
 
-     if( !(scet>minSCEt_) ) continue;
+       if( !(scet>minSCEt_) ) continue;
 
-     BNsupercluster MySC;
+       BNsupercluster MySC;
 
-     MySC.energy = supercluster->energy();
-     MySC.phi = supercluster->phi();
-     MySC.eta = supercluster->eta();
+       MySC.energy = supercluster->energy();
+       MySC.phi = supercluster->phi();
+       MySC.eta = supercluster->eta();
 
-     MySC.theta = sctheta;
+       MySC.theta = sctheta;
 
-     MySC.et = supercluster->energy()*sin(sctheta);
-     MySC.ex = supercluster->energy()*sin(sctheta)*cos(supercluster->phi());
-     MySC.ey = supercluster->energy()*sin(sctheta)*sin(supercluster->phi());
-     MySC.ez = supercluster->energy()*cos(sctheta);
+       MySC.et = supercluster->energy()*sin(sctheta);
+       MySC.ex = supercluster->energy()*sin(sctheta)*cos(supercluster->phi());
+       MySC.ey = supercluster->energy()*sin(sctheta)*sin(supercluster->phi());
+       MySC.ez = supercluster->energy()*cos(sctheta);
 
 
-     bnsuperclusters->push_back(MySC);
+       bnsuperclusters->push_back(MySC);
+     }
    }
-
 
 
 
@@ -2328,7 +2459,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    vecWdecay.clear();
    vecHdecay.clear();
 
-   if( (genParticles.isValid() && sample_>=0) ){
+   if( (genParticles.isValid() && sample_>=0 && produceGenParticle) ){
      for( size_t k = 0; k < genParticles->size(); k++ ){
        const reco::Candidate & mcParticle = (*genParticles)[k];
 
@@ -2418,7 +2549,13 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 }
        }
 
-       if( (status!=3) ) continue;
+       int aId = abs(pdgId);
+       bool keep = false;
+       if( (status==3) ||
+	   (aId==23 || aId==24 || aId==25 || aId==6 || aId==5 || aId==4 || aId==11 || aId==13 || aId==15) ) keep = true;
+
+       if( !keep ) continue;
+
 
        BNmcparticle MyMCparticle;
 
@@ -2456,7 +2593,86 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   MyMCparticle.grandMotherEta = mcParticle.mother()->mother()->eta();
 	 }
        }
+       if( (mcParticle.numberOfMothers()>=1) ){
+	 MyMCparticle.mother0Id = mcParticle.mother(0)->pdgId();
+	 MyMCparticle.mother0Status = mcParticle.mother(0)->status();
+	 MyMCparticle.mother0Charge = mcParticle.mother(0)->charge();
+	 MyMCparticle.mother0ET = mcParticle.mother(0)->et();
+	 MyMCparticle.mother0PT = mcParticle.mother(0)->pt();
+	 MyMCparticle.mother0Phi = mcParticle.mother(0)->phi();
+	 MyMCparticle.mother0Eta = mcParticle.mother(0)->eta();
 
+	 if( (mcParticle.numberOfMothers()>=2) ){
+	   MyMCparticle.mother1Id = mcParticle.mother(1)->pdgId();
+	   MyMCparticle.mother1Status = mcParticle.mother(1)->status();
+	   MyMCparticle.mother1Charge = mcParticle.mother(1)->charge();
+	   MyMCparticle.mother1ET = mcParticle.mother(1)->et();
+	   MyMCparticle.mother1PT = mcParticle.mother(1)->pt();
+	   MyMCparticle.mother1Phi = mcParticle.mother(1)->phi();
+	   MyMCparticle.mother1Eta = mcParticle.mother(1)->eta();
+
+	   if( (mcParticle.mother(0)->numberOfMothers()>=1) ){
+	     MyMCparticle.grandMother00Id = mcParticle.mother(0)->mother(0)->pdgId();
+	     MyMCparticle.grandMother00Status = mcParticle.mother(0)->mother(0)->status();
+	     MyMCparticle.grandMother00Charge = mcParticle.mother(0)->mother(0)->charge();
+	     MyMCparticle.grandMother00ET = mcParticle.mother(0)->mother(0)->et();
+	     MyMCparticle.grandMother00PT = mcParticle.mother(0)->mother(0)->pt();
+	     MyMCparticle.grandMother00Phi = mcParticle.mother(0)->mother(0)->phi();
+	     MyMCparticle.grandMother00Eta = mcParticle.mother(0)->mother(0)->eta();
+
+	     if( (mcParticle.mother(0)->numberOfMothers()>=2) ){
+	       MyMCparticle.grandMother01Id = mcParticle.mother(0)->mother(1)->pdgId();
+	       MyMCparticle.grandMother01Status = mcParticle.mother(0)->mother(1)->status();
+	       MyMCparticle.grandMother01Charge = mcParticle.mother(0)->mother(1)->charge();
+	       MyMCparticle.grandMother01ET = mcParticle.mother(0)->mother(1)->et();
+	       MyMCparticle.grandMother01PT = mcParticle.mother(0)->mother(1)->pt();
+	       MyMCparticle.grandMother01Phi = mcParticle.mother(0)->mother(1)->phi();
+	       MyMCparticle.grandMother01Eta = mcParticle.mother(0)->mother(1)->eta();
+	     }
+	   }
+
+	   if( (mcParticle.mother(1)->numberOfMothers()>=1) ){
+	     MyMCparticle.grandMother10Id = mcParticle.mother(1)->mother(0)->pdgId();
+	     MyMCparticle.grandMother10Status = mcParticle.mother(1)->mother(0)->status();
+	     MyMCparticle.grandMother10Charge = mcParticle.mother(1)->mother(0)->charge();
+	     MyMCparticle.grandMother10ET = mcParticle.mother(1)->mother(0)->et();
+	     MyMCparticle.grandMother10PT = mcParticle.mother(1)->mother(0)->pt();
+	     MyMCparticle.grandMother10Phi = mcParticle.mother(1)->mother(0)->phi();
+	     MyMCparticle.grandMother10Eta = mcParticle.mother(1)->mother(0)->eta();
+
+	     if( (mcParticle.mother(1)->numberOfMothers()>=2) ){
+	       MyMCparticle.grandMother11Id = mcParticle.mother(1)->mother(1)->pdgId();
+	       MyMCparticle.grandMother11Status = mcParticle.mother(1)->mother(1)->status();
+	       MyMCparticle.grandMother11Charge = mcParticle.mother(1)->mother(1)->charge();
+	       MyMCparticle.grandMother11ET = mcParticle.mother(1)->mother(1)->et();
+	       MyMCparticle.grandMother11PT = mcParticle.mother(1)->mother(1)->pt();
+	       MyMCparticle.grandMother11Phi = mcParticle.mother(1)->mother(1)->phi();
+	       MyMCparticle.grandMother11Eta = mcParticle.mother(1)->mother(1)->eta();
+	     }
+	   }
+	 }
+       }
+
+
+       if( (mcParticle.numberOfDaughters()>=1) ){
+	 MyMCparticle.daughter0Id = mcParticle.daughter(0)->pdgId();
+	 MyMCparticle.daughter0Status = mcParticle.daughter(0)->status();
+	 MyMCparticle.daughter0Charge = mcParticle.daughter(0)->charge();
+	 MyMCparticle.daughter0ET = mcParticle.daughter(0)->et();
+	 MyMCparticle.daughter0PT = mcParticle.daughter(0)->pt();
+	 MyMCparticle.daughter0Phi = mcParticle.daughter(0)->phi();
+	 MyMCparticle.daughter0Eta = mcParticle.daughter(0)->eta();
+
+	 if( (mcParticle.numberOfDaughters()>=2) ){
+	   MyMCparticle.daughter1Id = mcParticle.daughter(1)->pdgId();
+	   MyMCparticle.daughter1Status = mcParticle.daughter(1)->status();
+	   MyMCparticle.daughter1Charge = mcParticle.daughter(1)->charge();
+	   MyMCparticle.daughter1ET = mcParticle.daughter(1)->et();
+	   MyMCparticle.daughter1PT = mcParticle.daughter(1)->pt();
+	   MyMCparticle.daughter1Phi = mcParticle.daughter(1)->phi();
+	   MyMCparticle.daughter1Eta = mcParticle.daughter(1)->eta();
+	 }
+       }
 
        bnmcparticles->push_back(MyMCparticle);
 
@@ -2492,6 +2708,40 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      }
    }
 
+
+
+   /////////////////////////////////////////////
+   ///////
+   ///////   Fill the mcparticles collection
+   ///////
+   /////////////////////////////////////////////
+
+   std::auto_ptr<BNgenjetCollection> bngenjets(new BNgenjetCollection);
+   if( sample_>=0 && produceGenJet ){
+     for(reco::GenJetCollection::const_iterator genjet = genjets.begin(); genjet!=genjets.end(); ++genjet ){
+
+       if( !(genjet->pt()>10. && fabs(genjet->eta())<3.5) ) continue;
+
+       BNgenjet MyGenjet;
+
+       MyGenjet.pt = genjet->pt();
+       MyGenjet.px = genjet->px();
+       MyGenjet.py = genjet->py();
+       MyGenjet.pz = genjet->pz();
+       MyGenjet.phi = genjet->phi();
+       MyGenjet.eta = genjet->eta();
+       MyGenjet.et = genjet->et();
+       MyGenjet.energy = genjet->energy();
+       MyGenjet.mass = genjet->mass();
+       MyGenjet.emEnergy = genjet->emEnergy();
+       MyGenjet.hadEnergy = genjet->hadEnergy();
+       MyGenjet.invisibleEnergy = genjet->invisibleEnergy();
+       MyGenjet.auxiliaryEnergy = genjet->auxiliaryEnergy();
+       MyGenjet.charge = genjet->charge();
+
+       bngenjets->push_back(MyGenjet);
+     }
+   }
 
 
    /////////////////////////////////////////////
@@ -2592,111 +2842,112 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    std::auto_ptr<BNmetCollection> bncalomet(new BNmetCollection);
    BNmet MyCalomet;
 
-   //double calometPT = calometHandle->front().pt();
-   MyCalomet.pt = calometHandle->front().pt();
-   MyCalomet.px = calometHandle->front().px();
-   MyCalomet.py = calometHandle->front().py();
-   MyCalomet.phi = calometHandle->front().phi();
-   MyCalomet.sumET = calometHandle->front().sumEt();
-   MyCalomet.corSumET = calometHandle->front().corSumEt();
-   MyCalomet.Upt = calometHandle->front().uncorrectedPt();
-   MyCalomet.Uphi = calometHandle->front().uncorrectedPhi();
+   if( produceCaloMET ){
+     //double calometPT = calometHandle->front().pt();
+     MyCalomet.pt = calometHandle->front().pt();
+     MyCalomet.px = calometHandle->front().px();
+     MyCalomet.py = calometHandle->front().py();
+     MyCalomet.phi = calometHandle->front().phi();
+     MyCalomet.sumET = calometHandle->front().sumEt();
+     MyCalomet.corSumET = calometHandle->front().corSumEt();
+     MyCalomet.Upt = calometHandle->front().uncorrectedPt();
+     MyCalomet.Uphi = calometHandle->front().uncorrectedPhi();
 
-   MyCalomet.et = calometHandle->front().et();
-   MyCalomet.mEtSig = calometHandle->front().mEtSig();
-   MyCalomet.metSignificance = calometHandle->front().metSignificance();
+     MyCalomet.et = calometHandle->front().et();
+     MyCalomet.mEtSig = calometHandle->front().mEtSig();
+     MyCalomet.metSignificance = calometHandle->front().metSignificance();
 
-   double sigmaX2_calo = (calometHandle->front()).getSignificanceMatrix()(0,0);
-   double sigmaY2_calo = (calometHandle->front()).getSignificanceMatrix()(1,1);
-   double sigmaXY_calo = (calometHandle->front()).getSignificanceMatrix()(0,1);
-   double sigmaYX_calo = (calometHandle->front()).getSignificanceMatrix()(1,0);
+     double sigmaX2_calo = (calometHandle->front()).getSignificanceMatrix()(0,0);
+     double sigmaY2_calo = (calometHandle->front()).getSignificanceMatrix()(1,1);
+     double sigmaXY_calo = (calometHandle->front()).getSignificanceMatrix()(0,1);
+     double sigmaYX_calo = (calometHandle->front()).getSignificanceMatrix()(1,0);
 
-   double significance_calo = 99;
-   if(sigmaX2_calo<1.e10 && sigmaY2_calo<1.e10) significance_calo = (calometHandle->front()).significance();
+     double significance_calo = 99;
+     if(sigmaX2_calo<1.e10 && sigmaY2_calo<1.e10) significance_calo = (calometHandle->front()).significance();
 
-   MyCalomet.significance = significance_calo;
-   MyCalomet.sigmaX2 = sigmaX2_calo;
-   MyCalomet.sigmaY2 = sigmaY2_calo;
-   MyCalomet.sigmaXY = sigmaXY_calo;
-   MyCalomet.sigmaYX = sigmaYX_calo;
+     MyCalomet.significance = significance_calo;
+     MyCalomet.sigmaX2 = sigmaX2_calo;
+     MyCalomet.sigmaY2 = sigmaY2_calo;
+     MyCalomet.sigmaXY = sigmaXY_calo;
+     MyCalomet.sigmaYX = sigmaYX_calo;
 
-   MyCalomet.maxEtInEmTowers = calometHandle->front().maxEtInEmTowers();
-   MyCalomet.emEtFraction = calometHandle->front().emEtFraction();
-   MyCalomet.emEtInEB = calometHandle->front().emEtInEB();
-   MyCalomet.emEtInEE = calometHandle->front().emEtInEE();
-   MyCalomet.emEtInHF = calometHandle->front().emEtInHF();
-   MyCalomet.maxEtInHadTowers = calometHandle->front().maxEtInHadTowers();
-   MyCalomet.hadEtFraction = calometHandle->front().etFractionHadronic();
-   MyCalomet.hadEtInHB = calometHandle->front().hadEtInHB();
-   MyCalomet.hadEtInHE = calometHandle->front().hadEtInHE();
-   MyCalomet.hadEtInHF = calometHandle->front().hadEtInHF();
-   MyCalomet.hadEtInHO = calometHandle->front().hadEtInHO();
+     MyCalomet.maxEtInEmTowers = calometHandle->front().maxEtInEmTowers();
+     MyCalomet.emEtFraction = calometHandle->front().emEtFraction();
+     MyCalomet.emEtInEB = calometHandle->front().emEtInEB();
+     MyCalomet.emEtInEE = calometHandle->front().emEtInEE();
+     MyCalomet.emEtInHF = calometHandle->front().emEtInHF();
+     MyCalomet.maxEtInHadTowers = calometHandle->front().maxEtInHadTowers();
+     MyCalomet.hadEtFraction = calometHandle->front().etFractionHadronic();
+     MyCalomet.hadEtInHB = calometHandle->front().hadEtInHB();
+     MyCalomet.hadEtInHE = calometHandle->front().hadEtInHE();
+     MyCalomet.hadEtInHF = calometHandle->front().hadEtInHF();
+     MyCalomet.hadEtInHO = calometHandle->front().hadEtInHO();
 
-   if( (calometHandle->front().genMET()) ){
-     MyCalomet.genPT = calometHandle->front().genMET()->pt();
-     MyCalomet.genPhi = calometHandle->front().genMET()->phi();
+     if( (calometHandle->front().genMET()) ){
+       MyCalomet.genPT = calometHandle->front().genMET()->pt();
+       MyCalomet.genPhi = calometHandle->front().genMET()->phi();
+     }
+
+
+     if( calometHandle->front().nCorrections()==0 ){
+       std::cout << "  nCorrections()==0, NO CORRECTIONS HAVE BEEN APPLIED!!" << std::endl;
+     }
+
+     // For now, simply trusting the muon corrections to MET
+     double calometMuoncorrPx = 0;
+     double calometMuoncorrPy = 0;
+     if( calometHandle->front().nCorrections()==1 ){
+       calometMuoncorrPx = calometHandle->front().corEx(pat::MET::uncorrJES);
+       calometMuoncorrPy = calometHandle->front().corEy(pat::MET::uncorrJES);
+     }
+     else if( calometHandle->front().nCorrections()>1 ){
+       calometMuoncorrPx = calometHandle->front().corEx(pat::MET::uncorrMUON);
+       calometMuoncorrPy = calometHandle->front().corEy(pat::MET::uncorrMUON);
+     }
+
+     MyCalomet.muonCorEx  = calometMuoncorrPx;
+     MyCalomet.muonCorEy  = calometMuoncorrPy;
+     MyCalomet.jet20CorEx = metJES20corrPx;
+     MyCalomet.jet20CorEy = metJES20corrPy;
+     MyCalomet.jet1CorEx  = metJES1corrPx;
+     MyCalomet.jet1CorEy  = metJES1corrPy;
+
+
+     UDeltaPx += calometHandle->front().uncorrectedPt() * cos(calometHandle->front().uncorrectedPhi()) ;
+     UDeltaPy += calometHandle->front().uncorrectedPt() * sin(calometHandle->front().uncorrectedPhi()) ;
+
+     double UDeltaP = sqrt( UDeltaPx*UDeltaPx + UDeltaPy*UDeltaPy );
+
+     double UscaleA = 1.5;
+     double UscaleB = 1.8;
+     double UscaleC = -0.06;
+
+     double Uscale = UscaleA+UscaleB*exp(UscaleC*UDeltaP);
+
+     double type2corPx = (Uscale-1.)*UDeltaPx;
+     double type2corPy = (Uscale-1.)*UDeltaPy;
+     double type2corSumET = (Uscale-1.)*USumET;
+
+     double T2px = calometHandle->front().px() + type2corPx;
+     double T2py = calometHandle->front().py() + type2corPy;
+     double T2pt = sqrt( T2px*T2px + T2py*T2py );
+     double T2phi = atan2(T2py,T2px);
+     double T2sumET = calometHandle->front().sumEt() + type2corSumET;
+
+     MyCalomet.UDeltaPx = UDeltaPx;
+     MyCalomet.UDeltaPy = UDeltaPy;
+     MyCalomet.UDeltaP = UDeltaP;
+     MyCalomet.Uscale = Uscale;
+     MyCalomet.type2corPx = type2corPx;
+     MyCalomet.type2corPy = type2corPy;
+     MyCalomet.T2pt = T2pt;
+     MyCalomet.T2px = T2px;
+     MyCalomet.T2py = T2py;
+     MyCalomet.T2phi = T2phi;
+     MyCalomet.T2sumET = T2sumET;
+
+     bncalomet->push_back(MyCalomet);
    }
-
-
-   if( calometHandle->front().nCorrections()==0 ){
-     std::cout << "  nCorrections()==0, NO CORRECTIONS HAVE BEEN APPLIED!!" << std::endl;
-   }
-
-   // For now, simply trusting the muon corrections to MET
-   double calometMuoncorrPx = 0;
-   double calometMuoncorrPy = 0;
-   if( calometHandle->front().nCorrections()==1 ){
-     calometMuoncorrPx = calometHandle->front().corEx(pat::MET::uncorrJES);
-     calometMuoncorrPy = calometHandle->front().corEy(pat::MET::uncorrJES);
-   }
-   else if( calometHandle->front().nCorrections()>1 ){
-     calometMuoncorrPx = calometHandle->front().corEx(pat::MET::uncorrMUON);
-     calometMuoncorrPy = calometHandle->front().corEy(pat::MET::uncorrMUON);
-   }
-
-   MyCalomet.muonCorEx  = calometMuoncorrPx;
-   MyCalomet.muonCorEy  = calometMuoncorrPy;
-   MyCalomet.jet20CorEx = metJES20corrPx;
-   MyCalomet.jet20CorEy = metJES20corrPy;
-   MyCalomet.jet1CorEx  = metJES1corrPx;
-   MyCalomet.jet1CorEy  = metJES1corrPy;
-
-
-   UDeltaPx += calometHandle->front().uncorrectedPt() * cos(calometHandle->front().uncorrectedPhi()) ;
-   UDeltaPy += calometHandle->front().uncorrectedPt() * sin(calometHandle->front().uncorrectedPhi()) ;
-
-   double UDeltaP = sqrt( UDeltaPx*UDeltaPx + UDeltaPy*UDeltaPy );
-
-   double UscaleA = 1.5;
-   double UscaleB = 1.8;
-   double UscaleC = -0.06;
-
-   double Uscale = UscaleA+UscaleB*exp(UscaleC*UDeltaP);
-
-   double type2corPx = (Uscale-1.)*UDeltaPx;
-   double type2corPy = (Uscale-1.)*UDeltaPy;
-   double type2corSumET = (Uscale-1.)*USumET;
-
-   double T2px = calometHandle->front().px() + type2corPx;
-   double T2py = calometHandle->front().py() + type2corPy;
-   double T2pt = sqrt( T2px*T2px + T2py*T2py );
-   double T2phi = atan2(T2py,T2px);
-   double T2sumET = calometHandle->front().sumEt() + type2corSumET;
-
-   MyCalomet.UDeltaPx = UDeltaPx;
-   MyCalomet.UDeltaPy = UDeltaPy;
-   MyCalomet.UDeltaP = UDeltaP;
-   MyCalomet.Uscale = Uscale;
-   MyCalomet.type2corPx = type2corPx;
-   MyCalomet.type2corPy = type2corPy;
-   MyCalomet.T2pt = T2pt;
-   MyCalomet.T2px = T2px;
-   MyCalomet.T2py = T2py;
-   MyCalomet.T2phi = T2phi;
-   MyCalomet.T2sumET = T2sumET;
-
-   bncalomet->push_back(MyCalomet);
-
 
 
 
@@ -2709,60 +2960,37 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    std::auto_ptr<BNmetCollection> bnpfmet(new BNmetCollection);
    BNmet MyPfmet;
 
-   MyPfmet.pt = pfmetHandle->front().pt();
-   MyPfmet.px = pfmetHandle->front().px();
-   MyPfmet.py = pfmetHandle->front().py();
-   MyPfmet.phi = pfmetHandle->front().phi();
-   MyPfmet.sumET = pfmetHandle->front().sumEt();
-   MyPfmet.corSumET = pfmetHandle->front().corSumEt();
-   MyPfmet.Upt = pfmetHandle->front().uncorrectedPt();
-   MyPfmet.Uphi = pfmetHandle->front().uncorrectedPhi();
+   if( producePFMET ){
+     MyPfmet.pt = pfmetHandle->front().pt();
+     MyPfmet.px = pfmetHandle->front().px();
+     MyPfmet.py = pfmetHandle->front().py();
+     MyPfmet.phi = pfmetHandle->front().phi();
+     MyPfmet.sumET = pfmetHandle->front().sumEt();
+     MyPfmet.corSumET = pfmetHandle->front().corSumEt();
+     MyPfmet.Upt = pfmetHandle->front().uncorrectedPt();
+     MyPfmet.Uphi = pfmetHandle->front().uncorrectedPhi();
 
-   double sigmaX2_pf = (pfmetHandle->front()).getSignificanceMatrix()(0,0);
-   double sigmaY2_pf = (pfmetHandle->front()).getSignificanceMatrix()(1,1);
-   double sigmaXY_pf = (pfmetHandle->front()).getSignificanceMatrix()(0,1);
-   double sigmaYX_pf = (pfmetHandle->front()).getSignificanceMatrix()(1,0);
+     double sigmaX2_pf = (pfmetHandle->front()).getSignificanceMatrix()(0,0);
+     double sigmaY2_pf = (pfmetHandle->front()).getSignificanceMatrix()(1,1);
+     double sigmaXY_pf = (pfmetHandle->front()).getSignificanceMatrix()(0,1);
+     double sigmaYX_pf = (pfmetHandle->front()).getSignificanceMatrix()(1,0);
 
-   double significance_pf = 99;
-   if(sigmaX2_pf<1.e10 && sigmaY2_pf<1.e10) significance_pf = (pfmetHandle->front()).significance();
+     double significance_pf = 99;
+     if(sigmaX2_pf<1.e10 && sigmaY2_pf<1.e10) significance_pf = (pfmetHandle->front()).significance();
 
-   MyPfmet.significance = significance_pf;
-   MyPfmet.sigmaX2 = sigmaX2_pf;
-   MyPfmet.sigmaY2 = sigmaY2_pf;
-   MyPfmet.sigmaXY = sigmaXY_pf;
-   MyPfmet.sigmaYX = sigmaYX_pf;
+     MyPfmet.significance = significance_pf;
+     MyPfmet.sigmaX2 = sigmaX2_pf;
+     MyPfmet.sigmaY2 = sigmaY2_pf;
+     MyPfmet.sigmaXY = sigmaXY_pf;
+     MyPfmet.sigmaYX = sigmaYX_pf;
 
-   if( (pfmetHandle->front().genMET()) ){
-     MyPfmet.genPT = pfmetHandle->front().genMET()->pt();
-     MyPfmet.genPhi = pfmetHandle->front().genMET()->phi();
+     if( (pfmetHandle->front().genMET()) ){
+       MyPfmet.genPT = pfmetHandle->front().genMET()->pt();
+       MyPfmet.genPhi = pfmetHandle->front().genMET()->phi();
+     }
+
+     bnpfmet->push_back(MyPfmet);
    }
-
-   /*
-   double pfMETjet1corrPx = pfmetHandle->front().px() + metJet1corrPx_pf;
-   double pfMETjet1corrPy = pfmetHandle->front().py() + metJet1corrPy_pf;
-   double pfMETjet6corrPx = pfmetHandle->front().px() + metJet6corrPx_pf;
-   double pfMETjet6corrPy = pfmetHandle->front().py() + metJet6corrPy_pf;
-   double pfMETjet10corrPx = pfmetHandle->front().px() + metJet10corrPx_pf;
-   double pfMETjet10corrPy = pfmetHandle->front().py() + metJet10corrPy_pf;
-
-   double pfMETjet1corrPt  = sqrt( pfMETjet1corrPx*pfMETjet1corrPx   + pfMETjet1corrPy*pfMETjet1corrPy );
-   double pfMETjet6corrPt  = sqrt( pfMETjet6corrPx*pfMETjet6corrPx   + pfMETjet6corrPy*pfMETjet6corrPy );
-   double pfMETjet10corrPt = sqrt( pfMETjet10corrPx*pfMETjet10corrPx + pfMETjet10corrPy*pfMETjet10corrPy );
-
-   double pfMETjet1corrPhi = atan2( pfMETjet1corrPy,pfMETjet1corrPx);
-   double pfMETjet6corrPhi = atan2( pfMETjet6corrPy,pfMETjet6corrPx);
-   double pfMETjet10corrPhi = atan2( pfMETjet10corrPy,pfMETjet10corrPx);
-
-   MyPfmet.pfT1jet1pt = pfMETjet1corrPt;
-   MyPfmet.pfT1jet6pt = pfMETjet6corrPt;
-   MyPfmet.pfT1jet10pt = pfMETjet10corrPt;
-   MyPfmet.pfT1jet1phi = pfMETjet1corrPhi;
-   MyPfmet.pfT1jet6phi = pfMETjet6corrPhi;
-   MyPfmet.pfT1jet10phi = pfMETjet10corrPhi;
-   */
-
-   bnpfmet->push_back(MyPfmet);
-
 
 
 
@@ -2775,37 +3003,38 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    std::auto_ptr<BNmetCollection> bntcmet(new BNmetCollection);
    BNmet MyTcmet;
 
-   MyTcmet.pt = tcmetHandle->front().pt();
-   MyTcmet.px = tcmetHandle->front().px();
-   MyTcmet.py = tcmetHandle->front().py();
-   MyTcmet.phi = tcmetHandle->front().phi();
-   MyTcmet.sumET = tcmetHandle->front().sumEt();
-   MyTcmet.corSumET = tcmetHandle->front().corSumEt();
-   MyTcmet.Upt = tcmetHandle->front().uncorrectedPt();
-   MyTcmet.Uphi = tcmetHandle->front().uncorrectedPhi();
+   if( produceTCMET ){
+     MyTcmet.pt = tcmetHandle->front().pt();
+     MyTcmet.px = tcmetHandle->front().px();
+     MyTcmet.py = tcmetHandle->front().py();
+     MyTcmet.phi = tcmetHandle->front().phi();
+     MyTcmet.sumET = tcmetHandle->front().sumEt();
+     MyTcmet.corSumET = tcmetHandle->front().corSumEt();
+     MyTcmet.Upt = tcmetHandle->front().uncorrectedPt();
+     MyTcmet.Uphi = tcmetHandle->front().uncorrectedPhi();
 
-   double sigmaX2_tc = (tcmetHandle->front()).getSignificanceMatrix()(0,0);
-   double sigmaY2_tc = (tcmetHandle->front()).getSignificanceMatrix()(1,1);
-   double sigmaXY_tc = (tcmetHandle->front()).getSignificanceMatrix()(0,1);
-   double sigmaYX_tc = (tcmetHandle->front()).getSignificanceMatrix()(1,0);
+     double sigmaX2_tc = (tcmetHandle->front()).getSignificanceMatrix()(0,0);
+     double sigmaY2_tc = (tcmetHandle->front()).getSignificanceMatrix()(1,1);
+     double sigmaXY_tc = (tcmetHandle->front()).getSignificanceMatrix()(0,1);
+     double sigmaYX_tc = (tcmetHandle->front()).getSignificanceMatrix()(1,0);
 
-   double significance_tc = 99;
-   if(sigmaX2_tc<1.e10 && sigmaY2_tc<1.e10) significance_tc = (tcmetHandle->front()).significance();
+     double significance_tc = 99;
+     if(sigmaX2_tc<1.e10 && sigmaY2_tc<1.e10) significance_tc = (tcmetHandle->front()).significance();
 
-   MyTcmet.significance = significance_tc;
-   MyTcmet.sigmaX2 = sigmaX2_tc;
-   MyTcmet.sigmaY2 = sigmaY2_tc;
-   MyTcmet.sigmaXY = sigmaXY_tc;
-   MyTcmet.sigmaYX = sigmaYX_tc;
+     MyTcmet.significance = significance_tc;
+     MyTcmet.sigmaX2 = sigmaX2_tc;
+     MyTcmet.sigmaY2 = sigmaY2_tc;
+     MyTcmet.sigmaXY = sigmaXY_tc;
+     MyTcmet.sigmaYX = sigmaYX_tc;
 
-   if( (tcmetHandle->front().genMET()) ){
-     MyTcmet.genPT = tcmetHandle->front().genMET()->pt();
-     MyTcmet.genPhi = tcmetHandle->front().genMET()->phi();
+     if( (tcmetHandle->front().genMET()) ){
+       MyTcmet.genPT = tcmetHandle->front().genMET()->pt();
+       MyTcmet.genPhi = tcmetHandle->front().genMET()->phi();
+     }
+
+
+     bntcmet->push_back(MyTcmet);
    }
-
-
-   bntcmet->push_back(MyTcmet);
-
 
    // std::cout << "   ======> calomet: pt = " << calometHandle->front().pt() << ", phi = " << calometHandle->front().phi() << ", significance = " << significance_calo << ", nCorr = " << calometHandle->front().nCorrections() << ", uncorrected pt = " << calometHandle->front().uncorrectedPt() << std::endl;
    // std::cout << "   ======> pfmet:   pt = " << pfmetHandle->front().pt()   << ", phi = " << pfmetHandle->front().phi()   << ", significance = " << significance_pf << ", nCorr = " << pfmetHandle->front().nCorrections() << ", uncorrected pt = " << pfmetHandle->front().uncorrectedPt() << std::endl;
@@ -3314,25 +3543,27 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    if( GoodVertex ) numGoodVertexEvents++;
    if( FilterOutScraping ) numFilterOutScrapingEvents++;
 
+
    // Put the collections into the event
    iEvent.put(bnevent);
-   iEvent.put(bnelectrons,eleTag_.label());
-   iEvent.put(bnpfelectrons,pfeleTag_.label());
-   iEvent.put(bncalojets,calojetTag_.label());
-   iEvent.put(bnpfjets,pfjetTag_.label());
-   iEvent.put(bncalomet,calometTag_.label());
-   iEvent.put(bnpfmet,pfmetTag_.label());
-   iEvent.put(bntcmet,tcmetTag_.label());
-   iEvent.put(bnmuons,muonTag_.label());
-   iEvent.put(bnpfmuons,pfmuonTag_.label());
-   iEvent.put(bncocktailmuons,cocktailmuonTag_.label());
-   iEvent.put(bnphotons,photonTag_.label());
-   iEvent.put(bnsuperclusters,kSC);
-   iEvent.put(bntracks,trackTag_.label());
+   if( produceElectron ) iEvent.put(bnelectrons,eleTag_.label());
+   if( producePFelectron ) iEvent.put(bnpfelectrons,pfeleTag_.label());
+   if( produceCaloJet ) iEvent.put(bncalojets,calojetTag_.label());
+   if( producePFJet ) iEvent.put(bnpfjets,pfjetTag_.label());
+   if( produceGenJet ) iEvent.put(bngenjets,genjetTag_.label());
+   if( produceCaloMET ) iEvent.put(bncalomet,calometTag_.label());
+   if( producePFMET ) iEvent.put(bnpfmet,pfmetTag_.label());
+   if( produceTCMET ) iEvent.put(bntcmet,tcmetTag_.label());
+   if( produceMuon ) iEvent.put(bnmuons,muonTag_.label());
+   if( producePFMuon ) iEvent.put(bnpfmuons,pfmuonTag_.label());
+   if( produceCocktailMuon ) iEvent.put(bncocktailmuons,cocktailmuonTag_.label());
+   if( producePhoton ) iEvent.put(bnphotons,photonTag_.label());
+   if( produceSCsEB || produceSCsEE ) iEvent.put(bnsuperclusters,kSC);
+   if( produceTrack ) iEvent.put(bntracks,trackTag_.label());
    iEvent.put(bntrigger,kHLT);
-   iEvent.put(bnmcparticles,kMCpar);
-   iEvent.put(bnmcelectrons,kMCele);
-   iEvent.put(bnmcmuons,kMCmu);
+   if( produceGenParticle ) iEvent.put(bnmcparticles,kMCpar);
+   if( produceGenParticle ) iEvent.put(bnmcelectrons,kMCele);
+   if( produceGenParticle ) iEvent.put(bnmcmuons,kMCmu);
    iEvent.put(bntriggerl1talgo,kL1Talgo);
    iEvent.put(bntriggerl1ttech,kL1Ttech);
    iEvent.put(bnhltobjs,kHLTobj);
@@ -3348,25 +3579,6 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    iEvent.put(bnbxlumis,kBXlumi);
 
-
-   /*
-   vParam_L2_calo.clear(); vParam_L2L3_calo.clear(); vParam_L2L3res_calo.clear();
-   delete L2JetCorPar_calo;
-   delete L3JetCorPar_calo;
-   delete ResJetCorPar_calo;
-   delete JEC_L2_calo;
-   delete JEC_L2L3_calo;
-   delete JEC_L2L3res_calo;
-
-   vParam_res_calo.clear();
-   delete JEC_res_calo;
-   delete jecUnc_calo;
-
-   vParam_res_pf.clear();
-   delete ResJetCorPar_pf;
-   delete JEC_res_pf;
-   delete jecUnc_pf;
-   */
 
    delete jecUnc_Calo;
    delete jecUnc_PF;
