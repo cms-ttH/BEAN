@@ -367,23 +367,18 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    // Get Object Handles
    edm::Handle<edm::View<pat::Electron> > electronHandle;
    iEvent.getByLabel(eleTag_,electronHandle);
-   edm::View<pat::Electron> electrons = *electronHandle;
 
    edm::Handle<edm::View<pat::Electron> > pfelectronHandle;
    iEvent.getByLabel(pfeleTag_,pfelectronHandle);
-   edm::View<pat::Electron> pfelectrons = *pfelectronHandle;
 
    edm::Handle<edm::View<pat::Jet> > calojetHandle;
    iEvent.getByLabel(calojetTag_,calojetHandle);
-   edm::View<pat::Jet> calojets = *calojetHandle;
 
    edm::Handle<edm::View<pat::Jet> > pfjetHandle;
    iEvent.getByLabel(pfjetTag_,pfjetHandle);
-   edm::View<pat::Jet> pfjets = *pfjetHandle;
 
    edm::Handle<reco::GenJetCollection > genjetHandle;
    iEvent.getByLabel(genjetTag_,genjetHandle);
-   reco::GenJetCollection genjets = *genjetHandle;
 
    edm::Handle<edm::View<pat::MET> > calometHandle;
    iEvent.getByLabel(calometTag_,calometHandle);
@@ -396,31 +391,24 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    edm::Handle<edm::View<pat::Muon> > muonHandle;
    iEvent.getByLabel(muonTag_,muonHandle);
-   edm::View<pat::Muon> muons = *muonHandle;
 
    edm::Handle<edm::View<pat::Muon> > pfmuonHandle;
    iEvent.getByLabel(pfmuonTag_,pfmuonHandle);
-   edm::View<pat::Muon> pfmuons = *pfmuonHandle;
 
    edm::Handle<edm::View<reco::Muon> > cocktailmuonHandle;
    iEvent.getByLabel(cocktailmuonTag_,cocktailmuonHandle);
-   edm::View<reco::Muon> cocktailmuons = *cocktailmuonHandle;
 
    edm::Handle<edm::View<pat::Photon> > photonHandle;
    iEvent.getByLabel(photonTag_,photonHandle);
-   edm::View<pat::Photon> photons = *photonHandle;
 
    edm::Handle<reco::TrackCollection > trackHandle;
    iEvent.getByLabel(trackTag_,trackHandle);
-   reco::TrackCollection tracks = *trackHandle;
 
    edm::Handle<reco::SuperClusterCollection > EBsuperclusterHandle;
    iEvent.getByLabel(EBsuperclusterTag_,EBsuperclusterHandle);
-   reco::SuperClusterCollection EBsuperclusters = *EBsuperclusterHandle;
 
    edm::Handle<reco::SuperClusterCollection > EEsuperclusterHandle;
    iEvent.getByLabel(EEsuperclusterTag_,EEsuperclusterHandle);
-   reco::SuperClusterCollection EEsuperclusters = *EEsuperclusterHandle;
 
    edm::Handle<reco::GenParticleCollection > genParticles;
    iEvent.getByLabel(genParticleTag_,genParticles);
@@ -595,7 +583,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    Bool_t hcalNoiseFilter = false;
    if( hcalNoiseFilterHandle.isValid() ) hcalNoiseFilter = (Bool_t)(*hcalNoiseFilterHandle);
-   else if( sample_<0 ) std::cout << " NoiseFilter =====> hcalNoiseFilterHandle.isValid()==false " << std::endl;
+   //else if( sample_<0 ) std::cout << " NoiseFilter =====> hcalNoiseFilterHandle.isValid()==false " << std::endl;
 
 
    Handle<HcalNoiseSummary> HcalNoiseSummaryHandle;
@@ -606,7 +594,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      passLooseNoiseFilter = HcalNoiseSummaryHandle->passLooseNoiseFilter();
      passTightNoiseFilter = HcalNoiseSummaryHandle->passTightNoiseFilter();
    }
-   else if( sample_<0 ) std::cout << " NoiseFilter =====> HcalNoiseSummaryHandle.isValid()==false " << std::endl;
+   //else if( sample_<0 ) std::cout << " NoiseFilter =====> HcalNoiseSummaryHandle.isValid()==false " << std::endl;
 
 
 
@@ -712,6 +700,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    std::auto_ptr<BNelectronCollection> bnelectrons(new BNelectronCollection);
    if( produceElectron ){
+     edm::View<pat::Electron> electrons = *electronHandle;
+
      for( edm::View<pat::Electron>::const_iterator ele = electrons.begin(); ele!=electrons.end(); ++ele ){
 
        double elePin = ele->trackMomentumAtVtx().R();
@@ -987,6 +977,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    std::auto_ptr<BNelectronCollection> bnpfelectrons(new BNelectronCollection);
    if( producePFelectron ){
+     edm::View<pat::Electron> pfelectrons = *pfelectronHandle;
+
      for( edm::View<pat::Electron>::const_iterator pfele = pfelectrons.begin(); pfele!=pfelectrons.end(); ++pfele ){
 
        double pfelePin = pfele->trackMomentumAtVtx().R();
@@ -1294,6 +1286,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    std::auto_ptr<BNjetCollection> bncalojets(new BNjetCollection);
    if( produceCaloJet ){
+     edm::View<pat::Jet> calojets = *calojetHandle;
+
      for( edm::View<pat::Jet>::const_iterator calojet = calojets.begin(); calojet != calojets.end(); ++ calojet ) {
 
        if( !(calojet->pt()>minJetPt_) ) continue;
@@ -1452,6 +1446,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    std::auto_ptr<BNjetCollection> bnpfjets(new BNjetCollection);
    if( producePFJet ){
+     edm::View<pat::Jet> pfjets = *pfjetHandle;
+
      for( edm::View<pat::Jet>::const_iterator pfjet = pfjets.begin(); pfjet != pfjets.end(); ++ pfjet ) {
 
        if( !(pfjet->pt()>minJetPt_) ) continue;
@@ -1626,6 +1622,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    std::auto_ptr<BNmuonCollection> bnmuons(new BNmuonCollection);
    if( produceMuon ){
+     edm::View<pat::Muon> muons = *muonHandle;
+
      for( edm::View<pat::Muon>::const_iterator muon = muons.begin(); muon!=muons.end(); ++muon ){
 
        BNmuon MyMuon;
@@ -1828,6 +1826,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    std::auto_ptr<BNmuonCollection> bnpfmuons(new BNmuonCollection);
    if( producePFMuon ){
+     edm::View<pat::Muon> pfmuons = *pfmuonHandle;
+
      for( edm::View<pat::Muon>::const_iterator pfmuon = pfmuons.begin(); pfmuon!=pfmuons.end(); ++pfmuon ){
 
        BNmuon MyPfmuon;
@@ -2045,6 +2045,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    std::auto_ptr<BNmuonCollection> bncocktailmuons(new BNmuonCollection);
    if( produceCocktailMuon ){
+     edm::View<reco::Muon> cocktailmuons = *cocktailmuonHandle;
+
      for( edm::View<reco::Muon>::const_iterator cocktailmuon = cocktailmuons.begin(); cocktailmuon!=cocktailmuons.end(); ++cocktailmuon ){
 
        BNmuon MyCocktailmuon;
@@ -2200,6 +2202,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    std::auto_ptr<BNphotonCollection> bnphotons(new BNphotonCollection);
    if( producePhoton ){
+     edm::View<pat::Photon> photons = *photonHandle;
+
      for( edm::View<pat::Photon>::const_iterator photon = photons.begin(); photon!=photons.end(); ++photon ){
 
        if( !(photon->et()>minPhotonEt_) ) continue;
@@ -2338,7 +2342,11 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    /////////////////////////////////////////////
 
    std::auto_ptr<BNtrackCollection> bntracks(new BNtrackCollection);
+   int tracksSize = 1;
+
    if( produceTrack ){
+     reco::TrackCollection tracks = *trackHandle;
+
      for(reco::TrackCollection::const_iterator track = tracks.begin(); track!=tracks.end(); ++track ){
 
        if( track->quality(_trackQuality) ) numhighpurity++;
@@ -2370,10 +2378,11 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
        bntracks->push_back(MyTrack);
      }
+     
+     tracksSize = int(tracks.size());
    }
 
    bool FilterOutScraping = false;
-   int tracksSize = int(tracks.size());
    double FilterOutScrapingFraction = ( tracksSize!=0 ) ? (double)numhighpurity/(double)tracksSize : 0;
 
    if( tracksSize>numtrack_ ){
@@ -2391,6 +2400,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    std::auto_ptr<BNsuperclusterCollection> bnsuperclusters(new BNsuperclusterCollection);
    if( produceSCsEB ){
+     reco::SuperClusterCollection EBsuperclusters = *EBsuperclusterHandle;
+
      for(reco::SuperClusterCollection::const_iterator supercluster = EBsuperclusters.begin(); supercluster!=EBsuperclusters.end(); ++supercluster ){
 
        double sctheta = 2.0*atan(exp(-supercluster->eta()));
@@ -2416,6 +2427,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      }
    }
    if( produceSCsEE ){
+     reco::SuperClusterCollection EEsuperclusters = *EEsuperclusterHandle;
+
      for(reco::SuperClusterCollection::const_iterator supercluster = EEsuperclusters.begin(); supercluster!=EEsuperclusters.end(); ++supercluster ){
 
        double sctheta = 2.0*atan(exp(-supercluster->eta()));
@@ -2718,6 +2731,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    std::auto_ptr<BNgenjetCollection> bngenjets(new BNgenjetCollection);
    if( sample_>=0 && produceGenJet ){
+     reco::GenJetCollection genjets = *genjetHandle;
+
      for(reco::GenJetCollection::const_iterator genjet = genjets.begin(); genjet!=genjets.end(); ++genjet ){
 
        if( !(genjet->pt()>10. && fabs(genjet->eta())<3.5) ) continue;
