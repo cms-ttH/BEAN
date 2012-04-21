@@ -713,19 +713,16 @@ if addTriggerMatching:
 process.BNproducer = cms.EDProducer('BEANmaker',
         calometTag = cms.InputTag("patMETs"),
         pfmetTag = cms.InputTag("patMETsPFlow"),
-        # tcmet? Who uses this? Nothing good to set it to, give it some PF met
-        # tcmetTag = cms.InputTag("patMETsAK5TC"),                             
-        tcmetTag = cms.InputTag("patMETsAK5PF"),        
+        tcmetTag = cms.InputTag("none"),        
         eleTag = cms.InputTag("selectedPatElectrons"),
         pfeleTag = cms.InputTag("selectedPatElectronsPFlow"),
         genParticleTag = cms.InputTag("genParticles"),
         calojetTag = cms.InputTag("selectedPatJets"),        
         pfjetTag = cms.InputTag("selectedPatJetsPFlow"),
-        # jpt? Who uses this?  Nothing good to set it to, give it some PF jets                          
-        jptjetTag = cms.InputTag("selectedPatJetsAK5PF"), 
+        genjetTag = cms.InputTag("ak5GenJets"), 
         muonTag = cms.InputTag("selectedPatMuons"),
         pfmuonTag = cms.InputTag("selectedPatMuonsPFlow"),
-        cocktailmuonTag = cms.InputTag("refitMuons"),
+        cocktailmuonTag = cms.InputTag("none"),
         photonTag = cms.InputTag("selectedPatPhotons"),
         EBsuperclusterTag = cms.InputTag("correctedHybridSuperClusters"),
         EEsuperclusterTag = cms.InputTag("correctedMulti5x5SuperClustersWithPreshower"),
@@ -960,7 +957,7 @@ if runPF2PAT:
   if use4Jets:
     pPF += getattr( process, 'step5' + postfix )
 
-  pPF += process.refitMuons
+  #pPF += process.refitMuons
   pPF += process.BNproducer
   setattr( process, 'p' + postfix, pPF )
   process.out.SelectEvents.SelectEvents.append( 'p' + postfix )
