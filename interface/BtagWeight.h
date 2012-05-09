@@ -18,7 +18,7 @@ class BTagWeight
   maxTags(jmax), minTags(jmin) {}
 
   bool filter(int t);
-  std::vector<double> weight(vector<JetInfo> jets, int useMinTags, int useMaxTags);
+  double weight(vector<JetInfo> jets, int useMinTags, int useMaxTags);
  private:
   int maxTags;
   int minTags;
@@ -34,9 +34,8 @@ bool BTagWeight::filter(int t)
 
 
 
-std::vector<double> BTagWeight::weight(vector<JetInfo> jets, int useMinTags=-1, int useMaxTags=-1 )
+double BTagWeight::weight(vector<JetInfo> jets, int useMinTags=-1, int useMaxTags=-1 )
 {
-  std::vector<double> result;
 
   if( useMinTags>-1 ) minTags = useMinTags;
   if( useMaxTags>-1 ) maxTags = useMaxTags;
@@ -71,11 +70,7 @@ std::vector<double> BTagWeight::weight(vector<JetInfo> jets, int useMinTags=-1, 
 
   double ratio = ( pMC>0. ) ? pData/pMC : 0;
 
-  result.push_back(ratio);
-  result.push_back(pData);
-  result.push_back(pMC);
-
-  return result;
+  return ratio;
 }
 
 #endif // INC_BTAGWEIGHT
