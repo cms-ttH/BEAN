@@ -1,4 +1,4 @@
-// -*- C++ -*-
+//// -*- C++ -*-
 //
 // Package:    BEANmaker
 // Class:      BEANmaker
@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.7 2012/02/23 22:20:13 puigh Exp $
+// $Id: BEANmaker.cc,v 1.9 2012/04/21 17:07:39 puigh Exp $
 //
 //
 
@@ -114,6 +114,8 @@
 
 #include "RecoEgamma/EgammaTools/interface/ConversionFinder.h"
 #include "RecoEgamma/EgammaTools/interface/ConversionInfo.h"
+#include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
+
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
 #include "MagneticField/Engine/interface/MagneticField.h"
 
@@ -122,6 +124,10 @@
 #include "SusyAnalysis/EventSelector/interface/uncorrectionTypeMET.h"
 
 #include "DataFormats/Common/interface/View.h"
+
+#include "EGamma/EGammaAnalysisTools/interface/ElectronEffectiveArea.h"
+#include "Muon/MuonAnalysisTools/interface/MuonEffectiveArea.h"
+#include "DataFormats/MuonReco/interface/MuonPFIsolation.h"
 
 #include <vector>
 #include <map>
@@ -186,6 +192,8 @@ class BEANmaker : public edm::EDProducer {
 
   edm::InputTag reducedBarrelRecHitCollection_;
   edm::InputTag reducedEndcapRecHitCollection_;
+
+  
 
   std::string hltProcessName_ ;
 
@@ -412,6 +420,13 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    edm::Handle<reco::GenParticleCollection > genParticles;
    iEvent.getByLabel(genParticleTag_,genParticles);
+
+   edm::Handle< double > rhoHandle;
+   iEvent.getByLabel(edm::InputTag("kt6PFJetsPFlow","rho"), rhoHandle);
+   double rho_event = *rhoHandle;   
+   
+   edm::Handle<reco::ConversionCollection> conversionsHandle;
+   iEvent.getByLabel("allConversions", conversionsHandle);
 
 
    bool produceElectron = ( (eleTag_.label() == "none") ) ? false : true;
@@ -726,13 +741,17 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyElectron.vy = ele->vy();
        MyElectron.vz = ele->vz();
 
+       MyElectron.pIn = elePin;
+       MyElectron.pOut = elePout;
        MyElectron.EscOverPin = ele->eSuperClusterOverP();
        MyElectron.EseedOverPout = ele->eSeedClusterOverPout();
        MyElectron.hadOverEm = ele->hadronicOverEm();
        MyElectron.fbrem = fabs(elePin-elePout)/elePin;
+       MyElectron.absInvEMinusInvPin = fabs( 1/ele->ecalEnergy()-(ele->eSuperClusterOverP()/ele->ecalEnergy()) );
        MyElectron.delPhiIn = ele->deltaPhiSuperClusterTrackAtVtx();
        MyElectron.delEtaIn = ele->deltaEtaSuperClusterTrackAtVtx();
 
+       /*
        MyElectron.eidRobustHighEnergy = ele->electronID("eidRobustHighEnergy");
        MyElectron.eidRobustLoose = ele->electronID("eidRobustLoose");
        MyElectron.eidRobustTight = ele->electronID("eidRobustTight");
@@ -747,7 +766,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyElectron.eidHyperTight2MC = ele->electronID("eidHyperTight2MC");
        MyElectron.eidHyperTight3MC = ele->electronID("eidHyperTight3MC");
        MyElectron.eidHyperTight4MC = ele->electronID("eidHyperTight4MC");
-
+       */
        MyElectron.trackIso = ele->trackIso();
        MyElectron.ecalIso = ele->ecalIso();
        MyElectron.hcalIso = ele->hcalIso();
@@ -768,6 +787,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyElectron.caloIsoDR04 = ele->dr04EcalRecHitSumEt()+ele->dr04HcalTowerSumEt();
 
        MyElectron.mva = ele->mva();
+       MyElectron.mvaTrigV0 = ele->electronID("mvaTrigV0");
+       MyElectron.mvaNonTrigV0 = ele->electronID("mvaNonTrigV0");
        MyElectron.numberOfLostHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
        MyElectron.numberOfExpectedInnerHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfHits();
        MyElectron.numberOfValidPixelHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelHits();
@@ -868,6 +889,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 MyElectron.gsfCharge = ele->gsfTrack()->charge();
 
 	 MyElectron.correctedD0 = ele->gsfTrack()->dxy(beamSpotPosition);
+         MyElectron.correctedD0Vertex = ele->gsfTrack()->dxy(vertexPosition);
 	 MyElectron.correctedDZ = ele->gsfTrack()->dz(vertexPosition);
        }
 
@@ -919,7 +941,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyElectron.convPointX = convPoint.x();
        MyElectron.convPointY = convPoint.y();
        MyElectron.convPointZ = convPoint.z();
-
+       MyElectron.passConvVeto = ele->passConversionVeto();
+      
 
        bool cutDelEta=false, cutDelPhi=false, cutSigIeta=false, cutE2x5=false, cutEMhad1=false, cutHad2=false, cutTrackIso=false;
 
@@ -1003,13 +1026,16 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyPfelectron.vy = pfele->vy();
        MyPfelectron.vz = pfele->vz();
 
+       MyPfelectron.pIn = pfelePin;
+       MyPfelectron.pOut = pfelePout;
        MyPfelectron.EscOverPin = pfele->eSuperClusterOverP();
        MyPfelectron.EseedOverPout = pfele->eSeedClusterOverPout();
        MyPfelectron.hadOverEm = pfele->hadronicOverEm();
        MyPfelectron.fbrem = fabs(pfelePin-pfelePout)/pfelePin;
+       MyPfelectron.absInvEMinusInvPin = fabs( 1/pfele->ecalEnergy()-(pfele->eSuperClusterOverP()/pfele->ecalEnergy()) );
        MyPfelectron.delPhiIn = pfele->deltaPhiSuperClusterTrackAtVtx();
        MyPfelectron.delEtaIn = pfele->deltaEtaSuperClusterTrackAtVtx();
-
+       /*
        MyPfelectron.eidRobustHighEnergy = pfele->electronID("eidRobustHighEnergy");
        MyPfelectron.eidRobustLoose = pfele->electronID("eidRobustLoose");
        MyPfelectron.eidRobustTight = pfele->electronID("eidRobustTight");
@@ -1024,7 +1050,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyPfelectron.eidHyperTight2MC = pfele->electronID("eidHyperTight2MC");
        MyPfelectron.eidHyperTight3MC = pfele->electronID("eidHyperTight3MC");
        MyPfelectron.eidHyperTight4MC = pfele->electronID("eidHyperTight4MC");
-
+       */
        MyPfelectron.particleIso = pfele->particleIso();     
        MyPfelectron.chargedHadronIso = pfele->chargedHadronIso();     
        MyPfelectron.neutralHadronIso = pfele->neutralHadronIso();     
@@ -1040,6 +1066,11 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyPfelectron.neutralHadronIsoDR04 = pfele->userIso(5);
        MyPfelectron.photonIsoDR04 = pfele->userIso(6);
        MyPfelectron.puChargedHadronIsoDR04 = pfele->userIso(7);
+
+       MyPfelectron.rhoPrime = std::max(rho_event, 0.0);
+       MyPfelectron.AEffDr03 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso03, pfele->eta(), ElectronEffectiveArea::kEleEAData2011);
+       MyPfelectron.AEffDr04 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso04, pfele->eta(), ElectronEffectiveArea::kEleEAData2011);  
+
 
        MyPfelectron.trackIso = pfele->trackIso();
        MyPfelectron.ecalIso = pfele->ecalIso();
@@ -1061,6 +1092,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyPfelectron.caloIsoDR04 = pfele->dr04EcalRecHitSumEt()+pfele->dr04HcalTowerSumEt();
 
        MyPfelectron.mva = pfele->mva();
+       MyPfelectron.mvaTrigV0 = pfele->electronID("mvaTrigV0");
+       MyPfelectron.mvaNonTrigV0 = pfele->electronID("mvaNonTrigV0");
        MyPfelectron.numberOfLostHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
        MyPfelectron.numberOfExpectedInnerHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfHits();
        MyPfelectron.numberOfValidPixelHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelHits();
@@ -1161,6 +1194,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 MyPfelectron.gsfCharge = pfele->gsfTrack()->charge();
 
 	 MyPfelectron.correctedD0 = pfele->gsfTrack()->dxy(beamSpotPosition);
+         MyPfelectron.correctedD0Vertex = pfele->gsfTrack()->dxy(vertexPosition);
 	 MyPfelectron.correctedDZ = pfele->gsfTrack()->dz(vertexPosition);
        }
 
@@ -1212,7 +1246,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyPfelectron.convPointX = convPoint.x();
        MyPfelectron.convPointY = convPoint.y();
        MyPfelectron.convPointZ = convPoint.z();
-
+       MyPfelectron.passConvVeto = pfele->passConversionVeto();
+       
 
        bool cutDelEta=false, cutDelPhi=false, cutSigIeta=false, cutE2x5=false, cutEMhad1=false, cutHad2=false, cutTrackIso=false;
 
@@ -1717,13 +1752,16 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 MyMuon.normalizedChi2 = muon->globalTrack()->normalizedChi2();
 	 MyMuon.numberOfValidMuonHits = muon->globalTrack()->hitPattern().numberOfValidMuonHits();
 	 MyMuon.numberOfValidTrackerHits = muon->globalTrack()->hitPattern().numberOfValidTrackerHits();
+         MyMuon.numberOfLayersWithMeasurement = muon->track()->hitPattern().trackerLayersWithMeasurement();
 	 MyMuon.ptErr = muon->globalTrack()->ptError();
        }
        if( (muon->innerTrack().isAvailable()) ){
 	 MyMuon.numberOfValidTrackerHitsInnerTrack = muon->innerTrack()->numberOfValidHits();
 	 MyMuon.pixelLayersWithMeasurement = muon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
+         MyMuon.numberOfValidPixelHits = muon->innerTrack()->hitPattern().numberOfValidPixelHits();
 
 	 MyMuon.correctedD0 = muon->innerTrack()->dxy(beamSpotPosition);
+         MyMuon.correctedD0Vertex = muon->innerTrack()->dxy(vertexPosition);
 	 MyMuon.correctedDZ = muon->innerTrack()->dz(vertexPosition);
        }
 
@@ -1866,6 +1904,22 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyPfmuon.photonIsoDR04 = pfmuon->userIso(6);
        MyPfmuon.puChargedHadronIsoDR04 = pfmuon->userIso(7);
 
+       MyPfmuon.rhoPrime = std::max(rho_event, 0.0);
+       MyPfmuon.AEffDr03 = MuonEffectiveArea::GetMuonEffectiveArea(MuonEffectiveArea::kMuGammaAndNeutralHadronIso03, pfmuon->eta(), MuonEffectiveArea::kMuEAData2011);
+       MyPfmuon.AEffDr04 = MuonEffectiveArea::GetMuonEffectiveArea(MuonEffectiveArea::kMuGammaAndNeutralHadronIso04, pfmuon->eta(), MuonEffectiveArea::kMuEAData2011);
+
+       MyPfmuon.pfIsoR03SumChargedHadronPt = pfmuon->pfIsolationR03().sumChargedHadronPt;
+       MyPfmuon.pfIsoR03SumNeutralHadronEt = pfmuon->pfIsolationR03().sumNeutralHadronEt;
+       MyPfmuon.pfIsoR03SumPhotonEt = pfmuon->pfIsolationR03().sumPhotonEt;
+       MyPfmuon.pfIsoR03SumPUPt = pfmuon->pfIsolationR03().sumPUPt;
+
+       MyPfmuon.pfIsoR04SumChargedHadronPt = pfmuon->pfIsolationR04().sumChargedHadronPt;
+       MyPfmuon.pfIsoR04SumNeutralHadronEt = pfmuon->pfIsolationR04().sumNeutralHadronEt;
+       MyPfmuon.pfIsoR04SumPhotonEt = pfmuon->pfIsolationR04().sumPhotonEt;
+       MyPfmuon.pfIsoR04SumPUPt = pfmuon->pfIsolationR04().sumPUPt;
+
+
+
        MyPfmuon.trackIso = pfmuon->trackIso();
        MyPfmuon.ecalIso = pfmuon->ecalIso();
        MyPfmuon.hcalIso = pfmuon->hcalIso();
@@ -1918,6 +1972,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
        MyPfmuon.IDGMPTight = ( pfmuon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
 
+       MyPfmuon.isPFMuon = ( pfmuon->isPFMuon() ) ? 1 : 0;
+       MyPfmuon.isGoodMuon_1StationTight = ( pfmuon->isGood("TMOneStationTight") )  ? 1 : 0;
        MyPfmuon.isGlobalMuon = ( pfmuon->isGlobalMuon() ) ? 1 : 0;
        MyPfmuon.isTrackerMuon = ( pfmuon->isTrackerMuon() ) ? 1 : 0;
        MyPfmuon.isStandAloneMuon = ( pfmuon->isStandAloneMuon() ) ? 1 : 0;
@@ -1936,13 +1992,17 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 MyPfmuon.normalizedChi2 = pfmuon->globalTrack()->normalizedChi2();
 	 MyPfmuon.numberOfValidMuonHits = pfmuon->globalTrack()->hitPattern().numberOfValidMuonHits();
 	 MyPfmuon.numberOfValidTrackerHits = pfmuon->globalTrack()->hitPattern().numberOfValidTrackerHits();
+         MyPfmuon.numberOfLayersWithMeasurement = pfmuon->track()->hitPattern().trackerLayersWithMeasurement();
 	 MyPfmuon.ptErr = pfmuon->globalTrack()->ptError();
        }
        if( (pfmuon->innerTrack().isAvailable()) ){
+         MyPfmuon.innerTrackNormChi2 = pfmuon->innerTrack()->normalizedChi2();
 	 MyPfmuon.numberOfValidTrackerHitsInnerTrack = pfmuon->innerTrack()->numberOfValidHits();
 	 MyPfmuon.pixelLayersWithMeasurement = pfmuon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
+         MyPfmuon.numberOfValidPixelHits = pfmuon->innerTrack()->hitPattern().numberOfValidPixelHits();
 
 	 MyPfmuon.correctedD0 = pfmuon->innerTrack()->dxy(beamSpotPosition);
+         MyPfmuon.correctedD0Vertex = pfmuon->innerTrack()->dxy(vertexPosition);
 	 MyPfmuon.correctedDZ = pfmuon->innerTrack()->dz(vertexPosition);
        }
 
@@ -2116,13 +2176,16 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 MyCocktailmuon.normalizedChi2 = cocktailmuon->globalTrack()->normalizedChi2();
 	 MyCocktailmuon.numberOfValidMuonHits = cocktailmuon->globalTrack()->hitPattern().numberOfValidMuonHits();
 	 MyCocktailmuon.numberOfValidTrackerHits = cocktailmuon->globalTrack()->hitPattern().numberOfValidTrackerHits();
+         MyCocktailmuon.numberOfLayersWithMeasurement = cocktailmuon->track()->hitPattern().trackerLayersWithMeasurement();
 	 MyCocktailmuon.ptErr = cocktailmuon->globalTrack()->ptError();
        }
        if( (cocktailmuon->innerTrack().isAvailable()) ){
 	 MyCocktailmuon.numberOfValidTrackerHitsInnerTrack = cocktailmuon->innerTrack()->numberOfValidHits();
 	 MyCocktailmuon.pixelLayersWithMeasurement = cocktailmuon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
+         MyCocktailmuon.numberOfValidPixelHits = cocktailmuon->innerTrack()->hitPattern().numberOfValidPixelHits();
 
 	 MyCocktailmuon.correctedD0 = cocktailmuon->innerTrack()->dxy(beamSpotPosition);
+         MyCocktailmuon.correctedD0Vertex = cocktailmuon->innerTrack()->dxy(vertexPosition);
 	 MyCocktailmuon.correctedDZ = cocktailmuon->innerTrack()->dz(vertexPosition);
        }
 
