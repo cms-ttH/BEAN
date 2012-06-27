@@ -154,8 +154,8 @@ globalTagMC   = 'START52_V9'
 ### Output
 
 # output file
-outputFile = 'patRefSel_muJets.root'
-#outputFile = 'test_run.root'
+outputFile = '/uscms_data/d3/jgwood/ttH_ttbb_lepJets/2012_analysis/topRefSel_SynchEx_v3_maxZVertex24.root'
+#outputFile = 'pat_52x_test.root'
 
 # event frequency of Fwk report
 fwkReportEvery = 2000
@@ -754,7 +754,8 @@ process.BNproducer = cms.EDProducer('BEANmaker',
                                     minJetPt = cms.double(10),
                                     minTrackPt = cms.double(10),
                                     verbose = cms.bool(True),
-                                    sample = cms.int32(-2500)
+                                    sample = cms.int32(-2500),
+                                    maxAbsZ = cms.untracked.double(24)
                                     )
 
 # For BEAN
