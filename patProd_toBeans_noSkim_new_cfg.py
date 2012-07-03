@@ -143,7 +143,7 @@ useRelVals = False # if 'False', "inputFiles" is used
 inputFiles = [] # overwritten, if "useRelVals" is 'True'
 
 # maximum number of events
-maxInputEvents = -1 # reduce for testing
+maxInputEvents = 10 # reduce for testing
 
 ### Conditions
 
@@ -154,8 +154,8 @@ globalTagMC   = 'START52_V9'
 ### Output
 
 # output file
-outputFile = '/uscms_data/d3/jgwood/ttH_ttbb_lepJets/2012_analysis/topRefSel_SynchEx_v3_maxZVertex24.root'
-#outputFile = 'pat_52x_test.root'
+#outputFile = '/uscms_data/d3/jgwood/ttH_ttbb_lepJets/2012_analysis/topRefSel_SynchEx_v3_maxZVertex24.root'
+outputFile = 'pat_52x_test.root'
 
 # event frequency of Fwk report
 fwkReportEvery = 2000
@@ -204,7 +204,8 @@ if useRelVals:
                                      )
 
 #inputFiles = cms.untracked.vstring('/store/mc/Summer12/TTJets_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S7_START52_V9-v1/0000/14F17D20-BB90-E111-A68E-001A92811724.root')
-inputFiles = cms.untracked.vstring('/store/mc/Summer12/TTJets_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S7_START52_V5-v1/0000/FEBE99BB-3881-E111-B1F3-003048D42DC8.root')
+inputFiles = cms.untracked.vstring('file:/tmp/puigh/TTJets_TuneZ2star_8TeV-madgraph-tauola_PU_S7_START52_V5-v1_FEBE99BB-3881-E111-B1F3-003048D42DC8.root')
+#inputFiles = cms.untracked.vstring('/store/mc/Summer12/TTJets_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S7_START52_V5-v1/0000/FEBE99BB-3881-E111-B1F3-003048D42DC8.root')
 #inputFiles = cms.untracked.vstring('/store/data/Run2012A/SingleMu/AOD/PromptReco-v1/000/190/645/FAF2D9E9-7F82-E111-BE0C-003048F1C420.root')
 #inputFiles = cms.untracked.vstring('/store/relval/CMSSW_5_2_3_patch3/RelValTTbar/GEN-SIM-RECO/START52_V9_special_120410-v1/0122/0EF8CDEB-1083-E111-846C-002618943937.root')         
 
@@ -758,6 +759,11 @@ process.BNproducer = cms.EDProducer('BEANmaker',
                                     maxAbsZ = cms.untracked.double(24)
                                     )
 
+
+process.q2weights = cms.EDProducer('Q2Weights'
+)
+
+
 # For BEAN
 process.load('CommonTools/RecoAlgos/HBHENoiseFilterResultProducer_cfi')
 
@@ -990,6 +996,7 @@ if runPF2PAT:
     pPF += getattr( process, 'step5' + postfix )
 
   #pPF += process.refitMuons
+  pPF += process.q2weights
   pPF += process.BNproducer
   setattr( process, 'p' + postfix, pPF )
   process.out.SelectEvents.SelectEvents.append( 'p' + postfix )

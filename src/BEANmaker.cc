@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.9 2012/04/21 17:07:39 puigh Exp $
+// $Id: BEANmaker.cc,v 1.10 2012/06/12 18:50:41 jgwood Exp $
 //
 //
 
@@ -576,6 +576,28 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
 
 
+   edm::Handle<std::vector<double> > q2weights;
+   bool hasQ2weights = iEvent.getByLabel( "q2weights", q2weights );
+
+   double Q2ScaleUpWgt=1, Q2ScaleDownWgt=1;
+   if( (hasQ2weights) ){
+     int q2size = q2weights->size();
+
+     if( q2size!=2 ){
+       std::cout << " ERROR!! q2weights->size() = " << q2size << std::endl;
+     }
+
+     if( q2size>0 ){
+       Q2ScaleUpWgt = q2weights->at(0);
+       if( q2size>1 ){
+	 Q2ScaleDownWgt = q2weights->at(1);
+       }
+     }
+
+     //std::cout << "  ==> Q2ScaleUpWgt = " << Q2ScaleUpWgt << ",\t Q2ScaleDownWgt = " << Q2ScaleDownWgt << std::endl;
+   }
+
+
    edm::Handle<GenEventInfoProduct> genEvtInfo;
    bool hasGenEvtInfo = iEvent.getByLabel( "generator", genEvtInfo );
 
@@ -634,7 +656,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      if( TheSummary.TightId() ) passTightId = true;
 
    }
-   else std::cout << " NoiseFilter =====> TheBeamHaloSummary.isValid()==false " << std::endl;
+   //else std::cout << " NoiseFilter =====> TheBeamHaloSummary.isValid()==false " << std::endl;
 
 
 
@@ -2885,6 +2907,10 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    MyEvent.np1_true = np1_true;
 
    MyEvent.bField = evt_bField;
+
+   MyEvent.Q2ScaleUpWgt = Q2ScaleUpWgt;
+   MyEvent.Q2ScaleDownWgt = Q2ScaleDownWgt;
+
 
    if( (vecWdecay.size()>0) ){
      MyEvent.W0decay = vecWdecay[0];
