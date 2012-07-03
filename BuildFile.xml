@@ -1,0 +1,18 @@
+<use name="FWCore/PluginManager"/>
+<use   name="root"/>
+<use   name="hepmc"/>
+<use   name="DataFormats/Common"/>
+<use   name="AnalysisDataFormats/TopObjects"/>
+<use   name="FWCore/Framework"/>
+<use   name="FWCore/ParameterSet"/>
+<use   name="DataFormats/Math"/>
+<use   name="DataFormats/JetReco"/>
+<use   name="DataFormats/Provenance"/>
+<use   name="SimGeneral/HepPDTRecord"/>
+<use   name="LHAPDF"/>
+<use   name="fastjet"/>
+<flags EDM_PLUGIN="1"/>
+<use name="CommonTools/UtilAlgos"/>
+<export>
+   <lib name="1"/>
+</export>
