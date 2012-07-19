@@ -22,6 +22,12 @@ process = cms.Process( 'jsmBeanTestv01' )
 ### Data or MC?
 runOnMC = True    ### if running on data change selection 0b to true
 
+### Integer number used to define sample
+### If runOnMC = True,  use a sampleNumber >= 0
+### If runOnMC = False, use a sampleNumber <  0
+sampleNumber = 2500
+
+
 ### Standard and PF work flow
 
 # Standard
@@ -203,14 +209,21 @@ if useRelVals:
                                      , maxVersions   = 1
                                      )
 
-#inputFiles = cms.untracked.vstring('/store/mc/Summer12/TTJets_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S7_START52_V9-v1/0000/14F17D20-BB90-E111-A68E-001A92811724.root')
-inputFiles = cms.untracked.vstring('file:/tmp/puigh/TTJets_TuneZ2star_8TeV-madgraph-tauola_PU_S7_START52_V5-v1_FEBE99BB-3881-E111-B1F3-003048D42DC8.root')
+inputFiles = cms.untracked.vstring('/store/mc/Summer12/TTJets_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S7_START52_V9-v1/0000/14F17D20-BB90-E111-A68E-001A92811724.root')
+#inputFiles = cms.untracked.vstring('file:/tmp/puigh/TTJets_TuneZ2star_8TeV-madgraph-tauola_PU_S7_START52_V5-v1_FEBE99BB-3881-E111-B1F3-003048D42DC8.root')
 #inputFiles = cms.untracked.vstring('/store/mc/Summer12/TTJets_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S7_START52_V5-v1/0000/FEBE99BB-3881-E111-B1F3-003048D42DC8.root')
 #inputFiles = cms.untracked.vstring('/store/data/Run2012A/SingleMu/AOD/PromptReco-v1/000/190/645/FAF2D9E9-7F82-E111-BE0C-003048F1C420.root')
 #inputFiles = cms.untracked.vstring('/store/relval/CMSSW_5_2_3_patch3/RelValTTbar/GEN-SIM-RECO/START52_V9_special_120410-v1/0122/0EF8CDEB-1083-E111-846C-002618943937.root')         
 
 process.source.fileNames = inputFiles
 process.maxEvents.input  = maxInputEvents
+
+
+if not runOnMC and sampleNumber>=0:
+  sys.exit( 'ERROR: Expecting to run on data with sampleNumber>=0.  The sampleNumber must be negative when running on data.' )
+
+if runOnMC and sampleNumber<0:
+  sys.exit( 'ERROR: Expecting to run on MC with sampleNumber<0.  The sampleNumber must be positive when running on MC.' )
 
 
 ###
@@ -755,7 +768,7 @@ process.BNproducer = cms.EDProducer('BEANmaker',
                                     minJetPt = cms.double(10),
                                     minTrackPt = cms.double(10),
                                     verbose = cms.bool(True),
-                                    sample = cms.int32(-2500),
+                                    sample = cms.int32(sampleNumber),
                                     maxAbsZ = cms.untracked.double(24)
                                     )
 
