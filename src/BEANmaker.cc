@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.10 2012/06/12 18:50:41 jgwood Exp $
+// $Id: BEANmaker.cc,v 1.11 2012/07/03 21:30:46 puigh Exp $
 //
 //
 
@@ -50,6 +50,7 @@
 #include "ProductArea/BNcollections/interface/BNmuon.h"
 #include "ProductArea/BNcollections/interface/BNphoton.h"
 #include "ProductArea/BNcollections/interface/BNsupercluster.h"
+#include "ProductArea/BNcollections/interface/BNtau.h"
 #include "ProductArea/BNcollections/interface/BNtrack.h"
 #include "ProductArea/BNcollections/interface/BNtrigger.h"
 #include "ProductArea/BNcollections/interface/BNbxlumi.h"
@@ -89,6 +90,7 @@
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/PatCandidates/interface/Lepton.h"
 #include "DataFormats/PatCandidates/interface/Isolation.h"
+#include "DataFormats/PatCandidates/interface/Tau.h"
 #include "PhysicsTools/SelectorUtils/interface/JetIDSelectionFunctor.h"
 #include "PhysicsTools/SelectorUtils/interface/strbitset.h"
 
@@ -155,6 +157,7 @@ class BEANmaker : public edm::EDProducer {
       // ----------member data ---------------------------
   int count_hits( const std::vector<CaloTowerPtr> & towers );
   bool isActive(int word, int bit);
+  bool tauIsInTheCracks(float);
   // Active boards DAQ record bit number:
   // 0 FDL 
   // 1 PSB_0 9 Techn.Triggers for FDL
@@ -188,6 +191,7 @@ class BEANmaker : public edm::EDProducer {
   edm::InputTag gtSource_;
   edm::InputTag pvTag_;
   edm::InputTag dcsTag_;
+  edm::InputTag tauTag_;
   edm::TriggerNames trigNames;
 
   edm::InputTag reducedBarrelRecHitCollection_;
@@ -240,6 +244,7 @@ typedef std::vector<BNtrigger>      BNtriggerCollection;
 typedef std::vector<BNbxlumi>       BNbxlumiCollection;
 typedef std::vector<BNtrigobj>      BNtrigobjCollection;
 typedef std::vector<BNprimaryvertex> BNprimaryvertexCollection;
+typedef std::vector<BNtau>          BNtauCollection;
 
 //
 // static data member definitions
@@ -303,6 +308,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   pvTag_ = iConfig.getParameter<edm::InputTag>("pvTag");
   triggerSummaryTag_ = iConfig.getParameter<edm::InputTag>("triggerSummaryTag");
   dcsTag_ = iConfig.getParameter<edm::InputTag>("dcsTag");
+  tauTag_ = iConfig.getParameter<edm::InputTag>("tauTag");
 
   reducedBarrelRecHitCollection_ = iConfig.getParameter<edm::InputTag>("reducedBarrelRecHitCollection");
   reducedEndcapRecHitCollection_ = iConfig.getParameter<edm::InputTag>("reducedEndcapRecHitCollection");
@@ -343,6 +349,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   produces<BNtrigobjCollection>(kL1JetParticlesTau).setBranchAlias("l1taujetobjs");
   produces<BNtrigobjCollection>(kL1MuonParticles).setBranchAlias("l1muonobjs");
   produces<BNprimaryvertexCollection>(pvTag_.label()).setBranchAlias("pvs");
+  produces<BNtauCollection>(tauTag_.label()).setBranchAlias("taus");
 
   m_l1GtPfAlgoCacheID = 0ULL;
 
@@ -412,6 +419,9 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    edm::Handle<reco::TrackCollection > trackHandle;
    iEvent.getByLabel(trackTag_,trackHandle);
 
+   edm::Handle<edm::View<pat::Tau> > tauHandle;
+   iEvent.getByLabel(tauTag_,tauHandle);
+
    edm::Handle<reco::SuperClusterCollection > EBsuperclusterHandle;
    iEvent.getByLabel(EBsuperclusterTag_,EBsuperclusterHandle);
 
@@ -440,6 +450,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    bool produceMuon = ( (muonTag_.label() == "none") ) ? false : true;
    bool producePFMuon = ( (pfmuonTag_.label() == "none") ) ? false : true;
    bool produceCocktailMuon = ( (cocktailmuonTag_.label() == "none") ) ? false : true;
+   bool produceTau = ( (tauTag_.label() == "none") ) ? false : true;
    bool producePhoton = ( (photonTag_.label() == "none") ) ? false : true;
    bool produceSCsEB = ( (EBsuperclusterTag_.label() == "none") ) ? false : true;
    bool produceSCsEE = ( (EEsuperclusterTag_.label() == "none") ) ? false : true;
@@ -2278,6 +2289,96 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 
+   /////////////////////////////////////////////
+   ///////
+   ///////   Fill the tau collection
+   ///////
+   /////////////////////////////////////////////
+
+   std::auto_ptr<BNtauCollection> bntaus(new BNtauCollection);
+   if( produceTau ){
+     edm::View<pat::Tau> taus = *tauHandle;
+
+     for( edm::View<pat::Tau>::const_iterator tau = taus.begin(); tau!=taus.end(); ++tau ){
+        
+		BNtau MyTau;
+
+		MyTau.et											= tau->et();
+		MyTau.pt											= tau->pt();
+		MyTau.eta											= tau->eta();
+		MyTau.phi											= tau->phi();
+		MyTau.numProngs										= tau->signalPFChargedHadrCands().size();
+		MyTau.numSignalGammas								= tau->signalPFGammaCands().size();
+		MyTau.numSignalNeutrals								= tau->signalPFNeutrHadrCands().size();
+		MyTau.numSignalPiZeros								= tau->signalPiZeroCandidates().size();
+		MyTau.decayMode										= tau->decayMode();
+		MyTau.emFraction									= tau->emFraction();
+		MyTau.inTheCracks									= tauIsInTheCracks(tau->eta());
+		MyTau.HPSagainstElectronLoose						= tau->tauID("againstElectronLoose");
+		MyTau.HPSagainstElectronMVA							= tau->tauID("againstElectronMVA");
+		MyTau.HPSagainstElectronMedium						= tau->tauID("againstElectronMedium");
+		MyTau.HPSagainstElectronTight						= tau->tauID("againstElectronTight");
+		MyTau.HPSagainstMuonLoose							= tau->tauID("againstMuonLoose");
+		MyTau.HPSagainstMuonMedium							= tau->tauID("againstMuonMedium");
+		MyTau.HPSagainstMuonTight							= tau->tauID("againstMuonTight");
+		MyTau.HPSbyLooseCombinedIsolationDeltaBetaCorr		= tau->tauID("byLooseCombinedIsolationDeltaBetaCorr");
+		MyTau.HPSbyLooseIsolation							= tau->tauID("byLooseIsolation");
+		MyTau.HPSbyLooseIsolationDeltaBetaCorr				= tau->tauID("byLooseIsolationDeltaBetaCorr");
+		MyTau.HPSbyMediumCombinedIsolationDeltaBetaCorr		= tau->tauID("byMediumCombinedIsolationDeltaBetaCorr");
+		MyTau.HPSbyMediumIsolation							= tau->tauID("byMediumIsolation");
+		MyTau.HPSbyMediumIsolationDeltaBetaCorr				= tau->tauID("byMediumIsolationDeltaBetaCorr");
+		MyTau.HPSbyTightCombinedIsolationDeltaBetaCorr		= tau->tauID("byTightCombinedIsolationDeltaBetaCorr");
+		MyTau.HPSbyTightIsolation							= tau->tauID("byTightIsolation");
+		MyTau.HPSbyTightIsolationDeltaBetaCorr				= tau->tauID("byTightIsolationDeltaBetaCorr");
+		MyTau.HPSbyVLooseCombinedIsolationDeltaBetaCorr		= tau->tauID("byVLooseCombinedIsolationDeltaBetaCorr");
+		MyTau.HPSbyVLooseIsolation							= tau->tauID("byVLooseIsolation");
+		MyTau.HPSbyVLooseIsolationDeltaBetaCorr				= tau->tauID("byVLooseIsolationDeltaBetaCorr");
+		MyTau.HPSdecayModeFinding							= tau->tauID("decayModeFinding");
+
+		if(tau->leadPFChargedHadrCand().isNonnull()){
+			MyTau.leadingTrackPt				= tau->leadPFChargedHadrCand()->pt();
+			MyTau.charge						= tau->leadPFChargedHadrCand()->charge();
+
+			if(false&&tau->leadPFChargedHadrCand()->trackRef().isNonnull()){
+			/*	MyTau.leadingTrackvalid				= 1;
+				MyTau.leadingTrackIpVtdxy			= tau->leadPFChargedHadrCand()->trackRef()->dxy(primaryVertex.position());
+				MyTau.leadingTrackIpVtdz			= tau->leadPFChargedHadrCand()->trackRef()->dz(primaryVertex.position());
+				MyTau.leadingTrackIpVtdxyError		= tau->leadPFChargedHadrCand()->trackRef()->dxyError();
+				MyTau.leadingTrackIpVtdzError		= tau->leadPFChargedHadrCand()->trackRef()->dzError();
+				MyTau.leadingTrackvx				= tau->leadPFChargedHadrCand()->trackRef()->vx();
+				MyTau.leadingTrackvy				= tau->leadPFChargedHadrCand()->trackRef()->vy();
+				MyTau.leadingTrackvz				= tau->leadPFChargedHadrCand()->trackRef()->vz();
+				MyTau.leadingTrackValidHits			= tau->leadPFChargedHadrCand()->trackRef()->numberOfValidHits();
+				MyTau.leadingTrackNormChiSqrd		= tau->leadPFChargedHadrCand()->trackRef()->normalizedChi2(); //*/
+			}else{
+				MyTau.leadingTrackvalid				= 0;
+				MyTau.leadingTrackIpVtdxy			= -99;
+				MyTau.leadingTrackIpVtdz			= -99;
+				MyTau.leadingTrackIpVtdxyError		= -99;
+				MyTau.leadingTrackIpVtdzError		= -99;
+				MyTau.leadingTrackvx				= -99;
+				MyTau.leadingTrackvy				= -99;
+				MyTau.leadingTrackvz				= -99;
+				MyTau.leadingTrackValidHits			= -99;
+				MyTau.leadingTrackNormChiSqrd		= -99;
+			}
+		}else{
+			MyTau.leadingTrackvalid				= 0;
+			MyTau.leadingTrackPt				= -99;
+			MyTau.charge						= -99;
+			MyTau.leadingTrackIpVtdxy			= -99;
+			MyTau.leadingTrackIpVtdz			= -99;
+			MyTau.leadingTrackIpVtdxyError		= -99;
+			MyTau.leadingTrackIpVtdzError		= -99;
+			MyTau.leadingTrackvx				= -99;
+			MyTau.leadingTrackvy				= -99;
+			MyTau.leadingTrackvz				= -99;
+			MyTau.leadingTrackValidHits			= -99;
+			MyTau.leadingTrackNormChiSqrd		= -99;
+		}
+
+     }
+   }
 
    /////////////////////////////////////////////
    ///////
@@ -3758,6 +3859,15 @@ int BEANmaker::count_hits( const std::vector<CaloTowerPtr> & towers )
     nHit += cellIDs.size();
   }
   return nHit;
+}
+
+// === Tau Crack veto === //
+bool BEANmaker::tauIsInTheCracks(float etaValue){
+	return (fabs(etaValue) < 0.018 ||  
+			(fabs(etaValue)>0.423 && fabs(etaValue)<0.461) ||
+			(fabs(etaValue)>0.770 && fabs(etaValue)<0.806) ||
+			(fabs(etaValue)>1.127 && fabs(etaValue)<1.163) ||
+			(fabs(etaValue)>1.460 && fabs(etaValue)<1.558));
 }
 
 //define this as a plug-in
