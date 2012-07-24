@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.11 2012/07/03 21:30:46 puigh Exp $
+// $Id: BEANmaker.cc,v 1.12 2012/07/24 14:19:37 nvallsve Exp $
 //
 //
 
@@ -2376,7 +2376,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 			MyTau.leadingTrackValidHits			= -99;
 			MyTau.leadingTrackNormChiSqrd		= -99;
 		}
-
+        bntaus->push_back(MyTau);
      }
    }
 
