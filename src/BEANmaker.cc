@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.12 2012/07/24 14:19:37 nvallsve Exp $
+// $Id: BEANmaker.cc,v 1.13 2012/07/24 19:36:27 jkolb Exp $
 //
 //
 
@@ -2298,7 +2298,6 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    std::auto_ptr<BNtauCollection> bntaus(new BNtauCollection);
    if( produceTau ){
      edm::View<pat::Tau> taus = *tauHandle;
-
      for( edm::View<pat::Tau>::const_iterator tau = taus.begin(); tau!=taus.end(); ++tau ){
         
 		BNtau MyTau;
@@ -3762,6 +3761,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    if( produceMuon ) iEvent.put(bnmuons,muonTag_.label());
    if( producePFMuon ) iEvent.put(bnpfmuons,pfmuonTag_.label());
    if( produceCocktailMuon ) iEvent.put(bncocktailmuons,cocktailmuonTag_.label());
+   if( produceTau ) iEvent.put(bntaus,tauTag_.label());
    if( producePhoton ) iEvent.put(bnphotons,photonTag_.label());
    if( produceSCsEB || produceSCsEE ) iEvent.put(bnsuperclusters,kSC);
    if( produceTrack ) iEvent.put(bntracks,trackTag_.label());
