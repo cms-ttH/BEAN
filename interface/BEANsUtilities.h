@@ -22,6 +22,9 @@
 #include "TLorentzVector.h"
 #include "TMath.h"
 #include "TRandom3.h"
+#include "TFile.h"
+#include "TH1.h"
+#include "TH2.h"
 
 #ifdef __MAKECINT__
 #pragma link C++ class std::vector< TLorentzVector >+; 
@@ -97,9 +100,9 @@ namespace BEANs{
 
   void setMCsample( int insample=2500 );
 
-  void electronSelector( BNelectronCollection electrons, bool isLJ, std::string era, vint &tightElectrons, vint &looseElectrons );
-  void muonSelector( BNmuonCollection muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons );
-  void jetSelector( BNjetCollection pfjets, std::string sysType, vint &tightJets, vint &tagJets, vint &untagJets, 
+  void electronSelector( const BNelectronCollection &electrons, bool isLJ, std::string era, vint &tightElectrons, vint &looseElectrons );
+  void muonSelector( const BNmuonCollection &muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons );
+  void jetSelector( const BNjetCollection &pfjets, std::string sysType, vint &tightJets, vint &tagJets, vint &untagJets, 
 		    std::vector<BTagWeight::JetInfo> &myjetinfo, double csvCut = 0.679 );
 
   vdouble getEffSF( int returnType, double jetPts, double jetEtas, double jetIds );
@@ -142,7 +145,7 @@ void setMCsample( int insample=2500 ){
 /// Electrons
 ///
 ////////
-void BEANs::electronSelector( BNelectronCollection electrons, bool isLJ, std::string era, vint &tightElectrons, vint &looseElectrons ){
+void BEANs::electronSelector( const BNelectronCollection &electrons, bool isLJ, std::string era, vint &tightElectrons, vint &looseElectrons ){
 
   tightElectrons.clear();
   looseElectrons.clear();
@@ -156,11 +159,11 @@ void BEANs::electronSelector( BNelectronCollection electrons, bool isLJ, std::st
       double eleSCEta = electrons.at(i).scEta;
       double absSCeta = fabs(eleSCEta);
       double eleEta = electrons.at(i).eta;
-      double eleEt = electrons.at(i).et;
+      double elePt = electrons.at(i).pt;
 
       bool isCrack = ( (absSCeta>1.4442) && (absSCeta<1.5660) );
 
-      bool kin = ( (eleEt>loosePt) && !isCrack && fabs(eleEta)<2.5 );
+      bool kin = ( (elePt>loosePt) && !isCrack && fabs(eleEta)<2.5 );
 
       if( !kin ) continue;
 
@@ -168,13 +171,18 @@ void BEANs::electronSelector( BNelectronCollection electrons, bool isLJ, std::st
       double neutralHadronIso = electrons.at(i).neutralHadronIso;
       double photonIso = electrons.at(i).photonIso;
 
-      double relIso = ( chargedHadronIso + neutralHadronIso + photonIso ) * 1./eleEt;
+      double relIso = ( chargedHadronIso + neutralHadronIso + photonIso ) * 1./elePt;
 
       bool looseIso = ( relIso < 0.2 );
       bool tightIso = ( relIso < 0.1 );
 
       int eidHyperTight1MC = electrons.at(i).eidHyperTight1MC;
       bool eidHyperTight1MC_dec = ( (eidHyperTight1MC & 1)==1 );
+
+      int eidTight = electrons.at(i).eidTight;
+      bool eidTight_dec = ( (eidTight & 1)==1 );
+
+      bool eid = isLJ ? eidHyperTight1MC_dec : eidTight_dec;
 
       bool d0 = ( fabs(electrons.at(i).correctedD0) < 0.02 );
       bool dZ = ( fabs(electrons.at(i).correctedDZ) < 1. );
@@ -184,11 +192,11 @@ void BEANs::electronSelector( BNelectronCollection electrons, bool isLJ, std::st
       bool nlost = ( electrons.at(i).numberOfLostHits<1 );
       bool notConv = ( !(dist && dcot) && nlost );
 
-      bool id = ( eidHyperTight1MC_dec && d0 && dZ && notConv );
+      bool id = ( eid && d0 && dZ && notConv );
 
       if( kin && looseIso ){
-	if( ((eleEt>tightPt) && id && tightIso) ) tightElectrons.push_back(i);
-	else looseElectrons.push_back(i);
+        if( ((elePt>tightPt) && id && tightIso) ) tightElectrons.push_back(i);
+        else looseElectrons.push_back(i);
       }
     }// end electron loop
 
@@ -231,8 +239,8 @@ void BEANs::electronSelector( BNelectronCollection electrons, bool isLJ, std::st
       bool id = ( passMVAId && d02 && dZ && notConv );
 
       if( kin && looseIso && passMVAId && d04 && notConv ){
-	if( ((elePt>tightPt) && id && tightIso) ) tightElectrons.push_back(i);
-	else looseElectrons.push_back(i);
+        if( ((elePt>tightPt) && id && tightIso) ) tightElectrons.push_back(i);
+        else looseElectrons.push_back(i);
       }
     }// end electron loop
   }
@@ -244,7 +252,7 @@ void BEANs::electronSelector( BNelectronCollection electrons, bool isLJ, std::st
 /// Muons
 ///
 ////////
-void BEANs::muonSelector( BNmuonCollection muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons ){
+void BEANs::muonSelector( const BNmuonCollection &muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons ){
 
   tightMuons.clear();
   looseMuons.clear();
@@ -286,8 +294,8 @@ void BEANs::muonSelector( BNmuonCollection muons, bool isLJ, std::string era, vi
       bool id = ( isTrackerMuon && isGlobalMuonPromptTight && numTrackHits && numPixelHits && numberOfMatches && passd0 && passdz );
 
       if( kin && isGlobalMuon && looseIso ){
-	if( ((muPt>tightPt) && (muAbsEta<2.1) && id && tightIso) ) tightMuons.push_back(i);
-	else looseMuons.push_back(i);
+        if( ((muPt>tightPt) && (muAbsEta<2.1) && id && tightIso) ) tightMuons.push_back(i);
+        else looseMuons.push_back(i);
       }
     }// end muon loop
   } // end if 2011
@@ -311,7 +319,8 @@ void BEANs::muonSelector( BNmuonCollection muons, bool isLJ, std::string era, vi
       bool looseIso = ( relIso_dBeta<0.20 );
       bool tightIso = ( relIso_dBeta<0.12 );
 
-      bool isPFmuon = ( muons.at(i).isPFMuon==1 );
+//       bool isPFmuon = ( muons.at(i).isPFMuon==1 );
+      bool isPFmuon = true; //Temporary hack for early 52x BEANs that lack this variable... (KPL)
       bool isGlobalMuon = ( muons.at(i).isGlobalMuon==1 );
       bool isTrackerMuon = ( muons.at(i).isTrackerMuon==1 );
 
@@ -329,8 +338,8 @@ void BEANs::muonSelector( BNmuonCollection muons, bool isLJ, std::string era, vi
 		  numberOfLayersWithMeasurement && numberOfValidMuonHits && numberOfValidPixelHits && numberOfMatchedStations );
 
       if( kin && (isGlobalMuon || isTrackerMuon) && looseIso && isPFmuon ){
-	if( ((muPt>tightPt) && (muAbsEta<2.1) && id && tightIso) ) tightMuons.push_back(i);
-	else looseMuons.push_back(i);
+        if( ((muPt>tightPt) && (muAbsEta<2.1) && id && tightIso) ) tightMuons.push_back(i);
+        else looseMuons.push_back(i);
       }
     }// end muon loop
   }
@@ -342,7 +351,7 @@ void BEANs::muonSelector( BNmuonCollection muons, bool isLJ, std::string era, vi
 /// PFJets
 ///
 ////////
-void BEANs::jetSelector( BNjetCollection pfjets, std::string sysType, vint &tightJets, vint &tagJets, vint &untagJets, 
+void BEANs::jetSelector( const BNjetCollection &pfjets, std::string sysType, vint &tightJets, vint &tagJets, vint &untagJets, 
 			 std::vector<BTagWeight::JetInfo> &myjetinfo, double csvCut ){
 
   tightJets.clear();
