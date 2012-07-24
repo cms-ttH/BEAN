@@ -89,6 +89,7 @@ electronCutPF          = 'et > 15. && abs(eta) < 2.5'
 # PF jets
 #jetCutPF               = ''
 #jetMuonsDRPF           = 0.1
+tauCut                 = 'et > 15. && abs(eta) < 2.5 && tauID("decayModeFinding")'
 
 # Trigger and trigger object
 #triggerSelectionData       = ''
@@ -496,6 +497,10 @@ if runOnMC:
                                 , 'keep *_addPileupInfo_*_*'
                                 , 'keep LHEEventProduct_*_*_*'
                                 ]
+# make PAT use modern tau discriminants
+from PhysicsTools.PatAlgos.tools.tauTools import *
+switchToPFTauHPS(process)
+
 
 
 ###
@@ -666,6 +671,10 @@ if runStandardPAT:
 
   process.selectedPatElectrons.cut = electronCut
 
+  ### Taus
+
+  process.selectedPatTaus.cut = tauCut
+
 if runPF2PAT:
 
   applyPostfix( process, 'patMuons', postfix ).usePV      = muonsUsePV
@@ -756,6 +765,7 @@ process.BNproducer = cms.EDProducer('BEANmaker',
                                     reducedBarrelRecHitCollection = cms.InputTag("reducedEcalRecHitsEB"),
                                     reducedEndcapRecHitCollection = cms.InputTag("reducedEcalRecHitsEE"),
                                     trackTag = cms.InputTag("generalTracks"),
+                                    tauTag = cms.InputTag("selectedPatTaus"),
                                     triggerResultsTag = cms.InputTag("TriggerResults::HLT"),
                                     gtSource = cms.InputTag("gtDigis"),
                                     pvTag = cms.InputTag("offlinePrimaryVertices"),
