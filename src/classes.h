@@ -4,6 +4,7 @@
 #include "ProductArea/BNcollections/interface/SampleProd.h"
 #include "ProductArea/BNcollections/interface/BNbxlumi.h"
 #include "ProductArea/BNcollections/interface/BNelectron.h"
+#include "ProductArea/BNcollections/interface/BNtau.h"
 #include "ProductArea/BNcollections/interface/BNevent.h"
 #include "ProductArea/BNcollections/interface/BNjet.h"
 #include "ProductArea/BNcollections/interface/BNmcparticle.h"
@@ -36,6 +37,11 @@ namespace {
      edm::Wrapper<BNelectron> electrondummy1;
      std::vector<BNelectron> electrondummy2;
      edm::Wrapper<std::vector<BNelectron> > electrondummy3;
+
+     BNtau taudummy0;
+     edm::Wrapper<BNtau> taudummy1;
+     std::vector<BNtau> taudummy2;
+     edm::Wrapper<std::vector<BNtau> > taudummy3;
 
      BNjet jetdummy0;
      edm::Wrapper<BNjet> jetdummy1;

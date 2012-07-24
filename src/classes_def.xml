@@ -14,6 +14,11 @@
   <class pattern="edm::Wrapper<BNelectron>"/>
   <class name="edm::Wrapper<std::vector<BNelectron> >" />
 
+  <class name="BNtau" />
+  <class name="std::vector<BNtau>" />
+  <class pattern="edm::Wrapper<BNtau>"/>
+  <class name="edm::Wrapper<std::vector<BNtau> >" />
+
   <class name="BNjet" />
   <class name="std::vector<BNjet>" />
   <class pattern="edm::Wrapper<BNjet>"/>
