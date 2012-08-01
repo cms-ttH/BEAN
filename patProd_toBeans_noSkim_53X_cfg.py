@@ -80,9 +80,9 @@ muonCutPF              = 'isGlobalMuon && pt > 10. && abs(eta) < 2.5'
 #looseMuonCutPF         = ''
 #tightMuonCutPF         = ''
 # Standard electrons
-electronCut            = 'et > 15. && abs(eta) < 2.5'
+electronCut            = 'et > 10. && abs(eta) < 2.5'
 # PF electrons
-electronCutPF          = 'et > 15. && abs(eta) < 2.5'
+electronCutPF          = 'et > 10. && abs(eta) < 2.5'
 # Tau cut
 tauCut                 = 'et > 15. && abs(eta) < 2.5 && tauID("decayModeFinding")'
 # Calo jets
@@ -221,7 +221,7 @@ if useRelVals:
                                      )
 
 #inputFiles = cms.untracked.vstring('/store/data/Run2012A/SingleMu/AOD/PromptReco-v1/000/190/645/FAF2D9E9-7F82-E111-BE0C-003048F1C420.root')
-inputFiles = cms.untracked.vstring('/store/relval/CMSSW_5_2_3_patch3/RelValTTbar/GEN-SIM-RECO/START52_V9_special_120410-v1/0122/0EF8CDEB-1083-E111-846C-002618943937.root')         
+inputFiles = cms.untracked.vstring('/store/relval/CMSSW_5_2_3_patch3/RelValTTbar/GEN-SIM-RECO/START52_V9_special_120410-v1/0122/0EF8CDEB-1083-E111-846C-002618943937.root')
 
 process.source.fileNames = inputFiles
 process.maxEvents.input  = maxInputEvents
