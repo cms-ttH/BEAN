@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.13 2012/07/24 19:36:27 jkolb Exp $
+// $Id: BEANmaker.cc,v 1.14 2012/07/24 20:03:41 jkolb Exp $
 //
 //
 
@@ -175,7 +175,7 @@ class BEANmaker : public edm::EDProducer {
   edm::InputTag calojetTag_;
   edm::InputTag pfjetTag_;
   edm::InputTag genjetTag_;
-  edm::InputTag calometTag_;
+  //edm::InputTag calometTag_;
   edm::InputTag pfmetTag_;
   edm::InputTag tcmetTag_;
   edm::InputTag muonTag_;
@@ -292,7 +292,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   calojetTag_ = iConfig.getParameter<edm::InputTag>("calojetTag");
   pfjetTag_ = iConfig.getParameter<edm::InputTag>("pfjetTag");
   genjetTag_ = iConfig.getParameter<edm::InputTag>("genjetTag");
-  calometTag_ = iConfig.getParameter<edm::InputTag>("calometTag");
+  //calometTag_ = iConfig.getParameter<edm::InputTag>("calometTag");
   pfmetTag_ = iConfig.getParameter<edm::InputTag>("pfmetTag");
   tcmetTag_ = iConfig.getParameter<edm::InputTag>("tcmetTag");
   muonTag_ = iConfig.getParameter<edm::InputTag>("muonTag");
@@ -322,7 +322,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   produces<BNjetCollection>(calojetTag_.label()).setBranchAlias("calojets");
   produces<BNjetCollection>(pfjetTag_.label()).setBranchAlias("pfjets");
   produces<BNgenjetCollection>(genjetTag_.label()).setBranchAlias("genjets");
-  produces<BNmetCollection>(calometTag_.label()).setBranchAlias("calomet");
+  //produces<BNmetCollection>(calometTag_.label()).setBranchAlias("calomet");
   produces<BNmetCollection>(pfmetTag_.label()).setBranchAlias("pfmet");
   produces<BNmetCollection>(tcmetTag_.label()).setBranchAlias("tcmet");
   produces<BNmuonCollection>(muonTag_.label()).setBranchAlias("muons");
@@ -395,8 +395,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    edm::Handle<reco::GenJetCollection > genjetHandle;
    iEvent.getByLabel(genjetTag_,genjetHandle);
 
-   edm::Handle<edm::View<pat::MET> > calometHandle;
-   iEvent.getByLabel(calometTag_,calometHandle);
+   //edm::Handle<edm::View<pat::MET> > calometHandle;
+   //iEvent.getByLabel(calometTag_,calometHandle);
 
    edm::Handle<edm::View<pat::MET> > pfmetHandle;
    iEvent.getByLabel(pfmetTag_,pfmetHandle);
@@ -432,7 +432,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.getByLabel(genParticleTag_,genParticles);
 
    edm::Handle< double > rhoHandle;
-   iEvent.getByLabel(edm::InputTag("kt6PFJetsPFlow","rho"), rhoHandle);
+   iEvent.getByLabel(edm::InputTag("kt6PFJets","rho"), rhoHandle);
    double rho_event = *rhoHandle;   
    
    edm::Handle<reco::ConversionCollection> conversionsHandle;
@@ -444,7 +444,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    bool produceCaloJet = ( (calojetTag_.label() == "none") ) ? false : true;
    bool producePFJet = ( (pfjetTag_.label() == "none") ) ? false : true;
    bool produceGenJet = ( (genjetTag_.label() == "none") ) ? false : true;
-   bool produceCaloMET = ( (calometTag_.label() == "none") ) ? false : true;
+   //bool produceCaloMET = ( (calometTag_.label() == "none") ) ? false : true;
    bool producePFMET = ( (pfmetTag_.label() == "none") ) ? false : true;
    bool produceTCMET = ( (tcmetTag_.label() == "none") ) ? false : true;
    bool produceMuon = ( (muonTag_.label() == "none") ) ? false : true;
@@ -3042,7 +3042,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    ///////   Fill the calomet collection
    ///////
    /////////////////////////////////////////////
-
+   /*
    std::auto_ptr<BNmetCollection> bncalomet(new BNmetCollection);
    BNmet MyCalomet;
 
@@ -3152,7 +3152,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
      bncalomet->push_back(MyCalomet);
    }
-
+   */
 
 
    /////////////////////////////////////////////
@@ -3755,7 +3755,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    if( produceCaloJet ) iEvent.put(bncalojets,calojetTag_.label());
    if( producePFJet ) iEvent.put(bnpfjets,pfjetTag_.label());
    if( produceGenJet ) iEvent.put(bngenjets,genjetTag_.label());
-   if( produceCaloMET ) iEvent.put(bncalomet,calometTag_.label());
+   //if( produceCaloMET ) iEvent.put(bncalomet,calometTag_.label());
    if( producePFMET ) iEvent.put(bnpfmet,pfmetTag_.label());
    if( produceTCMET ) iEvent.put(bntcmet,tcmetTag_.label());
    if( produceMuon ) iEvent.put(bnmuons,muonTag_.label());
