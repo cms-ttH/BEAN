@@ -265,11 +265,16 @@ process.step0b = process.goodOfflinePrimaryVertices.clone( filter = True )
 ### Event cleaning
 process.load( 'TopQuarkAnalysis.Configuration.patRefSel_eventCleaning_cff' )
 process.trackingFailureFilter.VertexSource = cms.InputTag( pfVertices )
+
+# For BEAN
+process.load('CommonTools/RecoAlgos/HBHENoiseFilterResultProducer_cfi')
+
 process.step0c = process.eventCleaning
 if runOnMC:
   process.step0c += process.eventCleaningMC
 else:
   process.step0c += process.eventCleaningData
+  process.step0c += process.HBHENoiseFilterResultProducer
         
 
 ###
@@ -797,8 +802,6 @@ process.q2weights = cms.EDProducer('Q2Weights'
                                        )
     
 
-# For BEAN
-process.load('CommonTools/RecoAlgos/HBHENoiseFilterResultProducer_cfi')
 
 # For BEAN
 process.load('RecoMuon/MuonIdentification/refitMuons_cfi')
