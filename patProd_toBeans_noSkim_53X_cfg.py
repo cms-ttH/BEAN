@@ -51,9 +51,9 @@ if ('crab.py' in sys.argv[0]) and (sys.argv[1] == '-create'):
 
     if cp.has_option('BEAN','sample'):
       sampleNumber = cp.getint('BEAN','sample')
-      print 'Setting sample to %d' % sample
+      print 'Setting sample to %d' % sampleNumber
 
-      if sample < 0:
+      if sampleNumber < 0:
         runOnMC = False
         print 'This sample is data!'
       else:
