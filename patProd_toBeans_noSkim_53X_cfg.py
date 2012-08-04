@@ -27,6 +27,40 @@ runOnMC = True
 ### If runOnMC = False, use a sampleNumber <  0
 sampleNumber = 2500
 
+#Check to see if this is a CRAB job...
+if ('crab.py' in sys.argv[0]) and (sys.argv[1] == '-create'):
+
+  print "This config is being used for CRAB!"
+  print "Checking to see if the CRAB config file contains BEAN parameters"
+
+  index = -1
+  try:
+    index = sys.argv.index('-cfg') + 1
+  except:
+    print 'Error cannot find the CRAB config file.  No "-cfg" argument found.  Command line args:'
+    print sys.argv
+
+  if (index < 0) or (index >= len(sys.argv)):
+    print 'Could not identify the CRAB config file.  Not extracting any special parameters from there.'
+  else:
+
+    #Read in the crab config file and process it for any special SQWaT arguments
+    import ConfigParser
+    cp = ConfigParser.ConfigParser()
+    cp.read(sys.argv[index])
+
+    if cp.has_option('BEAN','sample'):
+      sample = cp.getint('BEAN','sample')
+      print 'Setting sample to %d' % sample
+
+      if sample < 0:
+        runOnMC = False
+        print 'This sample is data!'
+      else:
+        runOnMC = True
+        print 'This sample is MC!'
+
+
 ### Standard and PF work flow
 
 # Standard
@@ -172,7 +206,7 @@ globalTagMC   = 'START52_V11'
 
 # output file
 # outputFile = 'patRefSel_muJets.root'
-outputFile = 'pat_52x_test.root'
+outputFile = 'pat2bean_53x.root'
 
 # event frequency of Fwk report
 fwkReportEvery = 1000
