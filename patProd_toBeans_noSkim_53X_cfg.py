@@ -50,7 +50,7 @@ if ('crab.py' in sys.argv[0]) and (sys.argv[1] == '-create'):
     cp.read(sys.argv[index])
 
     if cp.has_option('BEAN','sample'):
-      sample = cp.getint('BEAN','sample')
+      sampleNumber = cp.getint('BEAN','sample')
       print 'Setting sample to %d' % sample
 
       if sample < 0:
