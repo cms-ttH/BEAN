@@ -79,15 +79,20 @@ typedef BNtriggerCollection::const_iterator       TrigIter;
 typedef BNtrigobjCollection::const_iterator       TrigObjIter;
 
 char * my_pPath = getenv ("CMSSW_BASE");
-std::string eff_base_dir(my_pPath);
-std::string str_eff_file = eff_base_dir + "/src/NtupleMaker/BEANmaker/interface/mc_btag_efficiency.root";
+std::string my_base_dir(my_pPath);
+std::string str_eff_file_7TeV = my_base_dir + "/src/NtupleMaker/BEANmaker/interface/mc_btag_efficiency_7TeV.root";
+std::string str_eff_file_8TeV = my_base_dir + "/src/NtupleMaker/BEANmaker/interface/mc_btag_efficiency_8TeV.root";
+std::string str_pu_file_7TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/interface/pu_distributions_7TeV.root";
+std::string str_pu_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/interface/pu_distributions_8TeV.root";
 
+TH2D* h_b_eff_;
+TH2D* h_c_eff_;
+TH2D* h_l_eff_;
+TH2D* h_o_eff_;
 
-TFile *f_tag_eff_ = new TFile(str_eff_file.c_str());
-TH2D* h_b_eff_ = (TH2D*)f_tag_eff_->Get("ttH120_h_jet_pt_eta_b_eff");
-TH2D* h_c_eff_ = (TH2D*)f_tag_eff_->Get("ttH120_h_jet_pt_eta_c_eff");
-TH2D* h_l_eff_ = (TH2D*)f_tag_eff_->Get("ttH120_h_jet_pt_eta_l_eff");
-TH2D* h_o_eff_ = (TH2D*)f_tag_eff_->Get("ttH120_h_jet_pt_eta_o_eff");
+TH1D* h_PU_ratio_;
+TH1D* h_PUup_ratio_;
+TH1D* h_PUdown_ratio_;
 
 
 using namespace std;
@@ -98,12 +103,14 @@ namespace BEANs{
   const float ETA_LIMIT=15.0;
   const float EPSILON=1.E-10;
 
-  void setMCsample( int insample=2500 );
+  void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="" );
 
   void electronSelector( const BNelectronCollection &electrons, bool isLJ, std::string era, vint &tightElectrons, vint &looseElectrons );
   void muonSelector( const BNmuonCollection &muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons );
   void jetSelector( const BNjetCollection &pfjets, std::string sysType, vint &tightJets, vint &tagJets, vint &untagJets, 
 		    std::vector<BTagWeight::JetInfo> &myjetinfo, double csvCut = 0.679 );
+
+  void getPUwgt( double input_numPU, double &PU_scale, double &PUup_scale, double &PUdown_scale ); 
 
   vdouble getEffSF( int returnType, double jetPts, double jetEtas, double jetIds );
   double getJERfactor( int returnType, double jetAbsETA, double genjetPT, double recojetPT );
@@ -116,9 +123,21 @@ namespace BEANs{
 
 
 
-void setMCsample( int insample=2500 ){
+void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="" ){
 
-  std::string samplename = "ttH120";
+  std::string input_eff_file = str_eff_file_7TeV;
+  std::string input_pu_file  = str_pu_file_7TeV;
+  std::string com_suffix = "_7TeV";
+  if( is8TeV ){
+    input_eff_file = str_eff_file_8TeV;
+    input_pu_file  = str_pu_file_8TeV;
+    com_suffix = "_8TeV";
+  }
+
+
+  TFile *f_tag_eff_ = new TFile(input_eff_file.c_str());
+
+  std::string samplename = "ttbar";
   if( insample==2300 || insample==2310 ) samplename = "zjets";
   else if( insample==2400 ) samplename = "wjets";
   else if( insample==2500 ) samplename = "ttbar";
@@ -132,10 +151,83 @@ void setMCsample( int insample=2500 ){
   else if( insample==2702 ) samplename = "zz";
   else if( insample>=100 && insample<=140 ) samplename = "ttH120";
 
-  h_b_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + "_h_jet_pt_eta_b_eff" ).c_str());
-  h_c_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + "_h_jet_pt_eta_c_eff" ).c_str());
-  h_l_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + "_h_jet_pt_eta_l_eff" ).c_str());
-  h_o_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + "_h_jet_pt_eta_o_eff" ).c_str());
+  if( is8TeV ){
+    if( insample==2600      ) samplename = "t_schannel";
+    else if( insample==2602 ) samplename = "t_tchannel";
+    else if( insample==2504 ) samplename = "t_tWchannel";
+    else if( insample==2501 ) samplename = "tbar_schannel";
+    else if( insample==2503 ) samplename = "tbar_tchannel";
+    else if( insample==2505 ) samplename = "tbar_tWchannel";
+    else if( insample>=8000 && insample<9000  ) samplename = "ttH120_FullSim";
+    else if( insample>=9000 && insample<10000 ) samplename = "ttH120_FastSim";
+  }
+
+  h_b_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str());
+  h_c_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_c_eff" ).c_str());
+  h_l_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_l_eff" ).c_str());
+  h_o_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_o_eff" ).c_str());
+
+
+  TFile *f_pu_ = new TFile(input_pu_file.c_str());
+
+  TH1D* h_pu_data;
+  TH1D* h_pu_data_up;
+  TH1D* h_pu_data_down;
+  TH1D* h_pu_mc;
+
+  if( is8TeV ){
+    h_pu_data      = (TH1D*)f_pu_->Get((std::string("pileup_8TeV_69300xSec")).c_str());
+    h_pu_data_up   = (TH1D*)f_pu_->Get((std::string("pileup_8TeV_71795xSec")).c_str());
+    h_pu_data_down = (TH1D*)f_pu_->Get((std::string("pileup_8TeV_66805xSec")).c_str());
+
+    std::string mc_pu_input = "Summer2012";
+    if( insample==2300 || insample==2400 || insample==2500 || 
+	(insample>=8000 && insample<9000) || 
+	(insample>=9000 && insample<10000) ) mc_pu_input = std::string(samplename + "_Summer2012");
+    else if( insample==2523 || insample==2524 ) mc_pu_input = "ttZorW_Summer2012";
+
+    h_pu_mc = (TH1D*)f_pu_->Get((std::string(mc_pu_input + "_pileup_8TeV")).c_str());
+  }
+  else{
+    if( !(dset.find("SingleMu")!=std::string::npos || dset.find("ElectronHad")!=std::string::npos) ) dset = "SingleMu";
+
+    if( (insample>=100 && insample<=140) || (insample==2523) || (insample==2524) ){
+      h_pu_data      = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_68000_observed")).c_str());
+      h_pu_data_up   = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_73440_observed")).c_str());
+      h_pu_data_down = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_62560_observed")).c_str());
+
+      h_pu_mc = (TH1D*)f_pu_->Get("ttH_7TeV_numGenPV");
+    }
+    else{
+      h_pu_data      = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_68000_true")).c_str());
+      h_pu_data_up   = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_73440_true")).c_str());
+      h_pu_data_down = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_62560_true")).c_str());
+
+      h_pu_mc = (TH1D*)f_pu_->Get("F2011exp_7TeV");
+    }
+  }
+
+  h_pu_data->Scale( 1./h_pu_data->Integral() );
+  h_pu_data_up->Scale( 1./h_pu_data_up->Integral() );
+  h_pu_data_down->Scale( 1./h_pu_data_down->Integral() );
+
+  h_pu_mc->Scale( 1./h_pu_mc->Integral() );
+
+  h_PU_ratio_     = (TH1D*)h_pu_data->Clone();
+  h_PUup_ratio_   = (TH1D*)h_pu_data_up->Clone();
+  h_PUdown_ratio_ = (TH1D*)h_pu_data_down->Clone();
+
+  h_PU_ratio_->Divide( h_pu_mc );
+  h_PUup_ratio_->Divide( h_pu_mc );
+  h_PUdown_ratio_->Divide( h_pu_mc );
+}
+
+
+void getPUwgt( double input_numPU, double &PU_scale, double &PUup_scale, double &PUdown_scale ){
+
+  PU_scale     = h_PU_ratio_->GetBinContent( h_PU_ratio_->FindBin( input_numPU ) );
+  PUup_scale   = h_PUup_ratio_->GetBinContent( h_PUup_ratio_->FindBin( input_numPU ) );
+  PUdown_scale = h_PUdown_ratio_->GetBinContent( h_PUdown_ratio_->FindBin( input_numPU ) );
 
 }
 
