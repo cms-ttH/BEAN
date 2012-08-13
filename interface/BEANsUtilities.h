@@ -152,12 +152,21 @@ void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="" ){
   else if( insample>=100 && insample<=140 ) samplename = "ttH120";
 
   if( is8TeV ){
-    if( insample==2600      ) samplename = "t_schannel";
+    // 12Aug2012 - Include all samples - JGWood
+    if( insample==2500      ) samplename = "ttbar";
+    else if( insample==2600 ) samplename = "ttbarZ";
+    else if( insample==2600 ) samplename = "ttbarW";
+    else if( insample==2600 ) samplename = "t_schannel";
     else if( insample==2602 ) samplename = "t_tchannel";
     else if( insample==2504 ) samplename = "t_tWchannel";
     else if( insample==2501 ) samplename = "tbar_schannel";
     else if( insample==2503 ) samplename = "tbar_tchannel";
     else if( insample==2505 ) samplename = "tbar_tWchannel";
+    else if( insample==2800 ) samplename = "zjets";
+    else if( insample==2400 ) samplename = "wjets";
+    else if( insample==2700 ) samplename = "ww";
+    else if( insample==2701 ) samplename = "wz";
+    else if( insample==2702 ) samplename = "zz";
     else if( insample>=8000 && insample<9000  ) samplename = "ttH120_FullSim";
     else if( insample>=9000 && insample<10000 ) samplename = "ttH120_FastSim";
   }
@@ -716,7 +725,10 @@ void BEANs::getFox_mod2(TLorentzVector lepton, TLorentzVector met, vecTLorentzVe
 }
 
 
-vdouble BEANs::getEffSF( int returnType, double jetPt, double jetEta, double jetId ){
+
+vdouble BEANs::getEffSF( int returnType, double jetPt, double jetEta, double jetId, std::string era){
+
+  bool is2011 = ( era.find("2012")!=std::string::npos );
 
   double m_type = 0.;
   if( returnType==-1 )      m_type = -1.;
@@ -767,6 +779,12 @@ vdouble BEANs::getEffSF( int returnType, double jetPt, double jetEta, double jet
   SFb = SFb + m_type * SFb_error[use_bin];
   SFc = SFc + m_type * 2* SFb_error[use_bin];
 
+  // 2011/12 SFl correction function, JGWood 12Aug2012
+  if(2012){
+    SFb = SFb + m_type * 1.5 * SFb_error[use_bin];
+    SFc = SFc + m_type * 1.5 * 2* SFb_error[use_bin];
+  }
+
   double SFl = 1.;
   if( returnType==-2 ){ // min
     if( absEta < 0.8 )                      SFl = ((0.972455+(7.51396e-06*pt))+(4.91857e-07*(pt*pt)))+(-1.47661e-09*(pt*(pt*pt)));
@@ -783,6 +801,10 @@ vdouble BEANs::getEffSF( int returnType, double jetPt, double jetEta, double jet
     else if( absEta < 1.6 && absEta > 0.8 ) SFl = ((1.111+(-9.64191e-06*pt))+(1.80811e-07*(pt*pt)))+(-5.44868e-10*(pt*(pt*pt)));
     else if( absEta < 2.4 && absEta > 1.6 ) SFl = ((1.08498+(-0.000701422*pt))+(3.43612e-06*(pt*pt)))+(-4.11794e-09*(pt*(pt*pt)));
   }
+
+  // 2011/12 SFl correction function, JGWood 12Aug2012
+  //   CSVM    1.10422 + -0.000523856*x + 1.14251e-06*x*x   x=jetPt
+  if(2012) SFl *= 1.10422 + -0.000523856*pt + 1.14251e-06*pt*pt;
 
   double SF=1;
 
