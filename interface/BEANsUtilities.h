@@ -772,17 +772,17 @@ vdouble BEANs::getEffSF( int returnType, double jetPt, double jetEta, double jet
   if( use_bin<0 ) std::cout << "   ERROR!! use_bin < 0 " << std::endl;
 
 
-  double SFb = 0.6981*((1.+(0.414063*pt))/(1.+(0.300155*pt)));
+  double SFb_central = 0.6981*((1.+(0.414063*pt))/(1.+(0.300155*pt)));
 
-  double SFc = SFb;
+  double SFc_central = SFb;
 
-  SFb = SFb + m_type * SFb_error[use_bin];
-  SFc = SFc + m_type * 2* SFb_error[use_bin];
+  double SFb = SFb_central + m_type * SFb_error[use_bin];
+  double SFc = SFc_central + m_type * 2* SFb_error[use_bin];
 
   // 2011/12 SFl correction function, JGWood 12Aug2012
   if(2012){
-    SFb = SFb + m_type * 1.5 * SFb_error[use_bin];
-    SFc = SFc + m_type * 1.5 * 2* SFb_error[use_bin];
+    SFb = SFb_central + m_type * 1.5 * SFb_error[use_bin];
+    SFc = SFc_central + m_type * 1.5 * 2* SFb_error[use_bin];
   }
 
   double SFl = 1.;
