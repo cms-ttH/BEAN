@@ -34,7 +34,7 @@ bool BTagWeight::filter(int t)
 
 
 
-double BTagWeight::weight(vector<JetInfo> jets, int useMinTags=-1, int useMaxTags=-1 )
+double BTagWeight::weight(vector<JetInfo> jets, int useMinTags, int useMaxTags )
 {
 
   if( useMinTags>-1 ) minTags = useMinTags;
