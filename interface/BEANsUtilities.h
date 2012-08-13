@@ -53,6 +53,8 @@
 
 #include "NtupleMaker/BEANmaker/interface/BtagWeight.h"
 
+#include "DataFormats/Math/interface/deltaR.h"
+
 #endif
 
 
@@ -119,6 +121,13 @@ namespace BEANs{
   void getFox_mod2(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, double HT,
 		   float &h0_mod2, float &h1_mod2, float &h2_mod2, float &h3_mod2, float &h4_mod2,  float &h5_mod2,  
 		   float &h6_mod2, float &h7_mod2, float &h8_mod2, float &h9_mod2, float &h10_mod2 );
+
+  bool ttPlusHeavyKeepEvent( BNmcparticleCollection const &mcparticles,
+                        BNjetCollection const &pfjets,
+                        TString ttbarType,
+                        TString era);
+    
+  
 }
 
 
@@ -834,6 +843,211 @@ vdouble BEANs::getEffSF( int returnType, double jetPt, double jetEta, double jet
 
   return result;
 }
+
+
+///////////////////////////////////////////////////////////
+//
+//   Input: your pf jets before selection and mc particles
+//          the kind of tt+X you want (tt+lf, tt+cc, tt+bb)
+//          the year (2011 or 2012)
+//   Output: a bool saying whether or not to keep the event
+//
+///////////////////////////////////////////////////////////////
+
+
+bool ttPlusHeavyKeepEvent( BNmcparticleCollection const &mcparticles,
+                           BNjetCollection const &pfjets,
+                           TString ttbarType,
+                           TString era ){
+
+  // validate input
+  bool validInput = false;
+  if (ttbarType == "ttbar") validInput = true;
+  if (ttbarType == "ttbar_bb") validInput = true;
+  if (ttbarType == "ttbar_cc") validInput =true;
+
+  if (!validInput ){
+    cout << "ttPlusHeavyKeepEvent: could not recognize ttbarType " << ttbarType <<"... failing" <<endl;  
+    assert (ttbarType == "ttbar or ttbar_bb or ttbar_cc");
+  }
+
+
+  bool validEra = false;
+  if (era == "2011" ) validEra = true;
+  if (era == "2012" ) validEra = true;
+
+  if (!validEra ){
+    cout << "ttPlusHeavyKeepEvent: could not recognize era " << era <<"... failing" <<endl;  
+    assert (era == "2011 or 2012");
+  }
+
+
+
+
+
+  bool keepEvent = false;           
+  bool debug_ = false;
+
+  bool isWtoCS = false;
+
+  if (debug_) cout << "Num MC particles = " << mcparticles.size() << std::endl
+                   << "Num pfjets " <<  int(pfjets.size()) << std::endl;
+
+   
+  // check to see if the event has a c with a 
+  // parent W
+  for( unsigned i=0; i< mcparticles.size(); i++ ){
+    int id = mcparticles.at(i).id;
+    int motherID = mcparticles.at(i).motherId;
+    int grandMotherID = mcparticles.at(i).grandMotherId;
+
+    if (debug_) std::cout << "Particle " << i << " is " << id << ", has mother " << motherID << " and grandmother " << grandMotherID << std::endl;
+
+    if (debug_) cout <<" Particle " << i << " has id " << id << endl;
+    if( abs(id)==4  && abs(motherID)==24 ){
+      isWtoCS = true;
+      break;
+    }
+  }
+
+  bool isBBbarEvent = false;
+  bool isCCbarEvent = false;
+
+
+  bool gotB = false;
+  bool gotC = false;
+
+  int numBmomB=0;
+  int numBmomT=0;
+  int numBmomHiggs=0;
+  int numBbarmomBbar=0;
+  int numBbarmomTbar=0;
+  int numBbarmomHiggs=0;
+  int numCmomC=0;
+  int numCbarmomCbar=0;
+  int numCmomHiggs=0;
+  int numCbarmomHiggs=0;
+
+  if (debug_) cout << "Starting loop over pf jet parton ids to see if you have a b" <<endl;
+
+  for( int i=0; i<int(pfjets.size()); i++ ){
+
+
+          
+    int id = pfjets.at(i).genPartonId;
+    if( id==-99 ) continue;
+    int motherID = pfjets.at(i).genPartonMotherId;
+    int mother0ID =  pfjets.at(i).genPartonMother0Id;
+    int mother1ID =  pfjets.at(i).genPartonMother1Id;
+          
+
+
+    if (debug_) std::cout << "Jet index " << i << " is generator id " << id
+                          << ", has mother " << motherID << ", mother0ID = " << mother0ID << ", mother1ID = " << mother1ID  << std::endl;
+          
+    // check to see if pf jets is from a  b/c and mother is a gluon
+    // or, if mother is some light quark
+
+    if (era == "2011") {
+      if( abs(id)==5 && ( motherID==21 || abs(motherID)<abs(id) ) ) gotB=true;
+      if( abs(id)==4 && ( motherID==21 || abs(motherID)<abs(id) ) ) gotC=true;
+    } else if (era == "2012") {
+      if( abs(id)==5 && abs(mother0ID) != 6  && abs(mother1ID) != 6 ) gotB=true;
+      // basically, as long as you didn't come from a W, then you are a tt+cc
+      if( abs(id)==4 && (abs(mother0ID) ==21 || abs(mother1ID) == 21 || abs(mother0ID) < abs(id) || abs(mother1ID) < abs(id) )  ) gotC=true;
+    }
+
+    if (debug_) std::cout << "----------------> Got B = " << gotB << endl;
+    // if things are their own mother, 
+    // where are they from? Does this mean stable?
+    if( id==5  && motherID==id ) numBmomB++;
+    if( id==-5 && motherID==id ) numBbarmomBbar++;
+
+    if( id==4  && motherID==id ) numCmomC++;
+    if( id==-4 && motherID==id ) numCbarmomCbar++;
+
+    if( id==5  && motherID==6  ) numBmomT++;
+    if( id==-5 && motherID==-6 ) numBbarmomTbar++;
+
+    if( id==5 && motherID==25 ) numBmomHiggs++;
+    if( id==-5 && motherID==25 ) numBbarmomHiggs++;
+
+    if( id==4 && motherID==25 ) numCmomHiggs++;
+    if( id==-4 && motherID==25 ) numCbarmomHiggs++;
+  }
+
+  //std::cout << "b->b: " << numBmomB << " bbar->bbar: " << numBbarmomBbar << " t->b: " << numBmomT << " tbar->bbar: " << numBbarmomTbar << " H->b: " << numBmomHiggs << " H->bbar: " << numBbarmomHiggs << std::endl;
+  //std::cout << "c->c: " << numCmomC << " cbar->cbar: " << numCbarmomCbar << " H->c: " << numCmomHiggs << " H->cbar: " << numCbarmomHiggs << std::endl;
+        
+
+  // if at least one b from b & one b from t, or if CC, and your jet was not b
+  if( ((numBmomB>=1 && numBmomT>=1) || (numBbarmomBbar>=1 && numBbarmomTbar>=1)) && !gotB ){
+    if (debug_) std::cout << "No sign of a b jet, but looping over jets again to check"
+                          <<std::endl;
+    // for each jet that is  b from b
+    for( int i=0; i<int(pfjets.size()); i++ ){
+      cout << "LOOP: i = " << i << endl;
+      int id0 = pfjets.at(i).genPartonId;
+      int motherID0 = pfjets.at(i).genPartonMotherId;
+      if( !(abs(id0)==5 && motherID0==id0) ) continue;
+
+      if (debug_) std::cout << "Jet index " << i  << " is a bjet, let us see that it is not from top" <<std::endl;
+      // for each jet that is b from t
+      for( int j=0; j<int(pfjets.size()); j++ ){
+        cout << "LOOP: j = " << j << endl;
+        int id1 = pfjets.at(j).genPartonId;
+        int motherID1 = pfjets.at(j).genPartonMotherId;
+        if (debug_) std::cout << "LOOP: id0 = " << id0 << ", motherID0 = " << motherID0
+                              << ", id1 = " << id1 << ", motherID1 = " << motherID1 << endl
+                              << "continue? = " << !(id1==id0 && abs(motherID1)==6) << endl;
+                
+        if( !(id1==id0 && abs(motherID1)==6) ) continue;
+        if (debug_) std::cout << "You didn't skip this event!" << endl;
+        // if delta r between b from b and b from t is big enough, then b in final state is OK
+        double dR = reco::deltaR(pfjets.at(i).genPartonEta,
+                                   pfjets.at(i).genPartonPhi,
+                                   pfjets.at(j).genPartonEta,
+                                   pfjets.at(j).genPartonPhi);
+        if (debug_) std::cout << "dR = " << dR << endl;
+        if (debug_) std::cout << "gotB = " << gotB << endl;
+        if( dR>0.3 ){
+          gotB = true;
+          if (debug_) std::cout << "Found something with dR > 0.3... now gotB = " << gotB << endl;
+          break;
+        }
+        if (debug_) std::cout << "SECOND: b not from top with dR = " << dR << " gotB = " << gotB << endl;
+      }
+      if( gotB ) break;
+    }
+  }
+
+  if( (numCmomC>=1 || numCbarmomCbar>=1) && !isWtoCS ){
+    gotC = true;
+  }
+
+  if( gotB ) isBBbarEvent = true;
+  else if( gotC ) isCCbarEvent = true;
+
+
+  
+  if( (ttbarType == "ttbar") && !isBBbarEvent && !isCCbarEvent ) keepEvent = true;
+  else if( (ttbarType == "ttbar_bb") &&  isBBbarEvent && !isCCbarEvent ) keepEvent = true;
+  else if( (ttbarType == "ttbar_cc")  && !isBBbarEvent && isCCbarEvent  ) keepEvent = true;
+      
+
+  if (debug_) cout << "Filter result = " << keepEvent << endl
+                   << "isBBbarEvent = " << isBBbarEvent << endl
+                   << "isCCbarEvent = " << isCCbarEvent << endl
+                   << "... will we skip this? " << (!keepEvent) << endl;
+        
+  return keepEvent;
+
+  
+  
+
+
+}
+
 
 
 
