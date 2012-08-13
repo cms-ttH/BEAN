@@ -107,12 +107,12 @@ namespace BEANs{
 
   void electronSelector( const BNelectronCollection &electrons, bool isLJ, std::string era, vint &tightElectrons, vint &looseElectrons );
   void muonSelector( const BNmuonCollection &muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons );
-  void jetSelector( const BNjetCollection &pfjets, std::string sysType, vint &tightJets, vint &tagJets, vint &untagJets, 
+  void jetSelector( const BNjetCollection &pfjets, std::string sysType, std::string era, vint &tightJets, vint &tagJets, vint &untagJets, 
 		    std::vector<BTagWeight::JetInfo> &myjetinfo, double csvCut = 0.679 );
 
   void getPUwgt( double input_numPU, double &PU_scale, double &PUup_scale, double &PUdown_scale ); 
 
-  vdouble getEffSF( int returnType, double jetPts, double jetEtas, double jetIds );
+  vdouble getEffSF( int returnType, double jetPts, double jetEtas, double jetIds, std::string era);
   double getJERfactor( int returnType, double jetAbsETA, double genjetPT, double recojetPT );
   void getSp(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, float &aplanarity, float &sphericity);
   void getFox(vecTLorentzVector jets,float &h0, float &h1, float &h2, float &h3, float &h4);	
@@ -452,7 +452,7 @@ void BEANs::muonSelector( const BNmuonCollection &muons, bool isLJ, std::string 
 /// PFJets
 ///
 ////////
-void BEANs::jetSelector( const BNjetCollection &pfjets, std::string sysType, vint &tightJets, vint &tagJets, vint &untagJets, 
+void BEANs::jetSelector( const BNjetCollection &pfjets, std::string sysType, std::string era, vint &tightJets, vint &tagJets, vint &untagJets, 
 			 std::vector<BTagWeight::JetInfo> &myjetinfo, double csvCut ){
 
   tightJets.clear();
@@ -491,11 +491,11 @@ void BEANs::jetSelector( const BNjetCollection &pfjets, std::string sysType, vin
       if( sysType.compare("data")!=0 ){
 	int flavour = pfjets.at(i).flavour;
 	std::vector<double> myEffSF;
-	if( sysType.compare("hfSFUp")==0 )        myEffSF = BEANs::getEffSF( 1,  jetPt, jetEta, flavour );
-	else if( sysType.compare("hfSFDown")==0 ) myEffSF = BEANs::getEffSF( -1, jetPt, jetEta, flavour );
-	else if( sysType.compare("lfSFUp")==0 )   myEffSF = BEANs::getEffSF( 2,  jetPt, jetEta, flavour );
-	else if( sysType.compare("lfSFDown")==0 ) myEffSF = BEANs::getEffSF( -2, jetPt, jetEta, flavour );
-	else                                      myEffSF = BEANs::getEffSF( 0,  jetPt, jetEta, flavour );
+	if( sysType.compare("hfSFUp")==0 )        myEffSF = BEANs::getEffSF( 1,  jetPt, jetEta, flavour, era );
+	else if( sysType.compare("hfSFDown")==0 ) myEffSF = BEANs::getEffSF( -1, jetPt, jetEta, flavour, era );
+	else if( sysType.compare("lfSFUp")==0 )   myEffSF = BEANs::getEffSF( 2,  jetPt, jetEta, flavour, era );
+	else if( sysType.compare("lfSFDown")==0 ) myEffSF = BEANs::getEffSF( -2, jetPt, jetEta, flavour, era );
+	else                                      myEffSF = BEANs::getEffSF( 0,  jetPt, jetEta, flavour, era );
 
 	BTagWeight::JetInfo myjet( myEffSF[0], myEffSF[1] );
 	myjetinfo.push_back(myjet);
@@ -728,7 +728,7 @@ void BEANs::getFox_mod2(TLorentzVector lepton, TLorentzVector met, vecTLorentzVe
 
 vdouble BEANs::getEffSF( int returnType, double jetPt, double jetEta, double jetId, std::string era){
 
-  bool is2011 = ( era.find("2012")!=std::string::npos );
+  bool is2012 = ( era.find("2012")!=std::string::npos );
 
   double m_type = 0.;
   if( returnType==-1 )      m_type = -1.;
@@ -774,13 +774,13 @@ vdouble BEANs::getEffSF( int returnType, double jetPt, double jetEta, double jet
 
   double SFb_central = 0.6981*((1.+(0.414063*pt))/(1.+(0.300155*pt)));
 
-  double SFc_central = SFb;
+  double SFc_central = SFb_central;
 
   double SFb = SFb_central + m_type * SFb_error[use_bin];
   double SFc = SFc_central + m_type * 2* SFb_error[use_bin];
 
   // 2011/12 SFl correction function, JGWood 12Aug2012
-  if(2012){
+  if(is2012){
     SFb = SFb_central + m_type * 1.5 * SFb_error[use_bin];
     SFc = SFc_central + m_type * 1.5 * 2* SFb_error[use_bin];
   }
@@ -804,7 +804,7 @@ vdouble BEANs::getEffSF( int returnType, double jetPt, double jetEta, double jet
 
   // 2011/12 SFl correction function, JGWood 12Aug2012
   //   CSVM    1.10422 + -0.000523856*x + 1.14251e-06*x*x   x=jetPt
-  if(2012) SFl *= 1.10422 + -0.000523856*pt + 1.14251e-06*pt*pt;
+  if(is2012) SFl *= 1.10422 + -0.000523856*pt + 1.14251e-06*pt*pt;
 
   double SF=1;
 
