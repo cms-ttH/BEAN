@@ -154,15 +154,15 @@ void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="" ){
   if( is8TeV ){
     // 12Aug2012 - Include all samples - JGWood
     if( insample==2500      ) samplename = "ttbar";
-    else if( insample==2600 ) samplename = "ttbarZ";
-    else if( insample==2600 ) samplename = "ttbarW";
+    else if( insample==2523 ) samplename = "ttbarZ";
+    else if( insample==2524 ) samplename = "ttbarW";
     else if( insample==2600 ) samplename = "t_schannel";
     else if( insample==2602 ) samplename = "t_tchannel";
     else if( insample==2504 ) samplename = "t_tWchannel";
     else if( insample==2501 ) samplename = "tbar_schannel";
     else if( insample==2503 ) samplename = "tbar_tchannel";
     else if( insample==2505 ) samplename = "tbar_tWchannel";
-    else if( insample==2800 ) samplename = "zjets";
+    else if( insample==2800 || insample==2850 ) samplename = "zjets";
     else if( insample==2400 ) samplename = "wjets";
     else if( insample==2700 ) samplename = "ww";
     else if( insample==2701 ) samplename = "wz";
