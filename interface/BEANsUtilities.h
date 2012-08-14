@@ -134,6 +134,8 @@ namespace BEANs{
 
 void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="" ){
 
+  bool debug = false;
+  
   std::string input_eff_file = str_eff_file_7TeV;
   std::string input_pu_file  = str_pu_file_7TeV;
   std::string com_suffix = "_7TeV";
@@ -143,8 +145,17 @@ void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="" ){
     com_suffix = "_8TeV";
   }
 
+  if (debug)
+    cout << "setMCsample: Opening eff file " << input_eff_file
+         << ", pu file = " << input_pu_file << endl;
 
   TFile *f_tag_eff_ = new TFile(input_eff_file.c_str());
+
+  if (f_tag_eff_->IsZombie()){
+    cout << "Oops! Tried to open file " << input_eff_file
+         << ", but it was a zombie. Crashing" << endl;
+    assert (f_tag_eff_->IsZombie() == false);
+  }
 
   std::string samplename = "ttbar";
   if( insample==2300 || insample==2310 ) samplename = "zjets";
@@ -180,10 +191,47 @@ void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="" ){
     else if( insample>=9000 && insample<10000 ) samplename = "ttH120_FastSim";
   }
 
-  h_b_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str());
-  h_c_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_c_eff" ).c_str());
-  h_l_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_l_eff" ).c_str());
-  h_o_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_o_eff" ).c_str());
+
+  if (debug)
+    cout << "setMCSample: Looking for histrograms with names like: "
+         << std::string( samplename + com_suffix + "_jet_pt_eta_b_eff")
+         << endl;
+
+  if (samplename.find("ttH120_FastSim") == std::string::npos) {
+    h_b_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str());
+    h_c_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_c_eff" ).c_str());
+    h_l_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_l_eff" ).c_str());
+    h_o_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_o_eff" ).c_str());
+  } else {
+    if (debug)
+      cout << "setMCSample: You want ttH120_FastSim eff histograms, but those don't exist. Trying ttH120_FullSim instead..."
+           << endl;
+    string tempName = "ttH120_FullSim" + com_suffix;
+    h_b_eff_ = (TH2D*)f_tag_eff_->Get(std::string( tempName + "_jet_pt_eta_b_eff" ).c_str());
+    h_c_eff_ = (TH2D*)f_tag_eff_->Get(std::string( tempName + "_jet_pt_eta_c_eff" ).c_str());
+    h_l_eff_ = (TH2D*)f_tag_eff_->Get(std::string( tempName + "_jet_pt_eta_l_eff" ).c_str());
+    h_o_eff_ = (TH2D*)f_tag_eff_->Get(std::string( tempName + "_jet_pt_eta_o_eff" ).c_str());
+        
+  }
+
+  bool bHistoOK =  (h_b_eff_ != 0);
+  bool cHistoOK =  (h_c_eff_ != 0);
+  bool lHistoOK =  (h_l_eff_ != 0);
+  bool oHistoOK =  (h_o_eff_ != 0);
+
+  if (debug)
+    cout << "setMCSample: bHistoOK = " << bHistoOK << ", cHistoOK = " << cHistoOK << ", lHistoOK = "
+         << lHistoOK << ", oHistoOK = " << oHistoOK << endl;
+  
+  if (!bHistoOK || !cHistoOK || !lHistoOK || !oHistoOK){
+    cout << "setMCSample: Error. We are missing one of the required btag eff histograms. "     
+         << endl
+         << "Wanted histos with names like: "
+         << std::string( samplename + com_suffix + "_jet_pt_eta_b_eff")
+         << endl;
+    assert ( bHistoOK && cHistoOK && lHistoOK && oHistoOK);
+  }
+
 
 
   TFile *f_pu_ = new TFile(input_pu_file.c_str());
@@ -739,6 +787,34 @@ vdouble BEANs::getEffSF( int returnType, double jetPt, double jetEta, double jet
 
   bool is2012 = ( era.find("2012")!=std::string::npos );
 
+
+  bool debug = false;
+
+  if (debug)
+    cout << "getEffSF: Called getEffSF with the following parameters" << endl
+         << "  returnType = " << returnType << ", jetPt = " << jetPt
+         << ", jetEta = " << jetEta << ", jetId = " << jetId << ", era = " << era
+         << endl;
+
+  // check the histogram status before continuing
+
+
+  bool bHistoOK =  (h_b_eff_ != 0);
+  bool cHistoOK =  (h_c_eff_ != 0);
+  bool lHistoOK =  (h_l_eff_ != 0);
+  bool oHistoOK =  (h_o_eff_ != 0);
+
+  if (debug)
+    cout << "getEffSF: bHistoOK = " << bHistoOK << ", cHistoOK = " << cHistoOK << ", lHistoOK = "
+         << lHistoOK << ", oHistoOK = " << oHistoOK << endl;
+  
+  if (!bHistoOK || !cHistoOK || !lHistoOK || !oHistoOK){
+    cout << "getEffSF: Oops! We are missing one of the required histograms. Refusing to continue... "
+         << endl;
+    assert ( bHistoOK && cHistoOK && lHistoOK && oHistoOK);
+  }
+  
+  
   double m_type = 0.;
   if( returnType==-1 )      m_type = -1.;
   else if( returnType==1 )  m_type = 1.;
