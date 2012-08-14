@@ -96,6 +96,8 @@ TH1D* h_PU_ratio_;
 TH1D* h_PUup_ratio_;
 TH1D* h_PUdown_ratio_;
 
+bool isFastSim_ = false;
+
 
 using namespace std;
 
@@ -191,6 +193,8 @@ void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="" ){
     else if( insample>=9000 && insample<10000 ) samplename = "ttH120_FastSim";
   }
 
+
+  if( insample>=9000 && insample<10000 ) isFastSim_ = true;
 
   if (debug)
     cout << "setMCSample: Looking for histrograms with names like: "
@@ -568,31 +572,41 @@ double BEANs::getJERfactor( int returnType, double jetAbsETA, double genjetPT, d
   double factor = 1.;
 
   double scale_JER = 1., scale_JERup = 1., scale_JERdown = 1.;
+  double diff_FullSim_FastSim = 0.;
   if( jetAbsETA<0.5 ){ 
     scale_JER = 1.052; scale_JERup = 1.052 + sqrt( 0.012*0.012 + 0.062*0.062 ); scale_JERdown = 1.052 - sqrt( 0.012*0.012 + 0.061*0.061 );
+    diff_FullSim_FastSim = 1.35;
   }
   else if( jetAbsETA<1.1 ){ 
     scale_JER = 1.057; scale_JERup = 1.057 + sqrt( 0.012*0.012 + 0.056*0.056 ); scale_JERdown = 1.057 - sqrt( 0.012*0.012 + 0.055*0.055 );
+    diff_FullSim_FastSim = 1.54;
   }
   else if( jetAbsETA<1.7 ){ 
     scale_JER = 1.096; scale_JERup = 1.096 + sqrt( 0.017*0.017 + 0.063*0.063 ); scale_JERdown = 1.096 - sqrt( 0.017*0.017 + 0.062*0.062 );
+    diff_FullSim_FastSim = 1.97;
   }
   else if( jetAbsETA<2.3 ){ 
     scale_JER = 1.134; scale_JERup = 1.134 + sqrt( 0.035*0.035 + 0.087*0.087 ); scale_JERdown = 1.134 - sqrt( 0.035*0.035 + 0.085*0.085 );
+    diff_FullSim_FastSim = 3.12;
   }
   else if( jetAbsETA<5.0 ){ 
     scale_JER = 1.288; scale_JERup = 1.288 + sqrt( 0.127*0.127 + 0.155*0.155 ); scale_JERdown = 1.288 - sqrt( 0.127*0.127 + 0.153*0.153 );
+    diff_FullSim_FastSim = 3.12;
   }
 
   double jetPt_JER = recojetPT;
   double jetPt_JERup = recojetPT;
   double jetPt_JERdown = recojetPT;
 
+  double diff_recojet_genjet = recojetPT - genjetPT;
+  if( isFastSim_ ) diff_recojet_genjet += diff_FullSim_FastSim;
+
   if( genjetPT>10. ){
-    jetPt_JER = std::max( 0., genjetPT + scale_JER * ( recojetPT - genjetPT ) );
-    jetPt_JERup = std::max( 0., genjetPT + scale_JERup * ( recojetPT - genjetPT ) );
-    jetPt_JERdown = std::max( 0., genjetPT + scale_JERdown * ( recojetPT - genjetPT ) );
+    jetPt_JER = std::max( 0., genjetPT + scale_JER * ( diff_recojet_genjet ) );
+    jetPt_JERup = std::max( 0., genjetPT + scale_JERup * ( diff_recojet_genjet ) );
+    jetPt_JERdown = std::max( 0., genjetPT + scale_JERdown * ( diff_recojet_genjet ) );
   }
+
 
   if( returnType==1 )       factor = jetPt_JERup/recojetPT;
   else if( returnType==-1 ) factor = jetPt_JERdown/recojetPT;
