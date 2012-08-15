@@ -994,11 +994,24 @@ bool ttPlusHeavyKeepEvent( BNmcparticleCollection const &mcparticles,
     if (debug_) std::cout << "Particle " << i << " is " << id << ", has mother " << motherID << " and grandmother " << grandMotherID << std::endl;
 
     if (debug_) cout <<" Particle " << i << " has id " << id << endl;
-    if( abs(id)==4  && abs(motherID)==24 ){
-      isWtoCS = true;
-      break;
+
+    if (era == "2011") {
+      if( abs(id)==4  && abs(motherID)==24 ){
+	isWtoCS = true;
+	break;
+      }
+    }
+    else if (era == "2012") {
+      int daughter0ID = mcparticles.at(i).daughter0Id;
+      int daughter1ID = mcparticles.at(i).daughter1Id;
+
+      if( abs(id)==24 && ((abs(daughter0ID)==3 && abs(daughter1ID)==4) || (abs(daughter0ID)==4 && abs(daughter1ID)==3)) ){
+	isWtoCS = true;
+	break;
+      }
     }
   }
+
 
   bool isBBbarEvent = false;
   bool isCCbarEvent = false;
@@ -1032,9 +1045,6 @@ bool ttPlusHeavyKeepEvent( BNmcparticleCollection const &mcparticles,
           
 
 
-    if (debug_) std::cout << "Jet index " << i << " is generator id " << id
-                          << ", has mother " << motherID << ", mother0ID = " << mother0ID << ", mother1ID = " << mother1ID  << std::endl;
-          
     // check to see if pf jets is from a  b/c and mother is a gluon
     // or, if mother is some light quark
 
@@ -1044,8 +1054,14 @@ bool ttPlusHeavyKeepEvent( BNmcparticleCollection const &mcparticles,
     } else if (era == "2012") {
       if( abs(id)==5 && abs(mother0ID) != 6  && abs(mother1ID) != 6 ) gotB=true;
       // basically, as long as you didn't come from a W, then you are a tt+cc
-      if( abs(id)==4 && (abs(mother0ID) ==21 || abs(mother1ID) == 21 || abs(mother0ID) < abs(id) || abs(mother1ID) < abs(id) )  ) gotC=true;
+      if( abs(id)==4 && (abs(mother0ID)==21 || abs(mother1ID) == 21 || abs(mother0ID) < abs(id) || abs(mother1ID) < abs(id))
+	  && abs(mother0ID)!=24 && abs(mother1ID)!=24 ) gotC=true;
     }
+
+
+    if (debug_) std::cout << "Jet index " << i << " is generator id " << id
+				   << ", has mother " << motherID << ", mother0ID = " << mother0ID << ", mother1ID = " << mother1ID  << std::endl;
+    
 
     if (debug_) std::cout << "----------------> Got B = " << gotB << endl;
     // if things are their own mother, 
@@ -1076,7 +1092,7 @@ bool ttPlusHeavyKeepEvent( BNmcparticleCollection const &mcparticles,
                           <<std::endl;
     // for each jet that is  b from b
     for( int i=0; i<int(pfjets.size()); i++ ){
-      cout << "LOOP: i = " << i << endl;
+      if (debug_) cout << "LOOP: i = " << i << endl;
       int id0 = pfjets.at(i).genPartonId;
       int motherID0 = pfjets.at(i).genPartonMotherId;
       if( !(abs(id0)==5 && motherID0==id0) ) continue;
@@ -1084,7 +1100,7 @@ bool ttPlusHeavyKeepEvent( BNmcparticleCollection const &mcparticles,
       if (debug_) std::cout << "Jet index " << i  << " is a bjet, let us see that it is not from top" <<std::endl;
       // for each jet that is b from t
       for( int j=0; j<int(pfjets.size()); j++ ){
-        cout << "LOOP: j = " << j << endl;
+        if (debug_) cout << "LOOP: j = " << j << endl;
         int id1 = pfjets.at(j).genPartonId;
         int motherID1 = pfjets.at(j).genPartonMotherId;
         if (debug_) std::cout << "LOOP: id0 = " << id0 << ", motherID0 = " << motherID0
