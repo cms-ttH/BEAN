@@ -201,23 +201,12 @@ void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="" ){
          << std::string( samplename + com_suffix + "_jet_pt_eta_b_eff")
          << endl;
 
-  if (samplename.find("ttH120_FastSim") == std::string::npos) {
+  
     h_b_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str());
     h_c_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_c_eff" ).c_str());
     h_l_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_l_eff" ).c_str());
     h_o_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_o_eff" ).c_str());
-  } else {
-    if (debug)
-      cout << "setMCSample: You want ttH120_FastSim eff histograms, but those don't exist. Trying ttH120_FullSim instead..."
-           << endl;
-    string tempName = "ttH120_FullSim" + com_suffix;
-    h_b_eff_ = (TH2D*)f_tag_eff_->Get(std::string( tempName + "_jet_pt_eta_b_eff" ).c_str());
-    h_c_eff_ = (TH2D*)f_tag_eff_->Get(std::string( tempName + "_jet_pt_eta_c_eff" ).c_str());
-    h_l_eff_ = (TH2D*)f_tag_eff_->Get(std::string( tempName + "_jet_pt_eta_l_eff" ).c_str());
-    h_o_eff_ = (TH2D*)f_tag_eff_->Get(std::string( tempName + "_jet_pt_eta_o_eff" ).c_str());
-        
-  }
-
+  
   bool bHistoOK =  (h_b_eff_ != 0);
   bool cHistoOK =  (h_c_eff_ != 0);
   bool lHistoOK =  (h_l_eff_ != 0);
