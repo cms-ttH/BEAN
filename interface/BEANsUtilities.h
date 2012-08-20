@@ -470,8 +470,8 @@ void BEANs::muonSelector( const BNmuonCollection &muons, bool isLJ, std::string 
       bool looseIso = ( relIso_dBeta<0.20 );
       bool tightIso = ( relIso_dBeta<0.12 );
 
-//       bool isPFmuon = ( muons.at(i).isPFMuon==1 );
-      bool isPFmuon = true; //Temporary hack for early 52x BEANs that lack this variable... (KPL)
+      bool isPFmuon = ( muons.at(i).isPFMuon==1 );
+//      bool isPFmuon = true; //Temporary hack for early 52x BEANs that lack this variable... (KPL)
       bool isGlobalMuon = ( muons.at(i).isGlobalMuon==1 );
       bool isTrackerMuon = ( muons.at(i).isTrackerMuon==1 );
 
