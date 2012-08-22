@@ -116,7 +116,7 @@ namespace BEANs{
   const float ETA_LIMIT=15.0;
   const float EPSILON=1.E-10;
 
-  void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="", bool isLJ=true );
+  void setMCsample( int insample=2500, bool is8TeV=true, bool isLJ=true, std::string dset="" );
 
   void electronSelector( const BNelectronCollection &electrons, bool isLJ, std::string era, vint &tightElectrons, vint &looseElectrons, vdouble &tightElectronSF, vdouble &looseElectronSF );
   void muonSelector( const BNmuonCollection &muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons, vdouble &tightMuonSF, vdouble &looseMuonSF );
@@ -143,7 +143,7 @@ namespace BEANs{
 
 
 
-void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="", bool isLJ=true ){
+void setMCsample( int insample=2500, bool is8TeV=true, bool isLJ=true, std::string dset="" ){
 
   bool debug = false;
   
