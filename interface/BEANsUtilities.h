@@ -86,6 +86,9 @@ std::string str_eff_file_7TeV = my_base_dir + "/src/NtupleMaker/BEANmaker/interf
 std::string str_eff_file_8TeV = my_base_dir + "/src/NtupleMaker/BEANmaker/interface/mc_btag_efficiency_8TeV.root";
 std::string str_pu_file_7TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/interface/pu_distributions_7TeV.root";
 std::string str_pu_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/interface/pu_distributions_8TeV.root";
+std::string str_lep_file_7TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/interface/lepton_SF_8TeV.root";
+std::string str_lep_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/interface/lepton_SF_8TeV.root";
+
 
 TH2D* h_b_eff_;
 TH2D* h_c_eff_;
@@ -96,7 +99,13 @@ TH1D* h_PU_ratio_;
 TH1D* h_PUup_ratio_;
 TH1D* h_PUdown_ratio_;
 
+TH2D* h_ele_SF_;
+TH2D* h_mu_SF_;
+
+
 bool isFastSim_ = false;
+bool isLJ_ = false;
+std::string era_ = "2011";
 
 
 using namespace std;
@@ -107,10 +116,10 @@ namespace BEANs{
   const float ETA_LIMIT=15.0;
   const float EPSILON=1.E-10;
 
-  void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="" );
+  void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="", bool isLJ=true );
 
-  void electronSelector( const BNelectronCollection &electrons, bool isLJ, std::string era, vint &tightElectrons, vint &looseElectrons );
-  void muonSelector( const BNmuonCollection &muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons );
+  void electronSelector( const BNelectronCollection &electrons, bool isLJ, std::string era, vint &tightElectrons, vint &looseElectrons, vdouble &tightElectronSF, vdouble &looseElectronSF );
+  void muonSelector( const BNmuonCollection &muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons, vdouble &tightMuonSF, vdouble &looseMuonSF );
   void jetSelector( const BNjetCollection &pfjets, std::string sysType, std::string era, vint &tightJets, vint &tagJets, vint &untagJets, 
 		    std::vector<BTagWeight::JetInfo> &myjetinfo, double csvCut = 0.679 );
 
@@ -134,18 +143,23 @@ namespace BEANs{
 
 
 
-void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="" ){
+void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="", bool isLJ=true ){
 
   bool debug = false;
   
   std::string input_eff_file = str_eff_file_7TeV;
+  std::string input_lep_file = str_lep_file_7TeV;
   std::string input_pu_file  = str_pu_file_7TeV;
   std::string com_suffix = "_7TeV";
   if( is8TeV ){
     input_eff_file = str_eff_file_8TeV;
+    input_lep_file = str_lep_file_8TeV;
     input_pu_file  = str_pu_file_8TeV;
     com_suffix = "_8TeV";
+    era_ = "2012";
   }
+
+  if( isLJ ) isLJ_ = true;
 
   if (debug)
     cout << "setMCsample: Opening eff file " << input_eff_file
@@ -202,10 +216,10 @@ void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="" ){
          << endl;
 
   
-    h_b_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str());
-    h_c_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_c_eff" ).c_str());
-    h_l_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_l_eff" ).c_str());
-    h_o_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_o_eff" ).c_str());
+  h_b_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str());
+  h_c_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_c_eff" ).c_str());
+  h_l_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_l_eff" ).c_str());
+  h_o_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_o_eff" ).c_str());
   
   bool bHistoOK =  (h_b_eff_ != 0);
   bool cHistoOK =  (h_c_eff_ != 0);
@@ -279,6 +293,18 @@ void setMCsample( int insample=2500, bool is8TeV=true, std::string dset="" ){
   h_PU_ratio_->Divide( h_pu_mc );
   h_PUup_ratio_->Divide( h_pu_mc );
   h_PUdown_ratio_->Divide( h_pu_mc );
+
+
+  TFile *f_lep_ = new TFile(input_lep_file.c_str());
+  if( isLJ_ ){
+    h_ele_SF_ = (TH2D*)f_lep_->Get(std::string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str());
+    h_mu_SF_  = (TH2D*)f_lep_->Get(std::string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str());
+  }
+  else {
+    h_ele_SF_ = (TH2D*)f_lep_->Get(std::string( "ele_pt_eta_full_id_iso_8TeV" ).c_str());
+    h_mu_SF_  = (TH2D*)f_lep_->Get(std::string( "mu_pt_eta_full_id_iso_8TeV" ).c_str());
+  }
+
 }
 
 
@@ -296,13 +322,16 @@ void getPUwgt( double input_numPU, double &PU_scale, double &PUup_scale, double 
 /// Electrons
 ///
 ////////
-void BEANs::electronSelector( const BNelectronCollection &electrons, bool isLJ, std::string era, vint &tightElectrons, vint &looseElectrons ){
+void BEANs::electronSelector( const BNelectronCollection &electrons, bool isLJ, std::string era, vint &tightElectrons, vint &looseElectrons, vdouble &tightElectronSF, vdouble &looseElectronSF ){
 
   tightElectrons.clear();
   looseElectrons.clear();
+  tightElectronSF.clear();
+  looseElectronSF.clear();
 
-  bool is2011 = ( era.find("2011")!=std::string::npos );
-  double tightPt = ( isLJ ) ? 30. : 20.;
+
+  bool is2011 = ( era_.find("2011")!=std::string::npos );
+  double tightPt = ( isLJ_ ) ? 30. : 20.;
   double loosePt = 10.;
 
   if( is2011 ){
@@ -333,7 +362,7 @@ void BEANs::electronSelector( const BNelectronCollection &electrons, bool isLJ, 
       int eidTight = electrons.at(i).eidTight;
       bool eidTight_dec = ( (eidTight & 1)==1 );
 
-      bool eid = isLJ ? eidHyperTight1MC_dec : eidTight_dec;
+      bool eid = isLJ_ ? eidHyperTight1MC_dec : eidTight_dec;
 
       bool d0 = ( fabs(electrons.at(i).correctedD0) < 0.02 );
       bool dZ = ( fabs(electrons.at(i).correctedDZ) < 1. );
@@ -346,8 +375,14 @@ void BEANs::electronSelector( const BNelectronCollection &electrons, bool isLJ, 
       bool id = ( eid && d0 && dZ && notConv );
 
       if( kin && looseIso ){
-        if( ((elePt>tightPt) && id && tightIso) ) tightElectrons.push_back(i);
-        else looseElectrons.push_back(i);
+        if( ((elePt>tightPt) && id && tightIso) ){
+	  tightElectrons.push_back(i);
+	  tightElectronSF.push_back(1.);
+	}
+        else{
+	  looseElectrons.push_back(i);
+	  looseElectronSF.push_back(1.);
+	}
       }
     }// end electron loop
 
@@ -390,8 +425,17 @@ void BEANs::electronSelector( const BNelectronCollection &electrons, bool isLJ, 
       bool id = ( passMVAId && d02 && dZ && notConv );
 
       if( kin && looseIso && passMVAId && d04 && notConv ){
-        if( ((elePt>tightPt) && id && tightIso) ) tightElectrons.push_back(i);
-        else looseElectrons.push_back(i);
+        if( ((elePt>tightPt) && id && tightIso) ){
+	  tightElectrons.push_back(i);
+	  double usePT = std::min( elePt, 499. );
+	  double useEta = ( eleEta>0. ) ? std::min( 2.39, eleEta ) : std::max( -2.39, eleEta );
+	  double SF = h_ele_SF_->GetBinContent( h_ele_SF_->FindBin(usePT, useEta) );
+	  tightElectronSF.push_back(SF);
+	}
+        else{
+	  looseElectrons.push_back(i);
+	  looseElectronSF.push_back(1.);
+	}
       }
     }// end electron loop
   }
@@ -403,13 +447,15 @@ void BEANs::electronSelector( const BNelectronCollection &electrons, bool isLJ, 
 /// Muons
 ///
 ////////
-void BEANs::muonSelector( const BNmuonCollection &muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons ){
+void BEANs::muonSelector( const BNmuonCollection &muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons, vdouble &tightMuonSF, vdouble &looseMuonSF ){
 
   tightMuons.clear();
   looseMuons.clear();
+  tightMuonSF.clear();
+  looseMuonSF.clear();
 
-  bool is2011 = ( era.find("2011")!=std::string::npos );
-  double tightPt = ( isLJ ) ? 30. : 20.;
+  bool is2011 = ( era_.find("2011")!=std::string::npos );
+  double tightPt = ( isLJ_ ) ? 30. : 20.;
   double loosePt = 10.;
 
   if( is2011 ){
@@ -445,8 +491,14 @@ void BEANs::muonSelector( const BNmuonCollection &muons, bool isLJ, std::string 
       bool id = ( isTrackerMuon && isGlobalMuonPromptTight && numTrackHits && numPixelHits && numberOfMatches && passd0 && passdz );
 
       if( kin && isGlobalMuon && looseIso ){
-        if( ((muPt>tightPt) && (muAbsEta<2.1) && id && tightIso) ) tightMuons.push_back(i);
-        else looseMuons.push_back(i);
+        if( ((muPt>tightPt) && (muAbsEta<2.1) && id && tightIso) ){
+	  tightMuons.push_back(i);
+	  tightMuonSF.push_back(1.);
+	}
+        else{
+	  looseMuons.push_back(i);
+	  looseMuonSF.push_back(1.);
+	}
       }
     }// end muon loop
   } // end if 2011
@@ -489,8 +541,17 @@ void BEANs::muonSelector( const BNmuonCollection &muons, bool isLJ, std::string 
 		  numberOfLayersWithMeasurement && numberOfValidMuonHits && numberOfValidPixelHits && numberOfMatchedStations );
 
       if( kin && (isGlobalMuon || isTrackerMuon) && looseIso && isPFmuon ){
-        if( ((muPt>tightPt) && (muAbsEta<2.1) && id && tightIso) ) tightMuons.push_back(i);
-        else looseMuons.push_back(i);
+        if( ((muPt>tightPt) && (muAbsEta<2.1) && id && tightIso) ){
+	  tightMuons.push_back(i);
+	  double usePT = std::min( muPt, 499. );
+	  double useEta = ( muEta>0. ) ? std::min( 2.09, muEta ) : std::max( -2.09, muEta );
+	  double SF = h_mu_SF_->GetBinContent( h_mu_SF_->FindBin(usePT, useEta) );
+	  tightMuonSF.push_back(SF);
+	}
+        else{
+	  looseMuons.push_back(i);
+	  looseMuonSF.push_back(1.);
+	}
       }
     }// end muon loop
   }
@@ -541,11 +602,11 @@ void BEANs::jetSelector( const BNjetCollection &pfjets, std::string sysType, std
       if( sysType.compare("data")!=0 ){
 	int flavour = pfjets.at(i).flavour;
 	std::vector<double> myEffSF;
-	if( sysType.compare("hfSFUp")==0 )        myEffSF = BEANs::getEffSF( 1,  jetPt, jetEta, flavour, era );
-	else if( sysType.compare("hfSFDown")==0 ) myEffSF = BEANs::getEffSF( -1, jetPt, jetEta, flavour, era );
-	else if( sysType.compare("lfSFUp")==0 )   myEffSF = BEANs::getEffSF( 2,  jetPt, jetEta, flavour, era );
-	else if( sysType.compare("lfSFDown")==0 ) myEffSF = BEANs::getEffSF( -2, jetPt, jetEta, flavour, era );
-	else                                      myEffSF = BEANs::getEffSF( 0,  jetPt, jetEta, flavour, era );
+	if( sysType.compare("hfSFUp")==0 )        myEffSF = BEANs::getEffSF( 1,  jetPt, jetEta, flavour, era_ );
+	else if( sysType.compare("hfSFDown")==0 ) myEffSF = BEANs::getEffSF( -1, jetPt, jetEta, flavour, era_ );
+	else if( sysType.compare("lfSFUp")==0 )   myEffSF = BEANs::getEffSF( 2,  jetPt, jetEta, flavour, era_ );
+	else if( sysType.compare("lfSFDown")==0 ) myEffSF = BEANs::getEffSF( -2, jetPt, jetEta, flavour, era_ );
+	else                                      myEffSF = BEANs::getEffSF( 0,  jetPt, jetEta, flavour, era_ );
 
 	BTagWeight::JetInfo myjet( myEffSF[0], myEffSF[1] );
 	myjetinfo.push_back(myjet);
