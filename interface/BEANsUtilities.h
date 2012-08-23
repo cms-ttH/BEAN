@@ -143,7 +143,7 @@ namespace BEANs{
 
 
 
-void setMCsample( int insample=2500, bool is8TeV=true, bool isLJ=true, std::string dset="" ){
+void BEANs::setMCsample( int insample, bool is8TeV, bool isLJ, std::string dset ){
 
   bool debug = false;
   
@@ -308,7 +308,7 @@ void setMCsample( int insample=2500, bool is8TeV=true, bool isLJ=true, std::stri
 }
 
 
-void getPUwgt( double input_numPU, double &PU_scale, double &PUup_scale, double &PUdown_scale ){
+void BEANs::getPUwgt( double input_numPU, double &PU_scale, double &PUup_scale, double &PUdown_scale ){
 
   PU_scale     = h_PU_ratio_->GetBinContent( h_PU_ratio_->FindBin( input_numPU ) );
   PUup_scale   = h_PUup_ratio_->GetBinContent( h_PUup_ratio_->FindBin( input_numPU ) );
@@ -995,7 +995,7 @@ vdouble BEANs::getEffSF( int returnType, double jetPt, double jetEta, double jet
 ///////////////////////////////////////////////////////////////
 
 
-bool ttPlusHeavyKeepEvent( BNmcparticleCollection const &mcparticles,
+bool BEANs::ttPlusHeavyKeepEvent( BNmcparticleCollection const &mcparticles,
                            BNjetCollection const &pfjets,
                            TString ttbarType,
                            TString era ){
