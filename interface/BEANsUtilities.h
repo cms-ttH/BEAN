@@ -82,12 +82,12 @@ typedef BNtrigobjCollection::const_iterator       TrigObjIter;
 
 char * my_pPath = getenv ("CMSSW_BASE");
 std::string my_base_dir(my_pPath);
-std::string str_eff_file_7TeV = my_base_dir + "/src/NtupleMaker/BEANmaker/interface/mc_btag_efficiency_7TeV.root";
-std::string str_eff_file_8TeV = my_base_dir + "/src/NtupleMaker/BEANmaker/interface/mc_btag_efficiency_8TeV.root";
-std::string str_pu_file_7TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/interface/pu_distributions_7TeV.root";
-std::string str_pu_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/interface/pu_distributions_8TeV.root";
-std::string str_lep_file_7TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/interface/lepton_SF_8TeV.root";
-std::string str_lep_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/interface/lepton_SF_8TeV.root";
+std::string str_eff_file_7TeV = my_base_dir + "/src/NtupleMaker/BEANmaker/data/mc_btag_efficiency_7TeV.root";
+std::string str_eff_file_8TeV = my_base_dir + "/src/NtupleMaker/BEANmaker/data/mc_btag_efficiency_8TeV.root";
+std::string str_pu_file_7TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/pu_distributions_7TeV.root";
+std::string str_pu_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/pu_distributions_8TeV.root";
+std::string str_lep_file_7TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
+std::string str_lep_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
 
 
 TH2D* h_b_eff_;
