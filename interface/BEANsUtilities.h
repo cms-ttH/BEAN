@@ -25,6 +25,7 @@
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "Math/Interpolator.h"
 
 #ifdef __MAKECINT__
 #pragma link C++ class std::vector< TLorentzVector >+; 
@@ -52,6 +53,7 @@
 #include "ProductArea/BNcollections/interface/BNprimaryvertex.h"
 
 #include "NtupleMaker/BEANmaker/interface/BtagWeight.h"
+#include "NtupleMaker/BEANmaker/interface/BTagReshaping.h"
 
 #include "DataFormats/Math/interface/deltaR.h"
 
@@ -89,6 +91,15 @@ std::string str_pu_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/p
 std::string str_lep_file_7TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
 std::string str_lep_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
 
+std::string str_csv_file_8TeV = my_base_dir + "/src/NtupleMaker/BEANmaker/data/csvdiscr.root";
+
+
+BTagShapeInterface sh_(str_csv_file_8TeV.c_str(),0,0);
+BTagShapeInterface sh_hfSFUp_(str_csv_file_8TeV.c_str(),1,0);
+BTagShapeInterface sh_hfSFDown_(str_csv_file_8TeV.c_str(),-1,0);
+BTagShapeInterface sh_lfSFUp_(str_csv_file_8TeV.c_str(),0,1);
+BTagShapeInterface sh_lfSFDown_(str_csv_file_8TeV.c_str(),0,-1);
+
 
 TH2D* h_b_eff_;
 TH2D* h_c_eff_;
@@ -122,6 +133,7 @@ namespace BEANs{
   void muonSelector( const BNmuonCollection &muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons, vdouble &tightMuonSF, vdouble &looseMuonSF );
   void jetSelector( const BNjetCollection &pfjets, std::string sysType, std::string era, vint &tightJets, vint &tagJets, vint &untagJets, 
 		    std::vector<BTagWeight::JetInfo> &myjetinfo, double csvCut = 0.679 );
+  void jetSelectorV2( const BNjetCollection &pfjets, std::string sysType, std::string era, vint &tightJets, vint &tagJets, vint &untagJets, double csvCut = 0.679 );
 
   void getPUwgt( double input_numPU, double &PU_scale, double &PUup_scale, double &PUdown_scale ); 
 
@@ -137,8 +149,9 @@ namespace BEANs{
                         BNjetCollection const &pfjets,
                         TString ttbarType,
                         TString era);
-    
-  
+
+  double reshape_csv( double eta, double pt, double csv, int flavor, std::string sysType );
+
 }
 
 
@@ -329,6 +342,8 @@ void BEANs::electronSelector( const BNelectronCollection &electrons, bool isLJ, 
   tightElectronSF.clear();
   looseElectronSF.clear();
 
+  era_ = era;
+  isLJ_ = isLJ;
 
   bool is2011 = ( era_.find("2011")!=std::string::npos );
   double tightPt = ( isLJ_ ) ? 30. : 20.;
@@ -453,6 +468,9 @@ void BEANs::muonSelector( const BNmuonCollection &muons, bool isLJ, std::string 
   looseMuons.clear();
   tightMuonSF.clear();
   looseMuonSF.clear();
+
+  era_ = era;
+  isLJ_ = isLJ;
 
   bool is2011 = ( era_.find("2011")!=std::string::npos );
   double tightPt = ( isLJ_ ) ? 30. : 20.;
@@ -611,6 +629,55 @@ void BEANs::jetSelector( const BNjetCollection &pfjets, std::string sysType, std
 	BTagWeight::JetInfo myjet( myEffSF[0], myEffSF[1] );
 	myjetinfo.push_back(myjet);
       }
+    }
+  } // end loop over jets
+}
+
+
+
+
+/////////
+///
+/// PFJets
+///
+////////
+void BEANs::jetSelectorV2( const BNjetCollection &pfjets, std::string sysType, std::string era, vint &tightJets, vint &tagJets, vint &untagJets, double csvCut ){
+
+  tightJets.clear();
+  tagJets.clear();
+  untagJets.clear();
+
+  for( int i=0; i<int(pfjets.size()); i++ ){
+    double jetPt = pfjets.at(i).pt;
+    double jetEta = pfjets.at(i).eta;
+    double jetAbsEta = fabs(jetEta);
+
+    bool eta = ( jetAbsEta<2.4 );
+    bool jetId  = ( pfjets.at(i).jetIDLoose==1 );
+
+    int flavour = pfjets.at(i).flavour;
+
+    double factor=1;
+    if( sysType.compare("data")!=0 ){
+      double genJetPT = pfjets.at(i).genJetPT;
+      if( sysType.compare("JERUp")==0 )        factor = getJERfactor(1,jetAbsEta,genJetPT,jetPt);
+      else if( sysType.compare("JERDown")==0 ) factor = getJERfactor(-1,jetAbsEta,genJetPT,jetPt);
+      else                                     factor = getJERfactor(0,jetAbsEta,genJetPT,jetPt);
+    }
+    jetPt *= factor;
+
+    double unc = pfjets.at(i).JESunc;
+    if( sysType.compare("JESUp")==0 )        jetPt *= (1. + unc);
+    else if( sysType.compare("JESDown")==0 ) jetPt *= (1. - unc);
+
+    double csv_old = pfjets.at(i).btagCombinedSecVertex;
+    double csv = BEANs::reshape_csv( jetEta, jetPt, csv_old, flavour, sysType );
+
+    bool csvM = ( csv>csvCut );
+    if( jetPt>30. && eta && jetId ){
+      tightJets.push_back(i);
+      if( csvM ) tagJets.push_back(i);
+      else       untagJets.push_back(i);
     }
   } // end loop over jets
 }
@@ -1198,12 +1265,22 @@ bool BEANs::ttPlusHeavyKeepEvent( BNmcparticleCollection const &mcparticles,
         
   return keepEvent;
 
-  
-  
-
-
 }
 
+double BEANs::reshape_csv( double eta, double pt, double csv, int flavor, std::string sysType ){
+
+  double new_csv = csv;
+
+  if( sysType.compare("data")==0 ) return csv;
+
+  if( sysType.compare("hfSFUp")==0 )        new_csv = sh_hfSFUp_.reshape(eta, pt, csv, flavor);
+  else if( sysType.compare("hfSFDown")==0 ) new_csv = sh_hfSFDown_.reshape(eta, pt, csv, flavor);
+  else if( sysType.compare("lfSFUp")==0 )   new_csv = sh_lfSFUp_.reshape(eta, pt, csv, flavor);
+  else if( sysType.compare("lfSFDown")==0 ) new_csv = sh_lfSFDown_.reshape(eta, pt, csv, flavor);
+  else                                      new_csv = sh_.reshape(eta, pt, csv, flavor);
+
+  return new_csv;
+}
 
 
 
