@@ -91,14 +91,14 @@ std::string str_pu_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/p
 std::string str_lep_file_7TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
 std::string str_lep_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
 
-std::string str_csv_file_8TeV = my_base_dir + "/src/NtupleMaker/BEANmaker/data/csvdiscr.root";
+std::string str_csv_file_8TeV = str_eff_file_8TeV;
 
 
-BTagShapeInterface sh_(str_csv_file_8TeV.c_str(),0,0);
-BTagShapeInterface sh_hfSFUp_(str_csv_file_8TeV.c_str(),1.5,0);
-BTagShapeInterface sh_hfSFDown_(str_csv_file_8TeV.c_str(),-1.5,0);
-BTagShapeInterface sh_lfSFUp_(str_csv_file_8TeV.c_str(),0,1);
-BTagShapeInterface sh_lfSFDown_(str_csv_file_8TeV.c_str(),0,-1);
+BTagShapeInterface *sh_;
+BTagShapeInterface *sh_hfSFUp_;
+BTagShapeInterface *sh_hfSFDown_;
+BTagShapeInterface *sh_lfSFUp_;
+BTagShapeInterface *sh_lfSFDown_;
 
 
 TH2D* h_b_eff_;
@@ -317,6 +317,15 @@ void BEANs::setMCsample( int insample, bool is8TeV, bool isLJ, std::string dset 
     h_ele_SF_ = (TH2D*)f_lep_->Get(std::string( "ele_pt_eta_full_id_iso_8TeV" ).c_str());
     h_mu_SF_  = (TH2D*)f_lep_->Get(std::string( "mu_pt_eta_full_id_iso_8TeV" ).c_str());
   }
+
+
+
+  sh_ = new BTagShapeInterface(std::string(samplename + com_suffix),str_csv_file_8TeV.c_str(),0,0);
+  sh_hfSFUp_ = new BTagShapeInterface(std::string(samplename + com_suffix),str_csv_file_8TeV.c_str(),1.5,0);
+  sh_hfSFDown_ = new BTagShapeInterface(std::string(samplename + com_suffix),str_csv_file_8TeV.c_str(),-1.5,0);
+  sh_lfSFUp_ = new BTagShapeInterface(std::string(samplename + com_suffix),str_csv_file_8TeV.c_str(),0,1);
+  sh_lfSFDown_ = new BTagShapeInterface(std::string(samplename + com_suffix),str_csv_file_8TeV.c_str(),0,-1);
+
 
 }
 
@@ -1273,11 +1282,11 @@ double BEANs::reshape_csv( double eta, double pt, double csv, int flavor, std::s
 
   if( sysType.compare("data")==0 ) return csv;
 
-  if( sysType.compare("hfSFUp")==0 )        new_csv = sh_hfSFUp_.reshape(eta, pt, csv, flavor);
-  else if( sysType.compare("hfSFDown")==0 ) new_csv = sh_hfSFDown_.reshape(eta, pt, csv, flavor);
-  else if( sysType.compare("lfSFUp")==0 )   new_csv = sh_lfSFUp_.reshape(eta, pt, csv, flavor);
-  else if( sysType.compare("lfSFDown")==0 ) new_csv = sh_lfSFDown_.reshape(eta, pt, csv, flavor);
-  else                                      new_csv = sh_.reshape(eta, pt, csv, flavor);
+  if( sysType.compare("hfSFUp")==0 )        new_csv = sh_hfSFUp_->reshape(eta, pt, csv, flavor);
+  else if( sysType.compare("hfSFDown")==0 ) new_csv = sh_hfSFDown_->reshape(eta, pt, csv, flavor);
+  else if( sysType.compare("lfSFUp")==0 )   new_csv = sh_lfSFUp_->reshape(eta, pt, csv, flavor);
+  else if( sysType.compare("lfSFDown")==0 ) new_csv = sh_lfSFDown_->reshape(eta, pt, csv, flavor);
+  else                                      new_csv = sh_->reshape(eta, pt, csv, flavor);
 
   return new_csv;
 }
