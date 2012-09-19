@@ -141,8 +141,13 @@ class BTagShapeInterface
 {
  public:
   BTagShapeInterface(){}
-  BTagShapeInterface(const char * file, float scaleBC, float scaleL) : m_file(new TFile(file))
+  BTagShapeInterface(std::string prefix, const char * file, float scaleBC, float scaleL) : m_file(new TFile(file))
   {
+
+    std::string h_hb = std::string( prefix + "_hb" );
+    std::string h_hc = std::string( prefix + "_hc" );
+    std::string h_hl = std::string( prefix + "_hl" );
+
     std::vector<EtaPtBin> binsBC;
     std::vector< std::vector<std::pair<float, float> > > cutsAndSFB;
     std::vector< std::vector<std::pair<float, float> > > cutsAndSFC;
@@ -234,8 +239,10 @@ class BTagShapeInterface
     }
    
 
-    m_b = new BinnedBTagShape(binsBC,cutsAndSFB,m_file,"hb");
-    m_c = new BinnedBTagShape(binsBC,cutsAndSFC,m_file,"hc");
+/*     m_b = new BinnedBTagShape(binsBC,cutsAndSFB,m_file,"hb"); */
+/*     m_c = new BinnedBTagShape(binsBC,cutsAndSFC,m_file,"hc"); */
+    m_b = new BinnedBTagShape(binsBC,cutsAndSFB,m_file, h_hb.c_str() );
+    m_c = new BinnedBTagShape(binsBC,cutsAndSFC,m_file, h_hc.c_str() );
 
     std::vector<EtaPtBin> binsL;
     std::vector< std::vector<std::pair<float, float> > > cutsAndSFL;
@@ -288,7 +295,8 @@ class BTagShapeInterface
 
    }
  
-    m_l = new BinnedBTagShape(binsL,cutsAndSFL,m_file,"hl");
+/*     m_l = new BinnedBTagShape(binsL,cutsAndSFL,m_file,"hl"); */
+    m_l = new BinnedBTagShape(binsL,cutsAndSFL,m_file, h_hl.c_str() );
 
 
   }
