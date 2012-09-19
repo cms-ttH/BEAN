@@ -95,8 +95,8 @@ std::string str_csv_file_8TeV = my_base_dir + "/src/NtupleMaker/BEANmaker/data/c
 
 
 BTagShapeInterface sh_(str_csv_file_8TeV.c_str(),0,0);
-BTagShapeInterface sh_hfSFUp_(str_csv_file_8TeV.c_str(),1,0);
-BTagShapeInterface sh_hfSFDown_(str_csv_file_8TeV.c_str(),-1,0);
+BTagShapeInterface sh_hfSFUp_(str_csv_file_8TeV.c_str(),1.5,0);
+BTagShapeInterface sh_hfSFDown_(str_csv_file_8TeV.c_str(),-1.5,0);
 BTagShapeInterface sh_lfSFUp_(str_csv_file_8TeV.c_str(),0,1);
 BTagShapeInterface sh_lfSFDown_(str_csv_file_8TeV.c_str(),0,-1);
 
