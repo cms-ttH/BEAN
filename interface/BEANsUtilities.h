@@ -91,6 +91,7 @@ std::string str_pu_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/p
 std::string str_lep_file_7TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
 std::string str_lep_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
 
+std::string str_csv_file_7TeV = str_eff_file_7TeV;
 std::string str_csv_file_8TeV = str_eff_file_8TeV;
 
 
@@ -161,11 +162,13 @@ void BEANs::setMCsample( int insample, bool is8TeV, bool isLJ, std::string dset 
   bool debug = false;
   
   std::string input_eff_file = str_eff_file_7TeV;
+  std::string input_csv_file = str_csv_file_7TeV;
   std::string input_lep_file = str_lep_file_7TeV;
   std::string input_pu_file  = str_pu_file_7TeV;
   std::string com_suffix = "_7TeV";
   if( is8TeV ){
     input_eff_file = str_eff_file_8TeV;
+    input_csv_file = str_csv_file_8TeV;
     input_lep_file = str_lep_file_8TeV;
     input_pu_file  = str_pu_file_8TeV;
     com_suffix = "_8TeV";
@@ -319,12 +322,11 @@ void BEANs::setMCsample( int insample, bool is8TeV, bool isLJ, std::string dset 
   }
 
 
-
-  sh_ = new BTagShapeInterface(std::string(samplename + com_suffix),str_csv_file_8TeV.c_str(),0,0);
-  sh_hfSFUp_ = new BTagShapeInterface(std::string(samplename + com_suffix),str_csv_file_8TeV.c_str(),1.5,0);
-  sh_hfSFDown_ = new BTagShapeInterface(std::string(samplename + com_suffix),str_csv_file_8TeV.c_str(),-1.5,0);
-  sh_lfSFUp_ = new BTagShapeInterface(std::string(samplename + com_suffix),str_csv_file_8TeV.c_str(),0,1);
-  sh_lfSFDown_ = new BTagShapeInterface(std::string(samplename + com_suffix),str_csv_file_8TeV.c_str(),0,-1);
+  sh_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),0,0);
+  sh_hfSFUp_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),1.5,0);
+  sh_hfSFDown_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),-1.5,0);
+  sh_lfSFUp_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),0,1);
+  sh_lfSFDown_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),0,-1);
 
 
 }
