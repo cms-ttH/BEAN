@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.14 2012/07/24 20:03:41 jkolb Exp $
+// $Id: BEANmaker.cc,v 1.15 2012/08/01 13:39:06 sboutle Exp $
 //
 //
 
@@ -2302,8 +2302,12 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
         
 		BNtau MyTau;
 
-		MyTau.et											= tau->et();
+		MyTau.px											= tau->px();
+		MyTau.py											= tau->py();
+		MyTau.pz											= tau->pz();
 		MyTau.pt											= tau->pt();
+		MyTau.energy										= tau->energy();
+		MyTau.et											= tau->et();
 		MyTau.eta											= tau->eta();
 		MyTau.phi											= tau->phi();
 		MyTau.numProngs										= tau->signalPFChargedHadrCands().size();
@@ -2338,40 +2342,40 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 			MyTau.leadingTrackPt				= tau->leadPFChargedHadrCand()->pt();
 			MyTau.charge						= tau->leadPFChargedHadrCand()->charge();
 
-			if(false&&tau->leadPFChargedHadrCand()->trackRef().isNonnull()){
-			/*	MyTau.leadingTrackvalid				= 1;
-				MyTau.leadingTrackIpVtdxy			= tau->leadPFChargedHadrCand()->trackRef()->dxy(primaryVertex.position());
-				MyTau.leadingTrackIpVtdz			= tau->leadPFChargedHadrCand()->trackRef()->dz(primaryVertex.position());
+			if(tau->leadPFChargedHadrCand()->trackRef().isNonnull()){
+				MyTau.leadingTrackValid				= 1;
+				MyTau.leadingTrackIpVtdxy			= tau->leadPFChargedHadrCand()->trackRef()->dxy(vertexPosition);
+				MyTau.leadingTrackIpVtdz			= tau->leadPFChargedHadrCand()->trackRef()->dz(vertexPosition);
 				MyTau.leadingTrackIpVtdxyError		= tau->leadPFChargedHadrCand()->trackRef()->dxyError();
 				MyTau.leadingTrackIpVtdzError		= tau->leadPFChargedHadrCand()->trackRef()->dzError();
-				MyTau.leadingTrackvx				= tau->leadPFChargedHadrCand()->trackRef()->vx();
-				MyTau.leadingTrackvy				= tau->leadPFChargedHadrCand()->trackRef()->vy();
-				MyTau.leadingTrackvz				= tau->leadPFChargedHadrCand()->trackRef()->vz();
+				MyTau.leadingTrackVx				= tau->leadPFChargedHadrCand()->trackRef()->vx();
+				MyTau.leadingTrackVy				= tau->leadPFChargedHadrCand()->trackRef()->vy();
+				MyTau.leadingTrackVz				= tau->leadPFChargedHadrCand()->trackRef()->vz();
 				MyTau.leadingTrackValidHits			= tau->leadPFChargedHadrCand()->trackRef()->numberOfValidHits();
-				MyTau.leadingTrackNormChiSqrd		= tau->leadPFChargedHadrCand()->trackRef()->normalizedChi2(); //*/
+				MyTau.leadingTrackNormChiSqrd		= tau->leadPFChargedHadrCand()->trackRef()->normalizedChi2();
 			}else{
-				MyTau.leadingTrackvalid				= 0;
+				MyTau.leadingTrackValid				= 0;
 				MyTau.leadingTrackIpVtdxy			= -99;
 				MyTau.leadingTrackIpVtdz			= -99;
 				MyTau.leadingTrackIpVtdxyError		= -99;
 				MyTau.leadingTrackIpVtdzError		= -99;
-				MyTau.leadingTrackvx				= -99;
-				MyTau.leadingTrackvy				= -99;
-				MyTau.leadingTrackvz				= -99;
+				MyTau.leadingTrackVx				= -99;
+				MyTau.leadingTrackVy				= -99;
+				MyTau.leadingTrackVz				= -99;
 				MyTau.leadingTrackValidHits			= -99;
 				MyTau.leadingTrackNormChiSqrd		= -99;
 			}
 		}else{
-			MyTau.leadingTrackvalid				= 0;
+			MyTau.leadingTrackValid				= 0;
 			MyTau.leadingTrackPt				= -99;
 			MyTau.charge						= -99;
 			MyTau.leadingTrackIpVtdxy			= -99;
 			MyTau.leadingTrackIpVtdz			= -99;
 			MyTau.leadingTrackIpVtdxyError		= -99;
 			MyTau.leadingTrackIpVtdzError		= -99;
-			MyTau.leadingTrackvx				= -99;
-			MyTau.leadingTrackvy				= -99;
-			MyTau.leadingTrackvz				= -99;
+			MyTau.leadingTrackVx				= -99;
+			MyTau.leadingTrackVy				= -99;
+			MyTau.leadingTrackVz				= -99;
 			MyTau.leadingTrackValidHits			= -99;
 			MyTau.leadingTrackNormChiSqrd		= -99;
 		}
