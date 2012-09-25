@@ -8,7 +8,7 @@ import sys
 
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process( 'jsmBeanTestv01' )
+process = cms.Process( 'BEAN' )
 
 
 ### ======================================================================== ###
@@ -89,7 +89,7 @@ electronCutPF          = 'et > 15. && abs(eta) < 2.5'
 # PF jets
 #jetCutPF               = ''
 #jetMuonsDRPF           = 0.1
-tauCut                 = 'et > 15. && abs(eta) < 2.5 && tauID("decayModeFinding")'
+tauCut                 = 'et > 5. && abs(eta) < 2.5 && tauID("decayModeFinding")'
 
 # Trigger and trigger object
 #triggerSelectionData       = ''
@@ -162,7 +162,7 @@ globalTagMC   = 'START52_V9'
 
 # output file
 #outputFile = '/uscms_data/d3/jgwood/ttH_ttbb_lepJets/2012_analysis/topRefSel_SynchEx_v3_maxZVertex24.root'
-outputFile = 'pat_52x_test.root'
+outputFile = 'TTbar_summer12_BEAN.root'
 
 # event frequency of Fwk report
 fwkReportEvery = 2000
