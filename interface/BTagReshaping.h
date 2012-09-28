@@ -100,9 +100,8 @@ class EtaPtBin
  EtaPtBin(){}
  EtaPtBin(float emin,float emax,float ptmin,float ptmax) : etaMin(emin), etaMax(emax), ptMin(ptmin), ptMax(ptmax) {}
  bool contains(float eta,float pt) {return eta < etaMax && eta >= etaMin && pt < ptMax && pt >= ptMin ; } 
- float centerEta() { return (etaMax-etaMin)/2.;}
- //float centerPt() { return (ptMax-ptMin)/2.;}
- float centerPt() { return ptMin + (ptMax-ptMin)/2.;}
+ float centerEta() { return (etaMax+etaMin)/2.;}
+ float centerPt() { return (ptMax+ptMin)/2.;}
 
  float etaMin;
  float etaMax;
@@ -161,7 +160,7 @@ class BTagShapeInterface
       float sft = beff::CSVT_SFb(bin.centerPt());
       sft+=scaleBC * beff::CSVT_SFb_error[i]; // add error
       cutsAndSFbinB.push_back(std::pair<float, float>(0.898, sft));
-      sft+=scaleBC * beff::CSVL_SFb_error[i]*charmFactor; // charm additional error
+      sft+=scaleBC * beff::CSVT_SFb_error[i]*charmFactor; // charm additional error
       cutsAndSFbinC.push_back(std::pair<float, float>(0.898, sft));
 
       float sfm = beff::CSVM_SFb(bin.centerPt());
