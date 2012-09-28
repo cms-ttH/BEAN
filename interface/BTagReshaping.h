@@ -303,7 +303,7 @@ class BTagShapeInterface
  float reshape(float eta, float pt, float csv, int flav)
  {
    if(csv < 0) return csv;
-   if(csv > 1) return csv; 
+   if(csv >= 1.) return csv; 
    if(flav == 0) return csv;  
    if(fabs(flav) == 5) return  m_b->eval(eta,pt,csv); 
    if(fabs(flav) == 4) return  m_c->eval(eta,pt,csv);
