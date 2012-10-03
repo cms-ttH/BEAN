@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.15 2012/08/01 13:39:06 sboutle Exp $
+// $Id: BEANmaker.cc,v 1.16 2012/09/25 21:32:26 nvallsve Exp $
 //
 //
 
@@ -2325,17 +2325,9 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		MyTau.HPSagainstMuonMedium							= tau->tauID("againstMuonMedium");
 		MyTau.HPSagainstMuonTight							= tau->tauID("againstMuonTight");
 		MyTau.HPSbyLooseCombinedIsolationDeltaBetaCorr		= tau->tauID("byLooseCombinedIsolationDeltaBetaCorr");
-		MyTau.HPSbyLooseIsolation							= tau->tauID("byLooseIsolation");
-		MyTau.HPSbyLooseIsolationDeltaBetaCorr				= tau->tauID("byLooseIsolationDeltaBetaCorr");
 		MyTau.HPSbyMediumCombinedIsolationDeltaBetaCorr		= tau->tauID("byMediumCombinedIsolationDeltaBetaCorr");
-		MyTau.HPSbyMediumIsolation							= tau->tauID("byMediumIsolation");
-		MyTau.HPSbyMediumIsolationDeltaBetaCorr				= tau->tauID("byMediumIsolationDeltaBetaCorr");
 		MyTau.HPSbyTightCombinedIsolationDeltaBetaCorr		= tau->tauID("byTightCombinedIsolationDeltaBetaCorr");
-		MyTau.HPSbyTightIsolation							= tau->tauID("byTightIsolation");
-		MyTau.HPSbyTightIsolationDeltaBetaCorr				= tau->tauID("byTightIsolationDeltaBetaCorr");
 		MyTau.HPSbyVLooseCombinedIsolationDeltaBetaCorr		= tau->tauID("byVLooseCombinedIsolationDeltaBetaCorr");
-		MyTau.HPSbyVLooseIsolation							= tau->tauID("byVLooseIsolation");
-		MyTau.HPSbyVLooseIsolationDeltaBetaCorr				= tau->tauID("byVLooseIsolationDeltaBetaCorr");
 		MyTau.HPSdecayModeFinding							= tau->tauID("decayModeFinding");
 
 		if(tau->leadPFChargedHadrCand().isNonnull()){

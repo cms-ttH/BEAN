@@ -98,6 +98,9 @@ useBTag         = False
 
 addTriggerMatching = False
 
+# re-run RECO tau production sequence 
+rerunPFTau = False
+
 ### Reference selection
 
 from TopQuarkAnalysis.Configuration.patRefSel_refMuJets import *
@@ -118,7 +121,7 @@ electronCut            = 'et > 10. && abs(eta) < 2.5'
 # PF electrons
 electronCutPF          = 'et > 10. && abs(eta) < 2.5'
 # Tau cut
-tauCut                 = 'et > 15. && abs(eta) < 2.5 && tauID("decayModeFinding")'
+tauCut                 = 'et > 5. && abs(eta) < 2.5 && tauID("decayModeFinding")'
 # Calo jets
 #jetCut                 = ''
 # PF jets
@@ -255,7 +258,8 @@ if useRelVals:
                                      )
 
 #inputFiles = cms.untracked.vstring('/store/data/Run2012A/SingleMu/AOD/PromptReco-v1/000/190/645/FAF2D9E9-7F82-E111-BE0C-003048F1C420.root')
-inputFiles = cms.untracked.vstring('/store/relval/CMSSW_5_2_3_patch3/RelValTTbar/GEN-SIM-RECO/START52_V9_special_120410-v1/0122/0EF8CDEB-1083-E111-846C-002618943937.root')
+#inputFiles = cms.untracked.vstring('/store/relval/CMSSW_5_2_3_patch3/RelValTTbar/GEN-SIM-RECO/START52_V9_special_120410-v1/0122/0EF8CDEB-1083-E111-846C-002618943937.root')
+inputFiles = cms.untracked.vstring('/store/mc/Summer12_DR53X/TTH_HToTauTau_M-125_8TeV_pythia6/AODSIM/PU_S10_START53_V7A-v1/0000/1E8A921A-52FC-E111-8E4B-00266CFFC7E4.root')
 
 process.source.fileNames = inputFiles
 process.maxEvents.input  = maxInputEvents
@@ -542,11 +546,6 @@ if runOnMC:
                                 , 'keep *_addPileupInfo_*_*'
                                 , 'keep LHEEventProduct_*_*_*'
                                 ]
-
-
-# make PAT use modern tau discriminants
-from PhysicsTools.PatAlgos.tools.tauTools import *
-switchToPFTauHPS(process)
 
 
 ###
@@ -907,6 +906,8 @@ if runStandardPAT:
       process.p += process.step0b
     process.p += process.step0c
     process.p += process.eidMVASequence
+    if rerunPFTau:
+      process.p += process.PFTau
     if useL1FastJet and useRelVals:
       process.p += process.ak5CaloJetSequence
     process.p += process.patDefaultSequence
@@ -972,6 +973,8 @@ if runStandardPAT:
     pAddPF += process.eidMVASequence
     if useL1FastJet:
       pAddPF += process.ak5PFJets
+    if rerunPFTau:
+      pAddPF += process.PFTau
     pAddPF += process.patDefaultSequence
     pAddPF.remove( process.patJetCorrFactors )
     if useCaloJets and useL1FastJet and useRelVals:
@@ -1043,6 +1046,8 @@ if runPF2PAT:
     pPF += process.step0b
   pPF += process.step0c
   pPF += process.eidMVASequence
+  if rerunPFTau:
+    pAddPF += process.PFTau
   pPF += getattr( process, 'patPF2PATSequence' + postfix )
   pPF += getattr( process, 'patAddOnSequence' + postfix )
   pPF += process.patConversions
@@ -1076,7 +1081,10 @@ if runPF2PAT:
     'keep *_BNproducer_*_*',
     #'keep *',
     ] )
-  
+ 
+  # don't run extra tau modules if not requested
+  if not rerunPFTau and runStandardPAT:
+    process.patHPSPFTauDiscrimination.remove(process.produceHPSPFTaus)
   
   outfile = open('JohnsConfig.py','w')
   print >> outfile,process.dumpPython()
