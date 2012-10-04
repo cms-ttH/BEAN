@@ -259,8 +259,7 @@ if useRelVals:
 
 #inputFiles = cms.untracked.vstring('/store/data/Run2012A/SingleMu/AOD/PromptReco-v1/000/190/645/FAF2D9E9-7F82-E111-BE0C-003048F1C420.root')
 #inputFiles = cms.untracked.vstring('/store/relval/CMSSW_5_2_3_patch3/RelValTTbar/GEN-SIM-RECO/START52_V9_special_120410-v1/0122/0EF8CDEB-1083-E111-846C-002618943937.root')
-inputFiles = cms.untracked.vstring('/store/mc/Summer12_DR53X/TTH_HToTauTau_M-125_8TeV_pythia6/AODSIM/PU_S10_START53_V7A-v1/0000/1E8A921A-52FC-E111-8E4B-00266CFFC7E4.root')
-
+inputFiles = cms.untracked.vstring('/store/mc/Summer12/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S6_START52_V9-v1/0000/FEFAA4F3-63B8-E111-A65A-00304867924A.root')
 process.source.fileNames = inputFiles
 process.maxEvents.input  = maxInputEvents
 
@@ -1079,6 +1078,7 @@ if runPF2PAT:
   process.out.outputCommands = [ 'drop *' ]
   process.out.outputCommands.extend( [ # BEAN Objects
     'keep *_BNproducer_*_*',
+    'keep double_kt6PFJets*_rho_*',
     #'keep *',
     ] )
  
