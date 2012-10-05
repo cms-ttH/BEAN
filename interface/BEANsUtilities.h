@@ -90,10 +90,8 @@ std::string str_pu_file_7TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/p
 std::string str_pu_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/pu_distributions_8TeV.root";
 std::string str_lep_file_7TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
 std::string str_lep_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
-
 std::string str_csv_file_7TeV = str_eff_file_7TeV;
 std::string str_csv_file_8TeV = str_eff_file_8TeV;
-
 
 BTagShapeInterface *sh_;
 BTagShapeInterface *sh_hfSFUp_;
@@ -130,8 +128,8 @@ namespace BEANs{
 
   void setMCsample( int insample=2500, bool is8TeV=true, bool isLJ=true, std::string dset="" );
 
-  void electronSelector( const BNelectronCollection &electrons, bool isLJ, std::string era, vint &tightElectrons, vint &looseElectrons, vdouble &tightElectronSF, vdouble &looseElectronSF );
-  void muonSelector( const BNmuonCollection &muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons, vdouble &tightMuonSF, vdouble &looseMuonSF );
+  void electronSelector( const BNelectronCollection &electrons, bool isLJ, std::string sysType, std::string era, vint &tightElectrons, vint &looseElectrons, vint &sideTightElectrons, vint &sideLooseElectrons, vdouble &tightElectronSF, vdouble &looseElectronSF, vdouble &sideTightElectronSF, vdouble &sideLooseElectronSF );
+  void muonSelector( const BNmuonCollection &muons, bool isLJ, std::string sysType, std::string era, vint &tightMuons, vint &looseMuons, vint &sideTightMuons, vint &sideLooseMuons, vdouble &tightMuonSF, vdouble &looseMuonSF, vdouble &sideTightMuonSF, vdouble &sideLooseMuonSF );
   void jetSelector( const BNjetCollection &pfjets, std::string sysType, std::string era, vint &tightJets, vint &tagJets, vint &untagJets, 
 		    std::vector<BTagWeight::JetInfo> &myjetinfo, double csvCut = 0.679 );
   void jetSelectorV2( const BNjetCollection &pfjets, std::string sysType, std::string era, vint &tightJets, vint &tagJets, vint &untagJets, double csvCut = 0.679 );
@@ -160,7 +158,7 @@ namespace BEANs{
 void BEANs::setMCsample( int insample, bool is8TeV, bool isLJ, std::string dset ){
 
   bool debug = false;
-  
+
   std::string input_eff_file = str_eff_file_7TeV;
   std::string input_csv_file = str_csv_file_7TeV;
   std::string input_lep_file = str_lep_file_7TeV;
@@ -321,13 +319,11 @@ void BEANs::setMCsample( int insample, bool is8TeV, bool isLJ, std::string dset 
     h_mu_SF_  = (TH2D*)f_lep_->Get(std::string( "mu_pt_eta_full_id_iso_8TeV" ).c_str());
   }
 
-
   sh_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),0,0);
   sh_hfSFUp_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),1.5,0);
   sh_hfSFDown_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),-1.5,0);
   sh_lfSFUp_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),0,1);
   sh_lfSFDown_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),0,-1);
-
 
 }
 
@@ -346,12 +342,16 @@ void BEANs::getPUwgt( double input_numPU, double &PU_scale, double &PUup_scale, 
 /// Electrons
 ///
 ////////
-void BEANs::electronSelector( const BNelectronCollection &electrons, bool isLJ, std::string era, vint &tightElectrons, vint &looseElectrons, vdouble &tightElectronSF, vdouble &looseElectronSF ){
+void BEANs::electronSelector( const BNelectronCollection &electrons, bool isLJ, std::string sysType, std::string era, vint &tightElectrons, vint &looseElectrons, vint &sideTightElectrons, vint &sideLooseElectrons, vdouble &tightElectronSF, vdouble &looseElectronSF, vdouble &sideTightElectronSF, vdouble &sideLooseElectronSF ){
 
   tightElectrons.clear();
   looseElectrons.clear();
   tightElectronSF.clear();
   looseElectronSF.clear();
+  sideTightElectrons.clear();
+  sideLooseElectrons.clear();
+  sideTightElectronSF.clear();
+  sideLooseElectronSF.clear();
 
   era_ = era;
   isLJ_ = isLJ;
@@ -379,9 +379,11 @@ void BEANs::electronSelector( const BNelectronCollection &electrons, bool isLJ, 
 
       double relIso = ( chargedHadronIso + neutralHadronIso + photonIso ) * 1./elePt;
 
+      bool sideIso = ( relIso < 0.8 );
       bool looseIso = ( relIso < 0.2 );
       bool tightIso = ( relIso < 0.1 );
 
+      
       int eidHyperTight1MC = electrons.at(i).eidHyperTight1MC;
       bool eidHyperTight1MC_dec = ( (eidHyperTight1MC & 1)==1 );
 
@@ -400,19 +402,31 @@ void BEANs::electronSelector( const BNelectronCollection &electrons, bool isLJ, 
 
       bool id = ( eid && d0 && dZ && notConv );
 
-      if( kin && looseIso ){
-        if( ((elePt>tightPt) && id && tightIso) ){
-	  tightElectrons.push_back(i);
-	  tightElectronSF.push_back(1.);
-	}
+      if( kin && sideIso ){
+        if( (elePt>tightPt) && id && (tightIso || looseIso == 0)) {
+          if (tightIso) {
+            tightElectrons.push_back(i);
+            tightElectronSF.push_back(1.);
+          }
+          else {
+            sideTightElectrons.push_back(i);
+            sideTightElectronSF.push_back(1.);
+          }
+        }
         else{
-	  looseElectrons.push_back(i);
-	  looseElectronSF.push_back(1.);
-	}
+          if (looseIso) {
+            looseElectrons.push_back(i);
+            looseElectronSF.push_back(1.);
+          }
+          else {
+            sideLooseElectrons.push_back(i);
+            sideLooseElectronSF.push_back(1);
+          }
+        }
       }
     }// end electron loop
 
-  } // end if 2011
+    } // end if 2011
   else{ // default is 2012 selection
     for( int i=0; i<int(electrons.size()); i++ ){
 
@@ -436,6 +450,7 @@ void BEANs::electronSelector( const BNelectronCollection &electrons, bool isLJ, 
 
       double relIso_rho   = ( chargedHadronIso + max(0.0, neutralHadronIso + photonIso - AEffDr03*rhoPrime) ) * 1./elePt;
 
+      bool sideIso = ( relIso_rho < 0.8 );
       bool looseIso = ( relIso_rho < 0.2 );
       bool tightIso = ( relIso_rho < 0.1 );
 
@@ -450,18 +465,33 @@ void BEANs::electronSelector( const BNelectronCollection &electrons, bool isLJ, 
 
       bool id = ( passMVAId && d02 && dZ && notConv );
 
-      if( kin && looseIso && passMVAId && d04 && notConv ){
-        if( ((elePt>tightPt) && id && tightIso) ){
-	  tightElectrons.push_back(i);
-	  double usePT = std::min( elePt, 499. );
-	  double useEta = ( eleEta>0. ) ? std::min( 2.39, eleEta ) : std::max( -2.39, eleEta );
-	  double SF = h_ele_SF_->GetBinContent( h_ele_SF_->FindBin(usePT, useEta) );
-	  tightElectronSF.push_back(SF);
-	}
-        else{
-	  looseElectrons.push_back(i);
-	  looseElectronSF.push_back(1.);
-	}
+      if( kin && sideIso && passMVAId && d04 && notConv ){
+        if( ((elePt>tightPt) && id && (tightIso || looseIso == 0)) ) {
+          double SF = 1.0;
+          if( sysType.compare("data")!=0 ) {
+            double usePT = std::min( elePt, 499. );
+            double useEta = ( eleEta>0. ) ? std::min( 2.39, eleEta ) : std::max( -2.39, eleEta );
+            SF = h_ele_SF_->GetBinContent( h_ele_SF_->FindBin(usePT, useEta) );
+          }
+          if (tightIso) {
+            tightElectrons.push_back(i);
+            tightElectronSF.push_back(SF);
+          }
+          else {
+            sideTightElectrons.push_back(i);
+            sideTightElectronSF.push_back(SF);
+          }
+        }
+        else {
+          if (looseIso) {
+            looseElectrons.push_back(i);
+            looseElectronSF.push_back(1.);
+          }
+          else {
+            sideLooseElectrons.push_back(i);
+            sideLooseElectronSF.push_back(1.);
+          }
+        }
       }
     }// end electron loop
   }
@@ -473,12 +503,16 @@ void BEANs::electronSelector( const BNelectronCollection &electrons, bool isLJ, 
 /// Muons
 ///
 ////////
-void BEANs::muonSelector( const BNmuonCollection &muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons, vdouble &tightMuonSF, vdouble &looseMuonSF ){
+void BEANs::muonSelector( const BNmuonCollection &muons, bool isLJ, std::string sysType, std::string era, vint &tightMuons, vint &looseMuons, vint &sideTightMuons, vint &sideLooseMuons, vdouble &tightMuonSF, vdouble &looseMuonSF, vdouble &sideTightMuonSF, vdouble &sideLooseMuonSF ){
 
   tightMuons.clear();
   looseMuons.clear();
   tightMuonSF.clear();
   looseMuonSF.clear();
+  sideTightMuons.clear();
+  sideLooseMuons.clear();
+  sideTightMuonSF.clear();
+  sideLooseMuonSF.clear();
 
   era_ = era;
   isLJ_ = isLJ;
@@ -503,6 +537,7 @@ void BEANs::muonSelector( const BNmuonCollection &muons, bool isLJ, std::string 
 
       double relIso = ( chargedHadronIso + neutralHadronIso + photonIso ) * 1./muPt;
 
+      bool sideIso = ( relIso < 0.8 );
       bool looseIso = ( relIso<0.2 );
       bool tightIso = ( relIso<0.125 );
 
@@ -519,15 +554,28 @@ void BEANs::muonSelector( const BNmuonCollection &muons, bool isLJ, std::string 
 
       bool id = ( isTrackerMuon && isGlobalMuonPromptTight && numTrackHits && numPixelHits && numberOfMatches && passd0 && passdz );
 
-      if( kin && isGlobalMuon && looseIso ){
-        if( ((muPt>tightPt) && (muAbsEta<2.1) && id && tightIso) ){
-	  tightMuons.push_back(i);
-	  tightMuonSF.push_back(1.);
-	}
+      if( kin && isGlobalMuon && sideIso ){
+        if( ((muPt>tightPt) && (muAbsEta<2.1) && id && (tightIso || looseIso == 0)) ){
+          if (tightIso) {
+            tightMuons.push_back(i);
+            tightMuonSF.push_back(1.);
+          }
+          else {
+            if (relIso < 0.13) std::cout << "What am I doing here with relIso = " << relIso << std::endl; 
+            sideTightMuons.push_back(i);
+            sideTightMuonSF.push_back(1.);
+          }
+        }
         else{
-	  looseMuons.push_back(i);
-	  looseMuonSF.push_back(1.);
-	}
+          if (looseIso) {
+            looseMuons.push_back(i);
+            looseMuonSF.push_back(1.);
+          }
+          else {
+            sideLooseMuons.push_back(i);
+            sideLooseMuonSF.push_back(1.);
+          }
+        }
       }
     }// end muon loop
   } // end if 2011
@@ -548,6 +596,7 @@ void BEANs::muonSelector( const BNmuonCollection &muons, bool isLJ, std::string 
 
       double relIso_dBeta = (pfIsoR04SumChargedHadronPt + max(0.0, pfIsoR04SumNeutralHadronEt + pfIsoR04SumPhotonEt - 0.5*pfIsoR04SumPUPt))/muPt;
 
+      bool sideIso = ( relIso_dBeta < 0.80 );
       bool looseIso = ( relIso_dBeta<0.20 );
       bool tightIso = ( relIso_dBeta<0.12 );
 
@@ -569,18 +618,34 @@ void BEANs::muonSelector( const BNmuonCollection &muons, bool isLJ, std::string 
       bool id = ( isGlobalMuon && normChi2 && passd0 && dVzPVz && 
 		  numberOfLayersWithMeasurement && numberOfValidMuonHits && numberOfValidPixelHits && numberOfMatchedStations );
 
-      if( kin && (isGlobalMuon || isTrackerMuon) && looseIso && isPFmuon ){
-        if( ((muPt>tightPt) && (muAbsEta<2.1) && id && tightIso) ){
-	  tightMuons.push_back(i);
-	  double usePT = std::min( muPt, 499. );
-	  double useEta = ( muEta>0. ) ? std::min( 2.09, muEta ) : std::max( -2.09, muEta );
-	  double SF = h_mu_SF_->GetBinContent( h_mu_SF_->FindBin(usePT, useEta) );
-	  tightMuonSF.push_back(SF);
-	}
+      if( kin && (isGlobalMuon || isTrackerMuon) && sideIso && isPFmuon ){
+        if ((muPt>tightPt) && (muAbsEta<2.1) && id && (tightIso || looseIso == 0)) {
+          double SF = 1.0;
+          if( sysType.compare("data")!=0 ) {
+            double usePT = std::min( muPt, 499. );
+            double useEta = ( muEta>0. ) ? std::min( 2.09, muEta ) : std::max( -2.09, muEta );
+            SF = h_mu_SF_->GetBinContent( h_mu_SF_->FindBin(usePT, useEta) );
+          }
+          if (tightIso) {
+            tightMuons.push_back(i);
+            tightMuonSF.push_back(SF);
+          }
+          else {
+            if (relIso_dBeta < 0.13) std::cout << "What am I doing here with relIso_dBeta = " << relIso_dBeta << std::endl; 
+            sideTightMuons.push_back(i);
+            sideTightMuonSF.push_back(SF);
+          }
+        }
         else{
-	  looseMuons.push_back(i);
-	  looseMuonSF.push_back(1.);
-	}
+          if (looseIso) {
+            looseMuons.push_back(i);
+            looseMuonSF.push_back(1.);
+          }
+          else {
+            sideLooseMuons.push_back(i);
+            sideLooseMuonSF.push_back(1.);
+          }
+        }
       }
     }// end muon loop
   }
@@ -1289,7 +1354,7 @@ double BEANs::reshape_csv( double eta, double pt, double csv, int flavor, std::s
   else if( sysType.compare("lfSFUp")==0 )   new_csv = sh_lfSFUp_->reshape(eta, pt, csv, flavor);
   else if( sysType.compare("lfSFDown")==0 ) new_csv = sh_lfSFDown_->reshape(eta, pt, csv, flavor);
   else                                      new_csv = sh_->reshape(eta, pt, csv, flavor);
-
+  
   return new_csv;
 }
 
