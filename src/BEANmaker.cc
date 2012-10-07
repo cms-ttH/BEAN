@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.16 2012/09/25 21:32:26 nvallsve Exp $
+// $Id: BEANmaker.cc,v 1.17 2012/10/03 19:51:20 jkolb Exp $
 //
 //
 
@@ -434,7 +434,19 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    edm::Handle< double > rhoHandle;
    iEvent.getByLabel(edm::InputTag("kt6PFJets","rho"), rhoHandle);
    double rho_event = *rhoHandle;   
-   
+
+   edm::Handle< double > rhoHandle_CentralChargedPileUp;
+   iEvent.getByLabel(edm::InputTag("kt6PFJetsCentralChargedPileUp","rho"), rhoHandle_CentralChargedPileUp);
+   double rho_event_CentralChargedPileUp = ( (rhoHandle_CentralChargedPileUp.isValid()) ) ? *rhoHandle_CentralChargedPileUp : -99;   
+
+   edm::Handle< double > rhoHandle_CentralNeutral;
+   iEvent.getByLabel(edm::InputTag("kt6PFJetsCentralNeutral","rho"), rhoHandle_CentralNeutral);
+   double rho_event_CentralNeutral = ( (rhoHandle_CentralNeutral.isValid()) ) ? *rhoHandle_CentralNeutral : -99;
+
+   edm::Handle< double > rhoHandle_CentralNeutralTight;
+   iEvent.getByLabel(edm::InputTag("kt6PFJetsCentralNeutralTight","rho"), rhoHandle_CentralNeutralTight);
+   double rho_event_CentralNeutralTight = ( (rhoHandle_CentralNeutralTight.isValid()) ) ? *rhoHandle_CentralNeutralTight : -99;
+
    edm::Handle<reco::ConversionCollection> conversionsHandle;
    iEvent.getByLabel("allConversions", conversionsHandle);
 
@@ -613,12 +625,15 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    bool hasGenEvtInfo = iEvent.getByLabel( "generator", genEvtInfo );
 
    double qScale=-1, alphaQCD=-1, alphaQED=-1, pthat=-1, scalePDF=-1, x1=-1, x2=-1, xPDF1=-1, xPDF2=-1;
+   int id1=-99, id2=-99;
    if( (hasGenEvtInfo) ){
      qScale = genEvtInfo->qScale();
      alphaQCD = genEvtInfo->alphaQCD();
      alphaQED = genEvtInfo->alphaQED();
      pthat = ( genEvtInfo->hasBinningValues() ? (genEvtInfo->binningValues())[0] : 0.0);
      scalePDF = genEvtInfo->pdf()->scalePDF;
+     id1 = genEvtInfo->pdf()->id.first;
+     id2 = genEvtInfo->pdf()->id.second;
      x1 = genEvtInfo->pdf()->x.first;
      x2 = genEvtInfo->pdf()->x.second;
      xPDF1 = genEvtInfo->pdf()->xPDF.first;
@@ -2956,6 +2971,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    MyEvent.alphaQCD = alphaQCD;
    MyEvent.alphaQED = alphaQED;
    MyEvent.scalePDF = scalePDF;
+   MyEvent.id1 = id1;
+   MyEvent.id2 = id2;
    MyEvent.x1 = x1;
    MyEvent.x2 = x2;
    MyEvent.xPDF1 = xPDF1;
@@ -3006,6 +3023,11 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    MyEvent.Q2ScaleUpWgt = Q2ScaleUpWgt;
    MyEvent.Q2ScaleDownWgt = Q2ScaleDownWgt;
+
+   MyEvent.rho_kt6PFJets = rho_event;
+   MyEvent.rho_kt6PFJetsCentralChargedPileUp = rho_event_CentralChargedPileUp;
+   MyEvent.rho_kt6PFJetsCentralNeutral       = rho_event_CentralNeutral;
+   MyEvent.rho_kt6PFJetsCentralNeutralTight  = rho_event_CentralNeutralTight;
 
 
    if( (vecWdecay.size()>0) ){
