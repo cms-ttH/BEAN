@@ -864,9 +864,15 @@ process.eidMVASequence = cms.Sequence(
 
 ### PU Jet-ID
 # load the PU JetID sequence
-#process.load("CMGTools.External.pujetidsequence_cff")
-# run the PU JetID sequence
-#process.puJetID = cms.Sequence(process.puJetIdSqeuence)
+process.load("CMGTools.External.pujetidsequence_cff")
+
+# OK, out of laziness, I'm only going to configure the pu jet ID for our PF2PAT jets
+process.puJetIdChs.vertexes = 'goodOfflinePrimaryVertices'
+process.puJetIdChs.jets = 'selectedPatJetsPFlow'
+
+process.puJetMvaChs.vertexes = 'goodOfflinePrimaryVertices'
+process.puJetMvaChs.jets = 'selectedPatJetsPFlow'
+
   
 # The additional sequence
 
@@ -1049,6 +1055,7 @@ if runPF2PAT:
     pAddPF += process.PFTau
   pPF += getattr( process, 'patPF2PATSequence' + postfix )
   pPF += getattr( process, 'patAddOnSequence' + postfix )
+  pPF += process.puJetIdSqeuenceChs #Mispelled to match pujetidsequence_cff.py
   pPF += process.patConversions
 #  if useLooseMuon:
 #    pPF += getattr( process, 'step1a' + postfix )
