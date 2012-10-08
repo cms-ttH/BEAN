@@ -120,6 +120,10 @@
 
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
 #include "MagneticField/Engine/interface/MagneticField.h"
+#include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
+#include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
+#include "Geometry/TrackerGeometryBuilder/interface/StripGeomDetUnit.h"
+#include "Geometry/TrackerGeometryBuilder/interface/PixelGeomDetUnit.h"
 
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
@@ -177,6 +181,9 @@ class BEANmaker : public edm::EDProducer {
   edm::InputTag genjetTag_;
   //edm::InputTag calometTag_;
   edm::InputTag pfmetTag_;
+  edm::InputTag pfmetTag_type1correctedRECO_;
+  edm::InputTag pfmetTag_uncorrectedPF2PAT_;
+  edm::InputTag pfmetTag_uncorrectedRECO_;
   edm::InputTag tcmetTag_;
   edm::InputTag muonTag_;
   edm::InputTag pfmuonTag_;
@@ -213,6 +220,7 @@ class BEANmaker : public edm::EDProducer {
   int numtrack_;
   double thresh_;
   bool verbose_;
+  bool fillTrackHitInfo_;
 
   std::vector<std::string> hlt_sd_eg_name;
   std::vector<std::string> hlt_sd_jetmettau_name;
@@ -225,6 +233,8 @@ class BEANmaker : public edm::EDProducer {
   unsigned long long m_l1GtPfAlgoCacheID;
 
   const std::vector<std::vector<int> >* m_prescaleFactorsAlgoTrig;
+
+  const TrackerGeometry* m_tracker;
 };
 
 //
@@ -283,7 +293,8 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   maxd0_(iConfig.getUntrackedParameter<double>("maxd0",2)),
   numtrack_(iConfig.getUntrackedParameter<int>("numtrack",10)),
   thresh_(iConfig.getUntrackedParameter<double>("thresh",0.25)),
-  verbose_(iConfig.getParameter<bool>("verbose"))
+  verbose_(iConfig.getParameter<bool>("verbose")),
+  fillTrackHitInfo_(iConfig.getParameter<bool>("fillTrackHitInfo"))
 {
 
   // Define InputTags 
@@ -294,6 +305,9 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   genjetTag_ = iConfig.getParameter<edm::InputTag>("genjetTag");
   //calometTag_ = iConfig.getParameter<edm::InputTag>("calometTag");
   pfmetTag_ = iConfig.getParameter<edm::InputTag>("pfmetTag");
+  pfmetTag_type1correctedRECO_ = iConfig.getParameter<edm::InputTag>("pfmetTag_type1correctedRECO");
+  pfmetTag_uncorrectedPF2PAT_  = iConfig.getParameter<edm::InputTag>("pfmetTag_uncorrectedPF2PAT");
+  pfmetTag_uncorrectedRECO_    = iConfig.getParameter<edm::InputTag>("pfmetTag_uncorrectedRECO");
   tcmetTag_ = iConfig.getParameter<edm::InputTag>("tcmetTag");
   muonTag_ = iConfig.getParameter<edm::InputTag>("muonTag");
   pfmuonTag_ = iConfig.getParameter<edm::InputTag>("pfmuonTag");
@@ -324,6 +338,9 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   produces<BNgenjetCollection>(genjetTag_.label()).setBranchAlias("genjets");
   //produces<BNmetCollection>(calometTag_.label()).setBranchAlias("calomet");
   produces<BNmetCollection>(pfmetTag_.label()).setBranchAlias("pfmet");
+  produces<BNmetCollection>(std::string(pfmetTag_type1correctedRECO_.label() + "BN")).setBranchAlias("pfmet_type1correctedRECO");
+  produces<BNmetCollection>(std::string(pfmetTag_uncorrectedPF2PAT_.label() + "BN")).setBranchAlias("pfmet_uncorrectedPF2PAT");
+  produces<BNmetCollection>(std::string(pfmetTag_uncorrectedRECO_.label() + "BN")).setBranchAlias("pfmet_uncorrectedRECO");
   produces<BNmetCollection>(tcmetTag_.label()).setBranchAlias("tcmet");
   produces<BNmuonCollection>(muonTag_.label()).setBranchAlias("muons");
   produces<BNelectronCollection>(pfeleTag_.label()).setBranchAlias("pfelectrons");
@@ -401,6 +418,15 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    edm::Handle<edm::View<pat::MET> > pfmetHandle;
    iEvent.getByLabel(pfmetTag_,pfmetHandle);
 
+   edm::Handle<vector<reco::PFMET> > pfmetHandle_type1correctedRECO;
+   iEvent.getByLabel(pfmetTag_type1correctedRECO_,pfmetHandle_type1correctedRECO);
+
+   edm::Handle<edm::View<pat::MET> > pfmetHandle_uncorrectedPF2PAT;
+   iEvent.getByLabel(pfmetTag_uncorrectedPF2PAT_,pfmetHandle_uncorrectedPF2PAT);
+
+   edm::Handle<vector<reco::PFMET> > pfmetHandle_uncorrectedRECO;
+   iEvent.getByLabel(pfmetTag_uncorrectedRECO_,pfmetHandle_uncorrectedRECO);
+
    edm::Handle<edm::View<pat::MET> > tcmetHandle;
    iEvent.getByLabel(tcmetTag_,tcmetHandle);
 
@@ -458,6 +484,9 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    bool produceGenJet = ( (genjetTag_.label() == "none") ) ? false : true;
    //bool produceCaloMET = ( (calometTag_.label() == "none") ) ? false : true;
    bool producePFMET = ( (pfmetTag_.label() == "none") ) ? false : true;
+   bool producePFMET_type1correctedRECO = ( (pfmetTag_type1correctedRECO_.label() == "none") ) ? false : true;
+   bool producePFMET_uncorrectedPF2PAT  = ( (pfmetTag_uncorrectedPF2PAT_.label() == "none") ) ? false : true;
+   bool producePFMET_uncorrectedRECO    = ( (pfmetTag_uncorrectedRECO_.label() == "none") ) ? false : true;
    bool produceTCMET = ( (tcmetTag_.label() == "none") ) ? false : true;
    bool produceMuon = ( (muonTag_.label() == "none") ) ? false : true;
    bool producePFMuon = ( (pfmuonTag_.label() == "none") ) ? false : true;
@@ -2571,6 +2600,30 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        double ndof = track->ndof();
        if( (ndof!=0) ) MyTrack.normChi2 = track->chi2()/ndof;
 
+       // Now get hit information. 
+       // See reference for this class:  http://cmssdt.cern.ch/SDT/doxygen/CMSSW_4_2_5/doc/html/d9/d6d/classTrackingRecHit-members.html 
+       if( fillTrackHitInfo_ ){
+         for (trackingRecHit_iterator hit = track->recHitsBegin(); hit!=track->recHitsEnd(); hit++) {
+           DetId detid = (*hit)->geographicalId();
+           const GeomDetUnit *det = m_tracker->idToDetUnit(detid);  
+           if (dynamic_cast<const StripGeomDetUnit*>(det)==0 && dynamic_cast<const PixelGeomDetUnit*>(det)==0) {
+	     // std::cout << "this detID doesn't seem to belong to the Tracker" 
+	     // 	       << "; subdetId = " << int(detid.subdetId())
+	     // 	       << "; rawId = " << int(detid.rawId())
+	     // 	       << endl;
+             continue;
+           }
+           GlobalPoint center = det->surface().toGlobal(LocalPoint(0,0,0)); //should be the center of this Det. 
+
+           MyTrack.subDetIdHits.push_back(int(detid.subdetId()));
+           MyTrack.rawDetIdHits.push_back(int(detid.rawId()));
+           MyTrack.isValidHits.push_back((*hit)->isValid());
+           MyTrack.modulePerpHits.push_back(center.perp());
+           MyTrack.moduleZHits.push_back(center.z());
+           MyTrack.modulePhiHits.push_back(center.phi());           
+         }  // end loop over hits
+       }
+
 
        bntracks->push_back(MyTrack);
      }
@@ -3215,6 +3268,101 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
 
 
+   std::auto_ptr<BNmetCollection> bnpfmet_type1correctedRECO(new BNmetCollection);
+   BNmet MyPfmet_type1correctedRECO;
+
+   if( producePFMET_type1correctedRECO ){
+     MyPfmet_type1correctedRECO.pt = pfmetHandle_type1correctedRECO->front().pt();
+     MyPfmet_type1correctedRECO.px = pfmetHandle_type1correctedRECO->front().px();
+     MyPfmet_type1correctedRECO.py = pfmetHandle_type1correctedRECO->front().py();
+     MyPfmet_type1correctedRECO.phi = pfmetHandle_type1correctedRECO->front().phi();
+     MyPfmet_type1correctedRECO.sumET = pfmetHandle_type1correctedRECO->front().sumEt();
+
+     double sigmaX2_pf = (pfmetHandle_type1correctedRECO->front()).getSignificanceMatrix()(0,0);
+     double sigmaY2_pf = (pfmetHandle_type1correctedRECO->front()).getSignificanceMatrix()(1,1);
+     double sigmaXY_pf = (pfmetHandle_type1correctedRECO->front()).getSignificanceMatrix()(0,1);
+     double sigmaYX_pf = (pfmetHandle_type1correctedRECO->front()).getSignificanceMatrix()(1,0);
+
+     double significance_pf = 99;
+     if(sigmaX2_pf<1.e10 && sigmaY2_pf<1.e10) significance_pf = (pfmetHandle_type1correctedRECO->front()).significance();
+
+     MyPfmet_type1correctedRECO.significance = significance_pf;
+     MyPfmet_type1correctedRECO.sigmaX2 = sigmaX2_pf;
+     MyPfmet_type1correctedRECO.sigmaY2 = sigmaY2_pf;
+     MyPfmet_type1correctedRECO.sigmaXY = sigmaXY_pf;
+     MyPfmet_type1correctedRECO.sigmaYX = sigmaYX_pf;
+
+     bnpfmet_type1correctedRECO->push_back(MyPfmet_type1correctedRECO);
+   }
+
+
+
+   std::auto_ptr<BNmetCollection> bnpfmet_uncorrectedPF2PAT(new BNmetCollection);
+   BNmet MyPfmet_uncorrectedPF2PAT;
+
+   if( producePFMET_uncorrectedPF2PAT ){
+     MyPfmet_uncorrectedPF2PAT.pt = pfmetHandle_uncorrectedPF2PAT->front().pt();
+     MyPfmet_uncorrectedPF2PAT.px = pfmetHandle_uncorrectedPF2PAT->front().px();
+     MyPfmet_uncorrectedPF2PAT.py = pfmetHandle_uncorrectedPF2PAT->front().py();
+     MyPfmet_uncorrectedPF2PAT.phi = pfmetHandle_uncorrectedPF2PAT->front().phi();
+     MyPfmet_uncorrectedPF2PAT.sumET = pfmetHandle_uncorrectedPF2PAT->front().sumEt();
+     MyPfmet_uncorrectedPF2PAT.corSumET = pfmetHandle_uncorrectedPF2PAT->front().corSumEt();
+     MyPfmet_uncorrectedPF2PAT.Upt = pfmetHandle_uncorrectedPF2PAT->front().uncorrectedPt();
+     MyPfmet_uncorrectedPF2PAT.Uphi = pfmetHandle_uncorrectedPF2PAT->front().uncorrectedPhi();
+
+     double sigmaX2_pf = (pfmetHandle_uncorrectedPF2PAT->front()).getSignificanceMatrix()(0,0);
+     double sigmaY2_pf = (pfmetHandle_uncorrectedPF2PAT->front()).getSignificanceMatrix()(1,1);
+     double sigmaXY_pf = (pfmetHandle_uncorrectedPF2PAT->front()).getSignificanceMatrix()(0,1);
+     double sigmaYX_pf = (pfmetHandle_uncorrectedPF2PAT->front()).getSignificanceMatrix()(1,0);
+
+     double significance_pf = 99;
+     if(sigmaX2_pf<1.e10 && sigmaY2_pf<1.e10) significance_pf = (pfmetHandle_uncorrectedPF2PAT->front()).significance();
+
+     MyPfmet_uncorrectedPF2PAT.significance = significance_pf;
+     MyPfmet_uncorrectedPF2PAT.sigmaX2 = sigmaX2_pf;
+     MyPfmet_uncorrectedPF2PAT.sigmaY2 = sigmaY2_pf;
+     MyPfmet_uncorrectedPF2PAT.sigmaXY = sigmaXY_pf;
+     MyPfmet_uncorrectedPF2PAT.sigmaYX = sigmaYX_pf;
+
+     if( (pfmetHandle_uncorrectedPF2PAT->front().genMET()) ){
+       MyPfmet_uncorrectedPF2PAT.genPT = pfmetHandle_uncorrectedPF2PAT->front().genMET()->pt();
+       MyPfmet_uncorrectedPF2PAT.genPhi = pfmetHandle_uncorrectedPF2PAT->front().genMET()->phi();
+     }
+
+     bnpfmet_uncorrectedPF2PAT->push_back(MyPfmet_uncorrectedPF2PAT);
+   }
+
+
+
+   std::auto_ptr<BNmetCollection> bnpfmet_uncorrectedRECO(new BNmetCollection);
+   BNmet MyPfmet_uncorrectedRECO;
+
+   if( producePFMET_uncorrectedRECO ){
+     MyPfmet_uncorrectedRECO.pt = pfmetHandle_uncorrectedRECO->front().pt();
+     MyPfmet_uncorrectedRECO.px = pfmetHandle_uncorrectedRECO->front().px();
+     MyPfmet_uncorrectedRECO.py = pfmetHandle_uncorrectedRECO->front().py();
+     MyPfmet_uncorrectedRECO.phi = pfmetHandle_uncorrectedRECO->front().phi();
+     MyPfmet_uncorrectedRECO.sumET = pfmetHandle_uncorrectedRECO->front().sumEt();
+
+     double sigmaX2_pf = (pfmetHandle_uncorrectedRECO->front()).getSignificanceMatrix()(0,0);
+     double sigmaY2_pf = (pfmetHandle_uncorrectedRECO->front()).getSignificanceMatrix()(1,1);
+     double sigmaXY_pf = (pfmetHandle_uncorrectedRECO->front()).getSignificanceMatrix()(0,1);
+     double sigmaYX_pf = (pfmetHandle_uncorrectedRECO->front()).getSignificanceMatrix()(1,0);
+
+     double significance_pf = 99;
+     if(sigmaX2_pf<1.e10 && sigmaY2_pf<1.e10) significance_pf = (pfmetHandle_uncorrectedRECO->front()).significance();
+
+     MyPfmet_uncorrectedRECO.significance = significance_pf;
+     MyPfmet_uncorrectedRECO.sigmaX2 = sigmaX2_pf;
+     MyPfmet_uncorrectedRECO.sigmaY2 = sigmaY2_pf;
+     MyPfmet_uncorrectedRECO.sigmaXY = sigmaXY_pf;
+     MyPfmet_uncorrectedRECO.sigmaYX = sigmaYX_pf;
+
+     bnpfmet_uncorrectedRECO->push_back(MyPfmet_uncorrectedRECO);
+   }
+
+
+
 
    /////////////////////////////////////////////
    ///////
@@ -3775,6 +3923,9 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    if( produceGenJet ) iEvent.put(bngenjets,genjetTag_.label());
    //if( produceCaloMET ) iEvent.put(bncalomet,calometTag_.label());
    if( producePFMET ) iEvent.put(bnpfmet,pfmetTag_.label());
+   if( producePFMET_type1correctedRECO ) iEvent.put(bnpfmet_type1correctedRECO,std::string(pfmetTag_type1correctedRECO_.label() + "BN"));
+   if( producePFMET_uncorrectedPF2PAT )  iEvent.put(bnpfmet_uncorrectedPF2PAT,std::string(pfmetTag_uncorrectedPF2PAT_.label() + "BN"));
+   if( producePFMET_uncorrectedRECO )    iEvent.put(bnpfmet_uncorrectedRECO,std::string(pfmetTag_uncorrectedRECO_.label() + "BN"));
    if( produceTCMET ) iEvent.put(bntcmet,tcmetTag_.label());
    if( produceMuon ) iEvent.put(bnmuons,muonTag_.label());
    if( producePFMuon ) iEvent.put(bnpfmuons,pfmuonTag_.label());
@@ -3839,6 +3990,11 @@ BEANmaker::beginRun( edm::Run& run, const edm::EventSetup& c )
     std::cout << " HLT config extraction failure with process name " << hltProcessName_ << std::endl;
     // In this case, all access methods will return empty values!
   }
+
+  // tracker geometry used for hit information in BNtrack
+  edm::ESHandle<TrackerGeometry> tkGeom;
+  c.get<TrackerDigiGeometryRecord>().get( tkGeom );
+  m_tracker = tkGeom.product();
 
 }
 
