@@ -8,7 +8,7 @@ import sys
 
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process( 'jsmBeanTestv01OMG' )
+process = cms.Process( 'BEANs' )
 
 
 ### ======================================================================== ###
@@ -114,12 +114,14 @@ muonCut                = 'isGlobalMuon && pt > 10. && abs(eta) < 2.5'
 #tightMuonCut           = ''
 # PF muons
 muonCutPF              = 'isGlobalMuon && pt > 10. && abs(eta) < 2.5'
+muonCutLoosePF         = 'isGlobalMuon && pt > 10. && abs(eta) < 2.5'
 #looseMuonCutPF         = ''
 #tightMuonCutPF         = ''
 # Standard electrons
 electronCut            = 'et > 10. && abs(eta) < 2.5'
 # PF electrons
 electronCutPF          = 'et > 10. && abs(eta) < 2.5'
+electronCutLoosePF     = 'et > 10. && abs(eta) < 2.5'
 # Tau cut
 tauCut                 = 'et > 5. && abs(eta) < 2.5 && tauID("decayModeFinding")'
 # Calo jets
@@ -789,22 +791,255 @@ if addTriggerMatching:
     #getattr( process, 'intermediatePatMuons' + postfix ).src = cms.InputTag( 'selectedPatMuons' + postfix + 'TriggerMatch' )
 
 
+if runPF2PAT:
+  ##
+  ## LOOSE LEPTON ISOLATION
+  ##
+
+  #Muon,Charged
+  isoValMuonWithChargedDR03 = applyPostfix(process, 'muPFIsoValueCharged03', postfix).clone()
+  isoValMuonWithChargedDR03.deposits[0].deltaR = 0.3
+  setattr(process,'isoValMuonWithChargedDR03'+postfix,isoValMuonWithChargedDR03)
+  # Install alternative isolation in path
+  getattr( process, 'patPF2PATSequence' + postfix ).replace(getattr(process, 'muPFIsoValueCharged03'+postfix),
+                                                            getattr(process, 'muPFIsoValueCharged03'+postfix)+getattr(process, 'isoValMuonWithChargedDR03'+postfix)
+                                                            )
+  #Muon, Neutral
+  isoValMuonWithNeutralDR03 = applyPostfix(process, 'muPFIsoValueNeutral03', postfix).clone()
+  isoValMuonWithNeutralDR03.deposits[0].deltaR = 0.3
+  setattr(process,'isoValMuonWithNeutralDR03'+postfix,isoValMuonWithNeutralDR03)
+  getattr( process, 'patPF2PATSequence' + postfix ).replace(getattr(process, 'muPFIsoValueNeutral03'+postfix),
+                                                            getattr(process, 'muPFIsoValueNeutral03'+postfix)+getattr(process, 'isoValMuonWithNeutralDR03'+postfix)
+                                                            )
+  #Muon, Photons
+  isoValMuonWithPhotonsDR03 = applyPostfix(process, 'muPFIsoValueGamma03', postfix).clone()
+  isoValMuonWithPhotonsDR03.deposits[0].deltaR = 0.3
+  setattr(process,'isoValMuonWithPhotonsDR03'+postfix,isoValMuonWithPhotonsDR03)
+  getattr( process, 'patPF2PATSequence' + postfix ).replace(getattr(process, 'muPFIsoValueGamma03'+postfix),
+                                                            getattr(process, 'muPFIsoValueGamma03'+postfix)+getattr(process, 'isoValMuonWithPhotonsDR03'+postfix)
+                                                            )
+  #Muon, PU
+  isoValMuonWithPUDR03 = applyPostfix(process, 'muPFIsoValuePU03', postfix).clone()
+  isoValMuonWithPUDR03.deposits[0].deltaR = 0.3
+  setattr(process,'isoValMuonWithPUDR03'+postfix,isoValMuonWithPUDR03)
+  getattr( process, 'patPF2PATSequence' + postfix ).replace(getattr(process, 'muPFIsoValuePU03'+postfix),
+                                                            getattr(process, 'muPFIsoValuePU03'+postfix)+getattr(process, 'isoValMuonWithPUDR03'+postfix)
+                                                            )
+  
+  #Muon,Charged
+  isoValMuonWithChargedDR04 = applyPostfix(process, 'muPFIsoValueCharged04', postfix).clone()
+  isoValMuonWithChargedDR04.deposits[0].deltaR = 0.4
+  setattr(process,'isoValMuonWithChargedDR04'+postfix,isoValMuonWithChargedDR04)
+  getattr( process, 'patPF2PATSequence' + postfix ).replace(getattr(process, 'muPFIsoValueCharged04'+postfix),
+                                                            getattr(process, 'muPFIsoValueCharged04'+postfix)+getattr(process, 'isoValMuonWithChargedDR04'+postfix)
+                                                            )
+  #Muon, Neutral
+  isoValMuonWithNeutralDR04 = applyPostfix(process, 'muPFIsoValueNeutral04', postfix).clone()
+  isoValMuonWithNeutralDR04.deposits[0].deltaR = 0.4
+  setattr(process,'isoValMuonWithNeutralDR04'+postfix,isoValMuonWithNeutralDR04)
+  getattr( process, 'patPF2PATSequence' + postfix ).replace(getattr(process, 'muPFIsoValueNeutral04'+postfix),
+                                                            getattr(process, 'muPFIsoValueNeutral04'+postfix)+getattr(process, 'isoValMuonWithNeutralDR04'+postfix)
+                                                            )
+  #Muon, Photons
+  isoValMuonWithPhotonsDR04 = applyPostfix(process, 'muPFIsoValueGamma04', postfix).clone()
+  isoValMuonWithPhotonsDR04.deposits[0].deltaR = 0.4
+  setattr(process,'isoValMuonWithPhotonsDR04'+postfix,isoValMuonWithPhotonsDR04)
+  getattr( process, 'patPF2PATSequence' + postfix ).replace(getattr(process, 'muPFIsoValueGamma04'+postfix),
+                                                            getattr(process, 'muPFIsoValueGamma04'+postfix)+getattr(process, 'isoValMuonWithPhotonsDR04'+postfix)
+                                                            )
+  #Muon, PU
+  isoValMuonWithPUDR04 = applyPostfix(process, 'muPFIsoValuePU04', postfix).clone()
+  isoValMuonWithPUDR04.deposits[0].deltaR = 0.4
+  setattr(process,'isoValMuonWithPUDR04'+postfix,isoValMuonWithPUDR04)
+  getattr( process, 'patPF2PATSequence' + postfix ).replace(getattr(process, 'muPFIsoValuePU04'+postfix),
+                                                            getattr(process, 'muPFIsoValuePU04'+postfix)+getattr(process, 'isoValMuonWithPUDR04'+postfix)
+                                                            )
+  applyPostfix(process,'patMuons',postfix).isolationValues.user = cms.VInputTag("isoValMuonWithChargedDR03"+postfix
+                                                                                , "isoValMuonWithNeutralDR03"+postfix
+                                                                                , "isoValMuonWithPhotonsDR03"+postfix
+                                                                                , "isoValMuonWithPUDR03"+postfix                                                     
+                                                                                , "isoValMuonWithChargedDR04"+postfix
+                                                                                , "isoValMuonWithNeutralDR04"+postfix
+                                                                                , "isoValMuonWithPhotonsDR04"+postfix
+                                                                                , "isoValMuonWithPUDR04"+postfix                                                    
+    )
+
+  #Electron, Charged
+  isoValElectronWithChargedDR03 = applyPostfix(process, 'elPFIsoValueCharged03PFId', postfix).clone()
+  isoValElectronWithChargedDR03.deposits[0].deltaR = 0.3
+  setattr(process,'isoValElectronWithChargedDR03'+postfix,isoValElectronWithChargedDR03)
+  getattr( process, 'patPF2PATSequence' + postfix ).replace(getattr(process, 'elPFIsoValueCharged03PFId'+postfix),
+                                                            getattr(process, 'elPFIsoValueCharged03PFId'+postfix)+getattr(process, 'isoValElectronWithChargedDR03'+postfix)
+                                                            )
+  #Electron, Neutral
+  isoValElectronWithNeutralDR03 = applyPostfix(process, 'elPFIsoValueNeutral03PFId', postfix).clone()
+  isoValElectronWithNeutralDR03.deposits[0].deltaR = 0.3
+  setattr(process,'isoValElectronWithNeutralDR03'+postfix,isoValElectronWithNeutralDR03)
+  getattr( process, 'patPF2PATSequence' + postfix ).replace(getattr(process, 'elPFIsoValueNeutral03PFId'+postfix),
+                                                            getattr(process, 'elPFIsoValueNeutral03PFId'+postfix)+getattr(process, 'isoValElectronWithNeutralDR03'+postfix)
+                                                            )
+  #Electron, Photons
+  isoValElectronWithPhotonsDR03 = applyPostfix(process, 'elPFIsoValueGamma03PFId', postfix).clone()
+  isoValElectronWithPhotonsDR03.deposits[0].deltaR = 0.3
+  setattr(process,'isoValElectronWithPhotonsDR03'+postfix,isoValElectronWithPhotonsDR03)
+  getattr( process, 'patPF2PATSequence' + postfix ).replace(getattr(process, 'elPFIsoValueGamma03PFId'+postfix),
+                                                            getattr(process, 'elPFIsoValueGamma03PFId'+postfix)+getattr(process, 'isoValElectronWithPhotonsDR03'+postfix)
+                                                            )
+  #Electron, PU
+  isoValElectronWithPUDR03 = applyPostfix(process, 'elPFIsoValuePU03PFId', postfix).clone()
+  isoValElectronWithPUDR03.deposits[0].deltaR = 0.3
+  setattr(process,'isoValElectronWithPUDR03'+postfix,isoValElectronWithPUDR03)
+  getattr( process, 'patPF2PATSequence' + postfix ).replace(getattr(process, 'elPFIsoValuePU03PFId'+postfix),
+                                                            getattr(process, 'elPFIsoValuePU03PFId'+postfix)+getattr(process, 'isoValElectronWithPUDR03'+postfix)
+                                                            )
+  
+  #Electron, Charged
+  isoValElectronWithChargedDR04 = applyPostfix(process, 'elPFIsoValueCharged04PFId', postfix).clone()
+  isoValElectronWithChargedDR04.deposits[0].deltaR = 0.4
+  setattr(process,'isoValElectronWithChargedDR04'+postfix,isoValElectronWithChargedDR04)
+  getattr( process, 'patPF2PATSequence' + postfix ).replace(getattr(process, 'elPFIsoValueCharged04PFId'+postfix),
+                                                            getattr(process, 'elPFIsoValueCharged04PFId'+postfix)+getattr(process, 'isoValElectronWithChargedDR04'+postfix)
+                                                            )
+  #Electron, Neutral
+  isoValElectronWithNeutralDR04 = applyPostfix(process, 'elPFIsoValueNeutral04PFId', postfix).clone()
+  isoValElectronWithNeutralDR04.deposits[0].deltaR = 0.4
+  setattr(process,'isoValElectronWithNeutralDR04'+postfix,isoValElectronWithNeutralDR04)
+  getattr( process, 'patPF2PATSequence' + postfix ).replace(getattr(process, 'elPFIsoValueNeutral04PFId'+postfix),
+                                                            getattr(process, 'elPFIsoValueNeutral04PFId'+postfix)+getattr(process, 'isoValElectronWithNeutralDR04'+postfix)
+                                                            )
+  #Electron, Photons
+  isoValElectronWithPhotonsDR04 = applyPostfix(process, 'elPFIsoValueGamma04PFId', postfix).clone()
+  isoValElectronWithPhotonsDR04.deposits[0].deltaR = 0.4
+  setattr(process,'isoValElectronWithPhotonsDR04'+postfix,isoValElectronWithPhotonsDR04)
+  getattr( process, 'patPF2PATSequence' + postfix ).replace(getattr(process, 'elPFIsoValueGamma04PFId'+postfix),
+                                                            getattr(process, 'elPFIsoValueGamma04PFId'+postfix)+getattr(process, 'isoValElectronWithPhotonsDR04'+postfix)
+                                                            )
+  #Electron, PU
+  isoValElectronWithPUDR04 = applyPostfix(process, 'elPFIsoValuePU04PFId', postfix).clone()
+  isoValElectronWithPUDR04.deposits[0].deltaR = 0.4
+  setattr(process,'isoValElectronWithPUDR04'+postfix,isoValElectronWithPUDR04)
+  getattr( process, 'patPF2PATSequence' + postfix ).replace(getattr(process, 'elPFIsoValuePU04PFId'+postfix),
+                                                            getattr(process, 'elPFIsoValuePU04PFId'+postfix)+getattr(process, 'isoValElectronWithPUDR04'+postfix)
+                                                            )
+ 
+  applyPostfix(process,'patElectrons',postfix).isolationValues.user = cms.VInputTag("isoValElectronWithChargedDR03"+postfix
+                                                                                    , "isoValElectronWithNeutralDR03"+postfix
+                                                                                    , "isoValElectronWithPhotonsDR03"+postfix
+                                                                                    , "isoValElectronWithPUDR03"+postfix
+                                                                                    , "isoValElectronWithChargedDR04"+postfix
+                                                                                    , "isoValElectronWithNeutralDR04"+postfix
+                                                                                    , "isoValElectronWithPhotonsDR04"+postfix
+                                                                                    , "isoValElectronWithPUDR04"+postfix
+    )
+
+  
+  from PhysicsTools.PatAlgos.tools.pfTools import adaptPFMuons
+  from PhysicsTools.PatAlgos.tools.pfTools import adaptPFElectrons
+
+  ## Muons
+  pfIsolatedMuonsLoose = applyPostfix(process, 'pfIsolatedMuons', postfix).clone()
+  pfIsolatedMuonsLoose.isolationCut = cms.double(999.0)
+  pfIsolatedMuonsLoose.combinedIsolationCut = cms.double(999.0)
+  setattr(process,'pfIsolatedMuonsLoose'+postfix,pfIsolatedMuonsLoose)
+
+  patMuonsLoose = applyPostfix(process, 'patMuons', postfix).clone()
+  patMuonsLoose.addResolutions = cms.bool(False)
+  patMuonsLoose.pfMuonSource = cms.InputTag( 'pfIsolatedMuonsLoose' + postfix )
+  patMuonsLoose.genParticleMatch = cms.InputTag( 'muonMatchLoose' + postfix )
+
+  setattr(process,'patMuonsLoose'+postfix,patMuonsLoose)
+
+  adaptPFMuons( process, getattr(process, 'patMuonsLoose'+postfix), postfix )
+
+  getattr(process, 'patMuonsLoose'+postfix ).isolationValues.user = cms.VInputTag("isoValMuonWithChargedDR03"+postfix
+                                                                                  , "isoValMuonWithNeutralDR03"+postfix
+                                                                                  , "isoValMuonWithPhotonsDR03"+postfix                                                                                                                                     , "isoValMuonWithPUDR03"+postfix                                                        
+                                                                                  , "isoValMuonWithChargedDR04"+postfix
+                                                                                  , "isoValMuonWithNeutralDR04"+postfix
+                                                                                  , "isoValMuonWithPhotonsDR04"+postfix                                                                                                                                     , "isoValMuonWithPUDR04"+postfix                                                    
+    )
+  getattr(process, 'patMuonsLoose'+postfix ).pfMuonSource = cms.InputTag( 'pfIsolatedMuonsLoose' + postfix )
+
+  muonMatchLoose = applyPostfix(process, 'muonMatch', postfix).clone()
+  muonMatchLoose.src = cms.InputTag( 'pfIsolatedMuonsLoose' + postfix )
+  setattr(process,'muonMatchLoose'+postfix,muonMatchLoose)
+
+  applyPostfix( process, 'muonMatch', postfix ).src = cms.InputTag( 'pfIsolatedMuons' + postfix )
+
+  selectedPatMuonsLoose = applyPostfix(process, 'selectedPatMuons', postfix).clone()
+  selectedPatMuonsLoose.src = cms.InputTag( 'patMuonsLoose' + postfix )
+  selectedPatMuonsLoose.cut = muonCutLoosePF
+  setattr(process,'selectedPatMuonsLoose'+postfix,selectedPatMuonsLoose)
+
+  ## Electrons
+  pfIsolatedElectronsLoose = applyPostfix(process, 'pfIsolatedElectrons', postfix).clone()
+  pfIsolatedElectronsLoose.isolationCut = cms.double(999.0)
+  pfIsolatedElectronsLoose.combinedIsolationCut = cms.double(999.0)
+  setattr(process,'pfIsolatedElectronsLoose'+postfix,pfIsolatedElectronsLoose)
+
+  patElectronsLoose = applyPostfix(process, 'patElectrons', postfix).clone()
+  patElectronsLoose.pfElectronSource = cms.InputTag( 'pfIsolatedElectronsLoose' + postfix )
+
+  setattr(process,'patElectronsLoose'+postfix,patElectronsLoose)
+
+  adaptPFElectrons( process, getattr(process, 'patElectronsLoose'+postfix), postfix )
+
+  getattr(process, 'patElectronsLoose'+postfix ).isolationValues.user = cms.VInputTag("isoValElectronWithChargedDR03"+postfix
+                                                                                      , "isoValElectronWithNeutralDR03"+postfix
+                                                                                      , "isoValElectronWithPhotonsDR03"+postfix
+                                                                                      , "isoValElectronWithPUDR03"+postfix
+                                                                                      , "isoValElectronWithChargedDR04"+postfix
+                                                                                      , "isoValElectronWithNeutralDR04"+postfix
+                                                                                      , "isoValElectronWithPhotonsDR04"+postfix
+                                                                                      , "isoValElectronWithPUDR04"+postfix
+    )
+
+  selectedPatElectronsLoose = applyPostfix(process, 'selectedPatElectrons', postfix).clone()
+  selectedPatElectronsLoose.src = cms.InputTag( 'patElectronsLoose' + postfix )
+  selectedPatElectronsLoose.cut = electronCutLoosePF
+  setattr(process,'selectedPatElectronsLoose'+postfix,selectedPatElectronsLoose)
+
+
+  if not runOnMC:
+    process.looseLeptonSequence = cms.Sequence(
+      getattr(process, 'pfIsolatedMuonsLoose'+postfix) +
+      getattr(process, 'patMuonsLoose'+postfix) +
+      getattr(process, 'selectedPatMuonsLoose'+postfix) +
+      getattr(process, 'pfIsolatedElectronsLoose'+postfix) +
+      getattr(process, 'patElectronsLoose'+postfix) +
+      getattr(process, 'selectedPatElectronsLoose'+postfix)
+      )
+
+  if runOnMC:
+    process.looseLeptonSequence = cms.Sequence(
+      getattr(process, 'pfIsolatedMuonsLoose'+postfix) +
+      getattr(process, 'muonMatchLoose'+postfix) +
+      getattr(process, 'patMuonsLoose'+postfix) +
+      getattr(process, 'selectedPatMuonsLoose'+postfix) +
+      getattr(process, 'pfIsolatedElectronsLoose'+postfix) +
+      getattr(process, 'patElectronsLoose'+postfix) +
+      getattr(process, 'selectedPatElectronsLoose'+postfix)
+      )
+
+
 ### Darren Specific Stuff for BEAN
 ###
 
 process.BNproducer = cms.EDProducer('BEANmaker',
                                     calometTag = cms.InputTag("none"),
                                     pfmetTag = cms.InputTag("patMETsPFlow"),
+                                    pfmetTag_type1correctedRECO = cms.InputTag("pfType1CorrectedMet"),
+                                    pfmetTag_uncorrectedPF2PAT  = cms.InputTag("patPFMetPFlow"),
+                                    pfmetTag_uncorrectedRECO    = cms.InputTag("pfMETPFlow"),
                                     tcmetTag = cms.InputTag("none"),
                                     eleTag = cms.InputTag("selectedPatElectrons"),
-                                    pfeleTag = cms.InputTag("selectedPatElectronsPFlow"),
+                                    pfeleTag = cms.InputTag("selectedPatElectronsLoosePFlow"),
                                     genParticleTag = cms.InputTag("genParticles"),
                                     calojetTag = cms.InputTag("none"),
-                                    #pfjetTag = cms.InputTag("none"),
                                     pfjetTag = cms.InputTag("selectedPatJetsPFlow"),
                                     genjetTag = cms.InputTag("ak5GenJets"),
                                     muonTag = cms.InputTag("selectedPatMuons"),
-                                    pfmuonTag = cms.InputTag("selectedPatMuonsPFlow"),
+                                    pfmuonTag = cms.InputTag("selectedPatMuonsLoosePFlow"),
                                     cocktailmuonTag = cms.InputTag("none"),
                                     photonTag = cms.InputTag("none"),
                                     EBsuperclusterTag = cms.InputTag("correctedHybridSuperClusters"),
@@ -825,6 +1060,7 @@ process.BNproducer = cms.EDProducer('BEANmaker',
                                     minJetPt = cms.double(10),
                                     minTrackPt = cms.double(10),
                                     verbose = cms.bool(True),
+                                    fillTrackHitInfo = cms.bool(False), 
                                     sample = cms.int32(sampleNumber),
                                     maxAbsZ = cms.untracked.double(24)
                                     )
@@ -873,7 +1109,7 @@ process.puJetIdChs.jets = 'selectedPatJetsPFlow'
 process.puJetMvaChs.vertexes = 'goodOfflinePrimaryVertices'
 process.puJetMvaChs.jets = 'selectedPatJetsPFlow'
 
-  
+
 # The additional sequence
 
 if runStandardPAT:
@@ -1054,6 +1290,7 @@ if runPF2PAT:
   if rerunPFTau:
     pAddPF += process.PFTau
   pPF += getattr( process, 'patPF2PATSequence' + postfix )
+  pPF += process.looseLeptonSequence
   pPF += getattr( process, 'patAddOnSequence' + postfix )
   pPF += process.puJetIdSqeuenceChs #Mispelled to match pujetidsequence_cff.py
   pPF += process.patConversions
