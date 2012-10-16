@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.17 2012/10/03 19:51:20 jkolb Exp $
+// $Id: BEANmaker.cc,v 1.19 2012/10/08 03:38:53 puigh Exp $
 //
 //
 
@@ -135,6 +135,10 @@
 #include "Muon/MuonAnalysisTools/interface/MuonEffectiveArea.h"
 #include "DataFormats/MuonReco/interface/MuonPFIsolation.h"
 
+#include "CMGTools/External/interface/PileupJetIdentifier.h"
+
+#include "NtupleMaker/BEANmaker/interface/AnglesUtil.h"
+
 #include <vector>
 #include <map>
 #include <string>
@@ -204,7 +208,6 @@ class BEANmaker : public edm::EDProducer {
   edm::InputTag reducedBarrelRecHitCollection_;
   edm::InputTag reducedEndcapRecHitCollection_;
 
-  
 
   std::string hltProcessName_ ;
 
@@ -719,6 +722,16 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.getByLabel(pvTag_,vtxHandle);
    reco::VertexCollection vtxs = *vtxHandle;
 
+   reco::VertexCollection vertexCollection = *(vtxHandle.product());
+   //-- primary vtx 
+   //   require basic quality cuts on the vertexes
+   reco::VertexCollection::const_iterator ivtx = vertexCollection.begin();
+   while( ivtx != vertexCollection.end() && ( ivtx->isFake() || ivtx->ndof() < 4 ) ) {
+     ++ivtx;
+   }
+   if( ivtx == vertexCollection.end() ) { ivtx = vertexCollection.begin(); }
+   const reco::Vertex * vtx2  = &*(ivtx);
+  
 
    bool GoodVertex = false;
 
@@ -1145,9 +1158,6 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyPfelectron.puChargedHadronIsoDR04 = pfele->userIso(7);
 
        MyPfelectron.rhoPrime = std::max(rho_event, 0.0);
-       MyPfelectron.AEffDr03 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso03, pfele->eta(), ElectronEffectiveArea::kEleEAData2011);
-       MyPfelectron.AEffDr04 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso04, pfele->eta(), ElectronEffectiveArea::kEleEAData2011);  
-
 
        MyPfelectron.trackIso = pfele->trackIso();
        MyPfelectron.ecalIso = pfele->ecalIso();
@@ -1189,6 +1199,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyPfelectron.IPError = pfele->edB(pat::Electron::PV3D);
 
        double caloenergy = -1;
+       double pfeleEta = pfele->eta();
 
        if( (pfele->superCluster().isAvailable()) ){
 	 double eMax    = lazyTools.eMax(    *(pfele->superCluster()) );
@@ -1216,6 +1227,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 MyPfelectron.scEta = pfele->superCluster()->position().eta();
 	 MyPfelectron.scPhi = pfele->superCluster()->position().phi();
 	 MyPfelectron.scZ = pfele->superCluster()->position().Z();
+
+	 pfeleEta = pfele->superCluster()->position().eta();
 
 	 double seedE = -999, seedTime = -999;
 	 int seedRecoFlag = -999;
@@ -1366,6 +1379,15 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
        MyPfelectron.isHEEP = ( isHEEP ) ? 1 : 0;
        MyPfelectron.isHEEPnoEt = ( isHEEPnoEt ) ? 1 : 0;
+
+       if( sample_<0 ){
+	 MyPfelectron.AEffDr03 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso03, pfeleEta, ElectronEffectiveArea::kEleEAData2012);
+	 MyPfelectron.AEffDr04 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso04, pfeleEta, ElectronEffectiveArea::kEleEAData2012);  
+       }
+       else {
+	 MyPfelectron.AEffDr03 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso03, pfeleEta, ElectronEffectiveArea::kEleEAFall11MC);
+	 MyPfelectron.AEffDr04 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso04, pfeleEta, ElectronEffectiveArea::kEleEAFall11MC); 
+       }
 
        bnpfelectrons->push_back(MyPfelectron);
 
@@ -1559,10 +1581,133 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    std::auto_ptr<BNjetCollection> bnpfjets(new BNjetCollection);
    if( producePFJet ){
      edm::View<pat::Jet> pfjets = *pfjetHandle;
+     std::vector<PFCandidatePtr> PFJetPart;
+
+     //full
+     Handle<ValueMap<float> > puJetIdMVA_full;
+     iEvent.getByLabel("puJetMvaChs","fullDiscriminant",puJetIdMVA_full);
+     Handle<ValueMap<int> > puJetIdFlag_full;
+     iEvent.getByLabel("puJetMvaChs","fullId",puJetIdFlag_full);
+
+     //simple
+     Handle<ValueMap<float> > puJetIdMVA_simple;
+     iEvent.getByLabel("puJetMvaChs","simpleDiscriminant",puJetIdMVA_simple);
+     Handle<ValueMap<int> > puJetIdFlag_simple;
+     iEvent.getByLabel("puJetMvaChs","simpleId",puJetIdFlag_simple);
+
+     //cutbased
+     Handle<ValueMap<float> > puJetIdMVA_cutbased;
+     iEvent.getByLabel("puJetMvaChs","cutbasedDiscriminant",puJetIdMVA_cutbased);
+     Handle<ValueMap<int> > puJetIdFlag_cutbased;
+     iEvent.getByLabel("puJetMvaChs","cutbasedId",puJetIdFlag_cutbased);
 
      for( edm::View<pat::Jet>::const_iterator pfjet = pfjets.begin(); pfjet != pfjets.end(); ++ pfjet ) {
 
        if( !(pfjet->pt()>minJetPt_) ) continue;
+
+       BNjet MyPfjet;
+
+       unsigned int idx = pfjet-pfjets.begin();
+
+       float mva_full  = (*puJetIdMVA_full)[pfjets.refAt(idx)];
+       int idflag_full = (*puJetIdFlag_full)[pfjets.refAt(idx)];
+
+       float mva_simple  = (*puJetIdMVA_simple)[pfjets.refAt(idx)];
+       int idflag_simple = (*puJetIdFlag_simple)[pfjets.refAt(idx)];
+
+       float mva_cutbased  = (*puJetIdMVA_cutbased)[pfjets.refAt(idx)];
+       int idflag_cutbased = (*puJetIdFlag_cutbased)[pfjets.refAt(idx)];
+
+       bool passTight_full=false, passMedium_full=false, passLoose_full=false;
+       if( ( ( idflag_full & (1 << 0) ) != 0 ) ) passTight_full  = true;
+       if( ( ( idflag_full & (1 << 1) ) != 0 ) ) passMedium_full = true;
+       if( ( ( idflag_full & (1 << 2) ) != 0 ) ) passLoose_full = true;
+
+       bool passTight_simple=false, passMedium_simple=false, passLoose_simple=false;
+       if( ( ( idflag_simple & (1 << 0) ) != 0 ) ) passTight_simple  = true;
+       if( ( ( idflag_simple & (1 << 1) ) != 0 ) ) passMedium_simple = true;
+       if( ( ( idflag_simple & (1 << 2) ) != 0 ) ) passLoose_simple = true;
+
+       bool passTight_cutbased=false, passMedium_cutbased=false, passLoose_cutbased=false;
+       if( ( ( idflag_cutbased & (1 << 0) ) != 0 ) ) passTight_cutbased  = true;
+       if( ( ( idflag_cutbased & (1 << 1) ) != 0 ) ) passMedium_cutbased = true;
+       if( ( ( idflag_cutbased & (1 << 2) ) != 0 ) ) passLoose_cutbased = true;
+
+       // printf("  ===> jet %d,\t pt = %4.1f,\t eta = %4.2f \n", idx, pfjet->pt(), pfjet->eta() );
+       // printf("\t\t\t mva_full = %4.3f,\t idflag_full = %d,\t passTight_full = %d,\t passMedium_full = %d,\t passLoose_full = %d \n",
+       // 	      mva_full, idflag_full, (passTight_full)?1:0, (passMedium_full)?1:0, (passLoose_full)?1:0 );
+       // printf("\t\t\t mva_simp = %4.3f,\t idflag_simp = %d,\t passTight_simp = %d,\t passMedium_simp = %d,\t passLoose_simp = %d \n",
+       // 	      mva_simple, idflag_simple, (passTight_simple)?1:0, (passMedium_simple)?1:0, (passLoose_simple)?1:0 );
+       // printf("\t\t\t mva_cutb = %4.3f,\t idflag_cutb = %d,\t passTight_cutb = %d,\t passMedium_cutb = %d,\t passLoose_cutb = %d \n",
+       // 	      mva_cutbased, idflag_cutbased, (passTight_cutbased)?1:0, (passMedium_cutbased)?1:0, (passLoose_cutbased)?1:0 );
+
+       MyPfjet.puJetMVA_full     = mva_full;
+       MyPfjet.puJetMVA_simple   = mva_simple;
+       MyPfjet.puJetMVA_cutbased = mva_cutbased;
+
+       MyPfjet.puJetId_full     = idflag_full;
+       MyPfjet.puJetId_simple   = idflag_simple;
+       MyPfjet.puJetId_cutbased = idflag_cutbased;
+
+       MyPfjet.puJetId_tight_full     = (passTight_full)?1:0;
+       MyPfjet.puJetId_tight_simple   = (passTight_simple)?1:0;
+       MyPfjet.puJetId_tight_cutbased = (passTight_cutbased)?1:0;
+
+       MyPfjet.puJetId_medium_full     = (passMedium_full)?1:0;
+       MyPfjet.puJetId_medium_simple   = (passMedium_simple)?1:0;
+       MyPfjet.puJetId_medium_cutbased = (passMedium_cutbased)?1:0;
+
+       MyPfjet.puJetId_loose_full     = (passLoose_full)?1:0;
+       MyPfjet.puJetId_loose_simple   = (passLoose_simple)?1:0;
+       MyPfjet.puJetId_loose_cutbased = (passLoose_cutbased)?1:0;
+
+
+       PFJetPart = pfjet->getPFConstituents();
+
+       double rawpt = pfjet->correctedJet(0).pt();
+       double jec = ( rawpt>0. ) ? pfjet->pt()/rawpt : 1.;
+
+       // std::cout << " ====> jet pT = " << pfjet->pt() << ",\t raw pT = " << rawpt << ",\t eta = " << pfjet->eta() << ",\t phi = " << pfjet->phi()
+       // 		 << ",\t vertex = ("<< pfjet->vx() << "," << pfjet->vy() << "," << pfjet->vz() << ")"
+       // 		 << ",\t number of PFCandidates = " << PFJetPart.size() << std::endl;
+       double pTjet = rawpt;//pfjet->pt();
+       double DRmean=0, DR2mean=0., pTsum=0.;
+       for(UInt_t j=0;j<PFJetPart.size();j++){
+	 //energy = PFJetPart[j]->p4().energy();
+	 double dRcand = kinem::delta_R(pfjet->eta(),pfjet->phi(),PFJetPart[j]->eta(),PFJetPart[j]->phi());
+	 double pTcand = PFJetPart[j]->pt();
+	 double candPtDr = pTcand * dRcand;
+	 //printf("  j = %d,\t pt = %4.3f,\t eta = %4.3f,\t phi = %4.3f,\t type = %d, vertex = (%4.3f,%4.3f,%4.3f), dR = %4.3f \n",
+		// j,PFJetPart[j]->pt(),PFJetPart[j]->eta(),PFJetPart[j]->phi(),PFJetPart[j]->particleId(),
+		// PFJetPart[j]->vx(),PFJetPart[j]->vy(),PFJetPart[j]->vz(),dRcand);
+	 DRmean  += candPtDr;
+	 DR2mean += candPtDr * candPtDr;
+	 pTsum   += pTcand * pTcand;
+       }
+       DRmean  /= pTjet;
+       DR2mean /= pTsum;
+
+       //printf(" ==> DRmean = %4.3f,\t DR2mean = %4.3f \n", DRmean, DR2mean);
+
+       MyPfjet.dZ = 1;
+       MyPfjet.dR2Mean = DR2mean;
+       MyPfjet.dRMean = DRmean;
+       MyPfjet.frac01 = 1;
+       MyPfjet.frac02 = 1;
+       MyPfjet.frac03 = 1;
+       MyPfjet.frac04 = 1;
+       MyPfjet.frac05 = 1;
+       MyPfjet.frac06 = 1;
+       MyPfjet.frac07 = 1;
+       MyPfjet.beta = 1;
+       MyPfjet.betaStar = 1;
+       MyPfjet.betaClassic = 1;
+       MyPfjet.betaStarClassic = 1;
+       MyPfjet.ptD = 1;
+       MyPfjet.nvtx = 1;
+       MyPfjet.d0 = 1;
+
+       MyPfjet.Upt = rawpt;
 
        double unc = 1., JECuncUp = 1., JECuncDown = 1.; // JEC uncertainties only defined for jets with |eta| < 5.5 and pt > 9 GeV (2011 data)
        if( pfjet->pt()>9. && fabs(pfjet->eta())<5.0 ){
@@ -1574,8 +1719,6 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 jecUnc_PF->setJetPt(pfjet->pt());// the uncertainty is a function of the corrected pt
 	 JECuncDown = jecUnc_PF->getUncertainty(false); //up variation
        }
-
-       BNjet MyPfjet;
 
        // general kinematic variables
        MyPfjet.energy = pfjet->energy();
@@ -1982,8 +2125,14 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyPfmuon.puChargedHadronIsoDR04 = pfmuon->userIso(7);
 
        MyPfmuon.rhoPrime = std::max(rho_event, 0.0);
-       MyPfmuon.AEffDr03 = MuonEffectiveArea::GetMuonEffectiveArea(MuonEffectiveArea::kMuGammaAndNeutralHadronIso03, pfmuon->eta(), MuonEffectiveArea::kMuEAData2011);
-       MyPfmuon.AEffDr04 = MuonEffectiveArea::GetMuonEffectiveArea(MuonEffectiveArea::kMuGammaAndNeutralHadronIso04, pfmuon->eta(), MuonEffectiveArea::kMuEAData2011);
+       if( sample_<0 ){
+	 MyPfmuon.AEffDr03 = MuonEffectiveArea::GetMuonEffectiveArea(MuonEffectiveArea::kMuGammaAndNeutralHadronIso03, pfmuon->eta(), MuonEffectiveArea::kMuEAData2012);
+	 MyPfmuon.AEffDr04 = MuonEffectiveArea::GetMuonEffectiveArea(MuonEffectiveArea::kMuGammaAndNeutralHadronIso04, pfmuon->eta(), MuonEffectiveArea::kMuEAData2012);
+       }
+       else {
+	 MyPfmuon.AEffDr03 = MuonEffectiveArea::GetMuonEffectiveArea(MuonEffectiveArea::kMuGammaAndNeutralHadronIso03, pfmuon->eta(), MuonEffectiveArea::kMuEAFall11MC);
+	 MyPfmuon.AEffDr04 = MuonEffectiveArea::GetMuonEffectiveArea(MuonEffectiveArea::kMuGammaAndNeutralHadronIso04, pfmuon->eta(), MuonEffectiveArea::kMuEAFall11MC);
+       }
 
        MyPfmuon.pfIsoR03SumChargedHadronPt = pfmuon->pfIsolationR03().sumChargedHadronPt;
        MyPfmuon.pfIsoR03SumNeutralHadronEt = pfmuon->pfIsolationR03().sumNeutralHadronEt;
@@ -2574,11 +2723,17 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
      for(reco::TrackCollection::const_iterator track = tracks.begin(); track!=tracks.end(); ++track ){
 
-       if( track->quality(_trackQuality) ) numhighpurity++;
+       bool isHighPurity = false;
+       if( track->quality(_trackQuality) ){
+	 numhighpurity++;
+	 isHighPurity = true;
+       }
 
        if( !(track->pt()>minTrackPt_) ) continue;
 
        BNtrack MyTrack;
+
+       MyTrack.isHighPurity = ( isHighPurity ) ? 1 : 0;
 
        MyTrack.pt = track->pt();
        MyTrack.px = track->px();
