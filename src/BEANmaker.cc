@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.20 2012/10/16 22:35:28 puigh Exp $
+// $Id: BEANmaker.cc,v 1.21 2012/10/23 15:12:42 abrinke1 Exp $
 //
 //
 
@@ -722,21 +722,11 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.getByLabel(pvTag_,vtxHandle);
    reco::VertexCollection vtxs = *vtxHandle;
 
-   reco::VertexCollection vertexCollection = *(vtxHandle.product());
-   //-- primary vtx 
-   //   require basic quality cuts on the vertexes
-   reco::VertexCollection::const_iterator ivtx = vertexCollection.begin();
-   while( ivtx != vertexCollection.end() && ( ivtx->isFake() || ivtx->ndof() < 4 ) ) {
-     ++ivtx;
-   }
-   if( ivtx == vertexCollection.end() ) { ivtx = vertexCollection.begin(); }
-   const reco::Vertex * vtx2  = &*(ivtx);
-  
 
    bool GoodVertex = false;
 
    int numPVs = 0;
-   double PVz = 0;
+   double PVx=-99,PVy=-99,PVz =-99;
    math::XYZPoint vertexPosition;
    vertexPosition.SetCoordinates(0,0,0);
    std::auto_ptr<BNprimaryvertexCollection> bnpvs(new BNprimaryvertexCollection);
@@ -776,6 +766,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
        if( firstPV && isGood ){
 	 vertexPosition = vtx->position();
+	 PVx = vtx->x();
+	 PVy = vtx->y();
 	 PVz = vtx->z();
 	 firstPV = false;
        }
@@ -1395,13 +1387,13 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
 
 
-   double metJES1corrPx = 0;
-   double metJES1corrPy = 0;
-   double metJES20corrPx = 0;
-   double metJES20corrPy = 0;
-   double UDeltaPx = 0;
-   double UDeltaPy = 0;
-   double USumET = 0;
+   // double metJES1corrPx = 0;
+   // double metJES1corrPy = 0;
+   // double metJES20corrPx = 0;
+   // double metJES20corrPy = 0;
+   // double UDeltaPx = 0;
+   // double UDeltaPy = 0;
+   // double USumET = 0;
 
 
 
@@ -1670,32 +1662,30 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyPfjet.puJetId_loose_cutbased = (passLoose_cutbased)?1:0;
 
 
-       PFJetPart = pfjet->getPFConstituents();
 
        double rawpt = pfjet->correctedJet(0).pt();
-       double jec = ( rawpt>0. ) ? pfjet->pt()/rawpt : 1.;
 
-       // std::cout << " ====> jet pT = " << pfjet->pt() << ",\t raw pT = " << rawpt << ",\t eta = " << pfjet->eta() << ",\t phi = " << pfjet->phi()
-       // 		 << ",\t vertex = ("<< pfjet->vx() << "," << pfjet->vy() << "," << pfjet->vz() << ")"
-       // 		 << ",\t number of PFCandidates = " << PFJetPart.size() << std::endl;
-       double pTjet = rawpt;//pfjet->pt();
-       double DRmean=0, DR2mean=0., pTsum=0.;
+       PFJetPart = pfjet->getPFConstituents();
+
+       double maxCandPt=0;
+       double leadCandVx=-99,leadCandVy=-99,leadCandVz=-99;
        for(UInt_t j=0;j<PFJetPart.size();j++){
-	 //energy = PFJetPart[j]->p4().energy();
-	 double dRcand = kinem::delta_R(pfjet->eta(),pfjet->phi(),PFJetPart[j]->eta(),PFJetPart[j]->phi());
 	 double pTcand = PFJetPart[j]->pt();
-	 double candPtDr = pTcand * dRcand;
-	 //printf("  j = %d,\t pt = %4.3f,\t eta = %4.3f,\t phi = %4.3f,\t type = %d, vertex = (%4.3f,%4.3f,%4.3f), dR = %4.3f \n",
-		// j,PFJetPart[j]->pt(),PFJetPart[j]->eta(),PFJetPart[j]->phi(),PFJetPart[j]->particleId(),
-		// PFJetPart[j]->vx(),PFJetPart[j]->vy(),PFJetPart[j]->vz(),dRcand);
-	 DRmean  += candPtDr;
-	 DR2mean += candPtDr * candPtDr;
-	 pTsum   += pTcand * pTcand;
+	 if( pTcand>maxCandPt ){
+	   maxCandPt = pTcand;
+	   leadCandVx = PFJetPart[j]->vx();
+	   leadCandVy = PFJetPart[j]->vy();
+	   leadCandVz = PFJetPart[j]->vz();
+	 }
        }
-       DRmean  /= pTjet;
-       DR2mean /= pTsum;
 
-       //printf(" ==> DRmean = %4.3f,\t DR2mean = %4.3f \n", DRmean, DR2mean);
+       double leadCandDistFromPV = sqrt( (leadCandVx-PVx)*(leadCandVx-PVx) + (leadCandVy-PVy)*(leadCandVy-PVy) + (leadCandVz-PVz)*(leadCandVz-PVz) );
+
+       MyPfjet.leadCandVx = leadCandVx;
+       MyPfjet.leadCandVy = leadCandVy;
+       MyPfjet.leadCandVz = leadCandVz;
+       MyPfjet.leadCandDistFromPV = leadCandDistFromPV;
+
 
        MyPfjet.dZ = puIdentifier.dZ();
        MyPfjet.dR2Mean = puIdentifier.dR2Mean();
@@ -3196,6 +3186,9 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    MyEvent.BSx = BSx;
    MyEvent.BSy = BSy;
    MyEvent.BSz = BSz;
+   MyEvent.PVx = PVx;
+   MyEvent.PVy = PVy;
+   MyEvent.PVz = PVz;
    MyEvent.run = iEvent.id().run();
    MyEvent.evt = iEvent.id().event();
    MyEvent.lumi = iEvent.luminosityBlock();
@@ -3450,6 +3443,15 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      MyPfmet_type1correctedRECO.phi = pfmetHandle_type1correctedRECO->front().phi();
      MyPfmet_type1correctedRECO.sumET = pfmetHandle_type1correctedRECO->front().sumEt();
 
+     //pfmet specific quantities
+     MyPfmet_type1correctedRECO.NeutralEMFraction = pfmetHandle_type1correctedRECO->front().photonEtFraction();
+     MyPfmet_type1correctedRECO.NeutralHadEtFraction = pfmetHandle_type1correctedRECO->front().neutralHadronEtFraction();
+     MyPfmet_type1correctedRECO.ChargedEMEtFraction = pfmetHandle_type1correctedRECO->front().electronEtFraction();
+     MyPfmet_type1correctedRECO.ChargedHadEtFraction = pfmetHandle_type1correctedRECO->front().chargedHadronEtFraction();
+     MyPfmet_type1correctedRECO.MuonEtFraction = pfmetHandle_type1correctedRECO->front().muonEtFraction();
+     MyPfmet_type1correctedRECO.Type6EtFraction = pfmetHandle_type1correctedRECO->front().HFHadronEtFraction();
+     MyPfmet_type1correctedRECO.Type7EtFraction = pfmetHandle_type1correctedRECO->front().HFEMEtFraction();
+
      double sigmaX2_pf = (pfmetHandle_type1correctedRECO->front()).getSignificanceMatrix()(0,0);
      double sigmaY2_pf = (pfmetHandle_type1correctedRECO->front()).getSignificanceMatrix()(1,1);
      double sigmaXY_pf = (pfmetHandle_type1correctedRECO->front()).getSignificanceMatrix()(0,1);
@@ -3481,7 +3483,15 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      MyPfmet_uncorrectedPF2PAT.corSumET = pfmetHandle_uncorrectedPF2PAT->front().corSumEt();
      MyPfmet_uncorrectedPF2PAT.Upt = pfmetHandle_uncorrectedPF2PAT->front().uncorrectedPt();
      MyPfmet_uncorrectedPF2PAT.Uphi = pfmetHandle_uncorrectedPF2PAT->front().uncorrectedPhi();
-
+     if (pfmetHandle_uncorrectedPF2PAT->front().isPFMET()) { //Appears to always return false
+       MyPfmet_uncorrectedPF2PAT.NeutralEMFraction = pfmetHandle_uncorrectedPF2PAT->front().NeutralEMFraction();
+       MyPfmet_uncorrectedPF2PAT.NeutralHadEtFraction = pfmetHandle_uncorrectedPF2PAT->front().NeutralHadEtFraction();
+       MyPfmet_uncorrectedPF2PAT.ChargedEMEtFraction = pfmetHandle_uncorrectedPF2PAT->front().ChargedEMEtFraction();
+       MyPfmet_uncorrectedPF2PAT.ChargedHadEtFraction = pfmetHandle_uncorrectedPF2PAT->front().ChargedHadEtFraction();
+       MyPfmet_uncorrectedPF2PAT.MuonEtFraction = pfmetHandle_uncorrectedPF2PAT->front().MuonEtFraction();
+       MyPfmet_uncorrectedPF2PAT.Type6EtFraction = pfmetHandle_uncorrectedPF2PAT->front().Type6EtFraction();
+       MyPfmet_uncorrectedPF2PAT.Type7EtFraction = pfmetHandle_uncorrectedPF2PAT->front().Type7EtFraction();
+     }
      double sigmaX2_pf = (pfmetHandle_uncorrectedPF2PAT->front()).getSignificanceMatrix()(0,0);
      double sigmaY2_pf = (pfmetHandle_uncorrectedPF2PAT->front()).getSignificanceMatrix()(1,1);
      double sigmaXY_pf = (pfmetHandle_uncorrectedPF2PAT->front()).getSignificanceMatrix()(0,1);
@@ -3515,6 +3525,15 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      MyPfmet_uncorrectedRECO.py = pfmetHandle_uncorrectedRECO->front().py();
      MyPfmet_uncorrectedRECO.phi = pfmetHandle_uncorrectedRECO->front().phi();
      MyPfmet_uncorrectedRECO.sumET = pfmetHandle_uncorrectedRECO->front().sumEt();
+
+     //pfmet specific quantities
+     MyPfmet_uncorrectedRECO.NeutralEMFraction = pfmetHandle_uncorrectedRECO->front().photonEtFraction();
+     MyPfmet_uncorrectedRECO.NeutralHadEtFraction = pfmetHandle_uncorrectedRECO->front().neutralHadronEtFraction();
+     MyPfmet_uncorrectedRECO.ChargedEMEtFraction = pfmetHandle_uncorrectedRECO->front().electronEtFraction();
+     MyPfmet_uncorrectedRECO.ChargedHadEtFraction = pfmetHandle_uncorrectedRECO->front().chargedHadronEtFraction();
+     MyPfmet_uncorrectedRECO.MuonEtFraction = pfmetHandle_uncorrectedRECO->front().muonEtFraction();
+     MyPfmet_uncorrectedRECO.Type6EtFraction = pfmetHandle_uncorrectedRECO->front().HFHadronEtFraction();
+     MyPfmet_uncorrectedRECO.Type7EtFraction = pfmetHandle_uncorrectedRECO->front().HFEMEtFraction();
 
      double sigmaX2_pf = (pfmetHandle_uncorrectedRECO->front()).getSignificanceMatrix()(0,0);
      double sigmaY2_pf = (pfmetHandle_uncorrectedRECO->front()).getSignificanceMatrix()(1,1);
@@ -3701,11 +3720,11 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
 
    // initialize bx's to invalid value
-   int gtfeBx = -1;
+   //int gtfeBx = -1;
 
    // get info from GTFE DAQ record
    const L1GtfeWord& gtfeWord = gtReadoutRecord->gtfeWord();
-   gtfeBx = gtfeWord.bxNr();
+   //gtfeBx = gtfeWord.bxNr();
    int gtfeActiveBoards = gtfeWord.activeBoards();
 
    ///////////
