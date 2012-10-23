@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.19 2012/10/08 03:38:53 puigh Exp $
+// $Id: BEANmaker.cc,v 1.20 2012/10/16 22:35:28 puigh Exp $
 //
 //
 
@@ -1601,6 +1601,12 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      Handle<ValueMap<int> > puJetIdFlag_cutbased;
      iEvent.getByLabel("puJetMvaChs","cutbasedId",puJetIdFlag_cutbased);
 
+     //puJet ID  MVA inputs
+     Handle<ValueMap<StoredPileupJetIdentifier> > vmap;
+     iEvent.getByLabel("puJetIdChs", vmap);
+
+     PileupJetIdentifier puIdentifier;
+
      for( edm::View<pat::Jet>::const_iterator pfjet = pfjets.begin(); pfjet != pfjets.end(); ++ pfjet ) {
 
        if( !(pfjet->pt()>minJetPt_) ) continue;
@@ -1617,6 +1623,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
        float mva_cutbased  = (*puJetIdMVA_cutbased)[pfjets.refAt(idx)];
        int idflag_cutbased = (*puJetIdFlag_cutbased)[pfjets.refAt(idx)];
+
+       puIdentifier = (*vmap)[pfjets.refAt(idx)];
 
        bool passTight_full=false, passMedium_full=false, passLoose_full=false;
        if( ( ( idflag_full & (1 << 0) ) != 0 ) ) passTight_full  = true;
@@ -1689,23 +1697,23 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
        //printf(" ==> DRmean = %4.3f,\t DR2mean = %4.3f \n", DRmean, DR2mean);
 
-       MyPfjet.dZ = 1;
-       MyPfjet.dR2Mean = DR2mean;
-       MyPfjet.dRMean = DRmean;
-       MyPfjet.frac01 = 1;
-       MyPfjet.frac02 = 1;
-       MyPfjet.frac03 = 1;
-       MyPfjet.frac04 = 1;
-       MyPfjet.frac05 = 1;
-       MyPfjet.frac06 = 1;
-       MyPfjet.frac07 = 1;
-       MyPfjet.beta = 1;
-       MyPfjet.betaStar = 1;
-       MyPfjet.betaClassic = 1;
-       MyPfjet.betaStarClassic = 1;
-       MyPfjet.ptD = 1;
-       MyPfjet.nvtx = 1;
-       MyPfjet.d0 = 1;
+       MyPfjet.dZ = puIdentifier.dZ();
+       MyPfjet.dR2Mean = puIdentifier.dR2Mean();
+       MyPfjet.dRMean = puIdentifier.dRMean();
+       MyPfjet.frac01 = puIdentifier.frac01();
+       MyPfjet.frac02 = puIdentifier.frac02();
+       MyPfjet.frac03 = puIdentifier.frac03();
+       MyPfjet.frac04 = puIdentifier.frac04();
+       MyPfjet.frac05 = puIdentifier.frac05();
+       MyPfjet.frac06 = puIdentifier.frac06();
+       MyPfjet.frac07 = puIdentifier.frac07(); //Always 0
+       MyPfjet.beta = puIdentifier.beta();
+       MyPfjet.betaStar = puIdentifier.betaStar();
+       MyPfjet.betaClassic = puIdentifier.betaClassic();
+       MyPfjet.betaStarClassic = puIdentifier.betaStarClassic();
+       MyPfjet.ptD = puIdentifier.ptD();
+       MyPfjet.nvtx = puIdentifier.nvtx();
+       MyPfjet.d0 = puIdentifier.d0(); //Not declared in class StoredPileupJetIdentifier (PileupJetIdentifier.h) 
 
        MyPfjet.Upt = rawpt;
 
@@ -3399,6 +3407,15 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
      MyPfmet.corSumET = pfmetHandle->front().corSumEt();
      MyPfmet.Upt = pfmetHandle->front().uncorrectedPt();
      MyPfmet.Uphi = pfmetHandle->front().uncorrectedPhi();
+     if (pfmetHandle->front().isPFMET()) { //Appears to always return false
+       MyPfmet.NeutralEMFraction = pfmetHandle->front().NeutralEMFraction();
+       MyPfmet.NeutralHadEtFraction = pfmetHandle->front().NeutralHadEtFraction();
+       MyPfmet.ChargedEMEtFraction = pfmetHandle->front().ChargedEMEtFraction();
+       MyPfmet.ChargedHadEtFraction = pfmetHandle->front().ChargedHadEtFraction();
+       MyPfmet.MuonEtFraction = pfmetHandle->front().MuonEtFraction();
+       MyPfmet.Type6EtFraction = pfmetHandle->front().Type6EtFraction();
+       MyPfmet.Type7EtFraction = pfmetHandle->front().Type7EtFraction();
+     }
 
      double sigmaX2_pf = (pfmetHandle->front()).getSignificanceMatrix()(0,0);
      double sigmaY2_pf = (pfmetHandle->front()).getSignificanceMatrix()(1,1);
