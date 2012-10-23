@@ -38,6 +38,7 @@
 
 <use   name="Geometry/TrackerGeometryBuilder"/>
 <use   name="RecoTracker/TransientTrackingRecHit"/>
+<use   name="CMGTools/External"/>
 <flags   EDM_PLUGIN="1"/>
 <export>
   <lib   name="1"/>
