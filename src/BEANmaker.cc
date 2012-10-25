@@ -985,6 +985,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyElectron.isTrackerDriven = ele->trackerDrivenSeed();
 
        if( (ele->genLepton()) ){
+	 int genId = ele->genLepton()->pdgId();
+
 	 MyElectron.genId = ele->genLepton()->pdgId();
 	 MyElectron.genET = ele->genLepton()->et();
 	 MyElectron.genPT = ele->genLepton()->pt();
@@ -992,11 +994,13 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 MyElectron.genEta = ele->genLepton()->eta();
 	 MyElectron.genCharge = ele->genLepton()->charge();
 
+	 MyElectron.genNumberOfMothers = ele->genLepton()->numberOfMothers();
+
 	 if( (ele->genLepton()->numberOfMothers()>0) ){
 	   const reco::Candidate *ElectronMother = ele->genLepton()->mother();
 	   bool staytrapped = true;
-	   while( (abs(ElectronMother->pdgId())==11 && staytrapped) ){
-	     if( ElectronMother->numberOfMothers()==1 ) ElectronMother = ElectronMother->mother();
+	   while( (ElectronMother->pdgId()==genId && staytrapped) ){
+	     if( ElectronMother->numberOfMothers()>=1 ) ElectronMother = ElectronMother->mother();
 	     else staytrapped = false;
 	   }
        
@@ -1007,7 +1011,138 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   MyElectron.genMotherEta = ElectronMother->eta();
 	   MyElectron.genMotherCharge = ElectronMother->charge();
 	 }
-       }
+
+	 if( (ele->genLepton()->numberOfMothers()>=1) ){
+	   const reco::Candidate *ElectronMother0 = ele->genLepton()->mother(0);
+	   const reco::Candidate *ElectronMother1 = 0;
+
+	   if( (ele->genLepton()->numberOfMothers()>=2) ) ElectronMother1 = ele->genLepton()->mother(1);
+
+	   int mother0id = ElectronMother0->pdgId();
+	   int mother1id = ( ElectronMother1!=0 ) ? ElectronMother1->pdgId() : -99;
+
+	   bool staytrapped = true;
+	   while( (mother0id==genId || mother1id==genId) && staytrapped ){
+	     if( mother0id==genId && (ElectronMother0!=0) ){
+	       if( ElectronMother0->numberOfMothers()>=1 ){
+		 ElectronMother0 = ElectronMother0->mother(0);
+		 mother0id = ElectronMother0->pdgId();
+		 mother1id = -99;
+		 if( ElectronMother0->numberOfMothers()>=2 ){
+		   ElectronMother1 = ElectronMother0->mother(1);
+		   mother1id = ElectronMother1->pdgId();
+		 }
+	       }
+	       else staytrapped = false;
+	     }
+	     else if( mother1id==genId && (ElectronMother1!=0) ){
+	       if( ElectronMother1->numberOfMothers()>=1 ){
+		 ElectronMother1 = ElectronMother1->mother(0);
+		 mother1id = ElectronMother1->pdgId();
+		 mother0id = -99;
+		 if( ElectronMother1->numberOfMothers()>=2 ){
+		   ElectronMother0 = ElectronMother1->mother(1);
+		   mother0id = ElectronMother0->pdgId();
+		 }
+	       }
+	       else staytrapped = false;
+	     }
+	     else staytrapped = false;
+	   }
+
+	   if( mother0id!=-99 ){
+	     MyElectron.genMother0Id = ElectronMother0->pdgId();
+
+	     if( (ElectronMother0->numberOfMothers()>=1) ){
+	       const reco::Candidate *ElectronGrandMother0 = ElectronMother0->mother(0);
+	       const reco::Candidate *ElectronGrandMother1 = 0;
+
+	       if( (ElectronMother0->numberOfMothers()>=2) ) ElectronGrandMother1 = ElectronMother0->mother(1);
+
+	       int gmother0id = ElectronGrandMother0->pdgId();
+	       int gmother1id = ( ElectronGrandMother1!=0 ) ? ElectronGrandMother1->pdgId() : -99;
+
+	       bool staytrapped = true;
+	       while( (gmother0id==mother0id || gmother1id==mother0id) && staytrapped ){
+		 if( gmother0id==mother0id && (ElectronGrandMother0!=0) ){
+		   if( ElectronGrandMother0->numberOfMothers()>=1 ){
+		     ElectronGrandMother0 = ElectronGrandMother0->mother(0);
+		     gmother0id = ElectronGrandMother0->pdgId();
+		     gmother1id = -99;
+		     if( ElectronGrandMother0->numberOfMothers()>=2 ){
+		       ElectronGrandMother1 = ElectronGrandMother0->mother(1);
+		       gmother1id = ElectronGrandMother1->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else if( gmother1id==mother0id && (ElectronGrandMother1!=0) ){
+		   if( ElectronGrandMother1->numberOfMothers()>=1 ){
+		     ElectronGrandMother1 = ElectronGrandMother1->mother(0);
+		     gmother1id = ElectronGrandMother1->pdgId();
+		     gmother0id = -99;
+		     if( ElectronGrandMother1->numberOfMothers()>=2 ){
+		       ElectronGrandMother0 = ElectronGrandMother1->mother(1);
+		       gmother0id = ElectronGrandMother0->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else staytrapped = false;
+	       }
+
+	       MyElectron.genGrandMother00Id = gmother0id;
+	       MyElectron.genGrandMother01Id = gmother1id;
+	     }
+	   }
+	   if( mother1id!=-99 ){
+	     MyElectron.genMother1Id = ElectronMother1->pdgId();
+
+	     if( (ElectronMother1->numberOfMothers()>=1) ){
+	       const reco::Candidate *ElectronGrandMother0 = ElectronMother1->mother(0);
+	       const reco::Candidate *ElectronGrandMother1 = 0;
+
+	       if( (ElectronMother0->numberOfMothers()>=2) ) ElectronGrandMother1 = ElectronMother1->mother(1);
+
+	       int gmother0id = ElectronGrandMother0->pdgId();
+	       int gmother1id = ( ElectronGrandMother1!=0 ) ? ElectronGrandMother1->pdgId() : -99;
+
+	       bool staytrapped = true;
+	       while( (gmother0id==mother1id || gmother1id==mother1id) && staytrapped ){
+		 if( gmother0id==mother1id && (ElectronGrandMother0!=0) ){
+		   if( ElectronGrandMother0->numberOfMothers()>=1 ){
+		     ElectronGrandMother0 = ElectronGrandMother0->mother(0);
+		     gmother0id = ElectronGrandMother0->pdgId();
+		     gmother1id = -99;
+		     if( ElectronGrandMother0->numberOfMothers()>=2 ){
+		       ElectronGrandMother1 = ElectronGrandMother0->mother(1);
+		       gmother1id = ElectronGrandMother1->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else if( gmother1id==mother1id && (ElectronGrandMother1!=0) ){
+		   if( ElectronGrandMother1->numberOfMothers()>=1 ){
+		     ElectronGrandMother1 = ElectronGrandMother1->mother(0);
+		     gmother1id = ElectronGrandMother1->pdgId();
+		     gmother0id = -99;
+		     if( ElectronGrandMother1->numberOfMothers()>=2 ){
+		       ElectronGrandMother0 = ElectronGrandMother1->mother(1);
+		       gmother0id = ElectronGrandMother0->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else staytrapped = false;
+	       }
+
+	       MyElectron.genGrandMother10Id = gmother0id;
+	       MyElectron.genGrandMother11Id = gmother1id;
+	     }
+	   }
+	 }
+
+       }// end check if genLepton
 
        ConversionFinder convFinder;
        ConversionInfo convInfo = convFinder.getConversionInfo(*ele, trackHandle, evt_bField);
@@ -1290,6 +1425,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyPfelectron.isTrackerDriven = pfele->trackerDrivenSeed();
 
        if( (pfele->genLepton()) ){
+	 int genId = pfele->genLepton()->pdgId();
+
 	 MyPfelectron.genId = pfele->genLepton()->pdgId();
 	 MyPfelectron.genET = pfele->genLepton()->et();
 	 MyPfelectron.genPT = pfele->genLepton()->pt();
@@ -1297,11 +1434,13 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 MyPfelectron.genEta = pfele->genLepton()->eta();
 	 MyPfelectron.genCharge = pfele->genLepton()->charge();
 
+	 MyPfelectron.genNumberOfMothers = pfele->genLepton()->numberOfMothers();
+
 	 if( (pfele->genLepton()->numberOfMothers()>0) ){
 	   const reco::Candidate *ElectronMother = pfele->genLepton()->mother();
 	   bool staytrapped = true;
-	   while( (abs(ElectronMother->pdgId())==11 && staytrapped) ){
-	     if( ElectronMother->numberOfMothers()==1 ) ElectronMother = ElectronMother->mother();
+	   while( (ElectronMother->pdgId()==genId && staytrapped) ){
+	     if( ElectronMother->numberOfMothers()>=1 ) ElectronMother = ElectronMother->mother();
 	     else staytrapped = false;
 	   }
        
@@ -1312,7 +1451,139 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   MyPfelectron.genMotherEta = ElectronMother->eta();
 	   MyPfelectron.genMotherCharge = ElectronMother->charge();
 	 }
-       }
+
+	 if( (pfele->genLepton()->numberOfMothers()>=1) ){
+	   const reco::Candidate *ElectronMother0 = pfele->genLepton()->mother(0);
+	   const reco::Candidate *ElectronMother1 = 0;
+
+	   if( (pfele->genLepton()->numberOfMothers()>=2) ) ElectronMother1 = pfele->genLepton()->mother(1);
+
+	   int mother0id = ElectronMother0->pdgId();
+	   int mother1id = ( ElectronMother1!=0 ) ? ElectronMother1->pdgId() : -99;
+
+	   bool staytrapped = true;
+	   while( (mother0id==genId || mother1id==genId) && staytrapped ){
+	     if( mother0id==genId && (ElectronMother0!=0) ){
+	       if( ElectronMother0->numberOfMothers()>=1 ){
+		 ElectronMother0 = ElectronMother0->mother(0);
+		 mother0id = ElectronMother0->pdgId();
+		 mother1id = -99;
+		 if( ElectronMother0->numberOfMothers()>=2 ){
+		   ElectronMother1 = ElectronMother0->mother(1);
+		   mother1id = ElectronMother1->pdgId();
+		 }
+	       }
+	       else staytrapped = false;
+	     }
+	     else if( mother1id==genId && (ElectronMother1!=0) ){
+	       if( ElectronMother1->numberOfMothers()>=1 ){
+		 ElectronMother1 = ElectronMother1->mother(0);
+		 mother1id = ElectronMother1->pdgId();
+		 mother0id = -99;
+		 if( ElectronMother1->numberOfMothers()>=2 ){
+		   ElectronMother0 = ElectronMother1->mother(1);
+		   mother0id = ElectronMother0->pdgId();
+		 }
+	       }
+	       else staytrapped = false;
+	     }
+	     else staytrapped = false;
+	   }
+
+	   if( mother0id!=-99 ){
+	     MyPfelectron.genMother0Id = ElectronMother0->pdgId();
+
+	     if( (ElectronMother0->numberOfMothers()>=1) ){
+	       const reco::Candidate *ElectronGrandMother0 = ElectronMother0->mother(0);
+	       const reco::Candidate *ElectronGrandMother1 = 0;
+
+	       if( (ElectronMother0->numberOfMothers()>=2) ) ElectronGrandMother1 = ElectronMother0->mother(1);
+
+	       int gmother0id = ElectronGrandMother0->pdgId();
+	       int gmother1id = ( ElectronGrandMother1!=0 ) ? ElectronGrandMother1->pdgId() : -99;
+
+	       bool staytrapped = true;
+	       while( (gmother0id==mother0id || gmother1id==mother0id) && staytrapped ){
+		 if( gmother0id==mother0id && (ElectronGrandMother0!=0) ){
+		   if( ElectronGrandMother0->numberOfMothers()>=1 ){
+		     ElectronGrandMother0 = ElectronGrandMother0->mother(0);
+		     gmother0id = ElectronGrandMother0->pdgId();
+		     gmother1id = -99;
+		     if( ElectronGrandMother0->numberOfMothers()>=2 ){
+		       ElectronGrandMother1 = ElectronGrandMother0->mother(1);
+		       gmother1id = ElectronGrandMother1->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else if( gmother1id==mother0id && (ElectronGrandMother1!=0) ){
+		   if( ElectronGrandMother1->numberOfMothers()>=1 ){
+		     ElectronGrandMother1 = ElectronGrandMother1->mother(0);
+		     gmother1id = ElectronGrandMother1->pdgId();
+		     gmother0id = -99;
+		     if( ElectronGrandMother1->numberOfMothers()>=2 ){
+		       ElectronGrandMother0 = ElectronGrandMother1->mother(1);
+		       gmother0id = ElectronGrandMother0->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else staytrapped = false;
+	       }
+
+	       MyPfelectron.genGrandMother00Id = gmother0id;
+	       MyPfelectron.genGrandMother01Id = gmother1id;
+	     }
+	   }
+	   if( mother1id!=-99 ){
+	     MyPfelectron.genMother1Id = ElectronMother1->pdgId();
+
+	     if( (ElectronMother1->numberOfMothers()>=1) ){
+	       const reco::Candidate *ElectronGrandMother0 = ElectronMother1->mother(0);
+	       const reco::Candidate *ElectronGrandMother1 = 0;
+
+	       if( (ElectronMother0->numberOfMothers()>=2) ) ElectronGrandMother1 = ElectronMother1->mother(1);
+
+	       int gmother0id = ElectronGrandMother0->pdgId();
+	       int gmother1id = ( ElectronGrandMother1!=0 ) ? ElectronGrandMother1->pdgId() : -99;
+
+	       bool staytrapped = true;
+	       while( (gmother0id==mother1id || gmother1id==mother1id) && staytrapped ){
+		 if( gmother0id==mother1id && (ElectronGrandMother0!=0) ){
+		   if( ElectronGrandMother0->numberOfMothers()>=1 ){
+		     ElectronGrandMother0 = ElectronGrandMother0->mother(0);
+		     gmother0id = ElectronGrandMother0->pdgId();
+		     gmother1id = -99;
+		     if( ElectronGrandMother0->numberOfMothers()>=2 ){
+		       ElectronGrandMother1 = ElectronGrandMother0->mother(1);
+		       gmother1id = ElectronGrandMother1->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else if( gmother1id==mother1id && (ElectronGrandMother1!=0) ){
+		   if( ElectronGrandMother1->numberOfMothers()>=1 ){
+		     ElectronGrandMother1 = ElectronGrandMother1->mother(0);
+		     gmother1id = ElectronGrandMother1->pdgId();
+		     gmother0id = -99;
+		     if( ElectronGrandMother1->numberOfMothers()>=2 ){
+		       ElectronGrandMother0 = ElectronGrandMother1->mother(1);
+		       gmother0id = ElectronGrandMother0->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else staytrapped = false;
+	       }
+
+	       MyPfelectron.genGrandMother10Id = gmother0id;
+	       MyPfelectron.genGrandMother11Id = gmother1id;
+	     }
+	   }
+	 }
+
+       }// end check if genLepton
+
 
        ConversionFinder convFinder;
        ConversionInfo convInfo = convFinder.getConversionInfo(*pfele, trackHandle, evt_bField);
@@ -1681,6 +1952,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
        double leadCandDistFromPV = sqrt( (leadCandVx-PVx)*(leadCandVx-PVx) + (leadCandVy-PVy)*(leadCandVy-PVy) + (leadCandVz-PVz)*(leadCandVz-PVz) );
 
+       MyPfjet.leadCandPt = maxCandPt;
+
        MyPfjet.leadCandVx = leadCandVx;
        MyPfjet.leadCandVy = leadCandVy;
        MyPfjet.leadCandVz = leadCandVz;
@@ -2045,6 +2318,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        }
 
        if( (muon->genLepton()) ){
+	 int genId = muon->genLepton()->pdgId();
+
 	 MyMuon.genId = muon->genLepton()->pdgId();
 	 MyMuon.genET = muon->genLepton()->et();
 	 MyMuon.genPT = muon->genLepton()->pt();
@@ -2052,11 +2327,13 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 MyMuon.genEta = muon->genLepton()->eta();
 	 MyMuon.genCharge = muon->genLepton()->charge();
 
+	 MyMuon.genNumberOfMothers = muon->genLepton()->numberOfMothers();
+
 	 if( (muon->genLepton()->numberOfMothers()>0) ){
 	   const reco::Candidate *MuonMother = muon->genLepton()->mother();
 	   bool staytrapped = true;
-	   while( (abs(MuonMother->pdgId())==13 && staytrapped) ){
-	     if( MuonMother->numberOfMothers()==1 ) MuonMother = MuonMother->mother();
+	   while( (MuonMother->pdgId()==genId && staytrapped) ){
+	     if( MuonMother->numberOfMothers()>=1 ) MuonMother = MuonMother->mother();
 	     else staytrapped = false;
 	   }
        
@@ -2067,7 +2344,138 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   MyMuon.genMotherEta = MuonMother->eta();
 	   MyMuon.genMotherCharge = MuonMother->charge();
 	 }
-       }
+
+	 if( (muon->genLepton()->numberOfMothers()>=1) ){
+	   const reco::Candidate *MuonMother0 = muon->genLepton()->mother(0);
+	   const reco::Candidate *MuonMother1 = 0;
+
+	   if( (muon->genLepton()->numberOfMothers()>=2) ) MuonMother1 = muon->genLepton()->mother(1);
+
+	   int mother0id = MuonMother0->pdgId();
+	   int mother1id = ( MuonMother1!=0 ) ? MuonMother1->pdgId() : -99;
+
+	   bool staytrapped = true;
+	   while( (mother0id==genId || mother1id==genId) && staytrapped ){
+	     if( mother0id==genId && (MuonMother0!=0) ){
+	       if( MuonMother0->numberOfMothers()>=1 ){
+		 MuonMother0 = MuonMother0->mother(0);
+		 mother0id = MuonMother0->pdgId();
+		 mother1id = -99;
+		 if( MuonMother0->numberOfMothers()>=2 ){
+		   MuonMother1 = MuonMother0->mother(1);
+		   mother1id = MuonMother1->pdgId();
+		 }
+	       }
+	       else staytrapped = false;
+	     }
+	     else if( mother1id==genId && (MuonMother1!=0) ){
+	       if( MuonMother1->numberOfMothers()>=1 ){
+		 MuonMother1 = MuonMother1->mother(0);
+		 mother1id = MuonMother1->pdgId();
+		 mother0id = -99;
+		 if( MuonMother1->numberOfMothers()>=2 ){
+		   MuonMother0 = MuonMother1->mother(1);
+		   mother0id = MuonMother0->pdgId();
+		 }
+	       }
+	       else staytrapped = false;
+	     }
+	     else staytrapped = false;
+	   }
+
+	   if( mother0id!=-99 ){
+	     MyMuon.genMother0Id = MuonMother0->pdgId();
+
+	     if( (MuonMother0->numberOfMothers()>=1) ){
+	       const reco::Candidate *MuonGrandMother0 = MuonMother0->mother(0);
+	       const reco::Candidate *MuonGrandMother1 = 0;
+
+	       if( (MuonMother0->numberOfMothers()>=2) ) MuonGrandMother1 = MuonMother0->mother(1);
+
+	       int gmother0id = MuonGrandMother0->pdgId();
+	       int gmother1id = ( MuonGrandMother1!=0 ) ? MuonGrandMother1->pdgId() : -99;
+
+	       bool staytrapped = true;
+	       while( (gmother0id==mother0id || gmother1id==mother0id) && staytrapped ){
+		 if( gmother0id==mother0id && (MuonGrandMother0!=0) ){
+		   if( MuonGrandMother0->numberOfMothers()>=1 ){
+		     MuonGrandMother0 = MuonGrandMother0->mother(0);
+		     gmother0id = MuonGrandMother0->pdgId();
+		     gmother1id = -99;
+		     if( MuonGrandMother0->numberOfMothers()>=2 ){
+		       MuonGrandMother1 = MuonGrandMother0->mother(1);
+		       gmother1id = MuonGrandMother1->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else if( gmother1id==mother0id && (MuonGrandMother1!=0) ){
+		   if( MuonGrandMother1->numberOfMothers()>=1 ){
+		     MuonGrandMother1 = MuonGrandMother1->mother(0);
+		     gmother1id = MuonGrandMother1->pdgId();
+		     gmother0id = -99;
+		     if( MuonGrandMother1->numberOfMothers()>=2 ){
+		       MuonGrandMother0 = MuonGrandMother1->mother(1);
+		       gmother0id = MuonGrandMother0->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else staytrapped = false;
+	       }
+
+	       MyMuon.genGrandMother00Id = gmother0id;
+	       MyMuon.genGrandMother01Id = gmother1id;
+	     }
+	   }
+	   if( mother1id!=-99 ){
+	     MyMuon.genMother1Id = MuonMother1->pdgId();
+
+	     if( (MuonMother1->numberOfMothers()>=1) ){
+	       const reco::Candidate *MuonGrandMother0 = MuonMother1->mother(0);
+	       const reco::Candidate *MuonGrandMother1 = 0;
+
+	       if( (MuonMother0->numberOfMothers()>=2) ) MuonGrandMother1 = MuonMother1->mother(1);
+
+	       int gmother0id = MuonGrandMother0->pdgId();
+	       int gmother1id = ( MuonGrandMother1!=0 ) ? MuonGrandMother1->pdgId() : -99;
+
+	       bool staytrapped = true;
+	       while( (gmother0id==mother1id || gmother1id==mother1id) && staytrapped ){
+		 if( gmother0id==mother1id && (MuonGrandMother0!=0) ){
+		   if( MuonGrandMother0->numberOfMothers()>=1 ){
+		     MuonGrandMother0 = MuonGrandMother0->mother(0);
+		     gmother0id = MuonGrandMother0->pdgId();
+		     gmother1id = -99;
+		     if( MuonGrandMother0->numberOfMothers()>=2 ){
+		       MuonGrandMother1 = MuonGrandMother0->mother(1);
+		       gmother1id = MuonGrandMother1->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else if( gmother1id==mother1id && (MuonGrandMother1!=0) ){
+		   if( MuonGrandMother1->numberOfMothers()>=1 ){
+		     MuonGrandMother1 = MuonGrandMother1->mother(0);
+		     gmother1id = MuonGrandMother1->pdgId();
+		     gmother0id = -99;
+		     if( MuonGrandMother1->numberOfMothers()>=2 ){
+		       MuonGrandMother0 = MuonGrandMother1->mother(1);
+		       gmother0id = MuonGrandMother0->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else staytrapped = false;
+	       }
+
+	       MyMuon.genGrandMother10Id = gmother0id;
+	       MyMuon.genGrandMother11Id = gmother1id;
+	     }
+	   }
+	 }
+
+       }// end check if genLepton
 
        bnmuons->push_back(MyMuon);
      }
@@ -2292,6 +2700,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        }
 
        if( (pfmuon->genLepton()) ){
+	 int genId = pfmuon->genLepton()->pdgId();
+
 	 MyPfmuon.genId = pfmuon->genLepton()->pdgId();
 	 MyPfmuon.genET = pfmuon->genLepton()->et();
 	 MyPfmuon.genPT = pfmuon->genLepton()->pt();
@@ -2299,22 +2709,155 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 MyPfmuon.genEta = pfmuon->genLepton()->eta();
 	 MyPfmuon.genCharge = pfmuon->genLepton()->charge();
 
+	 MyPfmuon.genNumberOfMothers = pfmuon->genLepton()->numberOfMothers();
+
 	 if( (pfmuon->genLepton()->numberOfMothers()>0) ){
-	   const reco::Candidate *MuonMother = pfmuon->genLepton()->mother();
+	   const reco::Candidate *PfmuonMother = pfmuon->genLepton()->mother();
 	   bool staytrapped = true;
-	   while( (abs(MuonMother->pdgId())==13 && staytrapped) ){
-	     if( MuonMother->numberOfMothers()==1 ) MuonMother = MuonMother->mother();
+	   while( (PfmuonMother->pdgId()==genId && staytrapped) ){
+	     if( PfmuonMother->numberOfMothers()>=1 ) PfmuonMother = PfmuonMother->mother();
 	     else staytrapped = false;
 	   }
        
-	   MyPfmuon.genMotherId = MuonMother->pdgId();
-	   MyPfmuon.genMotherET = MuonMother->et();
-	   MyPfmuon.genMotherPT = MuonMother->pt();
-	   MyPfmuon.genMotherPhi = MuonMother->phi();
-	   MyPfmuon.genMotherEta = MuonMother->eta();
-	   MyPfmuon.genMotherCharge = MuonMother->charge();
+	   MyPfmuon.genMotherId = PfmuonMother->pdgId();
+	   MyPfmuon.genMotherET = PfmuonMother->et();
+	   MyPfmuon.genMotherPT = PfmuonMother->pt();
+	   MyPfmuon.genMotherPhi = PfmuonMother->phi();
+	   MyPfmuon.genMotherEta = PfmuonMother->eta();
+	   MyPfmuon.genMotherCharge = PfmuonMother->charge();
 	 }
-       }
+
+	 if( (pfmuon->genLepton()->numberOfMothers()>=1) ){
+	   const reco::Candidate *PfmuonMother0 = pfmuon->genLepton()->mother(0);
+	   const reco::Candidate *PfmuonMother1 = 0;
+
+	   if( (pfmuon->genLepton()->numberOfMothers()>=2) ) PfmuonMother1 = pfmuon->genLepton()->mother(1);
+
+	   int mother0id = PfmuonMother0->pdgId();
+	   int mother1id = ( PfmuonMother1!=0 ) ? PfmuonMother1->pdgId() : -99;
+
+	   bool staytrapped = true;
+	   while( (mother0id==genId || mother1id==genId) && staytrapped ){
+	     if( mother0id==genId && (PfmuonMother0!=0) ){
+	       if( PfmuonMother0->numberOfMothers()>=1 ){
+		 PfmuonMother0 = PfmuonMother0->mother(0);
+		 mother0id = PfmuonMother0->pdgId();
+		 mother1id = -99;
+		 if( PfmuonMother0->numberOfMothers()>=2 ){
+		   PfmuonMother1 = PfmuonMother0->mother(1);
+		   mother1id = PfmuonMother1->pdgId();
+		 }
+	       }
+	       else staytrapped = false;
+	     }
+	     else if( mother1id==genId && (PfmuonMother1!=0) ){
+	       if( PfmuonMother1->numberOfMothers()>=1 ){
+		 PfmuonMother1 = PfmuonMother1->mother(0);
+		 mother1id = PfmuonMother1->pdgId();
+		 mother0id = -99;
+		 if( PfmuonMother1->numberOfMothers()>=2 ){
+		   PfmuonMother0 = PfmuonMother1->mother(1);
+		   mother0id = PfmuonMother0->pdgId();
+		 }
+	       }
+	       else staytrapped = false;
+	     }
+	     else staytrapped = false;
+	   }
+
+	   if( mother0id!=-99 ){
+	     MyPfmuon.genMother0Id = PfmuonMother0->pdgId();
+
+	     if( (PfmuonMother0->numberOfMothers()>=1) ){
+	       const reco::Candidate *PfmuonGrandMother0 = PfmuonMother0->mother(0);
+	       const reco::Candidate *PfmuonGrandMother1 = 0;
+
+	       if( (PfmuonMother0->numberOfMothers()>=2) ) PfmuonGrandMother1 = PfmuonMother0->mother(1);
+
+	       int gmother0id = PfmuonGrandMother0->pdgId();
+	       int gmother1id = ( PfmuonGrandMother1!=0 ) ? PfmuonGrandMother1->pdgId() : -99;
+
+	       bool staytrapped = true;
+	       while( (gmother0id==mother0id || gmother1id==mother0id) && staytrapped ){
+		 if( gmother0id==mother0id && (PfmuonGrandMother0!=0) ){
+		   if( PfmuonGrandMother0->numberOfMothers()>=1 ){
+		     PfmuonGrandMother0 = PfmuonGrandMother0->mother(0);
+		     gmother0id = PfmuonGrandMother0->pdgId();
+		     gmother1id = -99;
+		     if( PfmuonGrandMother0->numberOfMothers()>=2 ){
+		       PfmuonGrandMother1 = PfmuonGrandMother0->mother(1);
+		       gmother1id = PfmuonGrandMother1->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else if( gmother1id==mother0id && (PfmuonGrandMother1!=0) ){
+		   if( PfmuonGrandMother1->numberOfMothers()>=1 ){
+		     PfmuonGrandMother1 = PfmuonGrandMother1->mother(0);
+		     gmother1id = PfmuonGrandMother1->pdgId();
+		     gmother0id = -99;
+		     if( PfmuonGrandMother1->numberOfMothers()>=2 ){
+		       PfmuonGrandMother0 = PfmuonGrandMother1->mother(1);
+		       gmother0id = PfmuonGrandMother0->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else staytrapped = false;
+	       }
+
+	       MyPfmuon.genGrandMother00Id = gmother0id;
+	       MyPfmuon.genGrandMother01Id = gmother1id;
+	     }
+	   }
+	   if( mother1id!=-99 ){
+	     MyPfmuon.genMother1Id = PfmuonMother1->pdgId();
+
+	     if( (PfmuonMother1->numberOfMothers()>=1) ){
+	       const reco::Candidate *PfmuonGrandMother0 = PfmuonMother1->mother(0);
+	       const reco::Candidate *PfmuonGrandMother1 = 0;
+
+	       if( (PfmuonMother0->numberOfMothers()>=2) ) PfmuonGrandMother1 = PfmuonMother1->mother(1);
+
+	       int gmother0id = PfmuonGrandMother0->pdgId();
+	       int gmother1id = ( PfmuonGrandMother1!=0 ) ? PfmuonGrandMother1->pdgId() : -99;
+
+	       bool staytrapped = true;
+	       while( (gmother0id==mother1id || gmother1id==mother1id) && staytrapped ){
+		 if( gmother0id==mother1id && (PfmuonGrandMother0!=0) ){
+		   if( PfmuonGrandMother0->numberOfMothers()>=1 ){
+		     PfmuonGrandMother0 = PfmuonGrandMother0->mother(0);
+		     gmother0id = PfmuonGrandMother0->pdgId();
+		     gmother1id = -99;
+		     if( PfmuonGrandMother0->numberOfMothers()>=2 ){
+		       PfmuonGrandMother1 = PfmuonGrandMother0->mother(1);
+		       gmother1id = PfmuonGrandMother1->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else if( gmother1id==mother1id && (PfmuonGrandMother1!=0) ){
+		   if( PfmuonGrandMother1->numberOfMothers()>=1 ){
+		     PfmuonGrandMother1 = PfmuonGrandMother1->mother(0);
+		     gmother1id = PfmuonGrandMother1->pdgId();
+		     gmother0id = -99;
+		     if( PfmuonGrandMother1->numberOfMothers()>=2 ){
+		       PfmuonGrandMother0 = PfmuonGrandMother1->mother(1);
+		       gmother0id = PfmuonGrandMother0->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else staytrapped = false;
+	       }
+
+	       MyPfmuon.genGrandMother10Id = gmother0id;
+	       MyPfmuon.genGrandMother11Id = gmother1id;
+	     }
+	   }
+	 }
+
+       }// end check if genLepton
 
        bnpfmuons->push_back(MyPfmuon);
      }
@@ -2886,7 +3429,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        BNmcparticle MyMCmuon;
 
        if( (status==1) ){
-	 if( fabs(pdgId)==11 ){
+	 if( abs(pdgId)==11 ){
 	   MyMCelectron.energy = mcParticle.energy();
 	   MyMCelectron.et = mcParticle.et();
 	   MyMCelectron.pt = mcParticle.pt();
@@ -2924,7 +3467,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	   bnmcelectrons->push_back(MyMCelectron);
 	 }
-	 else if( fabs(pdgId)==13 ){
+	 else if( abs(pdgId)==13 ){
 	   MyMCmuon.energy = mcParticle.energy();
 	   MyMCmuon.et = mcParticle.et();
 	   MyMCmuon.pt = mcParticle.pt();
@@ -2991,6 +3534,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        MyMCparticle.id = mcParticle.pdgId();
        MyMCparticle.status = mcParticle.status();
 
+
+
        if( (mcParticle.numberOfMothers()==1) ){
 	 MyMCparticle.motherId = mcParticle.mother()->pdgId();
 	 MyMCparticle.motherCharge = mcParticle.mother()->charge();
@@ -3009,60 +3554,174 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 }
        }
        if( (mcParticle.numberOfMothers()>=1) ){
-	 MyMCparticle.mother0Id = mcParticle.mother(0)->pdgId();
-	 MyMCparticle.mother0Status = mcParticle.mother(0)->status();
-	 MyMCparticle.mother0Charge = mcParticle.mother(0)->charge();
-	 MyMCparticle.mother0ET = mcParticle.mother(0)->et();
-	 MyMCparticle.mother0PT = mcParticle.mother(0)->pt();
-	 MyMCparticle.mother0Phi = mcParticle.mother(0)->phi();
-	 MyMCparticle.mother0Eta = mcParticle.mother(0)->eta();
+	 const reco::Candidate *Mother0 = mcParticle.mother(0);
+	 const reco::Candidate *Mother1 = 0;
 
-	 if( (mcParticle.numberOfMothers()>=2) ){
-	   MyMCparticle.mother1Id = mcParticle.mother(1)->pdgId();
-	   MyMCparticle.mother1Status = mcParticle.mother(1)->status();
-	   MyMCparticle.mother1Charge = mcParticle.mother(1)->charge();
-	   MyMCparticle.mother1ET = mcParticle.mother(1)->et();
-	   MyMCparticle.mother1PT = mcParticle.mother(1)->pt();
-	   MyMCparticle.mother1Phi = mcParticle.mother(1)->phi();
-	   MyMCparticle.mother1Eta = mcParticle.mother(1)->eta();
+	 if( (mcParticle.numberOfMothers()>=2) ) Mother1 = mcParticle.mother(1);
 
-	   if( (mcParticle.mother(0)->numberOfMothers()>=1) ){
-	     MyMCparticle.grandMother00Id = mcParticle.mother(0)->mother(0)->pdgId();
-	     MyMCparticle.grandMother00Status = mcParticle.mother(0)->mother(0)->status();
-	     MyMCparticle.grandMother00Charge = mcParticle.mother(0)->mother(0)->charge();
-	     MyMCparticle.grandMother00ET = mcParticle.mother(0)->mother(0)->et();
-	     MyMCparticle.grandMother00PT = mcParticle.mother(0)->mother(0)->pt();
-	     MyMCparticle.grandMother00Phi = mcParticle.mother(0)->mother(0)->phi();
-	     MyMCparticle.grandMother00Eta = mcParticle.mother(0)->mother(0)->eta();
+	 int mother0id = Mother0->pdgId();
+	 int mother1id = ( Mother1!=0 ) ? Mother1->pdgId() : -99;
 
-	     if( (mcParticle.mother(0)->numberOfMothers()>=2) ){
-	       MyMCparticle.grandMother01Id = mcParticle.mother(0)->mother(1)->pdgId();
-	       MyMCparticle.grandMother01Status = mcParticle.mother(0)->mother(1)->status();
-	       MyMCparticle.grandMother01Charge = mcParticle.mother(0)->mother(1)->charge();
-	       MyMCparticle.grandMother01ET = mcParticle.mother(0)->mother(1)->et();
-	       MyMCparticle.grandMother01PT = mcParticle.mother(0)->mother(1)->pt();
-	       MyMCparticle.grandMother01Phi = mcParticle.mother(0)->mother(1)->phi();
-	       MyMCparticle.grandMother01Eta = mcParticle.mother(0)->mother(1)->eta();
+	 bool staytrapped = true;
+	 while( (mother0id==pdgId || mother1id==pdgId) && staytrapped ){
+	   if( mother0id==pdgId && (Mother0!=0) ){
+	     if( Mother0->numberOfMothers()>=1 ){
+	       Mother0 = Mother0->mother(0);
+	       mother0id = Mother0->pdgId();
+	       mother1id = -99;
+	       if( Mother0->numberOfMothers()>=2 ){
+		 Mother1 = Mother0->mother(1);
+		 mother1id = Mother1->pdgId();
+	       }
+	     }
+	     else staytrapped = false;
+	   }
+	   else if( mother1id==pdgId && (Mother1!=0) ){
+	     if( Mother1->numberOfMothers()>=1 ){
+	       Mother1 = Mother1->mother(0);
+	       mother1id = Mother1->pdgId();
+	       mother0id = -99;
+	       if( Mother1->numberOfMothers()>=2 ){
+		 Mother0 = Mother1->mother(1);
+		 mother0id = Mother0->pdgId();
+	       }
+	     }
+	     else staytrapped = false;
+	   }
+	   else staytrapped = false;
+	 }
+
+	 if( mother0id!=-99 ){
+	   MyMCparticle.mother0Id = Mother0->pdgId();
+	   MyMCparticle.mother0Status = Mother0->status();
+	   MyMCparticle.mother0Charge = Mother0->charge();
+	   MyMCparticle.mother0ET = Mother0->et();
+	   MyMCparticle.mother0PT = Mother0->pt();
+	   MyMCparticle.mother0Phi = Mother0->phi();
+	   MyMCparticle.mother0Eta = Mother0->eta();
+
+	   if( (Mother0->numberOfMothers()>=1) ){
+	     const reco::Candidate *GrandMother0 = Mother0->mother(0);
+	     const reco::Candidate *GrandMother1 = 0;
+
+	     if( (Mother0->numberOfMothers()>=2) ) GrandMother1 = Mother0->mother(1);
+
+	     int gmother0id = GrandMother0->pdgId();
+	     int gmother1id = ( GrandMother1!=0 ) ? GrandMother1->pdgId() : -99;
+
+	     bool staytrapped = true;
+	     while( (gmother0id==mother0id || gmother1id==mother0id) && staytrapped ){
+	       if( gmother0id==mother0id && (GrandMother0!=0) ){
+		 if( GrandMother0->numberOfMothers()>=1 ){
+		   GrandMother0 = GrandMother0->mother(0);
+		   gmother0id = GrandMother0->pdgId();
+		   gmother1id = -99;
+		   if( GrandMother0->numberOfMothers()>=2 ){
+		     GrandMother1 = GrandMother0->mother(1);
+		     gmother1id = GrandMother1->pdgId();
+		   }
+		 }
+		 else staytrapped = false;
+	       }
+	       else if( gmother1id==mother0id && (GrandMother1!=0) ){
+		 if( GrandMother1->numberOfMothers()>=1 ){
+		   GrandMother1 = GrandMother1->mother(0);
+		   gmother1id = GrandMother1->pdgId();
+		   gmother0id = -99;
+		   if( GrandMother1->numberOfMothers()>=2 ){
+		     GrandMother0 = GrandMother1->mother(1);
+		     gmother0id = GrandMother0->pdgId();
+		   }
+		 }
+		 else staytrapped = false;
+	       }
+	       else staytrapped = false;
+	     }
+
+	     if( gmother0id!=-99 ){
+	       MyMCparticle.grandMother00Id = GrandMother0->pdgId();
+	       MyMCparticle.grandMother00Status = GrandMother0->status();
+	       MyMCparticle.grandMother00Charge = GrandMother0->charge();
+	       MyMCparticle.grandMother00ET = GrandMother0->et();
+	       MyMCparticle.grandMother00PT = GrandMother0->pt();
+	       MyMCparticle.grandMother00Phi = GrandMother0->phi();
+	       MyMCparticle.grandMother00Eta = GrandMother0->eta();
+	     }
+	     if( gmother1id!=-99 ){
+	       MyMCparticle.grandMother01Id = GrandMother1->pdgId();
+	       MyMCparticle.grandMother01Status = GrandMother1->status();
+	       MyMCparticle.grandMother01Charge = GrandMother1->charge();
+	       MyMCparticle.grandMother01ET = GrandMother1->et();
+	       MyMCparticle.grandMother01PT = GrandMother1->pt();
+	       MyMCparticle.grandMother01Phi = GrandMother1->phi();
+	       MyMCparticle.grandMother01Eta = GrandMother1->eta();
 	     }
 	   }
+	 }
+	 if( mother1id!=-99 ){
+	   MyMCparticle.mother1Id = Mother1->pdgId();
+	   MyMCparticle.mother1Status = Mother1->status();
+	   MyMCparticle.mother1Charge = Mother1->charge();
+	   MyMCparticle.mother1ET = Mother1->et();
+	   MyMCparticle.mother1PT = Mother1->pt();
+	   MyMCparticle.mother1Phi = Mother1->phi();
+	   MyMCparticle.mother1Eta = Mother1->eta();
 
-	   if( (mcParticle.mother(1)->numberOfMothers()>=1) ){
-	     MyMCparticle.grandMother10Id = mcParticle.mother(1)->mother(0)->pdgId();
-	     MyMCparticle.grandMother10Status = mcParticle.mother(1)->mother(0)->status();
-	     MyMCparticle.grandMother10Charge = mcParticle.mother(1)->mother(0)->charge();
-	     MyMCparticle.grandMother10ET = mcParticle.mother(1)->mother(0)->et();
-	     MyMCparticle.grandMother10PT = mcParticle.mother(1)->mother(0)->pt();
-	     MyMCparticle.grandMother10Phi = mcParticle.mother(1)->mother(0)->phi();
-	     MyMCparticle.grandMother10Eta = mcParticle.mother(1)->mother(0)->eta();
+	   if( (Mother1->numberOfMothers()>=1) ){
+	     const reco::Candidate *GrandMother0 = Mother1->mother(0);
+	     const reco::Candidate *GrandMother1 = 0;
 
-	     if( (mcParticle.mother(1)->numberOfMothers()>=2) ){
-	       MyMCparticle.grandMother11Id = mcParticle.mother(1)->mother(1)->pdgId();
-	       MyMCparticle.grandMother11Status = mcParticle.mother(1)->mother(1)->status();
-	       MyMCparticle.grandMother11Charge = mcParticle.mother(1)->mother(1)->charge();
-	       MyMCparticle.grandMother11ET = mcParticle.mother(1)->mother(1)->et();
-	       MyMCparticle.grandMother11PT = mcParticle.mother(1)->mother(1)->pt();
-	       MyMCparticle.grandMother11Phi = mcParticle.mother(1)->mother(1)->phi();
-	       MyMCparticle.grandMother11Eta = mcParticle.mother(1)->mother(1)->eta();
+	     if( (Mother0->numberOfMothers()>=2) ) GrandMother1 = Mother1->mother(1);
+
+	     int gmother0id = GrandMother0->pdgId();
+	     int gmother1id = ( GrandMother1!=0 ) ? GrandMother1->pdgId() : -99;
+
+	     bool staytrapped = true;
+	     while( (gmother0id==mother1id || gmother1id==mother1id) && staytrapped ){
+	       if( gmother0id==mother1id && (GrandMother0!=0) ){
+		 if( GrandMother0->numberOfMothers()>=1 ){
+		   GrandMother0 = GrandMother0->mother(0);
+		   gmother0id = GrandMother0->pdgId();
+		   gmother1id = -99;
+		   if( GrandMother0->numberOfMothers()>=2 ){
+		     GrandMother1 = GrandMother0->mother(1);
+		     gmother1id = GrandMother1->pdgId();
+		   }
+		 }
+		 else staytrapped = false;
+	       }
+	       else if( gmother1id==mother1id && (GrandMother1!=0) ){
+		 if( GrandMother1->numberOfMothers()>=1 ){
+		   GrandMother1 = GrandMother1->mother(0);
+		   gmother1id = GrandMother1->pdgId();
+		   gmother0id = -99;
+		   if( GrandMother1->numberOfMothers()>=2 ){
+		     GrandMother0 = GrandMother1->mother(1);
+		     gmother0id = GrandMother0->pdgId();
+		   }
+		 }
+		 else staytrapped = false;
+	       }
+	       else staytrapped = false;
+	     }
+
+	     if( gmother0id!=-99 ){
+	       MyMCparticle.grandMother10Id = GrandMother0->pdgId();
+	       MyMCparticle.grandMother10Status = GrandMother0->status();
+	       MyMCparticle.grandMother10Charge = GrandMother0->charge();
+	       MyMCparticle.grandMother10ET = GrandMother0->et();
+	       MyMCparticle.grandMother10PT = GrandMother0->pt();
+	       MyMCparticle.grandMother10Phi = GrandMother0->phi();
+	       MyMCparticle.grandMother10Eta = GrandMother0->eta();
+	     }
+	     if( gmother1id!=-99 ){
+	       MyMCparticle.grandMother11Id = GrandMother1->pdgId();
+	       MyMCparticle.grandMother11Status = GrandMother1->status();
+	       MyMCparticle.grandMother11Charge = GrandMother1->charge();
+	       MyMCparticle.grandMother11ET = GrandMother1->et();
+	       MyMCparticle.grandMother11PT = GrandMother1->pt();
+	       MyMCparticle.grandMother11Phi = GrandMother1->phi();
+	       MyMCparticle.grandMother11Eta = GrandMother1->eta();
 	     }
 	   }
 	 }
