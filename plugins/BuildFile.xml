@@ -35,9 +35,7 @@
 <use   name="MagneticField/Records"/>
 <use   name="MagneticField/Engine"/>
 <use   name="HLTrigger/HLTcore"/>
-<use   name="Geometry/TrackerGeometryBuilder"/>
-<use   name="RecoTracker/TransientTrackingRecHit"/>
-<use   name="CMGTools/External"/>
+<flags   EDM_PLUGIN="1"/>
 <export>
   <lib   name="1"/>
 </export>
