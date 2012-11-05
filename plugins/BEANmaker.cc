@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.23 2012/10/25 13:39:15 puigh Exp $
+// $Id: BEANmaker.cc,v 1.1 2012/10/29 21:01:52 nvallsve Exp $
 //
 //
 
@@ -180,6 +180,7 @@ class BEANmaker : public edm::EDProducer {
 
   edm::InputTag eleTag_;
   edm::InputTag pfeleTag_;
+  edm::InputTag pfeleLooseTag_;
   edm::InputTag calojetTag_;
   edm::InputTag pfjetTag_;
   edm::InputTag genjetTag_;
@@ -191,6 +192,7 @@ class BEANmaker : public edm::EDProducer {
   edm::InputTag tcmetTag_;
   edm::InputTag muonTag_;
   edm::InputTag pfmuonTag_;
+  edm::InputTag pfmuonLooseTag_;
   edm::InputTag cocktailmuonTag_;
   edm::InputTag photonTag_;
   edm::InputTag EBsuperclusterTag_;
@@ -303,6 +305,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   // Define InputTags 
   eleTag_ = iConfig.getParameter<edm::InputTag>("eleTag");
   pfeleTag_ = iConfig.getParameter<edm::InputTag>("pfeleTag");
+  pfeleLooseTag_ = iConfig.getParameter<edm::InputTag>("pfeleLooseTag");
   calojetTag_ = iConfig.getParameter<edm::InputTag>("calojetTag");
   pfjetTag_ = iConfig.getParameter<edm::InputTag>("pfjetTag");
   genjetTag_ = iConfig.getParameter<edm::InputTag>("genjetTag");
@@ -314,6 +317,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   tcmetTag_ = iConfig.getParameter<edm::InputTag>("tcmetTag");
   muonTag_ = iConfig.getParameter<edm::InputTag>("muonTag");
   pfmuonTag_ = iConfig.getParameter<edm::InputTag>("pfmuonTag");
+  pfmuonLooseTag_ = iConfig.getParameter<edm::InputTag>("pfmuonLooseTag");
   cocktailmuonTag_ = iConfig.getParameter<edm::InputTag>("cocktailmuonTag");
   photonTag_ = iConfig.getParameter<edm::InputTag>("photonTag");
   EBsuperclusterTag_ = iConfig.getParameter<edm::InputTag>("EBsuperclusterTag");
@@ -347,7 +351,9 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   produces<BNmetCollection>(tcmetTag_.label()).setBranchAlias("tcmet");
   produces<BNmuonCollection>(muonTag_.label()).setBranchAlias("muons");
   produces<BNelectronCollection>(pfeleTag_.label()).setBranchAlias("pfelectrons");
+  produces<BNelectronCollection>(pfeleLooseTag_.label()).setBranchAlias("pfelectrons_loose");
   produces<BNmuonCollection>(pfmuonTag_.label()).setBranchAlias("pfmuons");
+  produces<BNmuonCollection>(pfmuonLooseTag_.label()).setBranchAlias("pfmuons_loose");
   produces<BNmuonCollection>(cocktailmuonTag_.label()).setBranchAlias("cocktailmuons");
   produces<BNphotonCollection>(photonTag_.label()).setBranchAlias("photons");
   produces<BNsuperclusterCollection>(kSC).setBranchAlias("superclusters");
@@ -406,6 +412,9 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    edm::Handle<edm::View<pat::Electron> > pfelectronHandle;
    iEvent.getByLabel(pfeleTag_,pfelectronHandle);
 
+   edm::Handle<edm::View<pat::Electron> > pfelectronLooseHandle;
+   iEvent.getByLabel(pfeleLooseTag_,pfelectronLooseHandle);
+
    edm::Handle<edm::View<pat::Jet> > calojetHandle;
    iEvent.getByLabel(calojetTag_,calojetHandle);
 
@@ -438,6 +447,9 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    edm::Handle<edm::View<pat::Muon> > pfmuonHandle;
    iEvent.getByLabel(pfmuonTag_,pfmuonHandle);
+
+   edm::Handle<edm::View<pat::Muon> > pfmuonLooseHandle;
+   iEvent.getByLabel(pfmuonLooseTag_,pfmuonLooseHandle);
 
    edm::Handle<edm::View<reco::Muon> > cocktailmuonHandle;
    iEvent.getByLabel(cocktailmuonTag_,cocktailmuonHandle);
@@ -482,6 +494,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    bool produceElectron = ( (eleTag_.label() == "none") ) ? false : true;
    bool producePFelectron = ( (pfeleTag_.label() == "none") ) ? false : true;
+   bool producePFelectronLoose = ( (pfeleLooseTag_.label() == "none") ) ? false : true;
    bool produceCaloJet = ( (calojetTag_.label() == "none") ) ? false : true;
    bool producePFJet = ( (pfjetTag_.label() == "none") ) ? false : true;
    bool produceGenJet = ( (genjetTag_.label() == "none") ) ? false : true;
@@ -493,6 +506,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    bool produceTCMET = ( (tcmetTag_.label() == "none") ) ? false : true;
    bool produceMuon = ( (muonTag_.label() == "none") ) ? false : true;
    bool producePFMuon = ( (pfmuonTag_.label() == "none") ) ? false : true;
+   bool producePFMuonLoose = ( (pfmuonLooseTag_.label() == "none") ) ? false : true;
    bool produceCocktailMuon = ( (cocktailmuonTag_.label() == "none") ) ? false : true;
    bool produceTau = ( (tauTag_.label() == "none") ) ? false : true;
    bool producePhoton = ( (photonTag_.label() == "none") ) ? false : true;
@@ -1656,6 +1670,459 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
      }
    }
+
+
+
+
+
+   /////////////////////////////////////////////
+   ///////
+   ///////   Fill the pfelectron collection
+   ///////
+   /////////////////////////////////////////////
+
+   std::auto_ptr<BNelectronCollection> bnpfelectronsLoose(new BNelectronCollection);
+   if( producePFelectronLoose ){
+     edm::View<pat::Electron> pfelectronsLoose = *pfelectronLooseHandle;
+
+     for( edm::View<pat::Electron>::const_iterator pfele = pfelectronsLoose.begin(); pfele!=pfelectronsLoose.end(); ++pfele ){
+
+       double pfelePin = pfele->trackMomentumAtVtx().R();
+       double pfelePout = pfele->trackMomentumOut().R();
+
+       BNelectron MyPfelectronLoose;
+
+       // general kinematic variables
+       MyPfelectronLoose.energy = pfele->energy();
+       MyPfelectronLoose.gsfEt = pfele->et();
+       MyPfelectronLoose.pt = pfele->pt();
+       MyPfelectronLoose.px = pfele->px();
+       MyPfelectronLoose.py = pfele->py();
+       MyPfelectronLoose.pz = pfele->pz();
+       MyPfelectronLoose.phi = pfele->phi();
+       MyPfelectronLoose.eta = pfele->eta();
+       MyPfelectronLoose.theta = pfele->theta();
+
+       MyPfelectronLoose.charge = pfele->charge();
+       MyPfelectronLoose.classification = pfele->classification();
+       MyPfelectronLoose.vx = pfele->vx();
+       MyPfelectronLoose.vy = pfele->vy();
+       MyPfelectronLoose.vz = pfele->vz();
+
+       MyPfelectronLoose.pIn = pfelePin;
+       MyPfelectronLoose.pOut = pfelePout;
+       MyPfelectronLoose.EscOverPin = pfele->eSuperClusterOverP();
+       MyPfelectronLoose.EseedOverPout = pfele->eSeedClusterOverPout();
+       MyPfelectronLoose.hadOverEm = pfele->hadronicOverEm();
+       MyPfelectronLoose.fbrem = fabs(pfelePin-pfelePout)/pfelePin;
+       MyPfelectronLoose.absInvEMinusInvPin = fabs( 1/pfele->ecalEnergy()-(pfele->eSuperClusterOverP()/pfele->ecalEnergy()) );
+       MyPfelectronLoose.delPhiIn = pfele->deltaPhiSuperClusterTrackAtVtx();
+       MyPfelectronLoose.delEtaIn = pfele->deltaEtaSuperClusterTrackAtVtx();
+       /*
+       MyPfelectronLoose.eidRobustHighEnergy = pfele->electronID("eidRobustHighEnergy");
+       MyPfelectronLoose.eidRobustLoose = pfele->electronID("eidRobustLoose");
+       MyPfelectronLoose.eidRobustTight = pfele->electronID("eidRobustTight");
+       MyPfelectronLoose.eidLoose = pfele->electronID("eidLoose");
+       MyPfelectronLoose.eidTight = pfele->electronID("eidTight");
+       MyPfelectronLoose.eidVeryLooseMC = pfele->electronID("eidVeryLooseMC");
+       MyPfelectronLoose.eidLooseMC = pfele->electronID("eidLooseMC");
+       MyPfelectronLoose.eidMediumMC = pfele->electronID("eidMediumMC");
+       MyPfelectronLoose.eidTightMC = pfele->electronID("eidTightMC");
+       MyPfelectronLoose.eidSuperTightMC = pfele->electronID("eidSuperTightMC");
+       MyPfelectronLoose.eidHyperTight1MC = pfele->electronID("eidHyperTight1MC");
+       MyPfelectronLoose.eidHyperTight2MC = pfele->electronID("eidHyperTight2MC");
+       MyPfelectronLoose.eidHyperTight3MC = pfele->electronID("eidHyperTight3MC");
+       MyPfelectronLoose.eidHyperTight4MC = pfele->electronID("eidHyperTight4MC");
+       */
+       MyPfelectronLoose.particleIso = pfele->particleIso();     
+       MyPfelectronLoose.chargedHadronIso = pfele->chargedHadronIso();     
+       MyPfelectronLoose.neutralHadronIso = pfele->neutralHadronIso();     
+       MyPfelectronLoose.photonIso = pfele->photonIso();     
+       MyPfelectronLoose.puChargedHadronIso = pfele->puChargedHadronIso();     
+
+       MyPfelectronLoose.chargedHadronIsoDR03 = pfele->userIso(0);     
+       MyPfelectronLoose.neutralHadronIsoDR03 = pfele->userIso(1);
+       MyPfelectronLoose.photonIsoDR03 = pfele->userIso(2);
+       MyPfelectronLoose.puChargedHadronIsoDR03 = pfele->userIso(3);
+
+       MyPfelectronLoose.chargedHadronIsoDR04 = pfele->userIso(4);     
+       MyPfelectronLoose.neutralHadronIsoDR04 = pfele->userIso(5);
+       MyPfelectronLoose.photonIsoDR04 = pfele->userIso(6);
+       MyPfelectronLoose.puChargedHadronIsoDR04 = pfele->userIso(7);
+
+       MyPfelectronLoose.rhoPrime = std::max(rho_event, 0.0);
+
+       MyPfelectronLoose.trackIso = pfele->trackIso();
+       MyPfelectronLoose.ecalIso = pfele->ecalIso();
+       MyPfelectronLoose.hcalIso = pfele->hcalIso();
+       MyPfelectronLoose.caloIso = pfele->caloIso();
+
+       MyPfelectronLoose.trackIsoDR03 = pfele->dr03TkSumPt();
+       MyPfelectronLoose.ecalIsoDR03 = pfele->dr03EcalRecHitSumEt();
+       MyPfelectronLoose.hcalIsoDR03 = pfele->dr03HcalTowerSumEt();
+       MyPfelectronLoose.hcalIsoDR03depth1 = pfele->dr03HcalDepth1TowerSumEt();
+       MyPfelectronLoose.hcalIsoDR03depth2 = pfele->dr03HcalDepth2TowerSumEt();
+       MyPfelectronLoose.caloIsoDR03 = pfele->dr03EcalRecHitSumEt()+pfele->dr03HcalTowerSumEt();
+
+       MyPfelectronLoose.trackIsoDR04 = pfele->dr04TkSumPt();
+       MyPfelectronLoose.ecalIsoDR04 = pfele->dr04EcalRecHitSumEt();
+       MyPfelectronLoose.hcalIsoDR04 = pfele->dr04HcalTowerSumEt();
+       MyPfelectronLoose.hcalIsoDR04depth1 = pfele->dr04HcalDepth1TowerSumEt();
+       MyPfelectronLoose.hcalIsoDR04depth2 = pfele->dr04HcalDepth2TowerSumEt();
+       MyPfelectronLoose.caloIsoDR04 = pfele->dr04EcalRecHitSumEt()+pfele->dr04HcalTowerSumEt();
+
+       MyPfelectronLoose.mva = pfele->mva();
+       MyPfelectronLoose.mvaTrigV0 = pfele->electronID("mvaTrigV0");
+       MyPfelectronLoose.mvaNonTrigV0 = pfele->electronID("mvaNonTrigV0");
+       MyPfelectronLoose.numberOfLostHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
+       MyPfelectronLoose.numberOfExpectedInnerHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfHits();
+       MyPfelectronLoose.numberOfValidPixelHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelHits();
+       MyPfelectronLoose.numberOfValidPixelBarrelHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelBarrelHits();
+       MyPfelectronLoose.numberOfValidPixelEndcapHits = pfele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelEndcapHits();
+
+       MyPfelectronLoose.scEnergy = pfele->caloEnergy();
+       MyPfelectronLoose.scSigmaEtaEta = pfele->scSigmaEtaEta();
+       MyPfelectronLoose.scSigmaIEtaIEta = pfele->scSigmaIEtaIEta();
+       MyPfelectronLoose.scE1x5 = pfele->scE1x5();
+       MyPfelectronLoose.scE2x5Max = pfele->scE2x5Max();
+       MyPfelectronLoose.scE5x5 = pfele->scE5x5();
+       MyPfelectronLoose.numClusters = pfele->numberOfBrems();
+
+       MyPfelectronLoose.IP = pfele->dB(pat::Electron::PV3D);
+       MyPfelectronLoose.IPError = pfele->edB(pat::Electron::PV3D);
+
+       double caloenergy = -1;
+       double pfeleEta = pfele->eta();
+
+       if( (pfele->superCluster().isAvailable()) ){
+	 double eMax    = lazyTools.eMax(    *(pfele->superCluster()) );
+	 double eLeft   = lazyTools.eLeft(   *(pfele->superCluster()) );
+	 double eRight  = lazyTools.eRight(  *(pfele->superCluster()) );
+	 double eTop    = lazyTools.eTop(    *(pfele->superCluster()) );
+	 double eBottom = lazyTools.eBottom( *(pfele->superCluster()) );
+	 double e3x3    = lazyTools.e3x3(    *(pfele->superCluster()) );
+	 double swissCross = -99;
+
+	 if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
+
+	 MyPfelectronLoose.eMax = eMax;
+	 MyPfelectronLoose.eLeft = eLeft;
+	 MyPfelectronLoose.eRight = eRight;
+	 MyPfelectronLoose.eTop = eTop;
+	 MyPfelectronLoose.eBottom = eBottom;
+	 MyPfelectronLoose.e3x3 = e3x3;
+	 MyPfelectronLoose.swissCross = swissCross;
+
+	 caloenergy = pfele->caloEnergy();
+
+	 MyPfelectronLoose.scEt = pfele->caloEnergy() * sin( pfele->superCluster()->position().theta() );
+	 MyPfelectronLoose.scRawEnergy = pfele->superCluster()->rawEnergy();
+	 MyPfelectronLoose.scEta = pfele->superCluster()->position().eta();
+	 MyPfelectronLoose.scPhi = pfele->superCluster()->position().phi();
+	 MyPfelectronLoose.scZ = pfele->superCluster()->position().Z();
+
+	 pfeleEta = pfele->superCluster()->position().eta();
+
+	 double seedE = -999, seedTime = -999;
+	 int seedRecoFlag = -999;
+       
+	 if( (pfele->isEB()) ){
+	   DetId idEB = EcalClusterTools::getMaximum( pfele->superCluster()->hitsAndFractions(), &(*barrelRecHits) ).first;
+	   EcalRecHitCollection::const_iterator thisHitEB = barrelRecHits->find(idEB);
+
+	   seedE = thisHitEB->energy();
+	   seedTime = thisHitEB->time();
+	   seedRecoFlag = thisHitEB->recoFlag();
+	 }
+	 else if( (pfele->isEE()) ){
+	   DetId idEE = EcalClusterTools::getMaximum( pfele->superCluster()->hitsAndFractions(), &(*endcapRecHits) ).first;
+	   EcalRecHitCollection::const_iterator thisHitEE = endcapRecHits->find(idEE);
+
+	   seedE = thisHitEE->energy();
+	   seedTime = thisHitEE->time();
+	   seedRecoFlag = thisHitEE->recoFlag();
+	 }
+
+	 MyPfelectronLoose.seedEnergy   = seedE;
+	 MyPfelectronLoose.seedTime     = seedTime;
+	 MyPfelectronLoose.seedRecoFlag = seedRecoFlag;
+
+	 // MyPfelectronLoose.swissCrossNoI85 = swissCrossNoI85;
+	 // MyPfelectronLoose.swissCrossI85   = swissCrossI85;
+	 // MyPfelectronLoose.E2overE9NoI85 = e2overe9NoI85;
+	 // MyPfelectronLoose.E2overE9I85 = e2overe9I85;
+       }
+
+       double heepEt = ( caloenergy<0 || pfele->energy()==0. ) ? 0 : pfele->et()/pfele->energy()*caloenergy;
+       MyPfelectronLoose.et = heepEt;
+
+       if( (pfele->closestCtfTrackRef().isAvailable()) ) MyPfelectronLoose.tkCharge = pfele->closestCtfTrackRef()->charge();
+       if( (pfele->gsfTrack().isAvailable()) ){
+	 double tkvx = pfele->gsfTrack()->vx();
+	 double tkvy = pfele->gsfTrack()->vy();
+	 double tkpx = pfele->gsfTrack()->px();
+	 double tkpy = pfele->gsfTrack()->py();
+	 double tkpt = pfele->gsfTrack()->pt();
+
+	 double ndof = pfele->gsfTrack()->ndof();
+	 if( (ndof!=0) ) MyPfelectronLoose.tkNormChi2 = pfele->gsfTrack()->chi2()/ndof;
+	 MyPfelectronLoose.tkPT = pfele->gsfTrack()->pt();
+	 MyPfelectronLoose.tkEta = pfele->gsfTrack()->eta();
+	 MyPfelectronLoose.tkPhi = pfele->gsfTrack()->phi();
+	 MyPfelectronLoose.tkDZ = pfele->gsfTrack()->dz();
+	 MyPfelectronLoose.tkD0 = pfele->gsfTrack()->d0();
+	 MyPfelectronLoose.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
+	 MyPfelectronLoose.tkD0err = pfele->gsfTrack()->d0Error();
+	 MyPfelectronLoose.tkNumValidHits = pfele->gsfTrack()->numberOfValidHits();
+	 MyPfelectronLoose.gsfCharge = pfele->gsfTrack()->charge();
+
+	 MyPfelectronLoose.correctedD0 = pfele->gsfTrack()->dxy(beamSpotPosition);
+         MyPfelectronLoose.correctedD0Vertex = pfele->gsfTrack()->dxy(vertexPosition);
+	 MyPfelectronLoose.correctedDZ = pfele->gsfTrack()->dz(vertexPosition);
+       }
+
+       MyPfelectronLoose.isEB = pfele->isEB();
+       MyPfelectronLoose.isEE = pfele->isEE();
+       MyPfelectronLoose.isGap = pfele->isGap();
+       MyPfelectronLoose.isEBEEGap = pfele->isEBEEGap();
+       MyPfelectronLoose.isEBGap = pfele->isEBGap();
+       MyPfelectronLoose.isEEGap = pfele->isEEGap();
+       MyPfelectronLoose.isEcalDriven = pfele->ecalDrivenSeed();
+       MyPfelectronLoose.isTrackerDriven = pfele->trackerDrivenSeed();
+
+       if( (pfele->genLepton()) ){
+	 int genId = pfele->genLepton()->pdgId();
+
+	 MyPfelectronLoose.genId = pfele->genLepton()->pdgId();
+	 MyPfelectronLoose.genET = pfele->genLepton()->et();
+	 MyPfelectronLoose.genPT = pfele->genLepton()->pt();
+	 MyPfelectronLoose.genPhi = pfele->genLepton()->phi();
+	 MyPfelectronLoose.genEta = pfele->genLepton()->eta();
+	 MyPfelectronLoose.genCharge = pfele->genLepton()->charge();
+
+	 MyPfelectronLoose.genNumberOfMothers = pfele->genLepton()->numberOfMothers();
+
+	 if( (pfele->genLepton()->numberOfMothers()>0) ){
+	   const reco::Candidate *ElectronMother = pfele->genLepton()->mother();
+	   bool staytrapped = true;
+	   while( (ElectronMother->pdgId()==genId && staytrapped) ){
+	     if( ElectronMother->numberOfMothers()>=1 ) ElectronMother = ElectronMother->mother();
+	     else staytrapped = false;
+	   }
+       
+	   MyPfelectronLoose.genMotherId = ElectronMother->pdgId();
+	   MyPfelectronLoose.genMotherET = ElectronMother->et();
+	   MyPfelectronLoose.genMotherPT = ElectronMother->pt();
+	   MyPfelectronLoose.genMotherPhi = ElectronMother->phi();
+	   MyPfelectronLoose.genMotherEta = ElectronMother->eta();
+	   MyPfelectronLoose.genMotherCharge = ElectronMother->charge();
+	 }
+
+	 if( (pfele->genLepton()->numberOfMothers()>=1) ){
+	   const reco::Candidate *ElectronMother0 = pfele->genLepton()->mother(0);
+	   const reco::Candidate *ElectronMother1 = 0;
+
+	   if( (pfele->genLepton()->numberOfMothers()>=2) ) ElectronMother1 = pfele->genLepton()->mother(1);
+
+	   int mother0id = ElectronMother0->pdgId();
+	   int mother1id = ( ElectronMother1!=0 ) ? ElectronMother1->pdgId() : -99;
+
+	   bool staytrapped = true;
+	   while( (mother0id==genId || mother1id==genId) && staytrapped ){
+	     if( mother0id==genId && (ElectronMother0!=0) ){
+	       if( ElectronMother0->numberOfMothers()>=1 ){
+		 ElectronMother0 = ElectronMother0->mother(0);
+		 mother0id = ElectronMother0->pdgId();
+		 mother1id = -99;
+		 if( ElectronMother0->numberOfMothers()>=2 ){
+		   ElectronMother1 = ElectronMother0->mother(1);
+		   mother1id = ElectronMother1->pdgId();
+		 }
+	       }
+	       else staytrapped = false;
+	     }
+	     else if( mother1id==genId && (ElectronMother1!=0) ){
+	       if( ElectronMother1->numberOfMothers()>=1 ){
+		 ElectronMother1 = ElectronMother1->mother(0);
+		 mother1id = ElectronMother1->pdgId();
+		 mother0id = -99;
+		 if( ElectronMother1->numberOfMothers()>=2 ){
+		   ElectronMother0 = ElectronMother1->mother(1);
+		   mother0id = ElectronMother0->pdgId();
+		 }
+	       }
+	       else staytrapped = false;
+	     }
+	     else staytrapped = false;
+	   }
+
+	   if( mother0id!=-99 ){
+	     MyPfelectronLoose.genMother0Id = ElectronMother0->pdgId();
+
+	     if( (ElectronMother0->numberOfMothers()>=1) ){
+	       const reco::Candidate *ElectronGrandMother0 = ElectronMother0->mother(0);
+	       const reco::Candidate *ElectronGrandMother1 = 0;
+
+	       if( (ElectronMother0->numberOfMothers()>=2) ) ElectronGrandMother1 = ElectronMother0->mother(1);
+
+	       int gmother0id = ElectronGrandMother0->pdgId();
+	       int gmother1id = ( ElectronGrandMother1!=0 ) ? ElectronGrandMother1->pdgId() : -99;
+
+	       bool staytrapped = true;
+	       while( (gmother0id==mother0id || gmother1id==mother0id) && staytrapped ){
+		 if( gmother0id==mother0id && (ElectronGrandMother0!=0) ){
+		   if( ElectronGrandMother0->numberOfMothers()>=1 ){
+		     ElectronGrandMother0 = ElectronGrandMother0->mother(0);
+		     gmother0id = ElectronGrandMother0->pdgId();
+		     gmother1id = -99;
+		     if( ElectronGrandMother0->numberOfMothers()>=2 ){
+		       ElectronGrandMother1 = ElectronGrandMother0->mother(1);
+		       gmother1id = ElectronGrandMother1->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else if( gmother1id==mother0id && (ElectronGrandMother1!=0) ){
+		   if( ElectronGrandMother1->numberOfMothers()>=1 ){
+		     ElectronGrandMother1 = ElectronGrandMother1->mother(0);
+		     gmother1id = ElectronGrandMother1->pdgId();
+		     gmother0id = -99;
+		     if( ElectronGrandMother1->numberOfMothers()>=2 ){
+		       ElectronGrandMother0 = ElectronGrandMother1->mother(1);
+		       gmother0id = ElectronGrandMother0->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else staytrapped = false;
+	       }
+
+	       MyPfelectronLoose.genGrandMother00Id = gmother0id;
+	       MyPfelectronLoose.genGrandMother01Id = gmother1id;
+	     }
+	   }
+	   if( mother1id!=-99 ){
+	     MyPfelectronLoose.genMother1Id = ElectronMother1->pdgId();
+
+	     if( (ElectronMother1->numberOfMothers()>=1) ){
+	       const reco::Candidate *ElectronGrandMother0 = ElectronMother1->mother(0);
+	       const reco::Candidate *ElectronGrandMother1 = 0;
+
+	       if( (ElectronMother0->numberOfMothers()>=2) ) ElectronGrandMother1 = ElectronMother1->mother(1);
+
+	       int gmother0id = ElectronGrandMother0->pdgId();
+	       int gmother1id = ( ElectronGrandMother1!=0 ) ? ElectronGrandMother1->pdgId() : -99;
+
+	       bool staytrapped = true;
+	       while( (gmother0id==mother1id || gmother1id==mother1id) && staytrapped ){
+		 if( gmother0id==mother1id && (ElectronGrandMother0!=0) ){
+		   if( ElectronGrandMother0->numberOfMothers()>=1 ){
+		     ElectronGrandMother0 = ElectronGrandMother0->mother(0);
+		     gmother0id = ElectronGrandMother0->pdgId();
+		     gmother1id = -99;
+		     if( ElectronGrandMother0->numberOfMothers()>=2 ){
+		       ElectronGrandMother1 = ElectronGrandMother0->mother(1);
+		       gmother1id = ElectronGrandMother1->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else if( gmother1id==mother1id && (ElectronGrandMother1!=0) ){
+		   if( ElectronGrandMother1->numberOfMothers()>=1 ){
+		     ElectronGrandMother1 = ElectronGrandMother1->mother(0);
+		     gmother1id = ElectronGrandMother1->pdgId();
+		     gmother0id = -99;
+		     if( ElectronGrandMother1->numberOfMothers()>=2 ){
+		       ElectronGrandMother0 = ElectronGrandMother1->mother(1);
+		       gmother0id = ElectronGrandMother0->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else staytrapped = false;
+	       }
+
+	       MyPfelectronLoose.genGrandMother10Id = gmother0id;
+	       MyPfelectronLoose.genGrandMother11Id = gmother1id;
+	     }
+	   }
+	 }
+
+       }// end check if genLepton
+
+
+       ConversionFinder convFinder;
+       ConversionInfo convInfo = convFinder.getConversionInfo(*pfele, trackHandle, evt_bField);
+   
+       double dist = convInfo.dist();
+       double dcot = convInfo.dcot();
+       double convradius = convInfo.radiusOfConversion();
+       math::XYZPoint convPoint = convInfo.pointOfConversion();
+
+       MyPfelectronLoose.dist = dist;
+       MyPfelectronLoose.dcot = dcot;
+       MyPfelectronLoose.convradius = convradius;
+       MyPfelectronLoose.convPointX = convPoint.x();
+       MyPfelectronLoose.convPointY = convPoint.y();
+       MyPfelectronLoose.convPointZ = convPoint.z();
+       MyPfelectronLoose.passConvVeto = pfele->passConversionVeto();
+       
+
+       bool cutDelEta=false, cutDelPhi=false, cutSigIeta=false, cutE2x5=false, cutEMhad1=false, cutHad2=false, cutTrackIso=false;
+
+       double absEta = fabs(pfele->superCluster()->position().eta());
+       double EMhad1 = pfele->dr03EcalRecHitSumEt() + pfele->dr03HcalDepth1TowerSumEt();
+       bool EB = ( absEta < 1.442 );
+       bool EE = ( absEta > 1.560 && absEta < 2.5 );
+
+       bool isECAL = pfele->ecalDrivenSeed();
+
+       bool cutET = ( heepEt > 25. );
+       bool cutEta = ( EB || EE );
+       bool cutHoverE = ( pfele->hadronicOverEm() < 0.05 );
+
+       if( EB ){
+	 cutDelEta = ( fabs(pfele->deltaEtaSuperClusterTrackAtVtx())<0.005 );
+	 cutDelPhi = ( fabs(pfele->deltaPhiSuperClusterTrackAtVtx())<0.09 );
+	 cutSigIeta = true;
+	 cutE2x5 = ( (pfele->scE2x5Max()/pfele->scE5x5())>0.94 || (pfele->scE1x5()/pfele->scE5x5())>0.83 );
+	 cutEMhad1 = ( EMhad1 < (2 + 0.03*heepEt) );
+	 cutHad2 = true;
+	 cutTrackIso = ( pfele->dr03TkSumPt()<7.5 );
+       }
+       else if( EE ){
+	 cutDelEta = ( fabs(pfele->deltaEtaSuperClusterTrackAtVtx())<0.007 );
+	 cutDelPhi = ( fabs(pfele->deltaPhiSuperClusterTrackAtVtx())<0.09 );
+	 cutSigIeta = ( pfele->scSigmaIEtaIEta()<0.03 );
+	 cutE2x5 = true;
+	 if( heepEt<50 ) cutEMhad1 = ( EMhad1 < 2.5 );
+	 else cutEMhad1 = ( EMhad1 < (2.5 + 0.03*(heepEt-50)) );
+	 cutHad2 = ( pfele->dr03HcalDepth2TowerSumEt()<0.5 );
+	 cutTrackIso = ( pfele->dr03TkSumPt()<15. );
+       }
+
+       bool isHEEPnoEt = ( isECAL && cutEta && cutDelEta && cutDelPhi && cutHoverE &&  
+			   cutSigIeta && cutE2x5 && cutEMhad1 && cutHad2 && cutTrackIso );
+       bool isHEEP = ( isHEEPnoEt && cutET );
+
+
+       MyPfelectronLoose.isHEEP = ( isHEEP ) ? 1 : 0;
+       MyPfelectronLoose.isHEEPnoEt = ( isHEEPnoEt ) ? 1 : 0;
+
+       if( sample_<0 ){
+	 MyPfelectronLoose.AEffDr03 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso03, pfeleEta, ElectronEffectiveArea::kEleEAData2012);
+	 MyPfelectronLoose.AEffDr04 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso04, pfeleEta, ElectronEffectiveArea::kEleEAData2012);  
+       }
+       else {
+	 MyPfelectronLoose.AEffDr03 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso03, pfeleEta, ElectronEffectiveArea::kEleEAFall11MC);
+	 MyPfelectronLoose.AEffDr04 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso04, pfeleEta, ElectronEffectiveArea::kEleEAFall11MC); 
+       }
+
+       bnpfelectronsLoose->push_back(MyPfelectronLoose);
+
+     }
+   }
+
 
 
    // double metJES1corrPx = 0;
@@ -2860,6 +3327,390 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        }// end check if genLepton
 
        bnpfmuons->push_back(MyPfmuon);
+     }
+   }
+
+
+
+
+   /////////////////////////////////////////////
+   ///////
+   ///////   Fill the pfmuon collection
+   ///////
+   /////////////////////////////////////////////
+
+   std::auto_ptr<BNmuonCollection> bnpfmuonsLoose(new BNmuonCollection);
+   if( producePFMuon ){
+     edm::View<pat::Muon> pfmuonsLoose = *pfmuonLooseHandle;
+
+     for( edm::View<pat::Muon>::const_iterator pfmuon = pfmuonsLoose.begin(); pfmuon!=pfmuonsLoose.end(); ++pfmuon ){
+
+       BNmuon MyPfmuonLoose;
+
+       // general kinematic variables
+       MyPfmuonLoose.energy = pfmuon->energy();
+       MyPfmuonLoose.et = pfmuon->et();
+       MyPfmuonLoose.pt = pfmuon->pt();
+       MyPfmuonLoose.px = pfmuon->px();
+       MyPfmuonLoose.py = pfmuon->py();
+       MyPfmuonLoose.pz = pfmuon->pz();
+       MyPfmuonLoose.phi = pfmuon->phi();
+       MyPfmuonLoose.eta = pfmuon->eta();
+       MyPfmuonLoose.theta = pfmuon->theta();
+
+
+       MyPfmuonLoose.charge = pfmuon->charge();
+       MyPfmuonLoose.vx = pfmuon->vx();
+       MyPfmuonLoose.vy = pfmuon->vy();
+       MyPfmuonLoose.vz = pfmuon->vz();
+
+
+       MyPfmuonLoose.particleIso = pfmuon->particleIso();     
+       MyPfmuonLoose.chargedHadronIso = pfmuon->chargedHadronIso();     
+       MyPfmuonLoose.neutralHadronIso = pfmuon->neutralHadronIso();     
+       MyPfmuonLoose.photonIso = pfmuon->photonIso();     
+       MyPfmuonLoose.puChargedHadronIso = pfmuon->puChargedHadronIso();     
+
+       MyPfmuonLoose.chargedHadronIsoDR03 = pfmuon->userIso(0);     
+       MyPfmuonLoose.neutralHadronIsoDR03 = pfmuon->userIso(1);
+       MyPfmuonLoose.photonIsoDR03 = pfmuon->userIso(2);
+       MyPfmuonLoose.puChargedHadronIsoDR03 = pfmuon->userIso(3);
+
+       MyPfmuonLoose.chargedHadronIsoDR04 = pfmuon->userIso(4);     
+       MyPfmuonLoose.neutralHadronIsoDR04 = pfmuon->userIso(5);
+       MyPfmuonLoose.photonIsoDR04 = pfmuon->userIso(6);
+       MyPfmuonLoose.puChargedHadronIsoDR04 = pfmuon->userIso(7);
+
+       MyPfmuonLoose.rhoPrime = std::max(rho_event, 0.0);
+       if( sample_<0 ){
+	 MyPfmuonLoose.AEffDr03 = MuonEffectiveArea::GetMuonEffectiveArea(MuonEffectiveArea::kMuGammaAndNeutralHadronIso03, pfmuon->eta(), MuonEffectiveArea::kMuEAData2012);
+	 MyPfmuonLoose.AEffDr04 = MuonEffectiveArea::GetMuonEffectiveArea(MuonEffectiveArea::kMuGammaAndNeutralHadronIso04, pfmuon->eta(), MuonEffectiveArea::kMuEAData2012);
+       }
+       else {
+	 MyPfmuonLoose.AEffDr03 = MuonEffectiveArea::GetMuonEffectiveArea(MuonEffectiveArea::kMuGammaAndNeutralHadronIso03, pfmuon->eta(), MuonEffectiveArea::kMuEAFall11MC);
+	 MyPfmuonLoose.AEffDr04 = MuonEffectiveArea::GetMuonEffectiveArea(MuonEffectiveArea::kMuGammaAndNeutralHadronIso04, pfmuon->eta(), MuonEffectiveArea::kMuEAFall11MC);
+       }
+
+       MyPfmuonLoose.pfIsoR03SumChargedHadronPt = pfmuon->pfIsolationR03().sumChargedHadronPt;
+       MyPfmuonLoose.pfIsoR03SumNeutralHadronEt = pfmuon->pfIsolationR03().sumNeutralHadronEt;
+       MyPfmuonLoose.pfIsoR03SumPhotonEt = pfmuon->pfIsolationR03().sumPhotonEt;
+       MyPfmuonLoose.pfIsoR03SumPUPt = pfmuon->pfIsolationR03().sumPUPt;
+
+       MyPfmuonLoose.pfIsoR04SumChargedHadronPt = pfmuon->pfIsolationR04().sumChargedHadronPt;
+       MyPfmuonLoose.pfIsoR04SumNeutralHadronEt = pfmuon->pfIsolationR04().sumNeutralHadronEt;
+       MyPfmuonLoose.pfIsoR04SumPhotonEt = pfmuon->pfIsolationR04().sumPhotonEt;
+       MyPfmuonLoose.pfIsoR04SumPUPt = pfmuon->pfIsolationR04().sumPUPt;
+
+
+
+       MyPfmuonLoose.trackIso = pfmuon->trackIso();
+       MyPfmuonLoose.ecalIso = pfmuon->ecalIso();
+       MyPfmuonLoose.hcalIso = pfmuon->hcalIso();
+       MyPfmuonLoose.caloIso = pfmuon->caloIso();
+
+       MyPfmuonLoose.trackIsoDR03 = pfmuon->isolationR03().sumPt;
+       MyPfmuonLoose.ecalIsoDR03 = pfmuon->isolationR03().emEt;
+       MyPfmuonLoose.hcalIsoDR03 = pfmuon->isolationR03().hadEt;
+       MyPfmuonLoose.caloIsoDR03 = pfmuon->isolationR03().emEt + pfmuon->isolationR03().hadEt;
+
+       MyPfmuonLoose.trackVetoIsoDR03 = pfmuon->isolationR03().trackerVetoPt;
+       MyPfmuonLoose.ecalVetoIsoDR03 = pfmuon->isolationR03().emVetoEt;
+       MyPfmuonLoose.hcalVetoIsoDR03 = pfmuon->isolationR03().hadVetoEt;
+       MyPfmuonLoose.caloVetoIsoDR03 = pfmuon->isolationR03().emVetoEt + pfmuon->isolationR03().hadVetoEt;
+
+       MyPfmuonLoose.trackIsoDR05 = pfmuon->isolationR05().sumPt;
+       MyPfmuonLoose.ecalIsoDR05 = pfmuon->isolationR05().emEt;
+       MyPfmuonLoose.hcalIsoDR05 = pfmuon->isolationR05().hadEt;
+       MyPfmuonLoose.caloIsoDR05 = pfmuon->isolationR05().emEt + pfmuon->isolationR05().hadEt;
+
+       MyPfmuonLoose.trackVetoIsoDR05 = pfmuon->isolationR05().trackerVetoPt;
+       MyPfmuonLoose.ecalVetoIsoDR05 = pfmuon->isolationR05().emVetoEt;
+       MyPfmuonLoose.hcalVetoIsoDR05 = pfmuon->isolationR05().hadVetoEt;
+       MyPfmuonLoose.caloVetoIsoDR05 = pfmuon->isolationR05().emVetoEt + pfmuon->isolationR05().hadVetoEt;
+
+       ////   Removed due to not understood seg faults. Seems ok in bare ROOT.
+       ////   Investigate and uncomment in future.
+       //MyMuon.hcalE = muon->hcalIsoDeposit()->candEnergy();
+       //MyMuon.ecalE = muon->ecalIsoDeposit()->candEnergy();
+
+       MyPfmuonLoose.timeAtIpInOut = pfmuon->time().timeAtIpInOut;
+       MyPfmuonLoose.timeAtIpInOutErr = pfmuon->time().timeAtIpInOutErr;
+       MyPfmuonLoose.timeAtIpOutIn = pfmuon->time().timeAtIpOutIn;
+       MyPfmuonLoose.timeAtIpOutInErr = pfmuon->time().timeAtIpOutInErr;
+       MyPfmuonLoose.time_ndof = pfmuon->time().nDof;
+
+       if( pfmuon->isEnergyValid() ){
+	 MyPfmuonLoose.ecal_time = pfmuon->calEnergy().ecal_time;
+	 MyPfmuonLoose.hcal_time = pfmuon->calEnergy().hcal_time;
+	 MyPfmuonLoose.ecal_timeError = pfmuon->calEnergy().ecal_timeError;
+	 MyPfmuonLoose.hcal_timeError = pfmuon->calEnergy().hcal_timeError;
+	 MyPfmuonLoose.energy_ecal = pfmuon->calEnergy().em;
+	 MyPfmuonLoose.energy_hcal = pfmuon->calEnergy().had;
+	 MyPfmuonLoose.e3x3_ecal = pfmuon->calEnergy().emS9;
+	 MyPfmuonLoose.e3x3_hcal = pfmuon->calEnergy().hadS9;
+	 MyPfmuonLoose.energyMax_ecal = pfmuon->calEnergy().emMax;
+	 MyPfmuonLoose.energyMax_hcal = pfmuon->calEnergy().hadMax;
+       }
+
+
+       MyPfmuonLoose.IDGMPTight = ( pfmuon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
+
+       MyPfmuonLoose.isPFMuon = ( pfmuon->isPFMuon() ) ? 1 : 0;
+       MyPfmuonLoose.isGoodMuon_1StationTight = ( pfmuon->isGood("TMOneStationTight") )  ? 1 : 0;
+       MyPfmuonLoose.isGlobalMuon = ( pfmuon->isGlobalMuon() ) ? 1 : 0;
+       MyPfmuonLoose.isTrackerMuon = ( pfmuon->isTrackerMuon() ) ? 1 : 0;
+       MyPfmuonLoose.isStandAloneMuon = ( pfmuon->isStandAloneMuon() ) ? 1 : 0;
+       MyPfmuonLoose.isGlobalMuonPromptTight = ( pfmuon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
+
+       MyPfmuonLoose.numberOfMatches = pfmuon->numberOfMatches();
+       MyPfmuonLoose.numberOfMatchedStations = pfmuon->numberOfMatchedStations();
+
+       MyPfmuonLoose.dVzPVz = pfmuon->vz() - PVz;
+       MyPfmuonLoose.dB = pfmuon->dB();
+
+       MyPfmuonLoose.IP = pfmuon->dB(pat::Muon::PV3D);
+       MyPfmuonLoose.IPError = pfmuon->edB(pat::Muon::PV3D);
+
+       if( (pfmuon->globalTrack().isAvailable()) ){
+	 MyPfmuonLoose.normalizedChi2 = pfmuon->globalTrack()->normalizedChi2();
+	 MyPfmuonLoose.numberOfValidMuonHits = pfmuon->globalTrack()->hitPattern().numberOfValidMuonHits();
+	 MyPfmuonLoose.numberOfValidTrackerHits = pfmuon->globalTrack()->hitPattern().numberOfValidTrackerHits();
+         MyPfmuonLoose.numberOfLayersWithMeasurement = pfmuon->track()->hitPattern().trackerLayersWithMeasurement();
+	 MyPfmuonLoose.ptErr = pfmuon->globalTrack()->ptError();
+       }
+       if( (pfmuon->innerTrack().isAvailable()) ){
+         MyPfmuonLoose.innerTrackNormChi2 = pfmuon->innerTrack()->normalizedChi2();
+	 MyPfmuonLoose.numberOfValidTrackerHitsInnerTrack = pfmuon->innerTrack()->numberOfValidHits();
+	 MyPfmuonLoose.pixelLayersWithMeasurement = pfmuon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
+         MyPfmuonLoose.numberOfValidPixelHits = pfmuon->innerTrack()->hitPattern().numberOfValidPixelHits();
+
+	 MyPfmuonLoose.correctedD0 = pfmuon->innerTrack()->dxy(beamSpotPosition);
+         MyPfmuonLoose.correctedD0Vertex = pfmuon->innerTrack()->dxy(vertexPosition);
+	 MyPfmuonLoose.correctedDZ = pfmuon->innerTrack()->dz(vertexPosition);
+       }
+
+       // Get track pfmuon info
+       if( (pfmuon->track().isAvailable()) ){
+	 double tkvx = pfmuon->track()->vx();
+	 double tkvy = pfmuon->track()->vy();
+	 double tkpx = pfmuon->track()->px();
+	 double tkpy = pfmuon->track()->py();
+	 double tkpt = pfmuon->track()->pt();
+
+	 double ndof = pfmuon->track()->ndof();
+	 if( (ndof!=0) ) MyPfmuonLoose.tkNormChi2 = pfmuon->track()->chi2()/ndof;
+	 MyPfmuonLoose.tkPT = pfmuon->track()->pt();
+	 MyPfmuonLoose.tkEta = pfmuon->track()->eta();
+	 MyPfmuonLoose.tkPhi = pfmuon->track()->phi();
+	 MyPfmuonLoose.tkDZ = pfmuon->track()->dz();
+	 MyPfmuonLoose.tkD0 = pfmuon->track()->d0();
+	 MyPfmuonLoose.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
+	 MyPfmuonLoose.tkD0err = pfmuon->track()->d0Error();
+	 MyPfmuonLoose.tkNumValidHits = pfmuon->track()->numberOfValidHits();
+	 MyPfmuonLoose.tkCharge = pfmuon->track()->charge();
+       }
+       // Get standalone pfmuon info
+       if( (pfmuon->standAloneMuon().isAvailable()) ){
+	 double samvx = pfmuon->standAloneMuon()->vx();
+	 double samvy = pfmuon->standAloneMuon()->vy();
+	 double sampx = pfmuon->standAloneMuon()->px();
+	 double sampy = pfmuon->standAloneMuon()->py();
+	 double sampt = pfmuon->standAloneMuon()->pt();
+
+	 double ndof = pfmuon->standAloneMuon()->ndof();
+	 if( (ndof!=0) ) MyPfmuonLoose.samNormChi2 = pfmuon->standAloneMuon()->chi2()/ndof;
+	 MyPfmuonLoose.samPT = pfmuon->standAloneMuon()->pt();
+	 MyPfmuonLoose.samEta = pfmuon->standAloneMuon()->eta();
+	 MyPfmuonLoose.samPhi = pfmuon->standAloneMuon()->phi();
+	 MyPfmuonLoose.samDZ = pfmuon->standAloneMuon()->dz();
+	 MyPfmuonLoose.samD0 = pfmuon->standAloneMuon()->d0();
+	 MyPfmuonLoose.samD0bs = (samvx-BSx)*sampy/sampt-(samvy-BSy)*sampx/sampt;
+	 MyPfmuonLoose.samD0err = pfmuon->standAloneMuon()->d0Error();
+	 MyPfmuonLoose.samNumValidHits = pfmuon->standAloneMuon()->numberOfValidHits();
+	 MyPfmuonLoose.samCharge = pfmuon->standAloneMuon()->charge();
+       }
+       // Get global pfmuon info
+       if( (pfmuon->combinedMuon().isAvailable()) ){
+	 double comvx = pfmuon->combinedMuon()->vx();
+	 double comvy = pfmuon->combinedMuon()->vy();
+	 double compx = pfmuon->combinedMuon()->px();
+	 double compy = pfmuon->combinedMuon()->py();
+	 double compt = pfmuon->combinedMuon()->pt();
+
+	 double ndof = pfmuon->combinedMuon()->ndof();
+	 if( (ndof!=0) ) MyPfmuonLoose.comNormChi2 = pfmuon->combinedMuon()->chi2()/ndof;
+	 MyPfmuonLoose.comPT = pfmuon->combinedMuon()->pt();
+	 MyPfmuonLoose.comEta = pfmuon->combinedMuon()->eta();
+	 MyPfmuonLoose.comPhi = pfmuon->combinedMuon()->phi();
+	 MyPfmuonLoose.comDZ = pfmuon->combinedMuon()->dz();
+	 MyPfmuonLoose.comD0 = pfmuon->combinedMuon()->d0();
+	 MyPfmuonLoose.comD0bs = (comvx-BSx)*compy/compt-(comvy-BSy)*compx/compt;
+	 MyPfmuonLoose.comD0err = pfmuon->combinedMuon()->d0Error();
+	 MyPfmuonLoose.comNumValidHits = pfmuon->combinedMuon()->numberOfValidHits();
+	 MyPfmuonLoose.comCharge = pfmuon->combinedMuon()->charge();
+       }
+
+       if( (pfmuon->genLepton()) ){
+	 int genId = pfmuon->genLepton()->pdgId();
+
+	 MyPfmuonLoose.genId = pfmuon->genLepton()->pdgId();
+	 MyPfmuonLoose.genET = pfmuon->genLepton()->et();
+	 MyPfmuonLoose.genPT = pfmuon->genLepton()->pt();
+	 MyPfmuonLoose.genPhi = pfmuon->genLepton()->phi();
+	 MyPfmuonLoose.genEta = pfmuon->genLepton()->eta();
+	 MyPfmuonLoose.genCharge = pfmuon->genLepton()->charge();
+
+	 MyPfmuonLoose.genNumberOfMothers = pfmuon->genLepton()->numberOfMothers();
+
+	 if( (pfmuon->genLepton()->numberOfMothers()>0) ){
+	   const reco::Candidate *PfmuonMother = pfmuon->genLepton()->mother();
+	   bool staytrapped = true;
+	   while( (PfmuonMother->pdgId()==genId && staytrapped) ){
+	     if( PfmuonMother->numberOfMothers()>=1 ) PfmuonMother = PfmuonMother->mother();
+	     else staytrapped = false;
+	   }
+       
+	   MyPfmuonLoose.genMotherId = PfmuonMother->pdgId();
+	   MyPfmuonLoose.genMotherET = PfmuonMother->et();
+	   MyPfmuonLoose.genMotherPT = PfmuonMother->pt();
+	   MyPfmuonLoose.genMotherPhi = PfmuonMother->phi();
+	   MyPfmuonLoose.genMotherEta = PfmuonMother->eta();
+	   MyPfmuonLoose.genMotherCharge = PfmuonMother->charge();
+	 }
+
+	 if( (pfmuon->genLepton()->numberOfMothers()>=1) ){
+	   const reco::Candidate *PfmuonMother0 = pfmuon->genLepton()->mother(0);
+	   const reco::Candidate *PfmuonMother1 = 0;
+
+	   if( (pfmuon->genLepton()->numberOfMothers()>=2) ) PfmuonMother1 = pfmuon->genLepton()->mother(1);
+
+	   int mother0id = PfmuonMother0->pdgId();
+	   int mother1id = ( PfmuonMother1!=0 ) ? PfmuonMother1->pdgId() : -99;
+
+	   bool staytrapped = true;
+	   while( (mother0id==genId || mother1id==genId) && staytrapped ){
+	     if( mother0id==genId && (PfmuonMother0!=0) ){
+	       if( PfmuonMother0->numberOfMothers()>=1 ){
+		 PfmuonMother0 = PfmuonMother0->mother(0);
+		 mother0id = PfmuonMother0->pdgId();
+		 mother1id = -99;
+		 if( PfmuonMother0->numberOfMothers()>=2 ){
+		   PfmuonMother1 = PfmuonMother0->mother(1);
+		   mother1id = PfmuonMother1->pdgId();
+		 }
+	       }
+	       else staytrapped = false;
+	     }
+	     else if( mother1id==genId && (PfmuonMother1!=0) ){
+	       if( PfmuonMother1->numberOfMothers()>=1 ){
+		 PfmuonMother1 = PfmuonMother1->mother(0);
+		 mother1id = PfmuonMother1->pdgId();
+		 mother0id = -99;
+		 if( PfmuonMother1->numberOfMothers()>=2 ){
+		   PfmuonMother0 = PfmuonMother1->mother(1);
+		   mother0id = PfmuonMother0->pdgId();
+		 }
+	       }
+	       else staytrapped = false;
+	     }
+	     else staytrapped = false;
+	   }
+
+	   if( mother0id!=-99 ){
+	     MyPfmuonLoose.genMother0Id = PfmuonMother0->pdgId();
+
+	     if( (PfmuonMother0->numberOfMothers()>=1) ){
+	       const reco::Candidate *PfmuonGrandMother0 = PfmuonMother0->mother(0);
+	       const reco::Candidate *PfmuonGrandMother1 = 0;
+
+	       if( (PfmuonMother0->numberOfMothers()>=2) ) PfmuonGrandMother1 = PfmuonMother0->mother(1);
+
+	       int gmother0id = PfmuonGrandMother0->pdgId();
+	       int gmother1id = ( PfmuonGrandMother1!=0 ) ? PfmuonGrandMother1->pdgId() : -99;
+
+	       bool staytrapped = true;
+	       while( (gmother0id==mother0id || gmother1id==mother0id) && staytrapped ){
+		 if( gmother0id==mother0id && (PfmuonGrandMother0!=0) ){
+		   if( PfmuonGrandMother0->numberOfMothers()>=1 ){
+		     PfmuonGrandMother0 = PfmuonGrandMother0->mother(0);
+		     gmother0id = PfmuonGrandMother0->pdgId();
+		     gmother1id = -99;
+		     if( PfmuonGrandMother0->numberOfMothers()>=2 ){
+		       PfmuonGrandMother1 = PfmuonGrandMother0->mother(1);
+		       gmother1id = PfmuonGrandMother1->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else if( gmother1id==mother0id && (PfmuonGrandMother1!=0) ){
+		   if( PfmuonGrandMother1->numberOfMothers()>=1 ){
+		     PfmuonGrandMother1 = PfmuonGrandMother1->mother(0);
+		     gmother1id = PfmuonGrandMother1->pdgId();
+		     gmother0id = -99;
+		     if( PfmuonGrandMother1->numberOfMothers()>=2 ){
+		       PfmuonGrandMother0 = PfmuonGrandMother1->mother(1);
+		       gmother0id = PfmuonGrandMother0->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else staytrapped = false;
+	       }
+
+	       MyPfmuonLoose.genGrandMother00Id = gmother0id;
+	       MyPfmuonLoose.genGrandMother01Id = gmother1id;
+	     }
+	   }
+	   if( mother1id!=-99 ){
+	     MyPfmuonLoose.genMother1Id = PfmuonMother1->pdgId();
+
+	     if( (PfmuonMother1->numberOfMothers()>=1) ){
+	       const reco::Candidate *PfmuonGrandMother0 = PfmuonMother1->mother(0);
+	       const reco::Candidate *PfmuonGrandMother1 = 0;
+
+	       if( (PfmuonMother0->numberOfMothers()>=2) ) PfmuonGrandMother1 = PfmuonMother1->mother(1);
+
+	       int gmother0id = PfmuonGrandMother0->pdgId();
+	       int gmother1id = ( PfmuonGrandMother1!=0 ) ? PfmuonGrandMother1->pdgId() : -99;
+
+	       bool staytrapped = true;
+	       while( (gmother0id==mother1id || gmother1id==mother1id) && staytrapped ){
+		 if( gmother0id==mother1id && (PfmuonGrandMother0!=0) ){
+		   if( PfmuonGrandMother0->numberOfMothers()>=1 ){
+		     PfmuonGrandMother0 = PfmuonGrandMother0->mother(0);
+		     gmother0id = PfmuonGrandMother0->pdgId();
+		     gmother1id = -99;
+		     if( PfmuonGrandMother0->numberOfMothers()>=2 ){
+		       PfmuonGrandMother1 = PfmuonGrandMother0->mother(1);
+		       gmother1id = PfmuonGrandMother1->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else if( gmother1id==mother1id && (PfmuonGrandMother1!=0) ){
+		   if( PfmuonGrandMother1->numberOfMothers()>=1 ){
+		     PfmuonGrandMother1 = PfmuonGrandMother1->mother(0);
+		     gmother1id = PfmuonGrandMother1->pdgId();
+		     gmother0id = -99;
+		     if( PfmuonGrandMother1->numberOfMothers()>=2 ){
+		       PfmuonGrandMother0 = PfmuonGrandMother1->mother(1);
+		       gmother0id = PfmuonGrandMother0->pdgId();
+		     }
+		   }
+		   else staytrapped = false;
+		 }
+		 else staytrapped = false;
+	       }
+
+	       MyPfmuonLoose.genGrandMother10Id = gmother0id;
+	       MyPfmuonLoose.genGrandMother11Id = gmother1id;
+	     }
+	   }
+	 }
+
+       }// end check if genLepton
+
+       bnpfmuonsLoose->push_back(MyPfmuonLoose);
      }
    }
 
@@ -4768,6 +5619,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.put(bnevent);
    if( produceElectron ) iEvent.put(bnelectrons,eleTag_.label());
    if( producePFelectron ) iEvent.put(bnpfelectrons,pfeleTag_.label());
+   if( producePFelectronLoose ) iEvent.put(bnpfelectronsLoose,pfeleLooseTag_.label());
    if( produceCaloJet ) iEvent.put(bncalojets,calojetTag_.label());
    if( producePFJet ) iEvent.put(bnpfjets,pfjetTag_.label());
    if( produceGenJet ) iEvent.put(bngenjets,genjetTag_.label());
@@ -4779,6 +5631,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    if( produceTCMET ) iEvent.put(bntcmet,tcmetTag_.label());
    if( produceMuon ) iEvent.put(bnmuons,muonTag_.label());
    if( producePFMuon ) iEvent.put(bnpfmuons,pfmuonTag_.label());
+   if( producePFMuonLoose ) iEvent.put(bnpfmuonsLoose,pfmuonLooseTag_.label());
    if( produceCocktailMuon ) iEvent.put(bncocktailmuons,cocktailmuonTag_.label());
    if( produceTau ) iEvent.put(bntaus,tauTag_.label());
    if( producePhoton ) iEvent.put(bnphotons,photonTag_.label());

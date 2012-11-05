@@ -197,7 +197,7 @@ if runOnMC and sampleNumber<0:
   sys.exit( 'ERROR: Expecting to run on MC with sampleNumber<0.  The sampleNumber must be positive when running on MC.' )
 
 # maximum number of events
-maxInputEvents = 10 # reduce for testing
+maxInputEvents = 100 # reduce for testing
 
 ### Conditions
 
@@ -1033,13 +1033,15 @@ process.BNproducer = cms.EDProducer('BEANmaker',
                                     pfmetTag_uncorrectedRECO    = cms.InputTag("pfMETPFlow"),
                                     tcmetTag = cms.InputTag("none"),
                                     eleTag = cms.InputTag("selectedPatElectrons"),
-                                    pfeleTag = cms.InputTag("selectedPatElectronsLoosePFlow"),
+                                    pfeleTag = cms.InputTag("selectedPatElectronsPFlow"),
+                                    pfeleLooseTag = cms.InputTag("selectedPatElectronsLoosePFlow"),
                                     genParticleTag = cms.InputTag("genParticles"),
                                     calojetTag = cms.InputTag("none"),
                                     pfjetTag = cms.InputTag("selectedPatJetsPFlow"),
                                     genjetTag = cms.InputTag("ak5GenJets"),
                                     muonTag = cms.InputTag("selectedPatMuons"),
-                                    pfmuonTag = cms.InputTag("selectedPatMuonsLoosePFlow"),
+                                    pfmuonTag = cms.InputTag("selectedPatMuonsPFlow"),
+                                    pfmuonLooseTag = cms.InputTag("selectedPatMuonsLoosePFlow"),
                                     cocktailmuonTag = cms.InputTag("none"),
                                     photonTag = cms.InputTag("none"),
                                     EBsuperclusterTag = cms.InputTag("correctedHybridSuperClusters"),
