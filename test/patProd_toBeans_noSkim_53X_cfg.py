@@ -204,8 +204,8 @@ maxInputEvents = 100 # reduce for testing
 # GlobalTags (w/o suffix '::All')
 #globalTagData = 'GR_R_52_V7'
 #globalTagMC   = 'START52_V9'
-globalTagData = 'GR_R_52_V9'
-globalTagMC   = 'START52_V11'
+globalTagData = 'GR_R_53_V10'
+globalTagMC   = 'START53_V7F'
 
 ### Output
 
