@@ -32,10 +32,11 @@ GREEN="\033[0;32m"
 WHITE="\033[1;37m"
 NOCOLOR="\e[0m"
 
-function echoWar(){ echo -e "$PURPLE$1$NOCOLOR"; }
-function echoInf(){ echo -e "$BLUE$1$NOCOLOR"; }
-function echoSuc(){ echo -e "$GREEN$1$NOCOLOR"; }
-function echoWar(){ echo -e "$PURPLE[ WARNING ] $1$NOCOLOR" >&2; exit 1; }
+#function echoWar(){ echo -e "$PURPLE$1$NOCOLOR"; }
+#function echoInf(){ echo -e "$BLUE$1$NOCOLOR"; }
+#function echoSuc(){ echo -e "$GREEN$1$NOCOLOR"; }
+#function echoWar(){ echo -e "$PURPLE[ WARNING ] $1$NOCOLOR" >&2; exit 1; }
+function echoWar(){ echo -e "$PURPLE[ WARNING ] $1$NOCOLOR" >&2; }
 function echoErr(){ echo -e "$RED[  ERROR  ] $1$NOCOLOR" >&2; rm -rf "$tempfile" "$output"; exit 1; }
 
 input="$1"
@@ -46,8 +47,8 @@ touch "$output" > /dev/null
 if [ $? -ne 0 ]; then echoErr "output file '$output' unwritable."; fi
 
 ## Check that we have a valid proxy
-haveProxy=`voms-proxy-info | grep timeleft`
-if [ -z "$haveProxy" ]; then echo -n "[ ATTENTION ] You don't seem to have a valid proxy. Would you like to get one (Y) or skip the DBS instance autoquery (N)? ";
+proxyExpiration=`voms-proxy-info | grep timeleft | sed -e 's/.*:\ //g' -e 's/://g'`
+if [[ $proxyExpiration -eq 0 ]]; then echo -n "[ ATTENTION ] You don't seem to have a valid proxy. Would you like to get one (Y) or skip the DBS instance autoquery (N)? ";
 	read getProxy;
 	while [[ "$getProxy" != "Y" ]] && [[ "$getProxy" != "y" ]] && [[ "$getProxy" != "N" ]] && [[ "$getProxy" != "n" ]]; do
 		echo -n "Invalid answer, please say 'Y' or 'N': "; read getProxy;
@@ -67,7 +68,8 @@ mkdir -p "/tmp/$USER/"
 tempfile="/tmp/$USER/.samples_from_twiki"
 
 ## Parse input file into temp file
-grep 'AOD\|USER' $input | sed 's/AOD\s.*/AOD/' | sed 's/AODSIM\s.*/AODSIM/' | sed 's/USER\s.*/USER/' > "$tempfile"
+#grep 'AOD\|USER' $input | sed 's/AOD\s.*/AOD/' | sed 's/AODSIM\s.*/AODSIM/' | sed 's/USER\s.*/USER/' > "$tempfile"
+grep 'AOD\|USER' $input > "$tempfile"
 
 ## Common parts for multicrab
 header="[MULTICRAB]
@@ -106,7 +108,55 @@ function getDBSinstance(){
 			if [[ "$dbsout" == "$input_ds" ]]; then echo "$url"; return 0; fi
 	done
 	echo "";
-	echoWar "dataset '$input_ds' not found in any DBS instance. Please check.";
+	echoErr "dataset '$input_ds' not found in any DBS instance. Please check.";
+}
+
+function getRecoType(){
+	ds="$1"
+	dssub=`echo "$ds" | grep Run20 | sed -e 's/.*Run20....//' -e 's/\/AOD.*//'`
+
+	if [ -z "$dssub" ]; then echoErr "Trying to obtain reco type for non collision dataset: $1"; fi
+
+	promtreco=`echo "$dssub" | grep -i "PromptReco"`
+	if [ ! -z "$promptreco" ]; then echo "PR"; return 0; fi
+
+	recover=`echo "$dssub" | grep -i "recover"`
+	if [ ! -z "$recover" ]; then echo "RRr"; return 0; fi
+
+	echo "RR"; return 0;
+
+}
+
+
+function getJSON(){
+	ds="echo $1 | awk '{print $2}'"
+	dssub=`echo "$ds" | grep Run20 | sed -e 's/.*Run20....//' -e 's/\/AOD.*//'`
+	if [ -z "$dssub" ]; then echoErr "Trying to obtain reco type for non collision dataset: $1"; fi
+
+	jsonPath="/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions"
+	era=`echo "$ds" | grep Run20 | sed -e 's/.*Run20\(..\).*/\1/'`
+	   if [ "$era" == "11" ]; then jsonPath+="11/7TeV/";
+	elif [ "$era" == "12" ]; then jsonPath+="12/8TeV/";
+	else echoErr "Could not determine era while attempting to get JSON file."
+	   fi
+
+	recoType=`getRecoType "$ds"`
+	if [ "$recoType" == "PR" ]; then jsonPath+="Prompt/";
+	else jsonPath+="Reprocessing/"; fi
+
+	filename=`echo "$line" | sed -e 's/.*Cert/Cert/' -e 's/\(\.txt\).*/\1/'`
+	jsonInFilename=`echo "$filename" | grep -i json`
+	if [ -z "$jsonInFilename" ]; then filename=""; fi
+
+	if [ ! -f "$jsonPath$filename" ]; then
+		echo "" >&2;
+		echoWar "JSON file does not exist: $jsonPath$filename"
+		echoWar "lumi_mask for this task will contain its directory only!"
+	else
+		jsonPath+="$filename"
+	fi
+
+	echo "$jsonPath"
 }
 
 
@@ -116,7 +166,7 @@ function getBlock(){
 	## Set up values
 	DS="$1"
 	NUM="$2"
-	TYPE="$3"
+	JSON="$3"
 	DSU=`echo $DS | sed "s/^\///" | sed "s/\//_/g" | sed "s/_AODSIM//g" | sed "s/_AOD//g" | sed "s/_USER//g"`
 
 	## Determine era
@@ -145,8 +195,8 @@ CMSSW.number_of_jobs            = $numJobs"
 collisions="$common
 CMSSW.total_number_of_lumis     = -1
 #CMSSW.runselection              = 190456-196531
-CMSSW.lumi_mask                 = /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/$json
-CMSSW.pycfg_params              = jobParams=${era}_${subEra}_data-PR_$NUM"
+CMSSW.lumi_mask                 = $JSON
+CMSSW.pycfg_params              = jobParams=${era}_${subEra}_data-$(getRecoType $DS)_$NUM"
 
 background="$common
 CMSSW.total_number_of_events    = -1
@@ -180,7 +230,8 @@ while read line; do
 	num=`echo $line | awk '{print $1}'`
 	ds=`echo $line | awk '{print $2}'`
 	echo -ne "${PURPLE}Preparing '${NOCOLOR}${ORANGE}$ds${PURPLE}'...${NOCOLOR}"
-	getBlock "$ds" $num >> "$output"
+	json="$(getJSON $line)"
+	getBlock "$ds" "$num" "$json" >> "$output"
 	echo -e "${GREEN} done!${NOCOLOR}";
 done < "$tempfile"
 
