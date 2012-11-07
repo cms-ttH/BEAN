@@ -62,7 +62,9 @@ if [ -z "$haveProxy" ]; then echo -n "[ ATTENTION ] You don't seem to have a val
 	fi
 fi
 
-tempfile="/tmp/.samples_from_twiki"
+
+mkdir -p "/tmp/$USER/"
+tempfile="/tmp/$USER/.samples_from_twiki"
 
 ## Parse input file into temp file
 grep 'AOD\|USER' $input | sed 's/AOD\s.*/AOD/' | sed 's/AODSIM\s.*/AODSIM/' | sed 's/USER\s.*/USER/' > "$tempfile"
