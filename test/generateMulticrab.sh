@@ -139,7 +139,7 @@ function getBlock(){
 common="[$DSU]
 CMSSW.datasetpath               = $DS
 CMSSW.dbs_url                   = $(getDBSinstance $DS)
-USER.publish_data_name          = $DSU$project
+USER.publish_data_name          = ${DSU}_${project}
 CMSSW.number_of_jobs            = $numJobs"
 
 collisions="$common
