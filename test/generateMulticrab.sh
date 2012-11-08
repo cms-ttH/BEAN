@@ -166,7 +166,6 @@ function getBlock(){
 	## Set up values
 	DS="$1"
 	NUM="$2"
-	JSON="$3"
 	DSU=`echo $DS | sed "s/^\///" | sed "s/\//_/g" | sed "s/_AODSIM//g" | sed "s/_AOD//g" | sed "s/_USER//g"`
 
 	## Determine era
@@ -199,9 +198,10 @@ if [[ "$DS" == *Run20* ]]; then
 echo "$common
 CMSSW.total_number_of_lumis     = -1
 #CMSSW.runselection              = 190456-196531
-CMSSW.lumi_mask                 = $JSON
+CMSSW.lumi_mask                 = $(getJSON $3)
 CMSSW.pycfg_params              = jobParams=${era}_${subEra}_data-$(getRecoType $DS)_$NUM"
 elif [[ "$DS" == /TTH* ]]; then 
+	echo "Signal!" >&2
 if [[ "$DS" == *FastSim* ]]; then SIM="FastSim"; else SIM="FullSim"; fi
 echo "$common
 CMSSW.total_number_of_events    = -1
@@ -227,8 +227,7 @@ while read line; do
 	num=`echo $line | awk '{print $1}'`
 	ds=`echo $line | awk '{print $2}'`
 	echo -ne "${PURPLE}Preparing '${NOCOLOR}${ORANGE}$ds${PURPLE}'...${NOCOLOR}"
-	json="$(getJSON $line)"
-	getBlock "$ds" "$num" "$json" >> "$output"
+	getBlock "$ds" "$num" "$line" >> "$output"
 	echo -e "${GREEN} done!${NOCOLOR}";
 done < "$tempfile"
 
