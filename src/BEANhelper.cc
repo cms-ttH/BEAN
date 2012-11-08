@@ -92,7 +92,7 @@ void BEANhelper::CheckSetUp(){ if(!isSetUp){ ThrowFatalError("BEANhelper not yet
 void BEANhelper::ThrowFatalError(string const iMessage){ cerr << "[ERROR]\t" << iMessage << " Cannot continue. Terminating..." << endl; exit(1); }
 
 // Return corrected MET based on *UNCORRECTED* input jet collection
-BNmet BEANhelper::GetCorrectedMET(const BNmet& iMET, const BNjetCollection& iJets, const sysType iSysType){
+BNmet BEANhelper::GetCorrectedMET(const BNmet& iMET, const BNjetCollection& iJets, const sysType::sysType iSysType){
 	CheckSetUp();
 	// IMPORTANT! iJets is the *UNCORRECTED* jet collection upon which to base the MET correction
 
@@ -122,7 +122,7 @@ BNmet BEANhelper::GetCorrectedMET(const BNmet& iMET, const BNjetCollection& iJet
 }
 
 // Return corrected jet
-BNjet BEANhelper::GetCorrectedJet(const BNjet& iJet, const sysType iSysType){
+BNjet BEANhelper::GetCorrectedJet(const BNjet& iJet, const sysType::sysType iSysType){
 	CheckSetUp();
 
 	// Return original jet if this sample contains collision data
@@ -154,7 +154,7 @@ BNjet BEANhelper::GetCorrectedJet(const BNjet& iJet, const sysType iSysType){
 }
 
 // Return collection with corrected jets
-BNjetCollection BEANhelper::GetCorrectedJets(const BNjetCollection& iJets, const sysType iSysType){
+BNjetCollection BEANhelper::GetCorrectedJets(const BNjetCollection& iJets, const sysType::sysType iSysType){
 	CheckSetUp();
 	BNjetCollection result;		
 	for( BNjetCollection::const_iterator Jet = iJets.begin(); Jet != iJets.end(); ++Jet ){
@@ -181,7 +181,7 @@ BNjetCollection BEANhelper::GetUncorrectedJets(const BNjetCollection& iCorrected
 }
 
 // Return the btag weight for the input jet (product of efficiency and scale factor)
-float BEANhelper::GetBtagWeight(const BNjet& iJet, const sysType iSysType){
+float BEANhelper::GetBtagWeight(const BNjet& iJet, const sysType::sysType iSysType){
 	CheckSetUp();
 
 	// Do nothing if this sample contains collision data
@@ -200,7 +200,7 @@ float BEANhelper::GetBtagWeight(const BNjet& iJet, const sysType iSysType){
 	return ((myEffSF[0])*(myEffSF[1]));
 }
 
-bool BEANhelper::PassesCSV(const BNjet& iJet, const char iCSVworkingPoint, const sysType iSysType){
+bool BEANhelper::PassesCSV(const BNjet& iJet, const char iCSVworkingPoint, const sysType::sysType iSysType){
 	CheckSetUp();
 
 		float csvValue = GetCSVvalue(iJet, iSysType);
@@ -215,7 +215,7 @@ bool BEANhelper::PassesCSV(const BNjet& iJet, const char iCSVworkingPoint, const
 		return false;
 }
 
-double BEANhelper::GetCSVvalue(const BNjet& iJet, const sysType iSysType){
+double BEANhelper::GetCSVvalue(const BNjet& iJet, const sysType::sysType iSysType){
 	CheckSetUp();
 		double result = iJet.btagCombinedSecVertex;
 
@@ -235,7 +235,7 @@ double BEANhelper::GetCSVvalue(const BNjet& iJet, const sysType iSysType){
 }
 
 // Return whether or not jet passes cuts
-bool BEANhelper::IsGoodJet(const BNjet& iJet, const float iMinPt, const float iMaxAbsEta, const jetID iJetID, const char iCSVworkingPoint){
+bool BEANhelper::IsGoodJet(const BNjet& iJet, const float iMinPt, const float iMaxAbsEta, const jetID::jetID iJetID, const char iCSVworkingPoint){
 	CheckSetUp();
 		// Transverse momentum requirement
 		if(iJet.pt < iMinPt){ return false; }
@@ -259,7 +259,7 @@ bool BEANhelper::IsGoodJet(const BNjet& iJet, const float iMinPt, const float iM
 }
 
 // Return collection with objects passing cuts
-BNjetCollection BEANhelper::GetSelectedJets(const BNjetCollection& iJets, const float iMinPt, const float iMaxAbsEta, const jetID iJetID, const char iCSVwp){
+BNjetCollection BEANhelper::GetSelectedJets(const BNjetCollection& iJets, const float iMinPt, const float iMaxAbsEta, const jetID::jetID iJetID, const char iCSVwp){
 	BNjetCollection result;		
 	for( BNjetCollection::const_iterator Jet = iJets.begin(); Jet != iJets.end(); ++Jet ){
 		if(IsGoodJet((*Jet), iMinPt, iMaxAbsEta, iJetID, iCSVwp)){ result.push_back(*Jet); }
@@ -319,7 +319,7 @@ bool BEANhelper::IsLooseMuon(const BNmuon& iMuon){ return IsGoodMuon(iMuon, muon
 
 bool BEANhelper::IsTightMuon(const BNmuon& iMuon){ return IsGoodMuon(iMuon, muonID::muonTight); }
 
-bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID iMuonID){
+bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
 	CheckSetUp();
 
 	// Set default kinematic thresholds
@@ -399,7 +399,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID iMuonID){
 }
 
 // Return collection with objects passing cuts
-BNmuonCollection BEANhelper::GetSelectedMuons(const BNmuonCollection& iMuons, const muonID iMuonID){
+BNmuonCollection BEANhelper::GetSelectedMuons(const BNmuonCollection& iMuons, const muonID::muonID iMuonID){
 	CheckSetUp();
 	BNmuonCollection result;
 	for( BNmuonCollection::const_iterator Muon = iMuons.begin(); Muon != iMuons.end(); ++Muon ){
@@ -430,7 +430,7 @@ float BEANhelper::GetElectronRelIso(const BNelectron& iElectron){
 
 
 // Electron ID function to keep things tidy
-bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electronID iElectronID){
+bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electronID::electronID iElectronID){
 	CheckSetUp();
 
 	// Electron ID stuff (DADT...)
@@ -469,7 +469,7 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 }
 
 // Return whether or not electron passes cuts
-bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID iElectronID){
+bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::electronID iElectronID){
 	CheckSetUp();
 
 	// Set default kinematic thresholds
@@ -543,7 +543,7 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID iE
 }
 
 // Return collection with objects passing cuts
-BNelectronCollection BEANhelper::GetSelectedElectrons(const BNelectronCollection& iElectrons, const electronID iElectronID){
+BNelectronCollection BEANhelper::GetSelectedElectrons(const BNelectronCollection& iElectrons, const electronID::electronID iElectronID){
 	CheckSetUp();
 	BNelectronCollection result;
 	for( BNelectronCollection::const_iterator Electron = iElectrons.begin(); Electron != iElectrons.end(); ++Electron ){
@@ -1213,7 +1213,7 @@ void BEANhelper::getFox(vecTLorentzVector jets, float &h0, float &h1, float &h2,
 }
 
 
-void BEANhelper::getFox_mod2(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, double HT,
+/*void BEANhelper::getFox_mod2(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, double HT,
 			float &h0_mod2, float &h1_mod2, float &h2_mod2, float &h3_mod2, float &h4_mod2,  float &h5_mod2,  
 			float &h6_mod2, float &h7_mod2, float &h8_mod2, float &h9_mod2, float &h10_mod2 ){
 
@@ -1300,7 +1300,7 @@ void BEANhelper::getFox_mod2(TLorentzVector lepton, TLorentzVector met, vecTLore
 
   return;
 }
-
+//*/
 
 vdouble BEANhelper::getEffSF( int returnType, double jetPt, double jetEta, double jetId ){
 

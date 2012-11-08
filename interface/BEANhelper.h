@@ -75,14 +75,15 @@ typedef BNtrackCollection::const_iterator         TrackIter;
 typedef BNtriggerCollection::const_iterator       TrigIter;
 typedef BNtrigobjCollection::const_iterator       TrigObjIter;
 
+namespace sysType{		enum sysType{		NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup }; }
+namespace jetID{		enum jetID{			jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
+namespace muonID{		enum muonID{		muonLoose, muonTight }; }
+namespace electronID{	enum electronID{	electronLoose, electronTight }; }
+
 using namespace std;
 
 class BEANhelper{
 	public:
-		enum sysType{ NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup };
-		enum jetID{ jetMinimal, jetLooseAOD, jetLoose, jetTight };
-		enum muonID{ muonLoose, muonTight };
-		enum electronID{ electronLoose, electronTight };
 
 
 	// === Functions === //
@@ -95,15 +96,15 @@ class BEANhelper{
 		void SetUp(unsigned int, int, bool, bool, string, bool);
 
 		// Jets and MET
-		float GetBtagWeight(const BNjet&, const sysType iSysType=sysType::NA);
-		bool PassesCSV(const BNjet&, const char, const sysType iSysType=sysType::NA);
-		double GetCSVvalue(const BNjet&, const sysType iSysType=sysType::NA);
-		bool IsGoodJet(const BNjet&, const float, const float, const jetID, const char);
-		BNmet GetCorrectedMET(const BNmet&, const BNjetCollection&, const sysType iSysType=sysType::NA);
-		BNjet GetCorrectedJet(const BNjet&, const sysType iSysType=sysType::NA);
-		BNjetCollection GetSelectedJets(const BNjetCollection&, const float, const float, const jetID, const char);
+		float GetBtagWeight(const BNjet&, const sysType::sysType iSysType=sysType::NA);
+		bool PassesCSV(const BNjet&, const char, const sysType::sysType iSysType=sysType::NA);
+		double GetCSVvalue(const BNjet&, const sysType::sysType iSysType=sysType::NA);
+		bool IsGoodJet(const BNjet&, const float, const float, const jetID::jetID, const char);
+		BNmet GetCorrectedMET(const BNmet&, const BNjetCollection&, const sysType::sysType iSysType=sysType::NA);
+		BNjet GetCorrectedJet(const BNjet&, const sysType::sysType iSysType=sysType::NA);
+		BNjetCollection GetSelectedJets(const BNjetCollection&, const float, const float, const jetID::jetID, const char);
 		BNjetCollection GetUncorrectedJets(const BNjetCollection&, const BNjetCollection&);
-		BNjetCollection GetCorrectedJets(const BNjetCollection&, const sysType iSysType=sysType::NA);
+		BNjetCollection GetCorrectedJets(const BNjetCollection&, const sysType::sysType iSysType=sysType::NA);
 		BNjetCollection GetCleanJets(const BNjetCollection&, const vector<TLorentzVector>&, const float);
 		unsigned int GetNumCSVbtags(const BNjetCollection&, const char);
 		unsigned int GetNumNonCSVbtags(const BNjetCollection&, const char);
@@ -115,17 +116,17 @@ class BEANhelper{
 		// Muons
 		bool IsLooseMuon(const BNmuon&);
 		bool IsTightMuon(const BNmuon&);
-		bool IsGoodMuon(const BNmuon&, const muonID);
+		bool IsGoodMuon(const BNmuon&, const muonID::muonID);
 		float GetMuonRelIso(const BNmuon&);
-		BNmuonCollection GetSelectedMuons(const BNmuonCollection&, const muonID);
+		BNmuonCollection GetSelectedMuons(const BNmuonCollection&, const muonID::muonID);
 
 		// Electrons
 		bool IsLooseElectron(const BNelectron&);
 		bool IsTightElectron(const BNelectron&);
 		float GetElectronRelIso(const BNelectron&);
-		bool GetElectronIDresult(const BNelectron& iElectron, const electronID);
-		bool IsGoodElectron(const BNelectron&, const electronID);
-		BNelectronCollection GetSelectedElectrons(const BNelectronCollection&, const electronID);
+		bool GetElectronIDresult(const BNelectron& iElectron, const electronID::electronID);
+		bool IsGoodElectron(const BNelectron&, const electronID::electronID);
+		BNelectronCollection GetSelectedElectrons(const BNelectronCollection&, const electronID::electronID);
 
 		// MCparticles
 		BNmcparticleCollection	GetSelectedMCparticlesByPDGid(const BNmcparticleCollection&, const vector<int>);
@@ -172,9 +173,9 @@ class BEANhelper{
 		double getJERfactor( int returnType, double jetAbsETA, double genjetPT, double recojetPT );
 		void getSp(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, float &aplanarity, float &sphericity);
 		void getFox(vecTLorentzVector jets,float &h0, float &h1, float &h2, float &h3, float &h4);	
-		void getFox_mod2(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, double HT,
-		float &h0_mod2, float &h1_mod2, float &h2_mod2, float &h3_mod2, float &h4_mod2,  float &h5_mod2,  
-		float &h6_mod2, float &h7_mod2, float &h8_mod2, float &h9_mod2, float &h10_mod2 );
+		//void getFox_mod2(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, double HT,
+		//float &h0_mod2, float &h1_mod2, float &h2_mod2, float &h3_mod2, float &h4_mod2,  float &h5_mod2,  
+		//float &h6_mod2, float &h7_mod2, float &h8_mod2, float &h9_mod2, float &h10_mod2 );
 
 	protected:
 
