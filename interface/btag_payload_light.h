@@ -1,6 +1,6 @@
 
 
-float mistag_CSVL(float eta,float x, float scale) {
+inline float mistag_CSVL(float eta,float x, float scale) {
   float mean=1.,min=1.,max=1.;
   double absEta = fabs(eta);
 
@@ -38,7 +38,7 @@ float mistag_CSVL(float eta,float x, float scale) {
   return SFl*(0.979396 + 0.000205898*x + 2.49868e-07*x*x);
 }
 
-float mistag_CSVM(float eta,float x, float scale) {
+inline float mistag_CSVM(float eta,float x, float scale) {
   float mean=1.,min=1.,max=1.;
   double absEta = fabs(eta);
 
@@ -71,7 +71,7 @@ float mistag_CSVM(float eta,float x, float scale) {
   return SFl*(1.10422 + -0.000523856*x + 1.14251e-06*x*x);
 }
 
-float mistag_CSVT(float eta,float x, float scale) {
+inline float mistag_CSVT(float eta,float x, float scale) {
   float mean=1.,min=1.,max=1.;
   double absEta = fabs(eta);
 
