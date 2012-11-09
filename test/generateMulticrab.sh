@@ -17,7 +17,6 @@ workingDir="/afs/crc.nd.edu/user/n/nvallsve/data/Production/"
 pset="makeBEAN_cfg.py"
 storageElement="T3_US_NotreDame"
 numJobs=450
-json="Collisions12/8TeV/Prompt/Cert_190456-205618_8TeV_PromptReco_Collisions12_JSON.txt"
 
 
 ##########################################################################################
@@ -117,7 +116,7 @@ function getRecoType(){
 
 	if [ -z "$dssub" ]; then echoErr "Trying to obtain reco type for non collision dataset: $1"; fi
 
-	promtreco=`echo "$dssub" | grep -i "PromptReco"`
+	promptreco=`echo "$dssub" | grep -i "PromptReco"`
 	if [ ! -z "$promptreco" ]; then echo "PR"; return 0; fi
 
 	recover=`echo "$dssub" | grep -i "recover"`
