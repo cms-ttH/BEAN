@@ -95,6 +95,15 @@ class BEANhelper{
 		// Set up BEANhelper
 		void SetUp(unsigned int, int, bool, bool, string, bool);
 
+		template <typename BNobject> void PrintInfo(const BNobject&);
+
+		// Union, intersection, difference
+		template <typename BNcollection> BNcollection GetSortedByPt(const BNcollection&);
+		template <typename BNcollection> BNcollection GetUnion(const BNcollection&, const BNcollection&);
+		template <typename BNcollection> BNcollection GetIntersection(const BNcollection&, const BNcollection&);
+		template <typename BNcollection> BNcollection GetDifference(const BNcollection&, const BNcollection&);
+		template <typename BNcollection> BNcollection GetSymmetricDifference(const BNcollection&, const BNcollection&);
+
 		// Jets and MET
 		float GetBtagWeight(const BNjet&, const sysType::sysType iSysType=sysType::NA);
 		bool PassesCSV(const BNjet&, const char, const sysType::sysType iSysType=sysType::NA);
@@ -177,6 +186,9 @@ class BEANhelper{
 		//float &h0_mod2, float &h1_mod2, float &h2_mod2, float &h3_mod2, float &h4_mod2,  float &h5_mod2,  
 		//float &h6_mod2, float &h7_mod2, float &h8_mod2, float &h9_mod2, float &h10_mod2 );
 
+
+
+
 	protected:
 
 	private:
@@ -207,6 +219,141 @@ class BEANhelper{
 		float			ETA_LIMIT;
 		float			EPSILON;
 
-};
+}; // End of class prototype
+
+
+
+// === Returned sorted input collection, by descending pT === //
+template <typename BNcollection> BNcollection BEANhelper::GetSortedByPt(const BNcollection& iBNcollection){
+	BNcollection result;
+	BNcollection tempCollection = iBNcollection;
+
+	while(tempCollection.size() > 1){
+		typename BNcollection::iterator largestPtElement = tempCollection.begin();
+		for(typename BNcollection::iterator Object = (tempCollection.begin()+1); Object != tempCollection.end(); ++Object ){
+			if(Object->pt > largestPtElement->pt){ largestPtElement = Object; }
+		}
+
+		result.push_back(*largestPtElement);
+		tempCollection.erase(largestPtElement);
+	}
+	result.push_back(*(tempCollection.begin()));
+
+	return result;
+}
+
+// === Return the union of the two input collections, removing the overlap === //
+template <typename BNcollection> BNcollection BEANhelper::GetUnion(const BNcollection& iBNcollection1, const BNcollection& iBNcollection2){
+	// Start off by adding all the objects in the first collection to the result
+	BNcollection result = iBNcollection1;
+
+	// Check to see what objects in the second collection need to be added, and do so
+	for(typename BNcollection::const_iterator Object2 = iBNcollection2.begin(); Object2 != iBNcollection2.end(); ++Object2 ){
+
+		// Look for Object2 in the results collection
+		bool presentInFirstCollection = false;
+		for(typename BNcollection::const_iterator Object1 = result.begin(); Object1 != result.end(); ++Object1 ){
+
+			// If two objects match in deltaR, check that they have virtually the same momentum. Throw fatal error
+			// if we get two matching objects with different momenta, as this probably mean that we're mixing corrected and uncorrected
+			// input collections
+			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < 0.001){
+				presentInFirstCollection = true;
+				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.001) &&
+									(fabs(Object1->py - Object2->py) < 0.001) &&
+									(fabs(Object1->pz - Object2->pz) < 0.001);
+				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; exit(1); }
+			}
+				
+		}
+
+		// If after looping over the results collection, Object2 wasn't found, add it!
+		if(!presentInFirstCollection){ result.push_back(*Object2); }
+	}
+
+	// Sort by descending pT
+	return GetSortedByPt(result);
+}
+
+// === Return the intersection of the two input collections, sorted by descending pT === //
+template <typename BNcollection> BNcollection BEANhelper::GetIntersection(const BNcollection& iBNcollection1, const BNcollection& iBNcollection2){
+	// Start off with an empty collection
+	BNcollection result;
+
+	// Check to see what objects in the second collection need to be added, and do so
+	for(typename BNcollection::const_iterator Object2 = iBNcollection2.begin(); Object2 != iBNcollection2.end(); ++Object2 ){
+
+		// Look for Object2 in the results collection
+		bool presentInFirstCollection = false;
+		for(typename BNcollection::const_iterator Object1 = iBNcollection1.begin(); Object1 != iBNcollection1.end(); ++Object1 ){
+
+			// If two objects match in deltaR, check that they have virtually the same momentum. Throw fatal error
+			// if we get two matching objects with different momenta, as this probably mean that we're mixing corrected and uncorrected
+			// input collections
+			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < 0.001){
+				presentInFirstCollection = true;
+				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.001) &&
+									(fabs(Object1->py - Object2->py) < 0.001) &&
+									(fabs(Object1->pz - Object2->pz) < 0.001);
+				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; exit(1); }
+
+				// If found a match, break loop
+				break;
+			}
+				
+		}
+
+		// If found match, add it!
+		if(presentInFirstCollection){ result.push_back(*Object2); }
+	}
+
+	// Sort by descending pT
+	return GetSortedByPt(result);
+}
+
+// === Return the difference of the two input collections, sorted by descending pT === //
+template <typename BNcollection> BNcollection BEANhelper::GetDifference(const BNcollection& iBNcollection1, const BNcollection& iBNcollection2){
+	// Start off with an empty collection
+	BNcollection result;
+
+	// Check to see what objects in the first collection need to be added, and do so
+	for(typename BNcollection::const_iterator Object1 = iBNcollection1.begin(); Object1 != iBNcollection1.end(); ++Object1 ){
+
+		// Look for Object1 in the second collection
+		bool presentInSecondCollection = false;
+		for(typename BNcollection::const_iterator Object2 = iBNcollection2.begin(); Object2 != iBNcollection2.end(); ++Object2 ){
+
+			// If two objects match in deltaR, check that they have virtually the same momentum. Throw fatal error
+			// if we get two matching objects with different momenta, as this probably mean that we're mixing corrected and uncorrected
+			// input collections
+			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < 0.001){
+				presentInSecondCollection = true;
+				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.001) &&
+									(fabs(Object1->py - Object2->py) < 0.001) &&
+									(fabs(Object1->pz - Object2->pz) < 0.001);
+				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; exit(1); }
+
+				break;
+			}
+		}
+
+		// If no match found, add it!
+		if(!presentInSecondCollection){ result.push_back(*Object1); }
+
+	}
+
+	// Sort by descending pT
+	return GetSortedByPt(result);
+}
+
+// === Return the symmetric difference of the two input collections, sorted by descending pT === //
+template <typename BNcollection> BNcollection BEANhelper::GetSymmetricDifference(const BNcollection& iBNcollection1, const BNcollection& iBNcollection2){
+	return GetUnion(GetDifference(iBNcollection1, iBNcollection2), GetDifference(iBNcollection2, iBNcollection1));
+}
+
+// === Print basic object info === //
+template <typename BNobject> void BEANhelper::PrintInfo(const BNobject& iBNobject){
+	cout << setprecision(4) << ">>> pT: " << setfill(' ') << setw(7) << iBNobject.pt << "\teta: " << iBNobject.eta << "\tphi: " << iBNobject.phi << endl;
+}
 
 #endif // _BEANhelper_h

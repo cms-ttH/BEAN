@@ -275,29 +275,6 @@ float BEANhelper::GetHT(const BNjetCollection& iJets){
 }
 
 
-/*BNobjectCollection BEANhelper::GetUnion(const BNobjectCollection& iObjects1, const BNobjectCollection& iObjects2){
-	BNobjectCollection result = iObjects1;
-	for( BNobjectCollection::const_iterator Object2 = iObjects2.begin(); Object2 != iObjects2.end(); ++Object2 ){
-
-		// Make sure Object2 does not overlap with any objects in the results
-		bool alreadyThere = false;
-		for( BNResultCollection::const_iterator Object1 = result.begin(); Object1 != result.end(); ++Object1){
-			alreadyThere = (deltaR(Result->eta, Result->phi, Object2->eta, Object2->phi) < 0.00001);
-			if(alreadyThere){ break; }
-		}
-		// Move on if it's already there
-		if(alreadyThere){ continue; }
-
-		// Else look for the right place to put it (keep descending pt order)
-		for( BNResultCollection::const_iterator Object1 = result.begin(); Object1 != result.end(); ++Object1){
-			if(Object2->pt > Object1->pt){ result.insert(Object1, *Object2); break; }	
-		}
-	}
-
-	return result;
-} //*/
-
-
 // Muon relative isolation
 float BEANhelper::GetMuonRelIso(const BNmuon& iMuon){ 
 	CheckSetUp();
@@ -602,7 +579,7 @@ BNmcparticleCollection BEANhelper::GetHadronicGenTaus(const BNmcparticleCollecti
 	BNmcparticleCollection result;
 	BNmcparticleCollection genTaus = GetGenTaus(iMCparticles);
 	for( BNmcparticleCollection::const_iterator genTau = genTaus.begin(); genTau != genTaus.end(); ++genTau){
-		if(true){ result.push_back(*genTau); }
+		if((abs(genTau->daughter0Id) == 16) || (abs(genTau->daughter1Id) == 16)){ result.push_back(*genTau); }
 	}
 
 	return result;
