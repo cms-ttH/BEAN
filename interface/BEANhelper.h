@@ -93,7 +93,7 @@ class BEANhelper{
 		virtual ~BEANhelper();
 		
 		// Set up BEANhelper
-		void SetUp(unsigned int, int, bool, bool, string, bool);
+		void SetUp(unsigned int, int, bool, bool, string, bool, bool);
 
 		template <typename BNobject> void PrintInfo(const BNobject&);
 
@@ -161,6 +161,7 @@ class BEANhelper{
 		bool isData;
 		string dataset;
 		bool reshapeCSV;
+        bool usePfLeptons;
 
 		// CSV reshaping
 		BTagShapeInterface*	  sh_;

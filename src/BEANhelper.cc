@@ -4,6 +4,7 @@ using namespace std;
 
 BEANhelper::BEANhelper(){
 
+    cout << __LINE__ << " " << __FILE__ << endl;
 	isSetUp = false;
 
 	CSVLwp = 0.244;
@@ -37,6 +38,7 @@ BEANhelper::BEANhelper(){
 	sh_hfSFDown_	= NULL;
 	sh_lfSFUp_		= NULL;
 	sh_lfSFDown_	= NULL;
+    cout << __LINE__ << " " << __FILE__ << endl;
 
 }
 
@@ -60,7 +62,8 @@ BEANhelper::~BEANhelper(){
 }
 
 // Set up parameters one by one
-void BEANhelper::SetUp(unsigned int iEra, int iSampleNumber, bool iIsLJ, bool iIsData, string iDataset, bool iReshapeCSV){
+void BEANhelper::SetUp(unsigned int iEra, int iSampleNumber, bool iIsLJ, bool iIsData, string iDataset, bool iReshapeCSV, bool iPfLeptons = true){
+    cout << __LINE__ << " " << __FILE__ << endl;
 	// Make sure we don't set up more than once
 	if(isSetUp){ ThrowFatalError("Trying to set up 'BEANhelper' for the second time. Check your code."); }
 	
@@ -71,6 +74,7 @@ void BEANhelper::SetUp(unsigned int iEra, int iSampleNumber, bool iIsLJ, bool iI
 	isData			= iIsData;
 	dataset			= iDataset;
 	reshapeCSV		= iReshapeCSV;
+    usePfLeptons    = iPfLeptons;
 
 	// Error checking here
 	if((era != 2011) && (era != 2012)){ ThrowFatalError("'era' has to be either '2011' or 2012'."); }
@@ -78,7 +82,9 @@ void BEANhelper::SetUp(unsigned int iEra, int iSampleNumber, bool iIsLJ, bool iI
 	if(dataset.length()==0){ ThrowFatalError("'dataset' is blank."); }
 
 	// Set sample
+    cout << __LINE__ << " " << __FILE__ << endl;
 	setMCsample(sampleNumber, (era==2012), isLJ, dataset);
+    cout << __LINE__ << " " << __FILE__ << endl;
 
 	// Awknowledge setup
 	isSetUp = true;
@@ -281,10 +287,16 @@ float BEANhelper::GetMuonRelIso(const BNmuon& iMuon){
 	float result = 9999;
 	switch(era){
 		case 2011:
-			result = ((iMuon.chargedHadronIso + iMuon.neutralHadronIso + iMuon.photonIso)/iMuon.pt);
+            if( usePfLeptons )
+			    result = ((iMuon.chargedHadronIso + iMuon.neutralHadronIso + iMuon.photonIso)/iMuon.pt);
+            else
+			    result = ((iMuon.trackIso + iMuon.ecalIso + iMuon.hcalIso)/iMuon.pt);
 			break;
 		case 2012:
-			result = (((iMuon.pfIsoR04SumChargedHadronPt + max(0.0, iMuon.pfIsoR04SumNeutralHadronEt + iMuon.pfIsoR04SumPhotonEt - 0.5*iMuon.pfIsoR04SumPUPt)))/iMuon.pt);
+            if( usePfLeptons )
+                result = (((iMuon.pfIsoR04SumChargedHadronPt + max(0.0, iMuon.pfIsoR04SumNeutralHadronEt + iMuon.pfIsoR04SumPhotonEt - 0.5*iMuon.pfIsoR04SumPUPt)))/iMuon.pt);
+            else
+                result = (((iMuon.pfIsoR04SumChargedHadronPt + max(0.0, iMuon.pfIsoR04SumNeutralHadronEt + iMuon.pfIsoR04SumPhotonEt - 0.5*iMuon.pfIsoR04SumPUPt)))/iMuon.pt);
 			break;
 	}
 
@@ -329,6 +341,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
 	bool passesIso			= false;
 	bool passesID			= false;
 	bool isPFMuon			= false;
+    bool passesTrackerID    = false;
 
 	// Check if this muon is good enough
 	switch(era){
@@ -342,7 +355,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
 				case muonID::muonTight:
 					passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
 					passesIso				= (GetMuonRelIso(iMuon) < 0.125);
-					bool passesTrackerID	= ((iMuon.isTrackerMuon) && (iMuon.numberOfValidTrackerHitsInnerTrack > 10) && (iMuon.pixelLayersWithMeasurement > 0)
+					passesTrackerID	        = ((iMuon.isTrackerMuon) && (iMuon.numberOfValidTrackerHitsInnerTrack > 10) && (iMuon.pixelLayersWithMeasurement > 0)
 											  && (iMuon.numberOfMatchedStations > 1) && (fabs(iMuon.correctedD0) < 0.02) && (fabs(iMuon.correctedDZ) < 1.));
 					passesID				= ((iMuon.isGlobalMuon==1) && (iMuon.isGlobalMuonPromptTight==1) && passesTrackerID);
 					break;
@@ -360,7 +373,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
 					passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
 					passesIso				= (GetMuonRelIso(iMuon) < 0.120);
 					isPFMuon				= true;
-					bool passesTrackerID	= ((iMuon.isGlobalMuon==1)
+					passesTrackerID	        = ((iMuon.isGlobalMuon==1)
 											   && (iMuon.normalizedChi2 < 10) && (fabs(iMuon.correctedD0Vertex) < 0.2) && (fabs(iMuon.dVzPVz) < 0.5) 
 											   && (iMuon.numberOfLayersWithMeasurement > 5 ) && (iMuon.numberOfValidMuonHits > 0)
 											   && (iMuon.numberOfValidPixelHits > 0) && (iMuon.numberOfMatchedStations > 1));
@@ -396,10 +409,16 @@ float BEANhelper::GetElectronRelIso(const BNelectron& iElectron){
 	float result = 9999;
 	switch(era){
 		case 2011:
-			result = ((iElectron.chargedHadronIso + iElectron.neutralHadronIso + iElectron.photonIso)/iElectron.pt);
+            if( usePfLeptons )
+			    result = ((iElectron.chargedHadronIso + iElectron.neutralHadronIso + iElectron.photonIso)/iElectron.pt);
+            else
+			    result = ((iElectron.trackIsoDR03 + iElectron.ecalIsoDR03 + iElectron.hcalIsoDR03)/iElectron.pt);
 			break;
 		case 2012:
-			result = (((iElectron.chargedHadronIso + max(0.0, iElectron.neutralHadronIso + iElectron.photonIso - iElectron.AEffDr03*iElectron.rhoPrime)))/iElectron.pt);
+            if( usePfLeptons ) 
+			    result = (((iElectron.chargedHadronIso + max(0.0, iElectron.neutralHadronIso + iElectron.photonIso - iElectron.AEffDr03*iElectron.rhoPrime)))/iElectron.pt);
+            else
+			    result = (((iElectron.chargedHadronIso + max(0.0, iElectron.neutralHadronIso + iElectron.photonIso - iElectron.AEffDr03*iElectron.rhoPrime)))/iElectron.pt);
 			break;
 	}
 	return result;
@@ -606,6 +625,8 @@ double BEANhelper::GetPUweightDown(const unsigned int iNumBX0){ return h_PUdown_
 
 void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string dset ){
 
+    cout << __LINE__ << " " << __FILE__ << endl;
+
 	char * my_pPath = getenv ("CMSSW_BASE");
 	std::string my_base_dir(my_pPath);
 	std::string str_eff_file_7TeV = my_base_dir + "/src/NtupleMaker/BEANmaker/data/mc_btag_efficiency_7TeV.root";
@@ -616,6 +637,7 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
 	std::string str_lep_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
 	std::string str_csv_file_7TeV = str_eff_file_7TeV;
 	std::string str_csv_file_8TeV = str_eff_file_8TeV;
+    cout << __LINE__ << " " << __FILE__ << endl;
 
   bool debug = false;
 
@@ -631,6 +653,7 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
     input_pu_file  = str_pu_file_8TeV;
     com_suffix = "_8TeV";
   }
+    cout << __LINE__ << " " << __FILE__ << endl;
 
   if (debug)
     cout << "setMCsample: Opening eff file " << input_eff_file
@@ -644,6 +667,7 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
     assert (f_tag_eff_->IsZombie() == false);
   }
 
+    cout << __LINE__ << " " << __FILE__ << endl;
   std::string samplename = "ttbar";
   if( insample==2300 || insample==2310 ) samplename = "zjets";
   else if( insample==2400 ) samplename = "wjets";
@@ -686,6 +710,7 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
          << std::string( samplename + com_suffix + "_jet_pt_eta_b_eff")
          << endl;
 
+    cout << __LINE__ << " " << __FILE__ << endl;
   
   h_b_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str());
   h_c_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_c_eff" ).c_str());
@@ -697,6 +722,7 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
   bool lHistoOK =  (h_l_eff_ != 0);
   bool oHistoOK =  (h_o_eff_ != 0);
 
+    cout << __LINE__ << " " << __FILE__ << endl;
   if (debug)
     cout << "setMCSample: bHistoOK = " << bHistoOK << ", cHistoOK = " << cHistoOK << ", lHistoOK = "
          << lHistoOK << ", oHistoOK = " << oHistoOK << endl;
@@ -712,6 +738,7 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
 
 
 
+    cout << __LINE__ << " " << __FILE__ << endl;
   TFile *f_pu_ = new TFile(input_pu_file.c_str());
 
   TH1D* h_pu_data;
@@ -751,6 +778,7 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
     }
   }
 
+    cout << __LINE__ << " " << __FILE__ << endl;
   h_pu_data->Scale( 1./h_pu_data->Integral() );
   h_pu_data_up->Scale( 1./h_pu_data_up->Integral() );
   h_pu_data_down->Scale( 1./h_pu_data_down->Integral() );
@@ -766,21 +794,27 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
   h_PUdown_ratio_->Divide( h_pu_mc );
 
 
-  TFile *f_lep_ = new TFile(input_lep_file.c_str());
-  if( isLJ ){
+  //TFile *f_lep_ = new TFile(input_lep_file.c_str());
+  //if( isLJ ){
    // h_ele_SF_ = (TH2D*)f_lep_->Get(std::string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str());
     //h_mu_SF_  = (TH2D*)f_lep_->Get(std::string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str());
-  }
-  else {
+  //}
+  //else {
     //h_ele_SF_ = (TH2D*)f_lep_->Get(std::string( "ele_pt_eta_full_id_iso_8TeV" ).c_str());
     //h_mu_SF_  = (TH2D*)f_lep_->Get(std::string( "mu_pt_eta_full_id_iso_8TeV" ).c_str());
-  }
+  //}
 
+    cout << __LINE__ << " " << __FILE__ << endl;
   sh_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),0,0);
+    cout << __LINE__ << " " << __FILE__ << endl;
   sh_hfSFUp_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),1.5,0);
+    cout << __LINE__ << " " << __FILE__ << endl;
   sh_hfSFDown_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),-1.5,0);
+    cout << __LINE__ << " " << __FILE__ << endl;
   sh_lfSFUp_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),0,1);
+    cout << __LINE__ << " " << __FILE__ << endl;
   sh_lfSFDown_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),0,-1);
+    cout << __LINE__ << " " << __FILE__ << endl;
 
 }
 
