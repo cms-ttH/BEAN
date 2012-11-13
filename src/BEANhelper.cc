@@ -4,7 +4,6 @@ using namespace std;
 
 BEANhelper::BEANhelper(){
 
-    cout << __LINE__ << " " << __FILE__ << endl;
 	isSetUp = false;
 
 	CSVLwp = 0.244;
@@ -38,7 +37,6 @@ BEANhelper::BEANhelper(){
 	sh_hfSFDown_	= NULL;
 	sh_lfSFUp_		= NULL;
 	sh_lfSFDown_	= NULL;
-    cout << __LINE__ << " " << __FILE__ << endl;
 
 }
 
@@ -63,7 +61,6 @@ BEANhelper::~BEANhelper(){
 
 // Set up parameters one by one
 void BEANhelper::SetUp(unsigned int iEra, int iSampleNumber, bool iIsLJ, bool iIsData, string iDataset, bool iReshapeCSV, bool iPfLeptons = true){
-    cout << __LINE__ << " " << __FILE__ << endl;
 	// Make sure we don't set up more than once
 	if(isSetUp){ ThrowFatalError("Trying to set up 'BEANhelper' for the second time. Check your code."); }
 	
@@ -82,9 +79,7 @@ void BEANhelper::SetUp(unsigned int iEra, int iSampleNumber, bool iIsLJ, bool iI
 	if(dataset.length()==0){ ThrowFatalError("'dataset' is blank."); }
 
 	// Set sample
-    cout << __LINE__ << " " << __FILE__ << endl;
 	setMCsample(sampleNumber, (era==2012), isLJ, dataset);
-    cout << __LINE__ << " " << __FILE__ << endl;
 
 	// Awknowledge setup
 	isSetUp = true;
@@ -625,7 +620,6 @@ double BEANhelper::GetPUweightDown(const unsigned int iNumBX0){ return h_PUdown_
 
 void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string dset ){
 
-    cout << __LINE__ << " " << __FILE__ << endl;
 
 	char * my_pPath = getenv ("CMSSW_BASE");
 	std::string my_base_dir(my_pPath);
@@ -637,7 +631,6 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
 	std::string str_lep_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
 	std::string str_csv_file_7TeV = str_eff_file_7TeV;
 	std::string str_csv_file_8TeV = str_eff_file_8TeV;
-    cout << __LINE__ << " " << __FILE__ << endl;
 
   bool debug = false;
 
@@ -653,7 +646,6 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
     input_pu_file  = str_pu_file_8TeV;
     com_suffix = "_8TeV";
   }
-    cout << __LINE__ << " " << __FILE__ << endl;
 
   if (debug)
     cout << "setMCsample: Opening eff file " << input_eff_file
@@ -667,7 +659,6 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
     assert (f_tag_eff_->IsZombie() == false);
   }
 
-    cout << __LINE__ << " " << __FILE__ << endl;
   std::string samplename = "ttbar";
   if( insample==2300 || insample==2310 ) samplename = "zjets";
   else if( insample==2400 ) samplename = "wjets";
@@ -710,7 +701,6 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
          << std::string( samplename + com_suffix + "_jet_pt_eta_b_eff")
          << endl;
 
-    cout << __LINE__ << " " << __FILE__ << endl;
   
   h_b_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str());
   h_c_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_c_eff" ).c_str());
@@ -722,7 +712,6 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
   bool lHistoOK =  (h_l_eff_ != 0);
   bool oHistoOK =  (h_o_eff_ != 0);
 
-    cout << __LINE__ << " " << __FILE__ << endl;
   if (debug)
     cout << "setMCSample: bHistoOK = " << bHistoOK << ", cHistoOK = " << cHistoOK << ", lHistoOK = "
          << lHistoOK << ", oHistoOK = " << oHistoOK << endl;
@@ -738,7 +727,6 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
 
 
 
-    cout << __LINE__ << " " << __FILE__ << endl;
   TFile *f_pu_ = new TFile(input_pu_file.c_str());
 
   TH1D* h_pu_data;
@@ -778,7 +766,6 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
     }
   }
 
-    cout << __LINE__ << " " << __FILE__ << endl;
   h_pu_data->Scale( 1./h_pu_data->Integral() );
   h_pu_data_up->Scale( 1./h_pu_data_up->Integral() );
   h_pu_data_down->Scale( 1./h_pu_data_down->Integral() );
@@ -804,17 +791,11 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
     //h_mu_SF_  = (TH2D*)f_lep_->Get(std::string( "mu_pt_eta_full_id_iso_8TeV" ).c_str());
   //}
 
-    cout << __LINE__ << " " << __FILE__ << endl;
   sh_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),0,0);
-    cout << __LINE__ << " " << __FILE__ << endl;
   sh_hfSFUp_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),1.5,0);
-    cout << __LINE__ << " " << __FILE__ << endl;
   sh_hfSFDown_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),-1.5,0);
-    cout << __LINE__ << " " << __FILE__ << endl;
   sh_lfSFUp_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),0,1);
-    cout << __LINE__ << " " << __FILE__ << endl;
   sh_lfSFDown_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),0,-1);
-    cout << __LINE__ << " " << __FILE__ << endl;
 
 }
 
