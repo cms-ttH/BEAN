@@ -49,6 +49,7 @@ beff::beff(){
 	CSVM_SFb_error.push_back(0.0409675);
 	CSVM_SFb_error.push_back(0.0420284);
 	CSVM_SFb_error.push_back(0.0541299);
+	CSVM_SFb_error.push_back(0.0578761);
 	CSVM_SFb_error.push_back(0.0655432);
 
 	//Tagger: CSVT within 30 < pt < 670 GeV, abs(eta) < 2.4, x = pt
