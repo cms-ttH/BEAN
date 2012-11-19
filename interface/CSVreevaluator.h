@@ -28,7 +28,7 @@ class CSVreevaluator{
 		CSVreevaluator(string, unsigned int, double, double, double);
 		virtual ~CSVreevaluator();
 
-		double GetReshapedCSVvalue(float, float, float, int);
+		double GetReshapedCSVvalue(double, double, double, int);
 		
 	private:
 		void ThrowFatalError(const string);

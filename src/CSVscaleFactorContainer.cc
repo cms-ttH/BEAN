@@ -113,9 +113,9 @@ double CSVscaleFactorContainer::GetLightFlavorScaleFactor(double iEta, double iP
 }
 
 double CSVscaleFactorContainer::GetMistagCSVloose(double iEta, double iPt, double iScaleL){
-	float mean	= 1.0;
-	float min	= 1.0;
-	float max	= 1.0;
+	double mean	= 1.0;
+	double min	= 1.0;
+	double max	= 1.0;
 
 	if( fabs(iEta) < 0.5 ){
 		min		= 0.994425 + (-8.66392e-05 * iPt) + (-3.03813e-08 * pow(iPt,2)) + (-3.52151e-10 * pow(iPt,3));
@@ -141,7 +141,7 @@ double CSVscaleFactorContainer::GetMistagCSVloose(double iEta, double iPt, doubl
 		mean	= 1.0124;
 	}
 
-	float SFl = mean;
+	double SFl = mean;
 	if( iScaleL > 0 ){		SFl = mean + iScaleL * (max-mean); }
 	else if( iScaleL < 0 ){	SFl = mean + iScaleL * (mean-min); }
 
@@ -149,9 +149,9 @@ double CSVscaleFactorContainer::GetMistagCSVloose(double iEta, double iPt, doubl
 }
 
 double CSVscaleFactorContainer::GetMistagCSVmedium(double iEta, double iPt, double iScaleL){
-	float mean	= 1.0;
-	float min	= 1.0;
-	float max	= 1.0;
+	double mean	= 1.0;
+	double min	= 1.0;
+	double max	= 1.0;
 
 	if( fabs(iEta) < 0.8 ){
 		min		= 0.972455 + (7.51396e-06  * iPt) + (4.91857e-07  * pow(iPt,2)) + (-1.47661e-09 * pow(iPt,3));
@@ -173,7 +173,7 @@ double CSVscaleFactorContainer::GetMistagCSVmedium(double iEta, double iPt, doub
 		mean	= 0.947232;
 	}
 
-	float SFl = mean;
+	double SFl = mean;
 	if( iScaleL > 0 ){		SFl = mean + iScaleL * (max-mean); }
 	else if( iScaleL < 0 ){	SFl = mean + iScaleL * (mean-min); }
 
@@ -181,9 +181,9 @@ double CSVscaleFactorContainer::GetMistagCSVmedium(double iEta, double iPt, doub
 }
 
 double CSVscaleFactorContainer::GetMistagCSVtight(double iEta, double iPt, double iScaleL){
-	float mean	= 1.0;
-	float min	= 1.0;
-	float max	= 1.0;
+	double mean	= 1.0;
+	double min	= 1.0;
+	double max	= 1.0;
 
 	if( fabs(iEta) < 2.4 ){
 		min		= 0.899715 + (0.00102278 * iPt) + (-2.46335e-06 * pow(iPt,2)) + (9.71143e-10 * pow(iPt,3));
@@ -197,7 +197,7 @@ double CSVscaleFactorContainer::GetMistagCSVtight(double iEta, double iPt, doubl
 		mean	= 0.950785;
 	}
 
-	float SFl = mean;
+	double SFl = mean;
 	if( iScaleL > 0 ){		SFl = mean + 1.5*iScaleL*(max-mean); }
 	else if( iScaleL < 0 ){	SFl = mean + 1.5*iScaleL*(mean-min); }
 

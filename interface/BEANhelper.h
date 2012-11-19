@@ -48,7 +48,9 @@
 #include "ProductArea/BNcollections/interface/BNprimaryvertex.h"
 
 #include "NtupleMaker/BEANmaker/interface/BtagWeight.h"
-#include "NtupleMaker/BEANmaker/interface/BTagReshaping.h"
+//#include "NtupleMaker/BEANmaker/interface/BTagReshaping.h"
+#include "NtupleMaker/BEANmaker/interface/CSVreevaluator.h"
+
 
 #endif
 
@@ -107,7 +109,6 @@ class BEANhelper{
 		// Jets and MET
 		float GetBtagWeight(const BNjet&, const sysType::sysType iSysType=sysType::NA);
 		bool PassesCSV(const BNjet&, const char, const sysType::sysType iSysType=sysType::NA);
-		double GetCSVvalue(const BNjet&, const sysType::sysType iSysType=sysType::NA);
 		bool IsGoodJet(const BNjet&, const float, const float, const jetID::jetID, const char);
 		BNmet GetCorrectedMET(const BNmet&, const BNjetCollection&, const sysType::sysType iSysType=sysType::NA);
 		BNjet GetCorrectedJet(const BNjet&, const sysType::sysType iSysType=sysType::NA);
@@ -118,9 +119,6 @@ class BEANhelper{
 		unsigned int GetNumCSVbtags(const BNjetCollection&, const char);
 		unsigned int GetNumNonCSVbtags(const BNjetCollection&, const char);
 		float GetHT(const BNjetCollection&);
-		//BNjetCollection GetUnion(const BNjetCollection&, const BNjetCollection&);
-		//BNjetCollection GetIntersection(const BNjetCollection&, const BNjetCollection&);
-		//BNjetCollection GetDifference(const BNjetCollection&, const BNjetCollection&);
 
 		// Muons
 		bool IsLooseMuon(const BNmuon&);
@@ -149,6 +147,7 @@ class BEANhelper{
 		double GetPUweightDown(const unsigned int);
 
 	private:
+		double GetCSVvalue(const BNjet&, const sysType::sysType iSysType=sysType::NA);
 		void CheckSetUp();
 		void ThrowFatalError(const string);
 
@@ -164,12 +163,19 @@ class BEANhelper{
         bool usePfLeptons;
 
 		// CSV reshaping
+		/*
 		BTagShapeInterface*	  sh_;
 		BTagShapeInterface*	  sh_hfSFUp_;
 		BTagShapeInterface*	  sh_hfSFDown_;
 		BTagShapeInterface*	  sh_lfSFUp_;
 		BTagShapeInterface*	  sh_lfSFDown_;
+		//*/
 
+		CSVreevaluator*	  sh_;
+		CSVreevaluator*	  sh_hfSFUp_;
+		CSVreevaluator*	  sh_hfSFDown_;
+		CSVreevaluator*	  sh_lfSFUp_;
+		CSVreevaluator*	  sh_lfSFDown_;
 
 		// Old functions
 	public:

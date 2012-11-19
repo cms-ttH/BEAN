@@ -23,8 +23,11 @@ CSVreshaper::CSVreshaper(CSVmultiplet<double>& iScaleFactors, TH1F* iHistogram){
 }
 
 // Destructor
-CSVreshaper::~CSVreshaper(){
-	//if(interpolator != NULL){ delete interpolator; interpolator = NULL; }
+CSVreshaper::~CSVreshaper(){}
+
+// Clean pointers
+void CSVreshaper::Clean(){
+	if(interpolator != NULL){ delete interpolator; interpolator = NULL; }
 }
 
 

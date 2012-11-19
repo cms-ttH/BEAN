@@ -106,7 +106,7 @@ void CSVreevaluator::ThrowFatalError(string const iMessage){ cerr << "[ERROR]\t"
 
 
 // Return the corrected CSV value
-double CSVreevaluator::GetReshapedCSVvalue(float iEta, float iPt, float iOriginalCSVvalue, int iFlavor){
+double CSVreevaluator::GetReshapedCSVvalue(double iEta, double iPt, double iOriginalCSVvalue, int iFlavor){
 
 	// CSV should not be >1
 	if( iOriginalCSVvalue > 1){ ThrowFatalError("CSV value > 1."); }

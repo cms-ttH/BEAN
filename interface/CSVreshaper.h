@@ -25,6 +25,7 @@ class CSVreshaper{
 		// Constructor(s) and destructor
 		CSVreshaper(CSVmultiplet<double>&, TH1F*);
 		virtual ~CSVreshaper();
+		void Clean();
 		double GetReshapedCSVvalue(double);
 
 	private:
