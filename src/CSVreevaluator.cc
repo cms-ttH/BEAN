@@ -21,7 +21,7 @@ CSVreevaluator::CSVreevaluator(string iSampleName, unsigned int iEra, double iSc
 			break;
 		case 2012:
 			pathToEfficiencyFile += "mc_btag_efficiency_8TeV.root";
-			histoName += "_7TeV";
+			histoName += "_8TeV";
 			break;
 		default:
 			ThrowFatalError("Invalid era");
@@ -108,8 +108,6 @@ void CSVreevaluator::ThrowFatalError(string const iMessage){ cerr << "[ERROR]\t"
 // Return the corrected CSV value
 double CSVreevaluator::GetReshapedCSVvalue(float iEta, float iPt, float iOriginalCSVvalue, int iFlavor){
 
-	cout << "GetReshapedCSVvalue(" << iEta << ", " << iPt << ", " << iOriginalCSVvalue << ", " << iFlavor << ")" << endl; 
-
 	// CSV should not be >1
 	if( iOriginalCSVvalue > 1){ ThrowFatalError("CSV value > 1."); }
 
@@ -122,19 +120,12 @@ double CSVreevaluator::GetReshapedCSVvalue(float iEta, float iPt, float iOrigina
 	// === Reshape based on flavor === //
 	double result = 0.0;
 	switch(abs(iFlavor)){
-		case 0:		result = iOriginalCSVvalue;																	break;
+		case 0:		result = iOriginalCSVvalue;																		break;
 		case 4:		result = charmFlavorReshapers->GetObject(iEta, iPt)->GetReshapedCSVvalue(iOriginalCSVvalue);	break; // charm flavor
 		case 5:		result = bottomFlavorReshapers->GetObject(iEta, iPt)->GetReshapedCSVvalue(iOriginalCSVvalue);	break; // bottom flavor
 		default:	result = lightFlavorReshapers->GetObject(iEta, iPt)->GetReshapedCSVvalue(iOriginalCSVvalue);	break; // light flavor
 	}
 
-	cout << "New csv: " << result << endl;
-
-	// Should never get here
-	//ThrowFatalError("Problem in GetReshapedCSVvalue(...).");
 	return result;
 }
-
-// Soon to be removed
-double CSVreevaluator::reshape(float iEta, float iPt, float iOriginalCSVvalue, int iFlavor){ return GetReshapedCSVvalue(iEta, iPt, iOriginalCSVvalue, iFlavor); }
 
