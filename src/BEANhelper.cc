@@ -310,6 +310,8 @@ float BEANhelper::GetMuonRelIso(const BNmuon& iMuon){
 }
 
 // Return whether or not muon passes cuts
+bool BEANhelper::IsSideMuon(const BNmuon& iMuon){ return IsGoodMuon(iMuon, muonID::muonSide); }
+
 bool BEANhelper::IsLooseMuon(const BNmuon& iMuon){ return IsGoodMuon(iMuon, muonID::muonLoose); }
 
 bool BEANhelper::IsTightMuon(const BNmuon& iMuon){ return IsGoodMuon(iMuon, muonID::muonTight); }
@@ -353,6 +355,11 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
 	switch(era){
 		case 2011:
 			switch(iMuonID){
+				case muonID::muonSide:
+					passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
+					passesIso				= (GetMuonRelIso(iMuon) < 0.800);
+					passesID				= (iMuon.isGlobalMuon==1);
+					break;
 				case muonID::muonLoose:
 					passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
 					passesIso				= (GetMuonRelIso(iMuon) < 0.200);
@@ -369,6 +376,12 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
 			break; // End of 2011 era
 		case 2012:
 			switch(iMuonID){
+				case muonID::muonSide:
+					passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
+					passesIso				= (GetMuonRelIso(iMuon) < 0.800);
+					isPFMuon				= true;
+					passesID				= (((iMuon.isGlobalMuon==1) || (iMuon.isTrackerMuon==1)) && isPFMuon);
+					break;
 				case muonID::muonLoose:
 					passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
 					passesIso				= (GetMuonRelIso(iMuon) < 0.200);
@@ -406,6 +419,8 @@ BNmuonCollection BEANhelper::GetSelectedMuons(const BNmuonCollection& iMuons, co
 
 // Electron relative isolation
 // Return whether or not muon passes cuts
+bool BEANhelper::IsSideElectron(const BNelectron& iElectron){ return IsGoodElectron(iElectron, electronID::electronSide); }
+
 bool BEANhelper::IsLooseElectron(const BNelectron& iElectron){ return IsGoodElectron(iElectron, electronID::electronLoose); }
 
 bool BEANhelper::IsTightElectron(const BNelectron& iElectron){ return IsGoodElectron(iElectron, electronID::electronTight); }
@@ -456,14 +471,16 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 	if(era==2011){
 		bool notConv				= ( !(dist && dcot) && nlost );
 		bool id						= ( eid && d0 && dZ && notConv );
-		if(iElectronID==electronID::electronLoose){			return true; }
+		if(iElectronID==electronID::electronSide){			return true; }
+		else if(iElectronID==electronID::electronLoose){    return true; }
 		else if(iElectronID==electronID::electronTight){	return id; }
 
 	}else if(era==2012){
 		bool notConv				= ( iElectron.passConvVeto );
 		bool id						= ( passMVAId && d02 && dZ && notConv );
 
-		if(iElectronID==electronID::electronLoose){			return (passMVAId && d04 && notConv); }
+		if(iElectronID==electronID::electronSide){			return (passMVAId && d04 && notConv); }
+		else if(iElectronID==electronID::electronLoose){  	return (passMVAId && d04 && notConv); }
 		else if(iElectronID==electronID::electronTight){	return id; }
 	}
 
@@ -510,6 +527,12 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
 	switch(era){
 		case 2011:
 			switch(iElectronID){
+				case electronID::electronSide:
+					passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
+					passesIso			= (GetElectronRelIso(iElectron) < 0.800);
+					passesID			= GetElectronIDresult(iElectron, iElectronID);
+					break;
+
 				case electronID::electronLoose:
 					passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
 					passesIso			= (GetElectronRelIso(iElectron) < 0.200);
@@ -526,6 +549,12 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
 
 		case 2012:
 			switch(iElectronID){
+				case electronID::electronSide:
+					passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
+					passesIso			= (GetElectronRelIso(iElectron) < 0.800);
+					passesID			= GetElectronIDresult(iElectron, iElectronID);
+					break;
+
 				case electronID::electronLoose:
 					passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
 					passesIso			= (GetElectronRelIso(iElectron) < 0.200);

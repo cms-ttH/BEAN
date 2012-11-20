@@ -79,8 +79,8 @@ typedef BNtrigobjCollection::const_iterator       TrigObjIter;
 
 namespace sysType{		enum sysType{		NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup }; }
 namespace jetID{		enum jetID{			jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
-namespace muonID{		enum muonID{		muonLoose, muonTight }; }
-namespace electronID{	enum electronID{	electronLoose, electronTight }; }
+namespace muonID{		enum muonID{		muonSide, muonLoose, muonTight }; }
+namespace electronID{	enum electronID{	electronSide, electronLoose, electronTight }; }
 
 using namespace std;
 
@@ -121,6 +121,7 @@ class BEANhelper{
 		float GetHT(const BNjetCollection&);
 
 		// Muons
+		bool IsSideMuon(const BNmuon&);
 		bool IsLooseMuon(const BNmuon&);
 		bool IsTightMuon(const BNmuon&);
 		bool IsGoodMuon(const BNmuon&, const muonID::muonID);
@@ -128,6 +129,7 @@ class BEANhelper{
 		BNmuonCollection GetSelectedMuons(const BNmuonCollection&, const muonID::muonID);
 
 		// Electrons
+		bool IsSideElectron(const BNelectron&);
 		bool IsLooseElectron(const BNelectron&);
 		bool IsTightElectron(const BNelectron&);
 		float GetElectronRelIso(const BNelectron&);
