@@ -14,7 +14,7 @@ using namespace std;
 // === Class to store BTagScaleFactor objects === //
 class CSVscaleFactorContainer{
 	public: 
-		CSVscaleFactorContainer();
+		CSVscaleFactorContainer(unsigned iEra);
 		~CSVscaleFactorContainer();
 		void SetBottomFlavorBins(vector<double>&, vector<double>&);
 		double GetBottomFlavorScaleFactor(double, double, char, double);
@@ -22,6 +22,7 @@ class CSVscaleFactorContainer{
 		double GetLightFlavorScaleFactor(double, double, char, double);
 
 	private:
+		unsigned int era;
 		XYmap<CSVmultiplet<double> >* bottom_scaleFactor_errors;
 
 		double GetMistagCSVloose(double, double, double);

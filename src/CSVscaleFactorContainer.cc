@@ -5,8 +5,12 @@ using namespace std;
 
 // === Class to store BTagScaleFactor objects === //
 // Constructor
-CSVscaleFactorContainer::CSVscaleFactorContainer(){
+CSVscaleFactorContainer::CSVscaleFactorContainer(unsigned int iEra){
 	bottom_scaleFactor_errors = NULL;
+	era				= iEra;
+
+	// Error checking here
+	if((era != 2011) && (era != 2012)){ cerr << "[ERROR]\t'era' has to be either '2011' or 2012'." << endl; exit(1); }
 }
 
 
@@ -141,11 +145,14 @@ double CSVscaleFactorContainer::GetMistagCSVloose(double iEta, double iPt, doubl
 		mean	= 1.0124;
 	}
 
-	double SFl = mean;
-	if( iScaleL > 0 ){		SFl = mean + iScaleL * (max-mean); }
-	else if( iScaleL < 0 ){	SFl = mean + iScaleL * (mean-min); }
+	double mistagScaleFactorLightFlavor = mean;
+	if( iScaleL > 0 ){		mistagScaleFactorLightFlavor = mean + iScaleL * (max-mean); }
+	else if( iScaleL < 0 ){	mistagScaleFactorLightFlavor = mean + iScaleL * (mean-min); }
 
-	return (SFl * (0.979396 + (0.000205898 * iPt) + (2.49868e-07 * pow(iPt,2))));
+	double result = 0;
+	if(era == 2012){		result = (mistagScaleFactorLightFlavor * (0.979396 + (0.000205898 * iPt) + (2.49868e-07 * pow(iPt,2)))); }
+	else if (era == 2011){	result = mistagScaleFactorLightFlavor; }
+	return result;
 }
 
 double CSVscaleFactorContainer::GetMistagCSVmedium(double iEta, double iPt, double iScaleL){
@@ -173,11 +180,14 @@ double CSVscaleFactorContainer::GetMistagCSVmedium(double iEta, double iPt, doub
 		mean	= 0.947232;
 	}
 
-	double SFl = mean;
-	if( iScaleL > 0 ){		SFl = mean + iScaleL * (max-mean); }
-	else if( iScaleL < 0 ){	SFl = mean + iScaleL * (mean-min); }
+	double mistagScaleFactorLightFlavor = mean;
+	if( iScaleL > 0 ){		mistagScaleFactorLightFlavor = mean + iScaleL * (max-mean); }
+	else if( iScaleL < 0 ){	mistagScaleFactorLightFlavor = mean + iScaleL * (mean-min); }
 
-	return (SFl * (1.10422 + (-0.000523856 * iPt) + (1.14251e-06 * pow(iPt,2))));
+	double result = 0;
+	if(era == 2012){		result = (mistagScaleFactorLightFlavor * (1.10422 + (-0.000523856 * iPt) + (1.14251e-06 * pow(iPt,2)))); }
+	else if (era == 2011){	result = mistagScaleFactorLightFlavor; }
+	return result;
 }
 
 double CSVscaleFactorContainer::GetMistagCSVtight(double iEta, double iPt, double iScaleL){
@@ -197,10 +207,18 @@ double CSVscaleFactorContainer::GetMistagCSVtight(double iEta, double iPt, doubl
 		mean	= 0.950785;
 	}
 
-	double SFl = mean;
-	if( iScaleL > 0 ){		SFl = mean + 1.5*iScaleL*(max-mean); }
-	else if( iScaleL < 0 ){	SFl = mean + 1.5*iScaleL*(mean-min); }
+	double mistagScaleFactorLightFlavor = mean;
+	if(era == 2012){
+		if( iScaleL > 0 ){		mistagScaleFactorLightFlavor = mean + 1.5 * iScaleL*(max-mean); }
+		else if( iScaleL < 0 ){	mistagScaleFactorLightFlavor = mean + 1.5 * iScaleL*(mean-min); }
+	}else if (era == 2011){
+		if( iScaleL > 0 ){		mistagScaleFactorLightFlavor = mean + iScaleL*(max-mean); }
+		else if( iScaleL < 0 ){	mistagScaleFactorLightFlavor = mean + iScaleL*(mean-min); }
+	}
 
-	return (SFl * (1.19275 + (-0.00191042 * iPt) + (2.92205e-06 * pow(iPt,2))));
+	double result = 0;
+	if(era == 2012){		result = (mistagScaleFactorLightFlavor * (1.19275 + (-0.00191042 * iPt) + (2.92205e-06 * pow(iPt,2)))); }
+	else if (era == 2011){	result = mistagScaleFactorLightFlavor; }
+	return result;
 }
 

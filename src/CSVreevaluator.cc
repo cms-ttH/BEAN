@@ -35,7 +35,7 @@ CSVreevaluator::CSVreevaluator(string iSampleName, unsigned int iEra, double iSc
 
 
 	// Scale factor container (where some "magic" numbers come from)
-	CSVscaleFactorContainer scaleFactorContainer;
+	CSVscaleFactorContainer scaleFactorContainer(iEra);
 
 
 	// === Set up CSV reshapers === //

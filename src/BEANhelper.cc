@@ -839,12 +839,19 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
 
 
 	double charmFactor = 2.0 - 1.0;
-	sh_				= new CSVreevaluator(samplename, era,    0, charmFactor,  0);
-	sh_hfSFUp_		= new CSVreevaluator(samplename, era,  1.5, charmFactor,  0);
-	sh_hfSFDown_	= new CSVreevaluator(samplename, era, -1.5, charmFactor,  0);
-	sh_lfSFUp_		= new CSVreevaluator(samplename, era,    0, charmFactor,  1);
-	sh_lfSFDown_	= new CSVreevaluator(samplename, era,    0, charmFactor, -1);
-	//*/
+	if(era == 2012){
+		sh_				= new CSVreevaluator(samplename, era,  0.0, charmFactor,  0.0);
+		sh_hfSFUp_		= new CSVreevaluator(samplename, era,  1.5, charmFactor,  0.0);
+		sh_hfSFDown_	= new CSVreevaluator(samplename, era, -1.5, charmFactor,  0.0);
+		sh_lfSFUp_		= new CSVreevaluator(samplename, era,  0.0, charmFactor,  1.0);
+		sh_lfSFDown_	= new CSVreevaluator(samplename, era,  0.0, charmFactor, -1.0);
+	}else{
+		sh_				= new CSVreevaluator(samplename, era,  0.0, charmFactor,  0.0);
+		sh_hfSFUp_		= new CSVreevaluator(samplename, era,  1.0, charmFactor,  0.0);
+		sh_hfSFDown_	= new CSVreevaluator(samplename, era, -1.0, charmFactor,  0.0);
+		sh_lfSFUp_		= new CSVreevaluator(samplename, era,  0.0, charmFactor,  1.0);
+		sh_lfSFDown_	= new CSVreevaluator(samplename, era,  0.0, charmFactor, -1.0);
+	}
 
 }
 
