@@ -237,6 +237,8 @@ template <typename BNcollection> BNcollection BEANhelper::GetSortedByPt(const BN
 	BNcollection result;
 	BNcollection tempCollection = iBNcollection;
 
+    if (tempCollection.size() == 0) { return tempCollection; }
+
 	while(tempCollection.size() > 1){
 		typename BNcollection::iterator largestPtElement = tempCollection.begin();
 		for(typename BNcollection::iterator Object = (tempCollection.begin()+1); Object != tempCollection.end(); ++Object ){
