@@ -95,7 +95,7 @@ class BEANhelper{
 		virtual ~BEANhelper();
 		
 		// Set up BEANhelper
-		void SetUp(unsigned int, int, bool, bool, string, bool, bool);
+  void SetUp(string, int, bool, bool, string, bool, bool);
 
 		template <typename BNobject> void PrintInfo(const BNobject&);
 
@@ -126,6 +126,7 @@ class BEANhelper{
 		bool IsTightMuon(const BNmuon&);
 		bool IsGoodMuon(const BNmuon&, const muonID::muonID);
 		float GetMuonRelIso(const BNmuon&);
+		float GetMuonSF(const BNmuon&);
 		BNmuonCollection GetSelectedMuons(const BNmuonCollection&, const muonID::muonID);
 
 		// Electrons
@@ -133,6 +134,7 @@ class BEANhelper{
 		bool IsLooseElectron(const BNelectron&);
 		bool IsTightElectron(const BNelectron&);
 		float GetElectronRelIso(const BNelectron&);
+		float GetElectronSF(const BNelectron&);
 		bool GetElectronIDresult(const BNelectron& iElectron, const electronID::electronID);
 		bool IsGoodElectron(const BNelectron&, const electronID::electronID);
 		BNelectronCollection GetSelectedElectrons(const BNelectronCollection&, const electronID::electronID);
@@ -142,7 +144,8 @@ class BEANhelper{
 		BNmcparticleCollection	GetGenTaus(const BNmcparticleCollection&);
 		BNmcparticleCollection	GetHadronicGenTaus(const BNmcparticleCollection&);
 		BNmcparticle			GetMatchedMCparticle(const BNmcparticleCollection&, const BNtau&, const double iMaxDeltaR=0.25);
-
+        bool                    ttPlusHeavyKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);  
+  
 		// PU reweighing
 		double GetPUweight(const unsigned int);
 		double GetPUweightUp(const unsigned int);
@@ -156,7 +159,7 @@ class BEANhelper{
 		// Parameter management
 	private:
 		bool isSetUp;
-		unsigned int era;
+		string era;
 		int sampleNumber;
 		bool isLJ;
 		bool isData;
@@ -181,7 +184,7 @@ class BEANhelper{
 
 		// Old functions
 	public:
-		void setMCsample( int insample=2500, bool is8TeV=true, bool isLJ=true, std::string dset="" );
+        void setMCsample( int insample=2500, std::string era="", bool isLJ=true, std::string dset="" );
 		void electronSelector( const BNelectronCollection &electrons, bool isLJ, std::string era, vint &tightElectrons, vint &looseElectrons );
 		void muonSelector( const BNmuonCollection &muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons );
 		void jetSelector( const BNjetCollection &pfjets, std::string sysType, vint &tightJets, vint &tagJets, vint &untagJets, 
@@ -223,10 +226,13 @@ class BEANhelper{
 		TH1D*			h_PU_ratio_;
 		TH1D*			h_PUup_ratio_;
 		TH1D*			h_PUdown_ratio_;
+        TH2D*           h_ele_SF_;
+        TH2D*           h_mu_SF_;
 		double			PI;
 		double			TWOPI;
 		float			ETA_LIMIT;
 		float			EPSILON;
+        string          samplename;
 
 }; // End of class prototype
 

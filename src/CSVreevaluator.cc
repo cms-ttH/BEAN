@@ -4,7 +4,7 @@ using namespace std;
 using namespace boost::assign;
 
 // Constructor
-CSVreevaluator::CSVreevaluator(string iSampleName, unsigned int iEra, double iScaleBC, double iCharmFactor, double iScaleL){
+CSVreevaluator::CSVreevaluator(string iSampleName, string iEra, double iScaleBC, double iCharmFactor, double iScaleL){
 
 	bottomFlavorReshapers	= NULL;
 	charmFlavorReshapers	= NULL;
@@ -14,18 +14,16 @@ CSVreevaluator::CSVreevaluator(string iSampleName, unsigned int iEra, double iSc
 	string pathToEfficiencyFile = (string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/");
 	string histoName			= iSampleName;
 
-	switch(iEra){
-		case 2011:
-			pathToEfficiencyFile += "mc_btag_efficiency_7TeV.root";
-			histoName += "_7TeV";
-			break;
-		case 2012:
-			pathToEfficiencyFile += "mc_btag_efficiency_8TeV.root";
-			histoName += "_8TeV";
-			break;
-		default:
-			ThrowFatalError("Invalid era");
-			break;
+    if (iEra == "2011") {
+      pathToEfficiencyFile += "mc_btag_efficiency_7TeV.root";
+      histoName += "_7TeV";
+    }
+    else if (iEra == "2012_52x" || iEra == "2012_53x") {
+      pathToEfficiencyFile += "mc_btag_efficiency_8TeV.root";
+      histoName += "_8TeV";
+    }
+    else {
+      ThrowFatalError("Invalid era");
 	}
 
 	efficiencyFile = new TFile(pathToEfficiencyFile.c_str());

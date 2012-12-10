@@ -25,7 +25,7 @@ class CSVreevaluator{
 	// === Functions === //
 	public: 
 		// Constructor(s) and destructor
-		CSVreevaluator(string, unsigned int, double, double, double);
+		CSVreevaluator(string, string, double, double, double);
 		virtual ~CSVreevaluator();
 
 		double GetReshapedCSVvalue(double, double, double, int);
