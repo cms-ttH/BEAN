@@ -25,7 +25,9 @@ BEANhelper::BEANhelper(){
 	h_PU_ratio_		= NULL;
 	h_PUup_ratio_	= NULL;
 	h_PUdown_ratio_	= NULL;
-
+    h_ele_SF_       = NULL;
+    h_mu_SF_        = NULL;
+    
 	PI			= 2.0*acos(0.);
 	TWOPI		= 2.0*PI;
 	ETA_LIMIT	= 15.0;
@@ -37,6 +39,8 @@ BEANhelper::BEANhelper(){
 	sh_hfSFDown_	= NULL;
 	sh_lfSFUp_		= NULL;
 	sh_lfSFDown_	= NULL;
+
+    samplename = "blank";
 
 }
 
@@ -50,17 +54,20 @@ BEANhelper::~BEANhelper(){
 	if(h_PU_ratio_ != NULL){ delete h_PU_ratio_; h_PU_ratio_ = NULL; }
 	if(h_PUup_ratio_ != NULL){ delete h_PUup_ratio_; h_PUup_ratio_ = NULL; }
 	if(h_PUdown_ratio_ != NULL){ delete h_PUdown_ratio_; h_PUdown_ratio_ = NULL; }
-
+    if(h_ele_SF_ != NULL){ delete h_ele_SF_; h_ele_SF_ = NULL; }
+    if(h_mu_SF_ != NULL){ delete h_mu_SF_; h_mu_SF_ = NULL; }
+    
 	// CSV reshaping
 	if(sh_ != NULL){ delete sh_; sh_ = NULL; }
 	if(sh_hfSFUp_ != NULL){ delete sh_hfSFUp_; sh_hfSFUp_ = NULL; }
 	if(sh_hfSFDown_ != NULL){ delete sh_hfSFDown_; sh_hfSFDown_ = NULL; }
 	if(sh_lfSFUp_ != NULL){ delete sh_lfSFUp_; sh_lfSFUp_ = NULL; }
 	if(sh_lfSFDown_ != NULL){ delete sh_lfSFDown_; sh_lfSFDown_ = NULL; }
+
 }
 
 // Set up parameters one by one
-void BEANhelper::SetUp(unsigned int iEra, int iSampleNumber, bool iIsLJ, bool iIsData, string iDataset, bool iReshapeCSV, bool iPfLeptons = true){
+void BEANhelper::SetUp(string iEra, int iSampleNumber, bool iIsLJ, bool iIsData, string iDataset, bool iReshapeCSV, bool iPfLeptons = true){
 	// Make sure we don't set up more than once
 	if(isSetUp){ ThrowFatalError("Trying to set up 'BEANhelper' for the second time. Check your code."); }
 
@@ -74,12 +81,12 @@ void BEANhelper::SetUp(unsigned int iEra, int iSampleNumber, bool iIsLJ, bool iI
 	usePfLeptons    = iPfLeptons;
 
 	// Error checking here
-	if((era != 2011) && (era != 2012)){ ThrowFatalError("'era' has to be either '2011' or 2012'."); }
+	if((era != "2011") && (era != "2012_52x") && (era != "2012_53x")){ ThrowFatalError("era has to be either 2011, 2012_52x, or 2012_53x"); }
 	if(sampleNumber==0){ ThrowFatalError("'sampleNumber' cannot be '0'."); }
 	if(dataset.length()==0){ ThrowFatalError("'dataset' is blank."); }
 
 	// Set sample
-	setMCsample(sampleNumber, (era==2012), isLJ, dataset);
+	setMCsample(sampleNumber, era, isLJ, dataset);
 
 	// Awknowledge setup
 	isSetUp = true;
@@ -291,23 +298,34 @@ float BEANhelper::GetHT(const BNjetCollection& iJets){
 float BEANhelper::GetMuonRelIso(const BNmuon& iMuon){ 
 	CheckSetUp();
 	float result = 9999;
-	switch(era){
-		case 2011:
-			if( usePfLeptons )
-				result = ((iMuon.chargedHadronIso + iMuon.neutralHadronIso + iMuon.photonIso)/iMuon.pt);
-			else
-				result = ((iMuon.trackIso + iMuon.ecalIso + iMuon.hcalIso)/iMuon.pt);
-			break;
-		case 2012:
-			if( usePfLeptons )
-				result = (((iMuon.pfIsoR04SumChargedHadronPt + max(0.0, iMuon.pfIsoR04SumNeutralHadronEt + iMuon.pfIsoR04SumPhotonEt - 0.5*iMuon.pfIsoR04SumPUPt)))/iMuon.pt);
-			else
-				result = (((iMuon.pfIsoR04SumChargedHadronPt + max(0.0, iMuon.pfIsoR04SumNeutralHadronEt + iMuon.pfIsoR04SumPhotonEt - 0.5*iMuon.pfIsoR04SumPUPt)))/iMuon.pt);
-			break;
-	}
+    if (era=="2011") {
+      if( usePfLeptons )
+        result = ((iMuon.chargedHadronIso + iMuon.neutralHadronIso + iMuon.photonIso)/iMuon.pt);
+      else
+        result = ((iMuon.trackIso + iMuon.ecalIso + iMuon.hcalIso)/iMuon.pt);
+    }
+	else if (era=="2012_52x" || era=="2012_53x") {
+      if( usePfLeptons )
+        result = (((iMuon.pfIsoR04SumChargedHadronPt + max(0.0, iMuon.pfIsoR04SumNeutralHadronEt + iMuon.pfIsoR04SumPhotonEt - 0.5*iMuon.pfIsoR04SumPUPt)))/iMuon.pt);
+      else
+        result = (((iMuon.pfIsoR04SumChargedHadronPt + max(0.0, iMuon.pfIsoR04SumNeutralHadronEt + iMuon.pfIsoR04SumPhotonEt - 0.5*iMuon.pfIsoR04SumPUPt)))/iMuon.pt);
+    }
 
 	return result;
 }
+
+float BEANhelper::GetMuonSF(const BNmuon& iMuon){
+  CheckSetUp();
+  double SF = 1.0;
+  if( !isData ) {
+    double usePT = std::min( iMuon.pt, 499. );
+    double useEta = ( iMuon.eta>0. ) ? std::min( 2.09, iMuon.eta ) : std::max( -2.09, iMuon.eta );
+    SF = h_mu_SF_->GetBinContent( h_mu_SF_->FindBin(usePT, useEta) );
+  }
+
+  return SF;
+}
+
 
 // Return whether or not muon passes cuts
 bool BEANhelper::IsSideMuon(const BNmuon& iMuon){ return IsGoodMuon(iMuon, muonID::muonSide); }
@@ -325,23 +343,20 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
 	float maxLooseMuonAbsEta	= 0;
 	float maxTightMuonAbsEta	= 0;
 
-	switch(era){
-		case 2011:
-			minLooseMuonPt		= 10;
-			minTightMuonPt		= ( isLJ ) ? 30. : 20.;
-			maxLooseMuonAbsEta	= 2.4;
-			maxTightMuonAbsEta	= 2.1;
-			break;
-
-		case 2012:
-			minLooseMuonPt		= 10;
-			minTightMuonPt		= ( isLJ ) ? 30. : 20.;
-			maxLooseMuonAbsEta	= 2.5;
-			maxTightMuonAbsEta	= 2.1;
-			break;
-		default:
-			return false;
-			break;
+    if (era=="2011") {
+      minLooseMuonPt		= 10;
+      minTightMuonPt		= ( isLJ ) ? 30. : 20.;
+      maxLooseMuonAbsEta	= 2.4;
+      maxTightMuonAbsEta	= 2.1;
+    }
+    else if (era=="2012_52x" || era=="2012_53x") {
+      minLooseMuonPt		= 10;
+      minTightMuonPt		= ( isLJ ) ? 30. : 20.;
+      maxLooseMuonAbsEta	= 2.5;
+      maxTightMuonAbsEta	= 2.1;
+    }
+    else {
+      return false;
 	}
 
 	// Be skeptical about this muon making it through
@@ -352,56 +367,54 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
 	bool passesTrackerID    = false;
 
 	// Check if this muon is good enough
-	switch(era){
-		case 2011:
-			switch(iMuonID){
-				case muonID::muonSide:
-					passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
-					passesIso				= (GetMuonRelIso(iMuon) < 0.800);
-					passesID				= (iMuon.isGlobalMuon==1);
-					break;
-				case muonID::muonLoose:
-					passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
-					passesIso				= (GetMuonRelIso(iMuon) < 0.200);
-					passesID				= (iMuon.isGlobalMuon==1);
-					break;
-				case muonID::muonTight:
-					passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
-					passesIso				= (GetMuonRelIso(iMuon) < 0.125);
-					passesTrackerID	        = ((iMuon.isTrackerMuon) && (iMuon.numberOfValidTrackerHitsInnerTrack > 10) && (iMuon.pixelLayersWithMeasurement > 0)
-							&& (iMuon.numberOfMatchedStations > 1) && (fabs(iMuon.correctedD0) < 0.02) && (fabs(iMuon.correctedDZ) < 1.));
-					passesID				= ((iMuon.isGlobalMuon==1) && (iMuon.isGlobalMuonPromptTight==1) && passesTrackerID);
-					break;
-			}
-			break; // End of 2011 era
-		case 2012:
-			switch(iMuonID){
-				case muonID::muonSide:
-					passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
-					passesIso				= (GetMuonRelIso(iMuon) < 0.800);
-					isPFMuon				= true;
-					passesID				= (((iMuon.isGlobalMuon==1) || (iMuon.isTrackerMuon==1)) && isPFMuon);
-					break;
-				case muonID::muonLoose:
-					passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
-					passesIso				= (GetMuonRelIso(iMuon) < 0.200);
-					isPFMuon				= true;
-					passesID				= (((iMuon.isGlobalMuon==1) || (iMuon.isTrackerMuon==1)) && isPFMuon);
-					break;
-				case muonID::muonTight:
-					passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
-					passesIso				= (GetMuonRelIso(iMuon) < 0.120);
-					isPFMuon				= true;
-					passesTrackerID	        = ((iMuon.isGlobalMuon==1)
-							&& (iMuon.normalizedChi2 < 10) && (fabs(iMuon.correctedD0Vertex) < 0.2) && (fabs(iMuon.dVzPVz) < 0.5) 
-							&& (iMuon.numberOfLayersWithMeasurement > 5 ) && (iMuon.numberOfValidMuonHits > 0)
-							&& (iMuon.numberOfValidPixelHits > 0) && (iMuon.numberOfMatchedStations > 1));
-
-					passesID				= (((iMuon.isGlobalMuon==1) || (iMuon.isTrackerMuon==1)) && isPFMuon && passesTrackerID);
-					break;
-			}
-			break; // End of 2012 era
-	}
+    if (era=="2011") { 
+      switch(iMuonID){
+      case muonID::muonSide:
+        passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
+        passesIso				= (GetMuonRelIso(iMuon) < 0.800);
+        passesID				= (iMuon.isGlobalMuon==1);
+        break;
+      case muonID::muonLoose:
+        passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
+        passesIso				= (GetMuonRelIso(iMuon) < 0.200);
+        passesID				= (iMuon.isGlobalMuon==1);
+        break;
+      case muonID::muonTight:
+        passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
+        passesIso				= (GetMuonRelIso(iMuon) < 0.125);
+        passesTrackerID	        = ((iMuon.isTrackerMuon) && (iMuon.numberOfValidTrackerHitsInnerTrack > 10) && (iMuon.pixelLayersWithMeasurement > 0)
+                                   && (iMuon.numberOfMatchedStations > 1) && (fabs(iMuon.correctedD0) < 0.02) && (fabs(iMuon.correctedDZ) < 1.));
+        passesID				= ((iMuon.isGlobalMuon==1) && (iMuon.isGlobalMuonPromptTight==1) && passesTrackerID);
+        break;
+      }
+    }// End of 2011 era
+    else if (era=="2012_52x" || era=="2012_53x") {
+      switch(iMuonID){
+      case muonID::muonSide:
+        passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
+        passesIso				= (GetMuonRelIso(iMuon) < 0.800);
+        isPFMuon				= true;
+        passesID				= (((iMuon.isGlobalMuon==1) || (iMuon.isTrackerMuon==1)) && isPFMuon);
+        break;
+      case muonID::muonLoose:
+        passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
+        passesIso				= (GetMuonRelIso(iMuon) < 0.200);
+        isPFMuon				= true;
+        passesID				= (((iMuon.isGlobalMuon==1) || (iMuon.isTrackerMuon==1)) && isPFMuon);
+        break;
+      case muonID::muonTight:
+        passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
+        passesIso				= (GetMuonRelIso(iMuon) < 0.120);
+        isPFMuon				= true;
+        passesTrackerID	        = ((iMuon.isGlobalMuon==1)
+                                   && (iMuon.normalizedChi2 < 10) && (fabs(iMuon.correctedD0Vertex) < 0.2) && (fabs(iMuon.dVzPVz) < 0.5) 
+                                   && (iMuon.numberOfLayersWithMeasurement > 5 ) && (iMuon.numberOfValidMuonHits > 0)
+                                   && (iMuon.numberOfValidPixelHits > 0) && (iMuon.numberOfMatchedStations > 1));
+        
+        passesID				= (((iMuon.isGlobalMuon==1) || (iMuon.isTrackerMuon==1)) && isPFMuon && passesTrackerID);
+        break;
+      }
+	}// End of 2012 era
 
 	return (passesKinematics && passesIso && passesID);
 
@@ -428,21 +441,31 @@ bool BEANhelper::IsTightElectron(const BNelectron& iElectron){ return IsGoodElec
 float BEANhelper::GetElectronRelIso(const BNelectron& iElectron){ 
 	CheckSetUp();
 	float result = 9999;
-	switch(era){
-		case 2011:
-			if( usePfLeptons )
-				result = ((iElectron.chargedHadronIso + iElectron.neutralHadronIso + iElectron.photonIso)/iElectron.pt);
-			else
-				result = ((iElectron.trackIsoDR03 + iElectron.ecalIsoDR03 + iElectron.hcalIsoDR03)/iElectron.pt);
-			break;
-		case 2012:
-			if( usePfLeptons ) 
-				result = (((iElectron.chargedHadronIso + max(0.0, iElectron.neutralHadronIso + iElectron.photonIso - iElectron.AEffDr03*iElectron.rhoPrime)))/iElectron.pt);
-			else
-				result = (((iElectron.chargedHadronIso + max(0.0, iElectron.neutralHadronIso + iElectron.photonIso - iElectron.AEffDr03*iElectron.rhoPrime)))/iElectron.pt);
-			break;
-	}
+    if (era == "2011") {
+      if( usePfLeptons )
+        result = ((iElectron.chargedHadronIso + iElectron.neutralHadronIso + iElectron.photonIso)/iElectron.pt);
+      else
+        result = ((iElectron.trackIsoDR03 + iElectron.ecalIsoDR03 + iElectron.hcalIsoDR03)/iElectron.pt);
+    }
+    else if (era == "2012_52x" || era == "2012_53x") {
+      if( usePfLeptons ) 
+        result = (((iElectron.chargedHadronIso + max(0.0, iElectron.neutralHadronIso + iElectron.photonIso - iElectron.AEffDr03*iElectron.rhoPrime)))/iElectron.pt);
+      else
+        result = (((iElectron.chargedHadronIso + max(0.0, iElectron.neutralHadronIso + iElectron.photonIso - iElectron.AEffDr03*iElectron.rhoPrime)))/iElectron.pt);
+    }
 	return result;
+}
+
+float BEANhelper::GetElectronSF(const BNelectron& iElectron){
+  CheckSetUp();
+  double SF = 1.0;
+  if( !isData ) {
+    double usePT = std::min( iElectron.pt, 499. );
+    double useEta = ( iElectron.eta>0. ) ? std::min( 2.09, iElectron.eta ) : std::max( -2.09, iElectron.eta );
+    SF = h_ele_SF_->GetBinContent( h_ele_SF_->FindBin(usePT, useEta) );
+  }
+
+  return SF;
 }
 
 
@@ -468,14 +491,14 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 	bool d02					= ( fabs(iElectron.correctedD0Vertex) < 0.02 );
 	bool d04					= ( fabs(iElectron.correctedD0Vertex) < 0.04 );
 
-	if(era==2011){
+	if(era=="2011"){
 		bool notConv				= ( !(dist && dcot) && nlost );
 		bool id						= ( eid && d0 && dZ && notConv );
 		if(iElectronID==electronID::electronSide){			return true; }
 		else if(iElectronID==electronID::electronLoose){    return true; }
 		else if(iElectronID==electronID::electronTight){	return id; }
 
-	}else if(era==2012){
+	}else if(era=="2012_52x" || era=="2012_53x"){
 		bool notConv				= ( iElectron.passConvVeto );
 		bool id						= ( passMVAId && d02 && dZ && notConv );
 
@@ -497,24 +520,20 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
 	float maxLooseElectronAbsEta	= 0;
 	float maxTightElectronAbsEta	= 0;
 
-	switch(era){
-		case 2011:
-			minLooseElectronPt		= 10;
-			minTightElectronPt		= ( isLJ ) ? 30. : 20.;
-			maxLooseElectronAbsEta	= 2.5;
-			maxTightElectronAbsEta	= 2.5;
-			break;
-
-		case 2012:
-			minLooseElectronPt		= 10;
-			minTightElectronPt		= ( isLJ ) ? 30. : 20.;
-			maxLooseElectronAbsEta	= 2.5;
-			maxTightElectronAbsEta	= 2.1;
-			break;
-
-		default:
-			return false;
-			break;
+    if (era=="2011") {
+      minLooseElectronPt		= 10;
+      minTightElectronPt		= ( isLJ ) ? 30. : 20.;
+      maxLooseElectronAbsEta	= 2.5;
+      maxTightElectronAbsEta	= 2.5;
+    }
+    else if (era=="2012_52x" || era=="2012_53x") {
+      minLooseElectronPt		= 10;
+      minTightElectronPt		= ( isLJ ) ? 30. : 20.;
+      maxLooseElectronAbsEta	= 2.5;
+      maxTightElectronAbsEta	= 2.1;
+    }
+    else {
+      return false;
 	}
 
 	// Be skeptical about this electron making it through
@@ -524,51 +543,48 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
 
 	// Check if this electron is good enough
 	bool inCrack			= ((fabs(iElectron.scEta) > 1.4442) && (fabs(iElectron.scEta) < 1.5660));
-	switch(era){
-		case 2011:
-			switch(iElectronID){
-				case electronID::electronSide:
-					passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
-					passesIso			= (GetElectronRelIso(iElectron) < 0.800);
-					passesID			= GetElectronIDresult(iElectron, iElectronID);
-					break;
+    if (era=="2012") {
+      switch(iElectronID){
+      case electronID::electronSide:
+        passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
+        passesIso			= (GetElectronRelIso(iElectron) < 0.800);
+        passesID			= GetElectronIDresult(iElectron, iElectronID);
+        break;
+        
+      case electronID::electronLoose:
+        passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
+        passesIso			= (GetElectronRelIso(iElectron) < 0.200);
+        passesID			= GetElectronIDresult(iElectron, iElectronID);
+        break;
 
-				case electronID::electronLoose:
-					passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
-					passesIso			= (GetElectronRelIso(iElectron) < 0.200);
-					passesID			= GetElectronIDresult(iElectron, iElectronID);
-					break;
-
-				case electronID::electronTight:
-					passesKinematics	= ((iElectron.pt >= minTightElectronPt) && (fabs(iElectron.scEta) <= maxTightElectronAbsEta) && (!inCrack));
-					passesIso			= (GetElectronRelIso(iElectron) < 0.100);
-					passesID			= GetElectronIDresult(iElectron, iElectronID);
-					break;
-			}
-			break; // End of 2011 era
-
-		case 2012:
-			switch(iElectronID){
-				case electronID::electronSide:
-					passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
-					passesIso			= (GetElectronRelIso(iElectron) < 0.800);
-					passesID			= GetElectronIDresult(iElectron, iElectronID);
-					break;
-
-				case electronID::electronLoose:
-					passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
-					passesIso			= (GetElectronRelIso(iElectron) < 0.200);
-					passesID			= GetElectronIDresult(iElectron, iElectronID);
-					break;
-
-				case electronID::electronTight:
-					passesKinematics	= ((iElectron.pt >= minTightElectronPt) && (fabs(iElectron.scEta) <= maxTightElectronAbsEta) && (!inCrack));
-					passesIso			= (GetElectronRelIso(iElectron) < 0.100);
-					passesID			= GetElectronIDresult(iElectron, iElectronID);
-					break;
-			}
-			break; // End of 2012 era
-	}
+      case electronID::electronTight:
+        passesKinematics	= ((iElectron.pt >= minTightElectronPt) && (fabs(iElectron.scEta) <= maxTightElectronAbsEta) && (!inCrack));
+        passesIso			= (GetElectronRelIso(iElectron) < 0.100);
+        passesID			= GetElectronIDresult(iElectron, iElectronID);
+        break;
+      }
+    } // End of 2011 era
+    else if (era=="2012_52x" || era=="2012_53x") {
+      switch(iElectronID){
+      case electronID::electronSide:
+        passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
+        passesIso			= (GetElectronRelIso(iElectron) < 0.800);
+        passesID			= GetElectronIDresult(iElectron, iElectronID);
+        break;
+        
+      case electronID::electronLoose:
+        passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
+        passesIso			= (GetElectronRelIso(iElectron) < 0.200);
+        passesID			= GetElectronIDresult(iElectron, iElectronID);
+        break;
+        
+      case electronID::electronTight:
+        passesKinematics	= ((iElectron.pt >= minTightElectronPt) && (fabs(iElectron.scEta) <= maxTightElectronAbsEta) && (!inCrack));
+        passesIso			= (GetElectronRelIso(iElectron) < 0.100);
+        passesID			= GetElectronIDresult(iElectron, iElectronID);
+        break;
+      }
+	} // End of 2012 era
 
 	return (passesKinematics && passesIso && passesID);
 }
@@ -658,8 +674,7 @@ double BEANhelper::GetPUweightDown(const unsigned int iNumBX0){ return h_PUdown_
 
 // ******************** OLD ****************** //
 
-void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string dset ){
-
+void BEANhelper::setMCsample( int insample, std::string era, bool isLJ, std::string dset ){
 
 	char * my_pPath = getenv ("CMSSW_BASE");
 	std::string my_base_dir(my_pPath);
@@ -679,7 +694,7 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
 	std::string input_lep_file = str_lep_file_7TeV;
 	std::string input_pu_file  = str_pu_file_7TeV;
 	std::string com_suffix = "_7TeV";
-	if( is8TeV ){
+	if( era=="2012_52x" || era=="2012_53x" ){
 		input_eff_file = str_eff_file_8TeV;
 		input_csv_file = str_csv_file_8TeV;
 		input_lep_file = str_lep_file_8TeV;
@@ -699,53 +714,106 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
 		assert (f_tag_eff_->IsZombie() == false);
 	}
 
-	std::string samplename = "ttbar";
-	if( insample==2300 || insample==2310 ) samplename = "zjets";
-	else if( insample==2400 ) samplename = "wjets";
-	else if( insample==2500 ) samplename = "ttbar";
-	else if( insample==2510 ) samplename = "ttbar_scaleup";
-	else if( insample==2511 ) samplename = "ttbar_scaledown";
-	else if( insample==2523 ) samplename = "ttbarZ";
-	else if( insample==2524 ) samplename = "ttbarW";
-	else if( insample==2600 ) samplename = "singlet";
-	else if( insample==2700 ) samplename = "ww";
-	else if( insample==2701 ) samplename = "wz";
-	else if( insample==2702 ) samplename = "zz";
-	else if( insample>=100 && insample<=140 ) samplename = "ttH120";
+    if (era == "2012_53x" || era == "2012_52x") {
+      if( insample==2500 ) samplename = "ttbar";
+      else if( insample==2544 ) samplename = "ttbar_cc";
+      else if( insample==2555 ) samplename = "ttbar_bb";
+      else if( insample==2511 ) samplename = "ttbar_scaleup";
+      else if( insample==2510 ) samplename = "ttbar_scaledown";
+      else if( insample==2513 ) samplename = "ttbar_matchingup";
+      else if( insample==2512 ) samplename = "ttbar_matchingdown";
+      else if( insample==2566 ) samplename = "ttbar_jj";
+      else if( insample==2563 ) samplename = "ttbar_lj";
+      else if( insample==2533 ) samplename = "ttbar_ll";
+      else if( insample==2576 ) samplename = "ttbar_cc_jj";
+      else if( insample==2573 ) samplename = "ttbar_cc_lj";
+      else if( insample==2543 ) samplename = "ttbar_cc_ll";
+      else if( insample==2586 ) samplename = "ttbar_bb_jj";
+      else if( insample==2583 ) samplename = "ttbar_bb_lj";
+      else if( insample==2553 ) samplename = "ttbar_bb_ll";
+      else if( insample==2400 ) samplename = "wjets";
+      else if( insample==2401 ) samplename = "wjets_1p";
+      else if( insample==2402 ) samplename = "wjets_2p";
+      else if( insample==2403 ) samplename = "wjets_3p";
+      else if( insample==2404 ) samplename = "wjets_4p";
+      else if( insample==2850 ) samplename = "zjets_lowmass";
+      else if( insample==2851 ) samplename = "zjets_lowmass_1p";
+      else if( insample==2852 ) samplename = "zjets_lowmass_2p";
+      else if( insample==2800 ) samplename = "zjets";
+      else if( insample==2801 ) samplename = "zjets_1p";
+      else if( insample==2802 ) samplename = "zjets_2p";
+      else if( insample==2803 ) samplename = "zjets_3p";
+      else if( insample==2804 ) samplename = "zjets_4p";
+      else if( insample==2600 ) samplename = "t_schannel";
+      else if( insample==2630 ) samplename = "t_schannel_ll";
+      else if( insample==2601 ) samplename = "tbar_schannel";
+      else if( insample==2631 ) samplename = "tbar_schannel_ll";
+      else if( insample==2602 ) samplename = "t_tchannel";
+      else if( insample==2632 ) samplename = "t_tchannel_ll";
+      else if( insample==2603 ) samplename = "tbar_tchannel";
+      else if( insample==2633 ) samplename = "tbar_tchannel_ll";
+      else if( insample==2604 ) samplename = "t_tWchannel";
+      else if( insample==2654 ) samplename = "t_tWchannel_lj";
+      else if( insample==2664 ) samplename = "t_tWchannel_jl";
+      else if( insample==2634 ) samplename = "t_tWchannel_ll";
+      else if( insample==2605 ) samplename = "tbar_tWchannel";
+      else if( insample==2655 ) samplename = "tbar_tWchannel_lj";
+      else if( insample==2665 ) samplename = "tbar_tWchannel_jl";
+      else if( insample==2635 ) samplename = "tbar_tWchannel_ll";
+      else if( insample==2700 ) samplename = "ww";
+      else if( insample==2710 ) samplename = "www";
+      else if( insample==2720 ) samplename = "wwz";
+      else if( insample==2701 ) samplename = "wz";
+      else if( insample==2721 ) samplename = "wzz";
+      else if( insample==2702 ) samplename = "zz";
+      else if( insample==2722 ) samplename = "zzz";
+      else if( insample==2524 ) samplename = "ttbarW";
+      else if( insample==2534 ) samplename = "ttbarWW";
+      else if( insample==2523 ) samplename = "ttbarZ";
+      else if( insample==2525 ) samplename = "ttbarttbar";
+    }
+    if (era == "2012_53x") {
+      if( insample>=9110 && insample <=9140 ) samplename = "ttH120";
+      else if( insample>=7110 && insample <=9140 ) samplename = "ttH120_tautau";
+      else if( insample>=8110 && insample <=8140 ) samplename = "ttH120_bb";
+    }
+    if (era == "2012_52x") {
+      if( insample>=8000 && insample<9000  ) samplename = "ttH120_FullSim";
+      else if( insample>=9000 && insample<10000 ) samplename = "ttH120_FastSim";
+    }
 
-	if( is8TeV ){
-		// 12Aug2012 - Include all samples - JGWood
-		if( insample==2500      ) samplename = "ttbar";
-		else if( insample==2523 ) samplename = "ttbarZ";
-		else if( insample==2524 ) samplename = "ttbarW";
-		else if( insample==2600 ) samplename = "t_schannel";
-		else if( insample==2602 ) samplename = "t_tchannel";
-		else if( insample==2504 ) samplename = "t_tWchannel";
-		else if( insample==2501 ) samplename = "tbar_schannel";
-		else if( insample==2503 ) samplename = "tbar_tchannel";
-		else if( insample==2505 ) samplename = "tbar_tWchannel";
-		else if( insample==2800 || insample==2850 ) samplename = "zjets";
-		else if( insample==2400 ) samplename = "wjets";
-		else if( insample==2700 ) samplename = "ww";
-		else if( insample==2701 ) samplename = "wz";
-		else if( insample==2702 ) samplename = "zz";
-		else if( insample>=8000 && insample<9000  ) samplename = "ttH120_FullSim";
-		else if( insample>=9000 && insample<10000 ) samplename = "ttH120_FastSim";
-	}
+    if (era == "2011") {
+      if( insample==2300 ) samplename = "zjets";
+      else if( insample==2310 ) samplename = "zjets_lowmass";
+      else if( insample==2400 ) samplename = "wjets";
+      else if( insample==2500 ) samplename = "ttbar";
+      else if( insample==2544 ) samplename = "ttbar_cc";
+      else if( insample==2555 ) samplename = "ttbar_bb";
+      else if( insample==2510 ) samplename = "ttbar_scaleup";
+      else if( insample==2511 ) samplename = "ttbar_scaledown";
+      else if( insample==2523 ) samplename = "ttbarZ";
+      else if( insample==2524 ) samplename = "ttbarW";
+      else if( insample==2600 ) samplename = "singlet";
+      else if( insample==2700 ) samplename = "ww";
+      else if( insample==2701 ) samplename = "wz";
+      else if( insample==2702 ) samplename = "zz";
+      else if( insample>=100 && insample<=140 ) samplename = "ttH120";
+    }
 
 
-	//  if( insample>=9000 && insample<10000 ) isFastSim_ = true;
-
+    std::string samplename_jet_eff = samplename;
+    if (samplename == "zjets_lowmass") samplename_jet_eff = "zjets";
+    
 	if (debug)
 		cout << "setMCSample: Looking for histrograms with names like: "
 			<< std::string( samplename + com_suffix + "_jet_pt_eta_b_eff")
 			<< endl;
 
 
-	h_b_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str());
-	h_c_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_c_eff" ).c_str());
-	h_l_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_l_eff" ).c_str());
-	h_o_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename + com_suffix + "_jet_pt_eta_o_eff" ).c_str());
+	h_b_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename_jet_eff + com_suffix + "_jet_pt_eta_b_eff" ).c_str());
+	h_c_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename_jet_eff + com_suffix + "_jet_pt_eta_c_eff" ).c_str());
+	h_l_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename_jet_eff + com_suffix + "_jet_pt_eta_l_eff" ).c_str());
+	h_o_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename_jet_eff + com_suffix + "_jet_pt_eta_o_eff" ).c_str());
 
 	bool bHistoOK =  (h_b_eff_ != 0);
 	bool cHistoOK =  (h_c_eff_ != 0);
@@ -760,12 +828,15 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
 		cout << "setMCSample: Error. We are missing one of the required btag eff histograms. "     
 			<< endl
 			<< "Wanted histos with names like: "
-			<< std::string( samplename + com_suffix + "_jet_pt_eta_b_eff")
+			<< std::string( samplename_jet_eff + com_suffix + "_jet_pt_eta_b_eff")
 			<< endl;
 		assert ( bHistoOK && cHistoOK && lHistoOK && oHistoOK);
 	}
 
 
+
+    std::string samplename_pu_input = samplename;
+    if (samplename == "zjets_lowmass") samplename_pu_input = "zjets";
 
 	TFile *f_pu_ = new TFile(input_pu_file.c_str());
 
@@ -774,20 +845,18 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
 	TH1D* h_pu_data_down;
 	TH1D* h_pu_mc;
 
-	if( is8TeV ){
+	if( era=="2012_52x" || era=="2012_53x" ){
 		h_pu_data      = (TH1D*)f_pu_->Get((std::string("pileup_8TeV_69300xSec")).c_str());
 		h_pu_data_up   = (TH1D*)f_pu_->Get((std::string("pileup_8TeV_71795xSec")).c_str());
 		h_pu_data_down = (TH1D*)f_pu_->Get((std::string("pileup_8TeV_66805xSec")).c_str());
 
 		std::string mc_pu_input = "Summer2012";
-		if( insample==2300 || insample==2400 || insample==2500 || 
-				(insample>=8000 && insample<9000) || 
-				(insample>=9000 && insample<10000) ) mc_pu_input = std::string(samplename + "_Summer2012");
-		else if( insample==2523 || insample==2524 ) mc_pu_input = "ttZorW_Summer2012";
+        if( insample>0) mc_pu_input = std::string(samplename_pu_input + "_Summer2012");
+        if( insample==2523 || insample==2524 ) mc_pu_input = "ttZorW_Summer2012";
 
 		h_pu_mc = (TH1D*)f_pu_->Get((std::string(mc_pu_input + "_pileup_8TeV")).c_str());
 	}
-	else{
+	else if ( era=="2011") {
 		if( !(dset.find("SingleMu")!=std::string::npos || dset.find("ElectronHad")!=std::string::npos) ) dset = "SingleMu";
 
 		if( (insample>=100 && insample<=140) || (insample==2523) || (insample==2524) ){
@@ -795,7 +864,8 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
 			h_pu_data_up   = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_73440_observed")).c_str());
 			h_pu_data_down = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_62560_observed")).c_str());
 
-			h_pu_mc = (TH1D*)f_pu_->Get("ttH_7TeV_numGenPV");
+            if( (insample>=100 && insample<=140) ) h_pu_mc = (TH1D*)f_pu_->Get("ttH_7TeV_numGenPV");
+            else  h_pu_mc = (TH1D*)f_pu_->Get("ttV_7TeV_numGenPV"); 
 		}
 		else{
 			h_pu_data      = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_68000_true")).c_str());
@@ -820,38 +890,27 @@ void BEANhelper::setMCsample( int insample, bool is8TeV, bool isLJ, std::string 
 	h_PUup_ratio_->Divide( h_pu_mc );
 	h_PUdown_ratio_->Divide( h_pu_mc );
 
+    TFile *f_lep_ = new TFile(input_lep_file.c_str());
+    if( isLJ ){
+      h_ele_SF_ = (TH2D*)f_lep_->Get(std::string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str());
+      h_mu_SF_  = (TH2D*)f_lep_->Get(std::string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str());
+    }
+    else {
+      h_ele_SF_ = (TH2D*)f_lep_->Get(std::string( "ele_pt_eta_full_id_iso_8TeV" ).c_str());
+      h_mu_SF_  = (TH2D*)f_lep_->Get(std::string( "mu_pt_eta_full_id_iso_8TeV" ).c_str());
+    }
 
-	//TFile *f_lep_ = new TFile(input_lep_file.c_str());
-	//if( isLJ ){
-	// h_ele_SF_ = (TH2D*)f_lep_->Get(std::string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str());
-	//h_mu_SF_  = (TH2D*)f_lep_->Get(std::string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str());
-	//}
-	//else {
-	//h_ele_SF_ = (TH2D*)f_lep_->Get(std::string( "ele_pt_eta_full_id_iso_8TeV" ).c_str());
-	//h_mu_SF_  = (TH2D*)f_lep_->Get(std::string( "mu_pt_eta_full_id_iso_8TeV" ).c_str());
-	//}
-
-	/*  sh_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),0,0);
-		sh_hfSFUp_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),1.5,0);
-		sh_hfSFDown_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),-1.5,0);
-		sh_lfSFUp_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),0,1);
-		sh_lfSFDown_ = new BTagShapeInterface(std::string(samplename + com_suffix),input_csv_file.c_str(),0,-1);//*/
-
-
+    std::string samplename_CSV_reevaluator = samplename;
+    if (samplename == "zjets_lowmass") samplename_CSV_reevaluator = "zjets";
+    
 	double charmFactor = 2.0 - 1.0;
-	if(era == 2012){
-		sh_				= new CSVreevaluator(samplename, era,  0.0, charmFactor,  0.0);
-		sh_hfSFUp_		= new CSVreevaluator(samplename, era,  1.5, charmFactor,  0.0);
-		sh_hfSFDown_	= new CSVreevaluator(samplename, era, -1.5, charmFactor,  0.0);
-		sh_lfSFUp_		= new CSVreevaluator(samplename, era,  0.0, charmFactor,  1.0);
-		sh_lfSFDown_	= new CSVreevaluator(samplename, era,  0.0, charmFactor, -1.0);
-	}else{
-		sh_				= new CSVreevaluator(samplename, era,  0.0, charmFactor,  0.0);
-		sh_hfSFUp_		= new CSVreevaluator(samplename, era,  1.0, charmFactor,  0.0);
-		sh_hfSFDown_	= new CSVreevaluator(samplename, era, -1.0, charmFactor,  0.0);
-		sh_lfSFUp_		= new CSVreevaluator(samplename, era,  0.0, charmFactor,  1.0);
-		sh_lfSFDown_	= new CSVreevaluator(samplename, era,  0.0, charmFactor, -1.0);
-	}
+
+	sh_				= new CSVreevaluator(samplename_CSV_reevaluator, era,    0, charmFactor,  0);
+	sh_hfSFUp_		= new CSVreevaluator(samplename_CSV_reevaluator, era,  1.5, charmFactor,  0);
+	sh_hfSFDown_	= new CSVreevaluator(samplename_CSV_reevaluator, era, -1.5, charmFactor,  0);
+	sh_lfSFUp_		= new CSVreevaluator(samplename_CSV_reevaluator, era,    0, charmFactor,  1);
+	sh_lfSFDown_	= new CSVreevaluator(samplename_CSV_reevaluator, era,    0, charmFactor, -1);
+	//*/
 
 }
 
@@ -1447,3 +1506,182 @@ vdouble BEANhelper::getEffSF( int returnType, double jetPt, double jetEta, doubl
 	return result;
 }
 
+bool BEANhelper::ttPlusHeavyKeepEvent( const BNmcparticleCollection& iMCparticles,
+                                       const BNjetCollection& iJets ) {
+
+  CheckSetUp();
+
+  // validate input
+  bool validInput = false;
+  if (samplename == "ttbar" || samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll") validInput = true;
+  if (samplename == "ttbar_cc" || samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll") validInput = true;
+  if (samplename == "ttbar_bb" || samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll") validInput = true;
+
+  if (!validInput ){
+    cout << "ttPlusHeavyKeepEvent: could not recognize samplename " << samplename <<"... failing" <<endl;
+  }
+
+  bool validEra = false;
+  if (era == "2011" ) validEra = true;
+  if (era == "2012_52x" || era == "2012_53x" ) validEra = true;
+
+  if (!validEra ){
+    cout << "ttPlusHeavyKeepEvent: could not recognize era " << era <<"... failing" <<endl;
+  }
+
+  bool keepEvent = false;
+  bool debug_ = false;
+
+  bool isWtoCS = false;
+
+  if (debug_) cout << "Num MC particles = " << iMCparticles.size() << std::endl
+                   << "Num pfjets " <<  int(iJets.size()) << std::endl;
+
+  // check to see if the event has a c with a parent W
+
+  for( unsigned i=0; i< iMCparticles.size(); i++ ){
+    int id = iMCparticles.at(i).id;
+    int motherID = iMCparticles.at(i).motherId;
+    int grandMotherID = iMCparticles.at(i).grandMotherId;
+
+    if (debug_) std::cout << "Particle " << i << " is " << id << ", has mother " << motherID << " and grandmother " << grandMotherID << std::endl;
+
+    if (debug_) cout <<" Particle " << i << " has id " << id << endl;
+
+    if (era == "2011") {
+      if( abs(id)==4  && abs(motherID)==24 ){
+        isWtoCS = true;
+        break;
+      }
+    }
+    else if (era == "2012_52x" || era == "2012_53x") {
+      int daughter0ID = iMCparticles.at(i).daughter0Id;
+      int daughter1ID = iMCparticles.at(i).daughter1Id;
+
+      if( abs(id)==24 && ((abs(daughter0ID)==3 && abs(daughter1ID)==4) || (abs(daughter0ID)==4 && abs(daughter1ID)==3)) ){
+        isWtoCS = true;
+        break;
+      }
+    }
+  }
+
+  bool isBBbarEvent = false;
+  bool isCCbarEvent = false;
+
+
+  bool gotB = false;
+  bool gotC = false;
+
+  int numBmomB=0;
+  int numBmomT=0;
+  int numBbarmomBbar=0;
+  int numBbarmomTbar=0;
+  int numCmomC=0;
+  int numCbarmomCbar=0;
+
+  if (debug_) cout << "Starting loop over pf jet parton ids to see if you have a b" <<endl;
+
+  for( int i=0; i<int(iJets.size()); i++ ){
+
+
+
+    int id = iJets.at(i).genPartonId;
+    if( id==-99 ) continue;
+    int motherID = iJets.at(i).genPartonMotherId;
+    int mother0ID =  iJets.at(i).genPartonMother0Id;
+    int mother1ID =  iJets.at(i).genPartonMother1Id;
+
+
+
+    // check to see if pf jets is from a  b/c and mother is a gluon
+    // or, if mother is some light quark
+
+    if (era == "2011") {
+      if( abs(id)==5 && ( motherID==21 || abs(motherID)<abs(id) ) ) gotB=true;
+      if( abs(id)==4 && ( motherID==21 || abs(motherID)<abs(id) ) ) gotC=true;
+    } else if (era == "2012_52x" || era == "2012_53x") {
+      if( abs(id)==5 && abs(mother0ID) != 6  && abs(mother1ID) != 6 ) gotB=true;
+      // basically, as long as you didn't come from a W, then you are a tt+cc
+      if( abs(id)==4 && (abs(mother0ID)==21 || abs(mother1ID) == 21 || abs(mother0ID) < abs(id) || abs(mother1ID) < abs(id))
+          && abs(mother0ID)!=24 && abs(mother1ID)!=24 ) gotC=true;
+    }
+
+    if (debug_) std::cout << "Jet index " << i << " is generator id " << id
+                          << ", has mother " << motherID << ", mother0ID = " << mother0ID << ", mother1ID = " << mother1ID  << std::endl;
+
+    if (debug_) std::cout << "----------------> Got B = " << gotB << endl;
+
+    // if things are their own mother,
+    // where are they from? Does this mean stable?
+    if( id==5  && motherID==id ) numBmomB++;
+    if( id==-5 && motherID==id ) numBbarmomBbar++;
+
+    if( id==4  && motherID==id ) numCmomC++;
+    if( id==-4 && motherID==id ) numCbarmomCbar++;
+
+    if( id==5  && motherID==6  ) numBmomT++;
+    if( id==-5 && motherID==-6 ) numBbarmomTbar++;
+
+  }
+
+  // if at least one b from b & one b from t, or if CC, and your jet was not b
+  if( ((numBmomB>=1 && numBmomT>=1) || (numBbarmomBbar>=1 && numBbarmomTbar>=1)) && !gotB ){
+    if (debug_) std::cout << "No sign of a b jet, but looping over jets again to check"
+                          <<std::endl;
+    // for each jet that is  b from b
+    for( int i=0; i<int(iJets.size()); i++ ){
+      if (debug_) cout << "LOOP: i = " << i << endl;
+      int id0 = iJets.at(i).genPartonId;
+      int motherID0 = iJets.at(i).genPartonMotherId;
+      if( !(abs(id0)==5 && motherID0==id0) ) continue;
+
+      if (debug_) std::cout << "Jet index " << i  << " is a bjet, let us see that it is not from top" <<std::endl;
+      // for each jet that is b from t
+      for( int j=0; j<int(iJets.size()); j++ ){
+        if (debug_) cout << "LOOP: j = " << j << endl;
+        int id1 = iJets.at(j).genPartonId;
+        int motherID1 = iJets.at(j).genPartonMotherId;
+        if (debug_) std::cout << "LOOP: id0 = " << id0 << ", motherID0 = " << motherID0
+                              << ", id1 = " << id1 << ", motherID1 = " << motherID1 << endl
+                              << "continue? = " << !(id1==id0 && abs(motherID1)==6) << endl;
+        if( !(id1==id0 && abs(motherID1)==6) ) continue;
+        if (debug_) std::cout << "You didn't skip this event!" << endl;
+        // if delta r between b from b and b from t is big enough, then b in final state is OK
+        double dR = reco::deltaR(iJets.at(i).genPartonEta,
+                                 iJets.at(i).genPartonPhi,
+                                 iJets.at(j).genPartonEta,
+                                 iJets.at(j).genPartonPhi);
+        if (debug_) std::cout << "dR = " << dR << endl;
+        if (debug_) std::cout << "gotB = " << gotB << endl;
+        if( dR>0.3 ){
+          gotB = true;
+          if (debug_) std::cout << "Found something with dR > 0.3... now gotB = " << gotB << endl;
+          break;
+        }
+        if (debug_) std::cout << "SECOND: b not from top with dR = " << dR << " gotB = " << gotB << endl;
+      }
+      if( gotB ) break;
+    }
+  }
+
+  if( (numCmomC>=1 || numCbarmomCbar>=1) && !isWtoCS ){
+    gotC = true;
+  }
+
+  if( gotB ) isBBbarEvent = true;
+  else if( gotC ) isCCbarEvent = true;
+
+
+
+  if( (samplename == "ttbar" || samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll") && !isBBbarEvent && !isCCbarEvent ) keepEvent = true;
+  else if( (samplename == "ttbar_bb" || samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll") &&  isBBbarEvent && !isCCbarEvent ) keepEvent = true;
+  else if( (samplename == "ttbar_cc" || samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll")  && !isBBbarEvent && isCCbarEvent  ) keepEvent = true;
+
+  if (debug_) cout << "Filter result = " << keepEvent << endl
+                   << "isBBbarEvent = " << isBBbarEvent << endl
+                   << "isCCbarEvent = " << isCCbarEvent << endl
+                   << "... will we skip this? " << (!keepEvent) << endl;
+
+  return keepEvent;
+
+}
