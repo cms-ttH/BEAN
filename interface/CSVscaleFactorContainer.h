@@ -5,7 +5,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <math.h>
-
+#include <assert.h>
 #include "CSVmultiplet.h"
 #include "XYmap.h"
 

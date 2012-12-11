@@ -310,6 +310,9 @@ float BEANhelper::GetMuonRelIso(const BNmuon& iMuon){
       else
         result = (((iMuon.pfIsoR04SumChargedHadronPt + max(0.0, iMuon.pfIsoR04SumNeutralHadronEt + iMuon.pfIsoR04SumPhotonEt - 0.5*iMuon.pfIsoR04SumPUPt)))/iMuon.pt);
     }
+    else {
+      assert (era == "either 2012_52x, 2012_53x, or 2011");
+    }
 
 	return result;
 }
@@ -356,8 +359,8 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
       maxTightMuonAbsEta	= 2.1;
     }
     else {
-      return false;
-	}
+      assert (era == "either 2012_52x, 2012_53x, or 2011");
+    }
 
 	// Be skeptical about this muon making it through
 	bool passesKinematics	= false;
@@ -415,6 +418,9 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
         break;
       }
 	}// End of 2012 era
+    else {
+      assert (era == "either 2012_52x, 2012_53x, or 2011");
+    }
 
 	return (passesKinematics && passesIso && passesID);
 
@@ -452,6 +458,9 @@ float BEANhelper::GetElectronRelIso(const BNelectron& iElectron){
         result = (((iElectron.chargedHadronIso + max(0.0, iElectron.neutralHadronIso + iElectron.photonIso - iElectron.AEffDr03*iElectron.rhoPrime)))/iElectron.pt);
       else
         result = (((iElectron.chargedHadronIso + max(0.0, iElectron.neutralHadronIso + iElectron.photonIso - iElectron.AEffDr03*iElectron.rhoPrime)))/iElectron.pt);
+    }
+    else {
+      assert (era == "either 2012_52x, 2012_53x, or 2011");
     }
 	return result;
 }
@@ -497,8 +506,8 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 		if(iElectronID==electronID::electronSide){			return true; }
 		else if(iElectronID==electronID::electronLoose){    return true; }
 		else if(iElectronID==electronID::electronTight){	return id; }
-
-	}else if(era=="2012_52x" || era=="2012_53x"){
+	}
+    else if(era=="2012_52x" || era=="2012_53x"){
 		bool notConv				= ( iElectron.passConvVeto );
 		bool id						= ( passMVAId && d02 && dZ && notConv );
 
@@ -506,6 +515,10 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 		else if(iElectronID==electronID::electronLoose){  	return (passMVAId && d04 && notConv); }
 		else if(iElectronID==electronID::electronTight){	return id; }
 	}
+    else {
+      assert (era == "either 2012_52x, 2012_53x, or 2011");
+    }
+
 
 	return false;
 }
@@ -533,8 +546,8 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
       maxTightElectronAbsEta	= 2.1;
     }
     else {
-      return false;
-	}
+      assert (era == "either 2012_52x, 2012_53x, or 2011");
+    }
 
 	// Be skeptical about this electron making it through
 	bool passesKinematics	= false;
@@ -585,6 +598,9 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
         break;
       }
 	} // End of 2012 era
+    else {
+      assert (era == "either 2012_52x, 2012_53x, or 2011");
+    }
 
 	return (passesKinematics && passesIso && passesID);
 }
@@ -771,18 +787,20 @@ void BEANhelper::setMCsample( int insample, std::string era, bool isLJ, std::str
       else if( insample==2534 ) samplename = "ttbarWW";
       else if( insample==2523 ) samplename = "ttbarZ";
       else if( insample==2525 ) samplename = "ttbarttbar";
+      if (era == "2012_53x") {
+        if( insample>=9110 && insample <=9140 ) samplename = "ttH120";
+        else if( insample>=7110 && insample <=9140 ) samplename = "ttH120_tautau";
+        else if( insample>=8110 && insample <=8140 ) samplename = "ttH120_bb";
+      }
+      else if (era == "2012_52x") {
+        if( insample>=8000 && insample<9000  ) samplename = "ttH120_FullSim";
+        else if( insample>=9000 && insample<10000 ) samplename = "ttH120_FastSim";
+      }
+      else {
+        assert (era == "either 2012_52x or 2012_53x");
+      }
     }
-    if (era == "2012_53x") {
-      if( insample>=9110 && insample <=9140 ) samplename = "ttH120";
-      else if( insample>=7110 && insample <=9140 ) samplename = "ttH120_tautau";
-      else if( insample>=8110 && insample <=8140 ) samplename = "ttH120_bb";
-    }
-    if (era == "2012_52x") {
-      if( insample>=8000 && insample<9000  ) samplename = "ttH120_FullSim";
-      else if( insample>=9000 && insample<10000 ) samplename = "ttH120_FastSim";
-    }
-
-    if (era == "2011") {
+    else if (era == "2011") {
       if( insample==2300 ) samplename = "zjets";
       else if( insample==2310 ) samplename = "zjets_lowmass";
       else if( insample==2400 ) samplename = "wjets";
@@ -798,6 +816,9 @@ void BEANhelper::setMCsample( int insample, std::string era, bool isLJ, std::str
       else if( insample==2701 ) samplename = "wz";
       else if( insample==2702 ) samplename = "zz";
       else if( insample>=100 && insample<=140 ) samplename = "ttH120";
+    }
+    else {
+      assert (era == "either 2012_52x, 2012_53x, or 2011");
     }
 
 
@@ -875,6 +896,10 @@ void BEANhelper::setMCsample( int insample, std::string era, bool isLJ, std::str
 			h_pu_mc = (TH1D*)f_pu_->Get("F2011exp_7TeV");
 		}
 	}
+    else {
+      assert (era == "either 2012_52x, 2012_53x, or 2011");
+    }
+    
 
 	h_pu_data->Scale( 1./h_pu_data->Integral() );
 	h_pu_data_up->Scale( 1./h_pu_data_up->Integral() );
@@ -931,11 +956,10 @@ void BEANhelper::electronSelector( const BNelectronCollection &electrons, bool i
 	tightElectrons.clear();
 	looseElectrons.clear();
 
-	bool is2011 = ( era.find("2011")!=std::string::npos );
 	double tightPt = ( isLJ ) ? 30. : 20.;
 	double loosePt = 10.;
 
-	if( is2011 ){
+	if( era=="2011" ){
 		for( int i=0; i<int(electrons.size()); i++ ){
 			double eleSCEta = electrons.at(i).scEta;
 			double absSCeta = fabs(eleSCEta);
@@ -982,7 +1006,7 @@ void BEANhelper::electronSelector( const BNelectronCollection &electrons, bool i
 		}// end electron loop
 
 	} // end if 2011
-	else{ // default is 2012 selection
+	else if (era=="2012_52x" || era=="2012_53x") { // default is 2012 selection
 		for( int i=0; i<int(electrons.size()); i++ ){
 
 			double eleSCEta = electrons.at(i).scEta;
@@ -1024,7 +1048,10 @@ void BEANhelper::electronSelector( const BNelectronCollection &electrons, bool i
 				else looseElectrons.push_back(i);
 			}
 		}// end electron loop
-	}
+	}// end if 2012
+    else {
+      assert (era == "either 2012_52x, 2012_53x, or 2011");
+    }    
 } //end electronSelector
 
 
@@ -1038,11 +1065,10 @@ void BEANhelper::muonSelector( const BNmuonCollection &muons, bool isLJ, std::st
 	tightMuons.clear();
 	looseMuons.clear();
 
-	bool is2011 = ( era.find("2011")!=std::string::npos );
 	double tightPt = ( isLJ ) ? 30. : 20.;
 	double loosePt = 10.;
 
-	if( is2011 ){
+	if( era=="2011" ){
 		for( int i=0; i<int(muons.size()); i++ ){
 			double muPt  = muons.at(i).pt;
 			double muEta = muons.at(i).eta;
@@ -1080,7 +1106,7 @@ void BEANhelper::muonSelector( const BNmuonCollection &muons, bool isLJ, std::st
 			}
 		}// end muon loop
 	} // end if 2011
-	else{ // default is 2012 selection
+	else if (era=="2012_52x" || era=="2012_53x") { // default is 2012 selection
 		for( int i=0; i<int(muons.size()); i++ ){
 			double muPt  = muons.at(i).pt;
 			double muEta = muons.at(i).eta;
@@ -1123,7 +1149,11 @@ void BEANhelper::muonSelector( const BNmuonCollection &muons, bool isLJ, std::st
 				else looseMuons.push_back(i);
 			}
 		}// end muon loop
-	}
+	} // end if 2012
+    else {
+      assert (era == "either 2012_52x, 2012_53x, or 2011");
+    }
+    
 } //end muonSelector
 
 
@@ -1563,6 +1593,9 @@ bool BEANhelper::ttPlusHeavyKeepEvent( const BNmcparticleCollection& iMCparticle
         break;
       }
     }
+    else {
+      assert (era == "either 2012_52x, 2012_53x, or 2011");
+    }    
   }
 
   bool isBBbarEvent = false;
@@ -1605,6 +1638,10 @@ bool BEANhelper::ttPlusHeavyKeepEvent( const BNmcparticleCollection& iMCparticle
       if( abs(id)==4 && (abs(mother0ID)==21 || abs(mother1ID) == 21 || abs(mother0ID) < abs(id) || abs(mother1ID) < abs(id))
           && abs(mother0ID)!=24 && abs(mother1ID)!=24 ) gotC=true;
     }
+    else {
+      assert (era == "either 2012_52x, 2012_53x, or 2011");
+    }
+    
 
     if (debug_) std::cout << "Jet index " << i << " is generator id " << id
                           << ", has mother " << motherID << ", mother0ID = " << mother0ID << ", mother1ID = " << mother1ID  << std::endl;

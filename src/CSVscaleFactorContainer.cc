@@ -152,6 +152,7 @@ double CSVscaleFactorContainer::GetMistagCSVloose(double iEta, double iPt, doubl
 	double result = 0;
 	if(era == "2012_52x" || era == "2012_53x"){		result = (mistagScaleFactorLightFlavor * (0.979396 + (0.000205898 * iPt) + (2.49868e-07 * pow(iPt,2)))); }
 	else if (era == "2011"){	result = mistagScaleFactorLightFlavor; }
+    else { assert (era == "either 2012_52x, 2012_53x, or 2011"); }
 	return result;
 }
 
@@ -187,6 +188,7 @@ double CSVscaleFactorContainer::GetMistagCSVmedium(double iEta, double iPt, doub
 	double result = 0;
 	if(era == "2012_52x" || era == "2012_53x"){		result = (mistagScaleFactorLightFlavor * (1.10422 + (-0.000523856 * iPt) + (1.14251e-06 * pow(iPt,2)))); }
 	else if (era == "2011"){	result = mistagScaleFactorLightFlavor; }
+    else { assert (era == "either 2012_52x, 2012_53x, or 2011"); }
 	return result;
 }
 
@@ -215,10 +217,12 @@ double CSVscaleFactorContainer::GetMistagCSVtight(double iEta, double iPt, doubl
 		if( iScaleL > 0 ){		mistagScaleFactorLightFlavor = mean + iScaleL*(max-mean); }
 		else if( iScaleL < 0 ){	mistagScaleFactorLightFlavor = mean + iScaleL*(mean-min); }
 	}
+    else { assert (era == "either 2012_52x, 2012_53x, or 2011"); }
 
 	double result = 0;
 	if(era == "2012_52x" || era == "2012_53x"){		result = (mistagScaleFactorLightFlavor * (1.19275 + (-0.00191042 * iPt) + (2.92205e-06 * pow(iPt,2)))); }
 	else if (era == "2011"){	result = mistagScaleFactorLightFlavor; }
+    else { assert (era == "either 2012_52x, 2012_53x, or 2011"); }
 	return result;
 }
 
