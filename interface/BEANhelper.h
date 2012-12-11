@@ -147,9 +147,9 @@ class BEANhelper{
         bool                    ttPlusHeavyKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);  
   
 		// PU reweighing
-		double GetPUweight(const unsigned int);
-		double GetPUweightUp(const unsigned int);
-		double GetPUweightDown(const unsigned int);
+		double GetPUweight(const double);
+		double GetPUweightUp(const double);
+		double GetPUweightDown(const double);
 
 	private:
 		double GetCSVvalue(const BNjet&, const sysType::sysType iSysType=sysType::NA);

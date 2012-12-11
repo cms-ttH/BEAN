@@ -683,9 +683,9 @@ BNmcparticle BEANhelper::GetMatchedMCparticle(const BNmcparticleCollection& iMCp
 
 
 // === PU reweighing === //
-double BEANhelper::GetPUweight(const unsigned int iNumBX0){ return h_PU_ratio_->GetBinContent( h_PU_ratio_->FindBin( iNumBX0 ) ); }
-double BEANhelper::GetPUweightUp(const unsigned int iNumBX0){ return h_PUup_ratio_->GetBinContent( h_PU_ratio_->FindBin( iNumBX0 ) ); }
-double BEANhelper::GetPUweightDown(const unsigned int iNumBX0){ return h_PUdown_ratio_->GetBinContent( h_PU_ratio_->FindBin( iNumBX0 ) ); }
+double BEANhelper::GetPUweight(const double iNumBX0){ return h_PU_ratio_->GetBinContent( h_PU_ratio_->FindBin( iNumBX0 ) ); }
+double BEANhelper::GetPUweightUp(const double iNumBX0){ return h_PUup_ratio_->GetBinContent( h_PUup_ratio_->FindBin( iNumBX0 ) ); }
+double BEANhelper::GetPUweightDown(const double iNumBX0){ return h_PUdown_ratio_->GetBinContent( h_PUdown_ratio_->FindBin( iNumBX0 ) ); }
 
 
 // ******************** OLD ****************** //
