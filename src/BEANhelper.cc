@@ -320,11 +320,12 @@ float BEANhelper::GetMuonRelIso(const BNmuon& iMuon){
 float BEANhelper::GetMuonSF(const BNmuon& iMuon){
   CheckSetUp();
   double SF = 1.0;
-  if( !isData ) {
-    double usePT = std::min( iMuon.pt, 499. );
-    double useEta = ( iMuon.eta>0. ) ? std::min( 2.09, iMuon.eta ) : std::max( -2.09, iMuon.eta );
-    SF = h_mu_SF_->GetBinContent( h_mu_SF_->FindBin(usePT, useEta) );
-  }
+
+  if (isData) return SF;
+  
+  double usePT = std::min( iMuon.pt, 499. );
+  double useEta = ( iMuon.eta>0. ) ? std::min( 2.09, iMuon.eta ) : std::max( -2.09, iMuon.eta );
+  SF = h_mu_SF_->GetBinContent( h_mu_SF_->FindBin(usePT, useEta) );
 
   return SF;
 }
@@ -468,11 +469,11 @@ float BEANhelper::GetElectronRelIso(const BNelectron& iElectron){
 float BEANhelper::GetElectronSF(const BNelectron& iElectron){
   CheckSetUp();
   double SF = 1.0;
-  if( !isData ) {
-    double usePT = std::min( iElectron.pt, 499. );
-    double useEta = ( iElectron.eta>0. ) ? std::min( 2.09, iElectron.eta ) : std::max( -2.09, iElectron.eta );
-    SF = h_ele_SF_->GetBinContent( h_ele_SF_->FindBin(usePT, useEta) );
-  }
+  if (isData) return SF;
+
+  double usePT = std::min( iElectron.pt, 499. );
+  double useEta = ( iElectron.eta>0. ) ? std::min( 2.09, iElectron.eta ) : std::max( -2.09, iElectron.eta );
+  SF = h_ele_SF_->GetBinContent( h_ele_SF_->FindBin(usePT, useEta) );
 
   return SF;
 }
@@ -683,15 +684,126 @@ BNmcparticle BEANhelper::GetMatchedMCparticle(const BNmcparticleCollection& iMCp
 
 
 // === PU reweighing === //
-double BEANhelper::GetPUweight(const double iNumBX0){ return h_PU_ratio_->GetBinContent( h_PU_ratio_->FindBin( iNumBX0 ) ); }
-double BEANhelper::GetPUweightUp(const double iNumBX0){ return h_PUup_ratio_->GetBinContent( h_PUup_ratio_->FindBin( iNumBX0 ) ); }
-double BEANhelper::GetPUweightDown(const double iNumBX0){ return h_PUdown_ratio_->GetBinContent( h_PUdown_ratio_->FindBin( iNumBX0 ) ); }
+double BEANhelper::GetPUweight(const double iNumBX0){
+  if (isData) return 1.0;
+  return h_PU_ratio_->GetBinContent( h_PU_ratio_->FindBin( iNumBX0 ) ); }
+double BEANhelper::GetPUweightUp(const double iNumBX0){
+  if (isData) return 1.0;
+  return h_PUup_ratio_->GetBinContent( h_PUup_ratio_->FindBin( iNumBX0 ) ); }
+double BEANhelper::GetPUweightDown(const double iNumBX0){
+  if (isData) return 1.0;
+  return h_PUdown_ratio_->GetBinContent( h_PUdown_ratio_->FindBin( iNumBX0 ) ); }
 
 
 // ******************** OLD ****************** //
 
 void BEANhelper::setMCsample( int insample, std::string era, bool isLJ, std::string dset ){
 
+
+  if (era == "2012_53x" || era == "2012_52x") {
+    if ( insample<0 ) samplename = "data";
+    else if( insample==2500 ) samplename = "ttbar";
+    else if( insample==2544 ) samplename = "ttbar_cc";
+    else if( insample==2555 ) samplename = "ttbar_bb";
+    else if( insample==2511 ) samplename = "ttbar_scaleup";
+    else if( insample==2510 ) samplename = "ttbar_scaledown";
+    else if( insample==2513 ) samplename = "ttbar_matchingup";
+    else if( insample==2512 ) samplename = "ttbar_matchingdown";
+    else if( insample==2566 ) samplename = "ttbar_jj";
+    else if( insample==2563 ) samplename = "ttbar_lj";
+    else if( insample==2533 ) samplename = "ttbar_ll";
+    else if( insample==2576 ) samplename = "ttbar_cc_jj";
+    else if( insample==2573 ) samplename = "ttbar_cc_lj";
+    else if( insample==2543 ) samplename = "ttbar_cc_ll";
+    else if( insample==2586 ) samplename = "ttbar_bb_jj";
+    else if( insample==2583 ) samplename = "ttbar_bb_lj";
+    else if( insample==2553 ) samplename = "ttbar_bb_ll";
+    else if( insample==2400 ) samplename = "wjets";
+    else if( insample==2401 ) samplename = "wjets_1p";
+    else if( insample==2402 ) samplename = "wjets_2p";
+    else if( insample==2403 ) samplename = "wjets_3p";
+    else if( insample==2404 ) samplename = "wjets_4p";
+    else if( insample==2850 ) samplename = "zjets_lowmass";
+    else if( insample==2851 ) samplename = "zjets_lowmass_1p";
+    else if( insample==2852 ) samplename = "zjets_lowmass_2p";
+    else if( insample==2800 ) samplename = "zjets";
+    else if( insample==2801 ) samplename = "zjets_1p";
+    else if( insample==2802 ) samplename = "zjets_2p";
+    else if( insample==2803 ) samplename = "zjets_3p";
+    else if( insample==2804 ) samplename = "zjets_4p";
+    else if( insample==2600 ) samplename = "t_schannel";
+    else if( insample==2630 ) samplename = "t_schannel_ll";
+    else if( insample==2601 ) samplename = "tbar_schannel";
+    else if( insample==2631 ) samplename = "tbar_schannel_ll";
+    else if( insample==2602 ) samplename = "t_tchannel";
+    else if( insample==2632 ) samplename = "t_tchannel_ll";
+    else if( insample==2603 ) samplename = "tbar_tchannel";
+    else if( insample==2633 ) samplename = "tbar_tchannel_ll";
+    else if( insample==2604 ) samplename = "t_tWchannel";
+    else if( insample==2654 ) samplename = "t_tWchannel_lj";
+    else if( insample==2664 ) samplename = "t_tWchannel_jl";
+    else if( insample==2634 ) samplename = "t_tWchannel_ll";
+    else if( insample==2605 ) samplename = "tbar_tWchannel";
+    else if( insample==2655 ) samplename = "tbar_tWchannel_lj";
+    else if( insample==2665 ) samplename = "tbar_tWchannel_jl";
+    else if( insample==2635 ) samplename = "tbar_tWchannel_ll";
+    else if( insample==2700 ) samplename = "ww";
+    else if( insample==2710 ) samplename = "www";
+    else if( insample==2720 ) samplename = "wwz";
+    else if( insample==2701 ) samplename = "wz";
+    else if( insample==2721 ) samplename = "wzz";
+    else if( insample==2702 ) samplename = "zz";
+    else if( insample==2722 ) samplename = "zzz";
+    else if( insample==2524 ) samplename = "ttbarW";
+    else if( insample==2534 ) samplename = "ttbarWW";
+    else if( insample==2523 ) samplename = "ttbarZ";
+    else if( insample==2525 ) samplename = "ttbarttbar";
+    else if( insample>=9100 && insample<=9300 ) {
+      if (era == "2012_53x") samplename = "ttH120";
+      else if (era == "2012_52x") samplename = "ttH120_FastSim";
+      else assert (era == "either 2012_52x or 2012_53x");
+    }
+    else if( insample>=8100 && insample<=8300 ) {
+      if (era == "2012_53x") samplename = "ttH120_bb";
+      else if (era == "2012_52x") samplename = "ttH120_FullSim";
+      else assert (era == "either 2012_52x or 2012_53x");
+    }
+    else if ( insample>=7100 && insample<=7300 && era == "2012_53x" ) samplename = "ttH120_tautau";
+    else assert (samplename == "No good insample found for 2012_52x or 2012_53x");
+  }
+  else if (era == "2011") {
+    if( insample<0 ) samplename = "data";
+    else if( insample==2300 ) samplename = "zjets";
+    else if( insample==2310 ) samplename = "zjets_lowmass";
+    else if( insample==2400 ) samplename = "wjets";
+    else if( insample==2500 ) samplename = "ttbar";
+    else if( insample==2544 ) samplename = "ttbar_cc";
+    else if( insample==2555 ) samplename = "ttbar_bb";
+    else if( insample==2510 ) samplename = "ttbar_scaleup";
+    else if( insample==2511 ) samplename = "ttbar_scaledown";
+    else if( insample==2523 ) samplename = "ttbarZ";
+    else if( insample==2524 ) samplename = "ttbarW";
+    else if( insample==2600 ) samplename = "singlet";
+    else if( insample==2700 ) samplename = "ww";
+    else if( insample==2701 ) samplename = "wz";
+    else if( insample==2702 ) samplename = "zz";
+    else if( insample>=100 && insample<=300 ) samplename = "ttH120";
+    else assert (samplename == "No good insample found for 2011" );
+  }
+  else {
+    assert (era == "either 2012_52x, 2012_53x, or 2011");
+  }
+  
+
+  //Don't get any of the histograms if the sample is data
+  if( !(insample>0 && samplename!="data" && !isData) && !(samplename<0 && samplename=="data" && isData) ) {
+    assert (samplename == "insample, samplename, and isData inconsistent"); }
+  if (samplename == "blank") assert (samplename == "Why is samplename still blank?");
+
+  if( insample<0 || samplename=="data" || isData) return;
+      
+      //-------------- Histograms for MC -------------------//
+  
 	char * my_pPath = getenv ("CMSSW_BASE");
 	std::string my_base_dir(my_pPath);
 	std::string str_eff_file_7TeV = my_base_dir + "/src/NtupleMaker/BEANmaker/data/mc_btag_efficiency_7TeV.root";
@@ -729,98 +841,6 @@ void BEANhelper::setMCsample( int insample, std::string era, bool isLJ, std::str
 			<< ", but it was a zombie. Crashing" << endl;
 		assert (f_tag_eff_->IsZombie() == false);
 	}
-
-    if (era == "2012_53x" || era == "2012_52x") {
-      if( insample==2500 ) samplename = "ttbar";
-      else if( insample==2544 ) samplename = "ttbar_cc";
-      else if( insample==2555 ) samplename = "ttbar_bb";
-      else if( insample==2511 ) samplename = "ttbar_scaleup";
-      else if( insample==2510 ) samplename = "ttbar_scaledown";
-      else if( insample==2513 ) samplename = "ttbar_matchingup";
-      else if( insample==2512 ) samplename = "ttbar_matchingdown";
-      else if( insample==2566 ) samplename = "ttbar_jj";
-      else if( insample==2563 ) samplename = "ttbar_lj";
-      else if( insample==2533 ) samplename = "ttbar_ll";
-      else if( insample==2576 ) samplename = "ttbar_cc_jj";
-      else if( insample==2573 ) samplename = "ttbar_cc_lj";
-      else if( insample==2543 ) samplename = "ttbar_cc_ll";
-      else if( insample==2586 ) samplename = "ttbar_bb_jj";
-      else if( insample==2583 ) samplename = "ttbar_bb_lj";
-      else if( insample==2553 ) samplename = "ttbar_bb_ll";
-      else if( insample==2400 ) samplename = "wjets";
-      else if( insample==2401 ) samplename = "wjets_1p";
-      else if( insample==2402 ) samplename = "wjets_2p";
-      else if( insample==2403 ) samplename = "wjets_3p";
-      else if( insample==2404 ) samplename = "wjets_4p";
-      else if( insample==2850 ) samplename = "zjets_lowmass";
-      else if( insample==2851 ) samplename = "zjets_lowmass_1p";
-      else if( insample==2852 ) samplename = "zjets_lowmass_2p";
-      else if( insample==2800 ) samplename = "zjets";
-      else if( insample==2801 ) samplename = "zjets_1p";
-      else if( insample==2802 ) samplename = "zjets_2p";
-      else if( insample==2803 ) samplename = "zjets_3p";
-      else if( insample==2804 ) samplename = "zjets_4p";
-      else if( insample==2600 ) samplename = "t_schannel";
-      else if( insample==2630 ) samplename = "t_schannel_ll";
-      else if( insample==2601 ) samplename = "tbar_schannel";
-      else if( insample==2631 ) samplename = "tbar_schannel_ll";
-      else if( insample==2602 ) samplename = "t_tchannel";
-      else if( insample==2632 ) samplename = "t_tchannel_ll";
-      else if( insample==2603 ) samplename = "tbar_tchannel";
-      else if( insample==2633 ) samplename = "tbar_tchannel_ll";
-      else if( insample==2604 ) samplename = "t_tWchannel";
-      else if( insample==2654 ) samplename = "t_tWchannel_lj";
-      else if( insample==2664 ) samplename = "t_tWchannel_jl";
-      else if( insample==2634 ) samplename = "t_tWchannel_ll";
-      else if( insample==2605 ) samplename = "tbar_tWchannel";
-      else if( insample==2655 ) samplename = "tbar_tWchannel_lj";
-      else if( insample==2665 ) samplename = "tbar_tWchannel_jl";
-      else if( insample==2635 ) samplename = "tbar_tWchannel_ll";
-      else if( insample==2700 ) samplename = "ww";
-      else if( insample==2710 ) samplename = "www";
-      else if( insample==2720 ) samplename = "wwz";
-      else if( insample==2701 ) samplename = "wz";
-      else if( insample==2721 ) samplename = "wzz";
-      else if( insample==2702 ) samplename = "zz";
-      else if( insample==2722 ) samplename = "zzz";
-      else if( insample==2524 ) samplename = "ttbarW";
-      else if( insample==2534 ) samplename = "ttbarWW";
-      else if( insample==2523 ) samplename = "ttbarZ";
-      else if( insample==2525 ) samplename = "ttbarttbar";
-      if (era == "2012_53x") {
-        if( insample>=9110 && insample <=9140 ) samplename = "ttH120";
-        else if( insample>=7110 && insample <=9140 ) samplename = "ttH120_tautau";
-        else if( insample>=8110 && insample <=8140 ) samplename = "ttH120_bb";
-      }
-      else if (era == "2012_52x") {
-        if( insample>=8000 && insample<9000  ) samplename = "ttH120_FullSim";
-        else if( insample>=9000 && insample<10000 ) samplename = "ttH120_FastSim";
-      }
-      else {
-        assert (era == "either 2012_52x or 2012_53x");
-      }
-    }
-    else if (era == "2011") {
-      if( insample==2300 ) samplename = "zjets";
-      else if( insample==2310 ) samplename = "zjets_lowmass";
-      else if( insample==2400 ) samplename = "wjets";
-      else if( insample==2500 ) samplename = "ttbar";
-      else if( insample==2544 ) samplename = "ttbar_cc";
-      else if( insample==2555 ) samplename = "ttbar_bb";
-      else if( insample==2510 ) samplename = "ttbar_scaleup";
-      else if( insample==2511 ) samplename = "ttbar_scaledown";
-      else if( insample==2523 ) samplename = "ttbarZ";
-      else if( insample==2524 ) samplename = "ttbarW";
-      else if( insample==2600 ) samplename = "singlet";
-      else if( insample==2700 ) samplename = "ww";
-      else if( insample==2701 ) samplename = "wz";
-      else if( insample==2702 ) samplename = "zz";
-      else if( insample>=100 && insample<=140 ) samplename = "ttH120";
-    }
-    else {
-      assert (era == "either 2012_52x, 2012_53x, or 2011");
-    }
-
 
     std::string samplename_jet_eff = samplename;
     if (samplename == "zjets_lowmass") samplename_jet_eff = "zjets";
@@ -1441,6 +1461,15 @@ return;
 
 vdouble BEANhelper::getEffSF( int returnType, double jetPt, double jetEta, double jetId ){
 
+	vdouble result;
+
+    if (isData) {
+      result.clear();
+      result.push_back(1.0);
+      result.push_back(1.0);
+      return result;
+    }
+  
 	double m_type = 0.;
 	if( returnType==-1 )      m_type = -1.;
 	else if( returnType==1 )  m_type = 1.;
@@ -1528,7 +1557,6 @@ vdouble BEANhelper::getEffSF( int returnType, double jetPt, double jetEta, doubl
 	}
 
 
-	vdouble result;
 	result.clear();
 	result.push_back(tagEff);
 	result.push_back(SF);
