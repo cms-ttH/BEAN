@@ -105,6 +105,7 @@ class BEANhelper{
 		template <typename BNcollection> BNcollection GetIntersection(const BNcollection&, const BNcollection&);
 		template <typename BNcollection> BNcollection GetDifference(const BNcollection&, const BNcollection&);
 		template <typename BNcollection> BNcollection GetSymmetricDifference(const BNcollection&, const BNcollection&);
+		template <typename BNcollection> BNcollection GetUnionUnsorted(const BNcollection&, const BNcollection&);
 
 		// Jets and MET
 		float GetBtagWeight(const BNjet&, const sysType::sysType iSysType=sysType::NA);
@@ -290,6 +291,38 @@ template <typename BNcollection> BNcollection BEANhelper::GetUnion(const BNcolle
 
 	// Sort by descending pT
 	return GetSortedByPt(result);
+}
+
+// === Return the union of the two input collections, removing the overlap, with collection1 objects first, then collection2 === //
+template <typename BNcollection> BNcollection BEANhelper::GetUnionUnsorted(const BNcollection& iBNcollection1, const BNcollection& iBNcollection2){
+	// Start off by adding all the objects in the first collection to the result
+	BNcollection result = iBNcollection1;
+
+	// Check to see what objects in the second collection need to be added, and do so
+	for(typename BNcollection::const_iterator Object2 = iBNcollection2.begin(); Object2 != iBNcollection2.end(); ++Object2 ){
+
+		// Look for Object2 in the results collection
+		bool presentInFirstCollection = false;
+		for(typename BNcollection::const_iterator Object1 = result.begin(); Object1 != result.end(); ++Object1 ){
+
+			// If two objects match in deltaR, check that they have virtually the same momentum. Throw fatal error
+			// if we get two matching objects with different momenta, as this probably mean that we're mixing corrected and uncorrected
+			// input collections
+			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < 0.001){
+				presentInFirstCollection = true;
+				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.001) &&
+									(fabs(Object1->py - Object2->py) < 0.001) &&
+									(fabs(Object1->pz - Object2->pz) < 0.001);
+				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; exit(1); }
+			}
+				
+		}
+
+		// If after looping over the results collection, Object2 wasn't found, add it!
+		if(!presentInFirstCollection){ result.push_back(*Object2); }
+	}
+
+	return result;
 }
 
 // === Return the intersection of the two input collections, sorted by descending pT === //
