@@ -544,7 +544,7 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
       minLooseElectronPt		= 10;
       minTightElectronPt		= ( isLJ ) ? 30. : 20.;
       maxLooseElectronAbsEta	= 2.5;
-      maxTightElectronAbsEta	= 2.1;
+      maxTightElectronAbsEta	= 2.5;
     }
     else {
       assert (era == "either 2012_52x, 2012_53x, or 2011");
