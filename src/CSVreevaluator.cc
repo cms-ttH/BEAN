@@ -92,10 +92,10 @@ CSVreevaluator::CSVreevaluator(string iSampleName, string iEra, double iScaleBC,
 
 // Destructor
 CSVreevaluator::~CSVreevaluator(){
-	delete efficiencyFile;			efficiencyFile = NULL;
 	delete bottomFlavorReshapers;	bottomFlavorReshapers	= NULL;
 	delete charmFlavorReshapers;	charmFlavorReshapers	= NULL;
 	delete lightFlavorReshapers;	lightFlavorReshapers	= NULL;
+	delete efficiencyFile;			efficiencyFile = NULL;
 }
 
 
