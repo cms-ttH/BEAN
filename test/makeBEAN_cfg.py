@@ -73,8 +73,8 @@ if (jobParams[0] != "2011") and (jobParams[0] != "2012"):
 
 runOnMC			= ((jobParams[2]).find('MC') != -1);
 runOnFastSim	= ((jobParams[2]).find('MC-sigFastSim') != -1);
-if (not runOnMC) and ((jobParams[1] != 'A') and (jobParams[1] != 'B') and (jobParams[1] != 'C')):
-	print "ERROR: job set to run on collision data from subera '" + jobParams[1] + "' but it must be 'A', 'B', or 'C'."; sys.exit(1);
+if (not runOnMC) and ((jobParams[1] != 'A') and (jobParams[1] != 'B') and (jobParams[1] != 'C') and (jobParams[1] != 'D')):
+	print "ERROR: job set to run on collision data from sub-era '" + jobParams[1] + "' but it must be 'A', 'B', 'C', or 'D'."; sys.exit(1);
 
 if (jobParams[2] != "data-PR") and (jobParams[2] != "data-RR") and (jobParams[2] != "data-RRr")and (jobParams[2] != "MC-bg") and (jobParams[2] != "MC-sigFullSim") and (jobParams[2] != "MC-sigFastSim"):
 	print "ERROR: sample type set to '" + jobParams[2] + "' but it can only be 'data-PR', 'data-RR', 'data-RRr', 'MC-bg', 'MC-sigFullSim', or 'MC-sigFastSim'."; sys.exit(1); 
