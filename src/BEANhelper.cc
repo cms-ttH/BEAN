@@ -81,7 +81,7 @@ void BEANhelper::SetUp(string iEra, int iSampleNumber, bool iIsLJ, bool iIsData,
 	usePfLeptons    = iPfLeptons;
 
 	// Error checking here
-	if((era != "2011") && (era != "2012_52x") && (era != "2012_53x")){ ThrowFatalError("era has to be either 2011, 2012_52x, or 2012_53x"); }
+	if((era != "2011") && (era != "2012_52x") && (era != "2012_53x")){ ThrowFatalError("era set to '" + era + "' but it has to be either 2011, 2012_52x, or 2012_53x"); }
 	if(sampleNumber==0){ ThrowFatalError("'sampleNumber' cannot be '0'."); }
 	if(dataset.length()==0){ ThrowFatalError("'dataset' is blank."); }
 
@@ -547,6 +547,7 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
       maxTightElectronAbsEta	= 2.5;
     }
     else {
+	  cout << "Era set to '" << era << "'" << endl;
       assert (era == "either 2012_52x, 2012_53x, or 2011");
     }
 
@@ -557,7 +558,7 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
 
 	// Check if this electron is good enough
 	bool inCrack			= ((fabs(iElectron.scEta) > 1.4442) && (fabs(iElectron.scEta) < 1.5660));
-    if (era=="2012") {
+    if (era=="2011") {
       switch(iElectronID){
       case electronID::electronSide:
         passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
@@ -600,6 +601,7 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
       }
 	} // End of 2012 era
     else {
+	  cout << "Era set to '" << era << "'" << endl;
       assert (era == "either 2012_52x, 2012_53x, or 2011");
     }
 
