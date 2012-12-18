@@ -798,7 +798,10 @@ void BEANhelper::setMCsample( int insample, std::string era, bool isLJ, std::str
   
 
   //Don't get any of the histograms if the sample is data
-  if( !(insample>0 && samplename!="data" && !isData) && !(samplename<0 && samplename=="data" && isData) ) {
+  if( !(insample>0 && samplename!="data" && !isData) && !(insample<0 && samplename=="data" && isData) ) {
+  	cout << "insample:   " << insample << endl;
+	cout << "samplename: '" << samplename << "'" << endl;
+	cout << "isData:     " << isData << endl;
     assert (samplename == "insample, samplename, and isData inconsistent"); }
   if (samplename == "blank") assert (samplename == "Why is samplename still blank?");
 
