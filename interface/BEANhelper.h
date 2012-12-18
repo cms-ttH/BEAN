@@ -280,7 +280,11 @@ template <typename BNcollection> BNcollection BEANhelper::GetUnion(const BNcolle
 				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.001) &&
 									(fabs(Object1->py - Object2->py) < 0.001) &&
 									(fabs(Object1->pz - Object2->pz) < 0.001);
-				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; exit(1); }
+				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl;
+				cout << setprecision(7) << "Eta1: " << Object1->eta << "\tPhi1: " << Object1->phi << "\tpT1: " << Object1->pt << endl;
+				cout << setprecision(7) << "Eta2: " << Object2->eta << "\tPhi2: " << Object2->phi << "\tpT2: " << Object2->pt << endl;
+				exit(1); }
+				
 			}
 				
 		}
@@ -308,12 +312,15 @@ template <typename BNcollection> BNcollection BEANhelper::GetUnionUnsorted(const
 			// If two objects match in deltaR, check that they have virtually the same momentum. Throw fatal error
 			// if we get two matching objects with different momenta, as this probably mean that we're mixing corrected and uncorrected
 			// input collections
-			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < 0.001){
+			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < 0.00001){
 				presentInFirstCollection = true;
-				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.001) &&
-									(fabs(Object1->py - Object2->py) < 0.001) &&
-									(fabs(Object1->pz - Object2->pz) < 0.001);
-				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; exit(1); }
+				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.00001) &&
+									(fabs(Object1->py - Object2->py) < 0.00001) &&
+									(fabs(Object1->pz - Object2->pz) < 0.00001);
+				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; 
+				cout << setprecision(7) << "Eta1: " << Object1->eta << "\tPhi1: " << Object1->phi << "\tpT1: " << Object1->pt << endl;
+				cout << setprecision(7) << "Eta2: " << Object2->eta << "\tPhi2: " << Object2->phi << "\tpT2: " << Object2->pt << endl;
+				exit(1); }
 			}
 				
 		}
@@ -340,12 +347,15 @@ template <typename BNcollection> BNcollection BEANhelper::GetIntersection(const 
 			// If two objects match in deltaR, check that they have virtually the same momentum. Throw fatal error
 			// if we get two matching objects with different momenta, as this probably mean that we're mixing corrected and uncorrected
 			// input collections
-			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < 0.001){
+			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < 0.00001){
 				presentInFirstCollection = true;
-				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.001) &&
-									(fabs(Object1->py - Object2->py) < 0.001) &&
-									(fabs(Object1->pz - Object2->pz) < 0.001);
-				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; exit(1); }
+				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.00001) &&
+									(fabs(Object1->py - Object2->py) < 0.00001) &&
+									(fabs(Object1->pz - Object2->pz) < 0.00001);
+				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; 
+				cout << setprecision(7) << "Eta1: " << Object1->eta << "\tPhi1: " << Object1->phi << "\tpT1: " << Object1->pt << endl;
+				cout << setprecision(7) << "Eta2: " << Object2->eta << "\tPhi2: " << Object2->phi << "\tpT2: " << Object2->pt << endl;
+				exit(1); }
 
 				// If found a match, break loop
 				break;
@@ -376,12 +386,15 @@ template <typename BNcollection> BNcollection BEANhelper::GetDifference(const BN
 			// If two objects match in deltaR, check that they have virtually the same momentum. Throw fatal error
 			// if we get two matching objects with different momenta, as this probably mean that we're mixing corrected and uncorrected
 			// input collections
-			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < 0.001){
+			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < 0.00001){
 				presentInSecondCollection = true;
-				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.001) &&
-									(fabs(Object1->py - Object2->py) < 0.001) &&
-									(fabs(Object1->pz - Object2->pz) < 0.001);
-				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; exit(1); }
+				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.00001) &&
+									(fabs(Object1->py - Object2->py) < 0.00001) &&
+									(fabs(Object1->pz - Object2->pz) < 0.00001);
+				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; 
+				cout << setprecision(7) << "Eta1: " << Object1->eta << "\tPhi1: " << Object1->phi << "\tpT1: " << Object1->pt << endl;
+				cout << setprecision(7) << "Eta2: " << Object2->eta << "\tPhi2: " << Object2->phi << "\tpT2: " << Object2->pt << endl;
+				exit(1); }
 
 				break;
 			}
