@@ -674,17 +674,6 @@ BNmcparticleCollection BEANhelper::GetHadronicGenTaus(const BNmcparticleCollecti
 	return result;
 }
 
-BNmcparticle BEANhelper::GetMatchedMCparticle(const BNmcparticleCollection& iMCparticles, const BNtau& iTau, const double iMaxDeltaR){
-	BNmcparticle result;
-	double minDeltaR = 999;
-	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
-		double thisDeltaR = deltaR(MCparticle->eta, MCparticle->phi, iTau.eta, iTau.phi);	
-		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*MCparticle); }
-	}
-	return result;
-}
-
-
 // === PU reweighing === //
 double BEANhelper::GetPUweight(const double iNumBX0){
   if (isData) return 1.0;

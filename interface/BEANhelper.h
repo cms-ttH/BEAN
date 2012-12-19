@@ -98,6 +98,7 @@ class BEANhelper{
   void SetUp(string, int, bool, bool, string, bool, bool);
 
 		template <typename BNobject> void PrintInfo(const BNobject&);
+		template <typename BNobject> BNmcparticle GetMatchedMCparticle(const BNmcparticleCollection&, const BNobject&, const double);
 
 		// Union, intersection, difference
 		template <typename BNcollection> BNcollection GetSortedByPt(const BNcollection&);
@@ -237,6 +238,17 @@ class BEANhelper{
 
 }; // End of class prototype
 
+
+// === Return matched BNmcparticle based on minimum deltaR and a deltaR threshold === //
+template <typename BNobject> BNmcparticle BEANhelper::GetMatchedMCparticle(const BNmcparticleCollection& iMCparticles, const BNobject& iObject, const double iMaxDeltaR){
+	BNmcparticle result;
+	double minDeltaR = 999;
+	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
+		double thisDeltaR = deltaR(MCparticle->eta, MCparticle->phi, iObject.eta, iObject.phi);	
+		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*MCparticle); }
+	}
+	return result;
+}
 
 
 // === Returned sorted input collection, by descending pT === //
