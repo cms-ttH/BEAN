@@ -145,7 +145,6 @@ class BEANhelper{
 		BNmcparticleCollection	GetSelectedMCparticlesByPDGid(const BNmcparticleCollection&, const vector<int>);
 		BNmcparticleCollection	GetGenTaus(const BNmcparticleCollection&);
 		BNmcparticleCollection	GetHadronicGenTaus(const BNmcparticleCollection&);
-		BNmcparticle			GetMatchedMCparticle(const BNmcparticleCollection&, const BNtau&, const double iMaxDeltaR=0.25);
         bool                    ttPlusHeavyKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);  
   
 		// PU reweighing
