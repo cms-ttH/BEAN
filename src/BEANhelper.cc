@@ -652,11 +652,80 @@ unsigned int BEANhelper::GetNumNonCSVbtags(const BNjetCollection& iJets, const c
 BNmcparticleCollection BEANhelper::GetSelectedMCparticlesByPDGid(const BNmcparticleCollection& iMCparticles, const vector<int> iPDGid){
 	BNmcparticleCollection result;
 	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
-		if( find(iPDGid.begin(), iPDGid.end(), MCparticle->motherId) != iPDGid.end() ){
+		if( find(iPDGid.begin(), iPDGid.end(), MCparticle->id) != iPDGid.end() ){
 			result.push_back(*MCparticle);	
 		}
 	}
 	return result;
+}
+
+BNmcparticleCollection BEANhelper::GetUnrejectedMCparticlesByPDGid(const BNmcparticleCollection& iMCparticles, const vector<int> iPDGid){
+	BNmcparticleCollection result;
+	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
+		if( find(iPDGid.begin(), iPDGid.end(), MCparticle->id) == iPDGid.end() ){
+			result.push_back(*MCparticle);	
+		}
+	}
+	return result;
+}
+
+BNmcparticleCollection BEANhelper::GetSelectedMCparticlesByStatus(const BNmcparticleCollection& iMCparticles, const bool iKeepStatus1, const bool iKeepStatus2, const bool iKeepStatus3){
+	BNmcparticleCollection result;
+	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
+		if( ((MCparticle->status == 1) && iKeepStatus1) ||
+			((MCparticle->status == 2) && iKeepStatus2) ||
+			((MCparticle->status == 3) && iKeepStatus3)
+		){ result.push_back(*MCparticle); }
+	}
+	return result;
+}
+
+// (Sort of) draws a feynman diagram with the particle id's of the particle itself, daughters, mothers and grandmothers
+void BEANhelper::DrawFeynman(const BNmcparticle& iMCparticle){
+
+	// Prepare particle IDs
+	stringstream d0;	d0.str("");
+	stringstream d1;	d1.str("");
+	stringstream p;		p.str("");
+	stringstream m0;	m0.str("");
+	stringstream m1;	m1.str("");
+	stringstream g00;	g00.str("");
+	stringstream g01;	g01.str("");
+	stringstream g10;	g10.str("");
+	stringstream g11;	g11.str("");
+
+											p	<< iMCparticle.id;
+	if(     iMCparticle.daughter0Id != -99){ d0	<< iMCparticle.daughter0Id;		}
+	if(     iMCparticle.daughter1Id != -99){ d1	<< iMCparticle.daughter0Id;		};
+	if(       iMCparticle.mother0Id != -99){ m0	<< iMCparticle.mother0Id;	 	};
+	if(       iMCparticle.mother1Id != -99){ m1	<< iMCparticle.mother1Id;	  	};
+	if( iMCparticle.grandMother00Id != -99){ g00	<< iMCparticle.grandMother00Id;	};
+	if( iMCparticle.grandMother01Id != -99){ g01	<< iMCparticle.grandMother01Id;	};
+	if( iMCparticle.grandMother10Id != -99){ g10	<< iMCparticle.grandMother10Id;	};
+	if( iMCparticle.grandMother11Id != -99){ g11	<< iMCparticle.grandMother11Id;	};
+
+	// Prepare each line
+	stringstream ssout; ssout.str("");
+	ssout << string( 2,' ') << setw(5) << setfill(' ') << g00.str()	<< endl;
+
+	ssout << string( 8,' ') << setw(5) << setfill(' ') << m0.str()	<< string( 7,' ') << d0.str() << endl;
+
+	ssout << string( 2,' ') << setw(5) << setfill(' ') << g01.str()	<< string( 6,' '); 
+	ssout << (  (iMCparticle.mother0Id != -99) ? "\\":" ") << string(5,' ');
+	ssout << ((iMCparticle.daughter0Id != -99) ?  "/":" ") << endl;
+
+	ssout << string(14,' ') << setw(3) << setfill(' ') << p.str()	<< endl;
+
+	ssout << string( 2,' ') << setw(5) << setfill(' ') << g10.str()	<< string( 6,' '); 
+	ssout << (  (iMCparticle.mother1Id != -99) ?  "/":" ") << string(5,' ');
+	ssout << ((iMCparticle.daughter1Id != -99) ? "\\":" ") << endl;
+
+	ssout << string( 8,' ') << setw(5) << setfill(' ') << m1.str()	<< string( 7,' ') << d1.str() << endl;
+
+	ssout << string( 2,' ') << setw(5) << setfill(' ') << g11.str()	<< endl;
+
+	// Print end result
+	cout << "\n" << string(40,'-') << endl << ssout.str() << string(40,'-') << endl;
 }
 
 BNmcparticleCollection BEANhelper::GetGenTaus(const BNmcparticleCollection& iMCparticles){
