@@ -297,7 +297,7 @@ template <typename BNcollection> BNcollection BEANhelper::GetUnion(const BNcolle
 				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl;
 				cout << setprecision(7) << "Eta1: " << Object1->eta << "\tPhi1: " << Object1->phi << "\tpT1: " << Object1->pt << endl;
 				cout << setprecision(7) << "Eta2: " << Object2->eta << "\tPhi2: " << Object2->phi << "\tpT2: " << Object2->pt << endl;
-				exit(1); }
+				throw std::logic_error("Inside GetUnion"); }
 				
 			}
 				
@@ -334,7 +334,7 @@ template <typename BNcollection> BNcollection BEANhelper::GetUnionUnsorted(const
 				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; 
 				cout << setprecision(7) << "Eta1: " << Object1->eta << "\tPhi1: " << Object1->phi << "\tpT1: " << Object1->pt << endl;
 				cout << setprecision(7) << "Eta2: " << Object2->eta << "\tPhi2: " << Object2->phi << "\tpT2: " << Object2->pt << endl;
-				exit(1); }
+				throw std::logic_error("Inside GetUnionUnsorted"); }
 			}
 				
 		}
@@ -369,7 +369,7 @@ template <typename BNcollection> BNcollection BEANhelper::GetIntersection(const 
 				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; 
 				cout << setprecision(7) << "Eta1: " << Object1->eta << "\tPhi1: " << Object1->phi << "\tpT1: " << Object1->pt << endl;
 				cout << setprecision(7) << "Eta2: " << Object2->eta << "\tPhi2: " << Object2->phi << "\tpT2: " << Object2->pt << endl;
-				exit(1); }
+				throw std::logic_error("Inside GetIntersection"); }
 
 				// If found a match, break loop
 				break;
@@ -408,7 +408,7 @@ template <typename BNcollection> BNcollection BEANhelper::GetDifference(const BN
 				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; 
 				cout << setprecision(7) << "Eta1: " << Object1->eta << "\tPhi1: " << Object1->phi << "\tpT1: " << Object1->pt << endl;
 				cout << setprecision(7) << "Eta2: " << Object2->eta << "\tPhi2: " << Object2->phi << "\tpT2: " << Object2->pt << endl;
-				exit(1); }
+				throw std::logic_error("Inside GetDifference"); }
 
 				break;
 			}

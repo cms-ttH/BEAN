@@ -136,24 +136,30 @@ BNjet BEANhelper::GetCorrectedJet(const BNjet& iJet, const sysType::sysType iSys
 	// Return original jet if this sample contains collision data
 	if(isData){ return iJet; }
 
-	// Lorentz vector storing xy of the input jet
-	TLorentzVector jetXY(iJet.px, iJet.py, 0, 0);
+	// Factor by which we will scale all the 4-vector components of the jet
+	double jetFactor = 1.;
 
 	// Make appopriate correction to the xy components of input jet
 	switch(iSysType){
-		case sysType::JERup:	jetXY *= getJERfactor(1, fabs(iJet.eta), iJet.genJetPT, iJet.pt);	break;
-		case sysType::JERdown:	jetXY *= getJERfactor(-1, fabs(iJet.eta), iJet.genJetPT, iJet.pt);	break;
-		case sysType::JESup:	jetXY *= (1. + iJet.JESunc);										break;
-		case sysType::JESdown:	jetXY *= (1. - iJet.JESunc);										break;
-		default:				jetXY *= getJERfactor(0, fabs(iJet.eta), iJet.genJetPT, iJet.pt);	break;
+		case sysType::JERup:	jetFactor *= getJERfactor(1, fabs(iJet.eta), iJet.genJetPT, iJet.pt);	 break;
+		case sysType::JERdown:	jetFactor *= getJERfactor(-1, fabs(iJet.eta), iJet.genJetPT, iJet.pt);	 break;
+		case sysType::JESup:	jetFactor *= (1. + iJet.JESunc);
+                                jetFactor *= getJERfactor(0, fabs(iJet.eta), iJet.genJetPT, jetFactor * iJet.pt); break;
+		case sysType::JESdown:	jetFactor *= (1. - iJet.JESunc);
+                                jetFactor *= getJERfactor(0, fabs(iJet.eta), iJet.genJetPT, jetFactor * iJet.pt); break;
+		default:				jetFactor *= getJERfactor(0, fabs(iJet.eta), iJet.genJetPT, iJet.pt);	 break;
 	}
 
-	// Make a copy of the input jet for output and update xy, phi values
+	// Make a copy of the input jet for output and update 4-vector values
 	BNjet result = iJet;
-	result.px	= jetXY.Px();
-	result.py	= jetXY.Py();
-	result.pt	= jetXY.Pt();
-	result.phi	= jetXY.Phi();
+
+	result.px	    *= jetFactor;
+	result.py	    *= jetFactor;
+	result.pz	    *= jetFactor;
+	result.pt	    *= jetFactor;
+    result.et       *= jetFactor;
+	result.energy	*= jetFactor;
+    result.mass     *= jetFactor;
 
 	// Update CSV value (i.e. reshape it if applicable)
 	result.btagCombinedSecVertex = GetCSVvalue(result);
@@ -561,19 +567,19 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
     if (era=="2011") {
       switch(iElectronID){
       case electronID::electronSide:
-        passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
+        passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.eta) <= maxLooseElectronAbsEta) && (!inCrack));
         passesIso			= (GetElectronRelIso(iElectron) < 0.800);
         passesID			= GetElectronIDresult(iElectron, iElectronID);
         break;
         
       case electronID::electronLoose:
-        passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
+        passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.eta) <= maxLooseElectronAbsEta) && (!inCrack));
         passesIso			= (GetElectronRelIso(iElectron) < 0.200);
         passesID			= GetElectronIDresult(iElectron, iElectronID);
         break;
 
       case electronID::electronTight:
-        passesKinematics	= ((iElectron.pt >= minTightElectronPt) && (fabs(iElectron.scEta) <= maxTightElectronAbsEta) && (!inCrack));
+        passesKinematics	= ((iElectron.pt >= minTightElectronPt) && (fabs(iElectron.eta) <= maxTightElectronAbsEta) && (!inCrack));
         passesIso			= (GetElectronRelIso(iElectron) < 0.100);
         passesID			= GetElectronIDresult(iElectron, iElectronID);
         break;
@@ -582,19 +588,19 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
     else if (era=="2012_52x" || era=="2012_53x") {
       switch(iElectronID){
       case electronID::electronSide:
-        passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
+        passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.eta) <= maxLooseElectronAbsEta) && (!inCrack));
         passesIso			= (GetElectronRelIso(iElectron) < 0.800);
         passesID			= GetElectronIDresult(iElectron, iElectronID);
         break;
         
       case electronID::electronLoose:
-        passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.scEta) <= maxLooseElectronAbsEta) && (!inCrack));
+        passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.eta) <= maxLooseElectronAbsEta) && (!inCrack));
         passesIso			= (GetElectronRelIso(iElectron) < 0.200);
         passesID			= GetElectronIDresult(iElectron, iElectronID);
         break;
         
       case electronID::electronTight:
-        passesKinematics	= ((iElectron.pt >= minTightElectronPt) && (fabs(iElectron.scEta) <= maxTightElectronAbsEta) && (!inCrack));
+        passesKinematics	= ((iElectron.pt >= minTightElectronPt) && (fabs(iElectron.eta) <= maxTightElectronAbsEta) && (!inCrack));
         passesIso			= (GetElectronRelIso(iElectron) < 0.100);
         passesID			= GetElectronIDresult(iElectron, iElectronID);
         break;
@@ -907,6 +913,7 @@ void BEANhelper::setMCsample( int insample, std::string era, bool isLJ, std::str
 
     std::string samplename_jet_eff = samplename;
     if (samplename == "zjets_lowmass") samplename_jet_eff = "zjets";
+    if (samplename == "ttbar_bb" || samplename == "ttbar_cc") samplename_jet_eff = "ttbar";
     
 	if (debug)
 		cout << "setMCSample: Looking for histrograms with names like: "
@@ -940,8 +947,10 @@ void BEANhelper::setMCsample( int insample, std::string era, bool isLJ, std::str
 
 
     std::string samplename_pu_input = samplename;
-    if (samplename == "zjets_lowmass") samplename_pu_input = "zjets";
 
+    if (samplename == "ttbar_bb" || samplename == "ttbar_cc") samplename_pu_input = "ttbar";
+    if (samplename == "zjets_lowmass") samplename_pu_input = "zjets";
+    
 	TFile *f_pu_ = new TFile(input_pu_file.c_str());
 
 	TH1D* h_pu_data;
@@ -950,25 +959,32 @@ void BEANhelper::setMCsample( int insample, std::string era, bool isLJ, std::str
 	TH1D* h_pu_mc;
 
 	if( era=="2012_52x" || era=="2012_53x" ){
-		h_pu_data      = (TH1D*)f_pu_->Get((std::string("pileup_8TeV_69300xSec")).c_str());
-		h_pu_data_up   = (TH1D*)f_pu_->Get((std::string("pileup_8TeV_71795xSec")).c_str());
-		h_pu_data_down = (TH1D*)f_pu_->Get((std::string("pileup_8TeV_66805xSec")).c_str());
 
-		std::string mc_pu_input = "Summer2012";
-        if( insample>0) mc_pu_input = std::string(samplename_pu_input + "_Summer2012");
-        if( insample==2523 || insample==2524 ) mc_pu_input = "ttZorW_Summer2012";
+      if (samplename == "ttbar" || samplename == "wjets" || samplename == "zjets" ||
+          samplename == "ttH120_FullSim"|| samplename == "ttH120_FastSim") samplename_pu_input = std::string(samplename+"_");
+      else if (samplename == "ttbar_bb" || samplename == "ttbar_cc") samplename_pu_input = "ttbar_";
+      else if (samplename == "ttbarW" || samplename == "ttbarZ") samplename_pu_input = "ttZorW_";
+      else if (samplename == "zjets_lowmass") samplename_pu_input = "zjets_";
+      else samplename_pu_input = "";
 
-		h_pu_mc = (TH1D*)f_pu_->Get((std::string(mc_pu_input + "_pileup_8TeV")).c_str());
+      h_pu_data      = (TH1D*)f_pu_->Get((std::string("pileup_8TeV_69300xSec")).c_str());
+      h_pu_data_up   = (TH1D*)f_pu_->Get((std::string("pileup_8TeV_71795xSec")).c_str());
+      h_pu_data_down = (TH1D*)f_pu_->Get((std::string("pileup_8TeV_66805xSec")).c_str());
+
+      std::string mc_pu_input = "Summer2012";
+      if( !isData ) mc_pu_input = std::string(samplename_pu_input + "Summer2012");
+      
+      h_pu_mc = (TH1D*)f_pu_->Get((std::string(mc_pu_input + "_pileup_8TeV")).c_str());
 	}
 	else if ( era=="2011") {
 		if( !(dset.find("SingleMu")!=std::string::npos || dset.find("ElectronHad")!=std::string::npos) ) dset = "SingleMu";
 
-		if( (insample>=100 && insample<=140) || (insample==2523) || (insample==2524) ){
+		if( samplename == "ttH120" || samplename == "ttbarW" || samplename == "ttbarZ" ){
 			h_pu_data      = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_68000_observed")).c_str());
 			h_pu_data_up   = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_73440_observed")).c_str());
 			h_pu_data_down = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_62560_observed")).c_str());
 
-            if( (insample>=100 && insample<=140) ) h_pu_mc = (TH1D*)f_pu_->Get("ttH_7TeV_numGenPV");
+            if( samplename == "ttH120" ) h_pu_mc = (TH1D*)f_pu_->Get("ttH_7TeV_numGenPV");
             else  h_pu_mc = (TH1D*)f_pu_->Get("ttV_7TeV_numGenPV"); 
 		}
 		else{
@@ -1010,6 +1026,7 @@ void BEANhelper::setMCsample( int insample, std::string era, bool isLJ, std::str
 
     std::string samplename_CSV_reevaluator = samplename;
     if (samplename == "zjets_lowmass") samplename_CSV_reevaluator = "zjets";
+    if (samplename == "ttbar_bb" || samplename == "ttbar_cc") samplename_CSV_reevaluator = "ttbar";
     
 	double charmFactor = 2.0 - 1.0;
 
@@ -1305,33 +1322,44 @@ void BEANhelper::jetSelector( const BNjetCollection &pfjets, std::string sysType
 
 double BEANhelper::getJERfactor( int returnType, double jetAbsETA, double genjetPT, double recojetPT){
 
+    CheckSetUp();
 	double factor = 1.;
-
+    
 	double scale_JER = 1., scale_JERup = 1., scale_JERdown = 1.;
+    double diff_FullSim_FastSim = 0.;
 	if( jetAbsETA<0.5 ){ 
 		scale_JER = 1.052; scale_JERup = 1.052 + sqrt( 0.012*0.012 + 0.062*0.062 ); scale_JERdown = 1.052 - sqrt( 0.012*0.012 + 0.061*0.061 );
+        diff_FullSim_FastSim = 1.35;
 	}
 	else if( jetAbsETA<1.1 ){ 
 		scale_JER = 1.057; scale_JERup = 1.057 + sqrt( 0.012*0.012 + 0.056*0.056 ); scale_JERdown = 1.057 - sqrt( 0.012*0.012 + 0.055*0.055 );
+        diff_FullSim_FastSim = 1.54;
 	}
 	else if( jetAbsETA<1.7 ){ 
 		scale_JER = 1.096; scale_JERup = 1.096 + sqrt( 0.017*0.017 + 0.063*0.063 ); scale_JERdown = 1.096 - sqrt( 0.017*0.017 + 0.062*0.062 );
+        diff_FullSim_FastSim = 1.97;
 	}
 	else if( jetAbsETA<2.3 ){ 
 		scale_JER = 1.134; scale_JERup = 1.134 + sqrt( 0.035*0.035 + 0.087*0.087 ); scale_JERdown = 1.134 - sqrt( 0.035*0.035 + 0.085*0.085 );
+        diff_FullSim_FastSim = 3.12;
 	}
 	else if( jetAbsETA<5.0 ){ 
 		scale_JER = 1.288; scale_JERup = 1.288 + sqrt( 0.127*0.127 + 0.155*0.155 ); scale_JERdown = 1.288 - sqrt( 0.127*0.127 + 0.153*0.153 );
+        diff_FullSim_FastSim = 3.12;
 	}
 
 	double jetPt_JER = recojetPT;
 	double jetPt_JERup = recojetPT;
 	double jetPt_JERdown = recojetPT;
 
+    double diff_recojet_genjet = recojetPT - genjetPT;
+    if ((era == "2011" && samplename == "ttH120") || (era == "2012_52x" && samplename == "ttH120_FastSim")) {
+      diff_recojet_genjet += diff_FullSim_FastSim; }
+
 	if( genjetPT>10. ){
-		jetPt_JER = std::max( 0., genjetPT + scale_JER * ( recojetPT - genjetPT ) );
-		jetPt_JERup = std::max( 0., genjetPT + scale_JERup * ( recojetPT - genjetPT ) );
-		jetPt_JERdown = std::max( 0., genjetPT + scale_JERdown * ( recojetPT - genjetPT ) );
+		jetPt_JER = std::max( 0., genjetPT + scale_JER * ( diff_recojet_genjet ) );
+		jetPt_JERup = std::max( 0., genjetPT + scale_JERup * ( diff_recojet_genjet ) );
+		jetPt_JERdown = std::max( 0., genjetPT + scale_JERdown * ( diff_recojet_genjet ) );
 	}
 
 	if( returnType==1 )       factor = jetPt_JERup/recojetPT;
