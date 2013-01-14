@@ -142,12 +142,25 @@ class BEANhelper{
 		BNelectronCollection GetSelectedElectrons(const BNelectronCollection&, const electronID::electronID);
 
 		// MCparticles
+		BNmcparticleCollection	GetSelectedMCparticlesByGrandParentPDGid(const BNmcparticleCollection&, const vector<int>);
+		BNmcparticleCollection	GetSelectedMCparticlesByParentPDGid(const BNmcparticleCollection&, const vector<int>);
 		BNmcparticleCollection	GetSelectedMCparticlesByPDGid(const BNmcparticleCollection&, const vector<int>);
+		BNmcparticleCollection	GetSelectedMCparticlesByChildPDGid(const BNmcparticleCollection&, const vector<int>);
+
+		BNmcparticleCollection	GetUnrejectedMCparticlesByGrandParentPDGid(const BNmcparticleCollection&, const vector<int>);
+		BNmcparticleCollection	GetUnrejectedMCparticlesByParentPDGid(const BNmcparticleCollection&, const vector<int>);
 		BNmcparticleCollection	GetUnrejectedMCparticlesByPDGid(const BNmcparticleCollection&, const vector<int>);
-		void 					DrawFeynman(const BNmcparticle&);
+		BNmcparticleCollection	GetUnrejectedMCparticlesByChildPDGid(const BNmcparticleCollection&, const vector<int>);
+
+		BNmcparticleCollection	GetSelectedMCparticlesByGrandParentStatus(const BNmcparticleCollection&, const bool, const bool, const bool);
+		BNmcparticleCollection	GetSelectedMCparticlesByParentStatus(const BNmcparticleCollection&, const bool, const bool, const bool);
 		BNmcparticleCollection	GetSelectedMCparticlesByStatus(const BNmcparticleCollection&, const bool, const bool, const bool);
+		BNmcparticleCollection	GetSelectedMCparticlesByChildStatus(const BNmcparticleCollection&, const bool, const bool, const bool);
+
+		void 					DrawFeynman(const BNmcparticle&);
 		BNmcparticleCollection	GetGenTaus(const BNmcparticleCollection&);
 		BNmcparticleCollection	GetHadronicGenTaus(const BNmcparticleCollection&);
+		BNmcparticle			GetVisGenTau(const BNmcparticle&, const BNmcparticleCollection&);
         bool                    ttPlusHeavyKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);  
   
 		// PU reweighing

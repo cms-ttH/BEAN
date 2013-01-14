@@ -665,6 +665,41 @@ BNmcparticleCollection BEANhelper::GetSelectedMCparticlesByPDGid(const BNmcparti
 	return result;
 }
 
+BNmcparticleCollection BEANhelper::GetSelectedMCparticlesByChildPDGid(const BNmcparticleCollection& iMCparticles, const vector<int> iPDGid){
+	BNmcparticleCollection result;
+	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
+		if( find(iPDGid.begin(), iPDGid.end(), MCparticle->daughter0Id) != iPDGid.end() || 
+			find(iPDGid.begin(), iPDGid.end(), MCparticle->daughter1Id) != iPDGid.end() ){
+			result.push_back(*MCparticle);	
+		}
+	}
+	return result;
+}
+
+BNmcparticleCollection BEANhelper::GetSelectedMCparticlesByParentPDGid(const BNmcparticleCollection& iMCparticles, const vector<int> iPDGid){
+	BNmcparticleCollection result;
+	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
+		if( find(iPDGid.begin(), iPDGid.end(), MCparticle->mother0Id) != iPDGid.end() || 
+			find(iPDGid.begin(), iPDGid.end(), MCparticle->mother1Id) != iPDGid.end() ){
+			result.push_back(*MCparticle);	
+		}
+	}
+	return result;
+}
+
+BNmcparticleCollection BEANhelper::GetSelectedMCparticlesByGrandParentPDGid(const BNmcparticleCollection& iMCparticles, const vector<int> iPDGid){
+	BNmcparticleCollection result;
+	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
+		if( find(iPDGid.begin(), iPDGid.end(), MCparticle->grandMother00Id) != iPDGid.end() || 
+			find(iPDGid.begin(), iPDGid.end(), MCparticle->grandMother01Id) != iPDGid.end() ||
+			find(iPDGid.begin(), iPDGid.end(), MCparticle->grandMother10Id) != iPDGid.end() ||
+			find(iPDGid.begin(), iPDGid.end(), MCparticle->grandMother11Id) != iPDGid.end() ){
+			result.push_back(*MCparticle);	
+		}
+	}
+	return result;
+}
+
 BNmcparticleCollection BEANhelper::GetUnrejectedMCparticlesByPDGid(const BNmcparticleCollection& iMCparticles, const vector<int> iPDGid){
 	BNmcparticleCollection result;
 	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
@@ -675,12 +710,82 @@ BNmcparticleCollection BEANhelper::GetUnrejectedMCparticlesByPDGid(const BNmcpar
 	return result;
 }
 
+BNmcparticleCollection BEANhelper::GetUnrejectedMCparticlesByChildPDGid(const BNmcparticleCollection& iMCparticles, const vector<int> iPDGid){
+	BNmcparticleCollection result;
+	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
+		if( find(iPDGid.begin(), iPDGid.end(), MCparticle->daughter0Id) == iPDGid.end() &&
+			find(iPDGid.begin(), iPDGid.end(), MCparticle->daughter1Id) == iPDGid.end()
+		){
+			result.push_back(*MCparticle);	
+		}
+	}
+	return result;
+}
+
+BNmcparticleCollection BEANhelper::GetUnrejectedMCparticlesByParentPDGid(const BNmcparticleCollection& iMCparticles, const vector<int> iPDGid){
+	BNmcparticleCollection result;
+	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
+		if( find(iPDGid.begin(), iPDGid.end(), MCparticle->mother0Id) == iPDGid.end() &&
+			find(iPDGid.begin(), iPDGid.end(), MCparticle->mother1Id) == iPDGid.end()
+		){
+			result.push_back(*MCparticle);	
+		}
+	}
+	return result;
+}
+
+BNmcparticleCollection BEANhelper::GetUnrejectedMCparticlesByGrandParentPDGid(const BNmcparticleCollection& iMCparticles, const vector<int> iPDGid){
+	BNmcparticleCollection result;
+	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
+		if( find(iPDGid.begin(), iPDGid.end(), MCparticle->grandMother00Id) == iPDGid.end() &&
+			find(iPDGid.begin(), iPDGid.end(), MCparticle->grandMother01Id) == iPDGid.end() &&
+			find(iPDGid.begin(), iPDGid.end(), MCparticle->grandMother10Id) == iPDGid.end() &&
+			find(iPDGid.begin(), iPDGid.end(), MCparticle->grandMother11Id) == iPDGid.end()
+		){
+			result.push_back(*MCparticle);	
+		}
+	}
+	return result;
+}
+
+BNmcparticleCollection BEANhelper::GetSelectedMCparticlesByChildStatus(const BNmcparticleCollection& iMCparticles, const bool iKeepStatus1, const bool iKeepStatus2, const bool iKeepStatus3){
+	BNmcparticleCollection result;
+	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
+		if( (((MCparticle->daughter0Status == 1) && iKeepStatus1) || ((MCparticle->daughter0Status == 2) && iKeepStatus2) || ((MCparticle->daughter0Status == 3) && iKeepStatus3)) ||
+			(((MCparticle->daughter1Status == 1) && iKeepStatus1) || ((MCparticle->daughter1Status == 2) && iKeepStatus2) || ((MCparticle->daughter1Status == 3) && iKeepStatus3))
+		){ result.push_back(*MCparticle); }
+	}
+	return result;
+}
+
 BNmcparticleCollection BEANhelper::GetSelectedMCparticlesByStatus(const BNmcparticleCollection& iMCparticles, const bool iKeepStatus1, const bool iKeepStatus2, const bool iKeepStatus3){
 	BNmcparticleCollection result;
 	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
 		if( ((MCparticle->status == 1) && iKeepStatus1) ||
 			((MCparticle->status == 2) && iKeepStatus2) ||
 			((MCparticle->status == 3) && iKeepStatus3)
+		){ result.push_back(*MCparticle); }
+	}
+	return result;
+}
+
+BNmcparticleCollection BEANhelper::GetSelectedMCparticlesByParentStatus(const BNmcparticleCollection& iMCparticles, const bool iKeepStatus1, const bool iKeepStatus2, const bool iKeepStatus3){
+	BNmcparticleCollection result;
+	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
+		if( (((MCparticle->mother0Status == 1) && iKeepStatus1) || ((MCparticle->mother0Status == 2) && iKeepStatus2) || ((MCparticle->mother0Status == 3) && iKeepStatus3)) ||
+			(((MCparticle->mother1Status == 1) && iKeepStatus1) || ((MCparticle->mother1Status == 2) && iKeepStatus2) || ((MCparticle->mother1Status == 3) && iKeepStatus3))
+		){ result.push_back(*MCparticle); }
+	}
+	return result;
+}
+
+BNmcparticleCollection BEANhelper::GetSelectedMCparticlesByGrandParentStatus(const BNmcparticleCollection& iMCparticles, const bool iKeepStatus1, const bool iKeepStatus2, const bool iKeepStatus3){
+	BNmcparticleCollection result;
+	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
+		if( (((MCparticle->grandMother00Status == 1) && iKeepStatus1) || ((MCparticle->grandMother00Status == 2) && iKeepStatus2) || ((MCparticle->grandMother00Status == 3) && iKeepStatus3)) ||
+			(((MCparticle->grandMother01Status == 1) && iKeepStatus1) || ((MCparticle->grandMother01Status == 2) && iKeepStatus2) || ((MCparticle->grandMother01Status == 3) && iKeepStatus3)) ||
+			(((MCparticle->grandMother10Status == 1) && iKeepStatus1) || ((MCparticle->grandMother10Status == 2) && iKeepStatus2) || ((MCparticle->grandMother10Status == 3) && iKeepStatus3)) ||
+			(((MCparticle->grandMother11Status == 1) && iKeepStatus1) || ((MCparticle->grandMother11Status == 2) && iKeepStatus2) || ((MCparticle->grandMother11Status == 3) && iKeepStatus3))
 		){ result.push_back(*MCparticle); }
 	}
 	return result;
@@ -745,6 +850,38 @@ BNmcparticleCollection BEANhelper::GetHadronicGenTaus(const BNmcparticleCollecti
 	for( BNmcparticleCollection::const_iterator genTau = genTaus.begin(); genTau != genTaus.end(); ++genTau){
 		if((abs(genTau->daughter0Id) == 16) || (abs(genTau->daughter1Id) == 16)){ result.push_back(*genTau); }
 	}
+
+	return result;
+}
+
+// Return the visible gentau (neutrino momentum removed)
+BNmcparticle BEANhelper::GetVisGenTau(const BNmcparticle& iTau, const BNmcparticleCollection& iMCparticles){
+	BNmcparticle result = iTau;
+	TLorentzVector tauP4(iTau.px, iTau.py, iTau.pz, iTau.energy);
+
+	vector<int> tauId(1, iTau.id);
+	vector<int> tauParent0Id(1, iTau.mother0Id);
+	vector<int> tauParent1Id(1, iTau.mother1Id);
+
+	// Get all particles whose parent is a tau
+	BNmcparticleCollection particlesWithTauParents						= GetSelectedMCparticlesByParentPDGid(iMCparticles, tauId);
+	// Out of those, keep only those whose grandparent0 is a tau parent
+	BNmcparticleCollection particlesWithTauParentsMatchedToTauParent0	= GetSelectedMCparticlesByGrandParentPDGid(particlesWithTauParents, tauParent0Id);
+	// Out of those, keep only those whose grandparent1 is a tau parent
+	BNmcparticleCollection particlesWithTauParentsMatchedToTauParents	= GetSelectedMCparticlesByGrandParentPDGid(particlesWithTauParentsMatchedToTauParent0, tauParent1Id);
+
+	// Subtrack those neutrinos that are tau children
+	for(BNmcparticleCollection::const_iterator tauChild = particlesWithTauParentsMatchedToTauParents.begin(); tauChild != particlesWithTauParentsMatchedToTauParents.end(); ++tauChild){
+		if( abs(tauChild->id) == 12 || abs(tauChild->id) == 14 || abs(tauChild->id) == 16 ){
+			TLorentzVector neutrinoP4(tauChild->px, tauChild->py, tauChild->pz, tauChild->energy);
+			tauP4 = tauP4-neutrinoP4;
+		}
+	}
+
+	result.energy	= tauP4.Energy();
+	result.px		= tauP4.Px();
+	result.py		= tauP4.Py();
+	result.pz		= tauP4.Pz();
 
 	return result;
 }
