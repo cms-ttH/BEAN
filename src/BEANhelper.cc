@@ -791,6 +791,36 @@ BNmcparticleCollection BEANhelper::GetSelectedMCparticlesByGrandParentStatus(con
 	return result;
 }
 
+BNmcparticleCollection BEANhelper::GetParents(const BNmcparticle& iMCparticle, const BNmcparticleCollection& iMCparticles){
+	BNmcparticleCollection result;
+
+	for( BNmcparticleCollection::const_iterator potentialParent = iMCparticles.begin(); potentialParent != iMCparticles.end(); ++potentialParent){
+
+		// Check that at least one of the children is iMCparticle
+		if(potentialParent->daughter0Id != iMCparticle.id && potentialParent->daughter1Id != iMCparticle.id){ continue; }
+
+		// Check that at least on of the parents of the iMCparticle is the potential parent
+		if(iMCparticle.mother0Id != potentialParent->id && iMCparticle.mother1Id != potentialParent->id){ continue; }
+
+		// Check that 
+		if(
+			iMCparticle.grandMother00Id != potentialParent->mother0Id &&
+			iMCparticle.grandMother01Id != potentialParent->mother0Id &&
+			iMCparticle.grandMother10Id != potentialParent->mother0Id &&
+			iMCparticle.grandMother11Id != potentialParent->mother0Id &&
+			iMCparticle.grandMother00Id != potentialParent->mother1Id &&
+			iMCparticle.grandMother01Id != potentialParent->mother1Id &&
+			iMCparticle.grandMother10Id != potentialParent->mother1Id &&
+			iMCparticle.grandMother11Id != potentialParent->mother1Id
+			){ continue; }
+
+			result.push_back(*potentialParent);
+
+	}
+
+	return result;
+}
+
 // (Sort of) draws a feynman diagram with the particle id's of the particle itself, daughters, mothers and grandmothers
 void BEANhelper::DrawFeynman(const BNmcparticle& iMCparticle){
 
@@ -807,7 +837,7 @@ void BEANhelper::DrawFeynman(const BNmcparticle& iMCparticle){
 
 											p	<< iMCparticle.id;
 	if(     iMCparticle.daughter0Id != -99){ d0	<< iMCparticle.daughter0Id;		}
-	if(     iMCparticle.daughter1Id != -99){ d1	<< iMCparticle.daughter0Id;		};
+	if(     iMCparticle.daughter1Id != -99){ d1	<< iMCparticle.daughter1Id;		};
 	if(       iMCparticle.mother0Id != -99){ m0	<< iMCparticle.mother0Id;	 	};
 	if(       iMCparticle.mother1Id != -99){ m1	<< iMCparticle.mother1Id;	  	};
 	if( iMCparticle.grandMother00Id != -99){ g00	<< iMCparticle.grandMother00Id;	};

@@ -157,6 +157,7 @@ class BEANhelper{
 		BNmcparticleCollection	GetSelectedMCparticlesByStatus(const BNmcparticleCollection&, const bool, const bool, const bool);
 		BNmcparticleCollection	GetSelectedMCparticlesByChildStatus(const BNmcparticleCollection&, const bool, const bool, const bool);
 
+		BNmcparticleCollection	GetParents(const BNmcparticle&, const BNmcparticleCollection&);
 		void 					DrawFeynman(const BNmcparticle&);
 		BNmcparticleCollection	GetGenTaus(const BNmcparticleCollection&);
 		BNmcparticleCollection	GetHadronicGenTaus(const BNmcparticleCollection&);
