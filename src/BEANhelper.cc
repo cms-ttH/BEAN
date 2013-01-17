@@ -992,7 +992,7 @@ void BEANhelper::setMCsample( int insample, std::string era, bool isLJ, std::str
     else if( insample==2523 ) samplename = "ttbarZ";
     else if( insample==2525 ) samplename = "ttbarttbar";
     else if( insample>=9100 && insample<=9300 ) {
-      if (era == "2012_53x") samplename = "ttH120";
+      if (era == "2012_53x") samplename = "ttH120_FullSim";
       else if (era == "2012_52x") samplename = "ttH120_FastSim";
       else assert (era == "either 2012_52x or 2012_53x");
     }
