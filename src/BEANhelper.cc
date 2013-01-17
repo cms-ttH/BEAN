@@ -162,7 +162,7 @@ BNjet BEANhelper::GetCorrectedJet(const BNjet& iJet, const sysType::sysType iSys
     result.mass     *= jetFactor;
 
 	// Update CSV value (i.e. reshape it if applicable)
-	result.btagCombinedSecVertex = GetCSVvalue(result);
+	result.btagCombinedSecVertex = GetCSVvalue(result,iSysType);
 
 	return result;
 }
@@ -214,7 +214,7 @@ float BEANhelper::GetBtagWeight(const BNjet& iJet, const sysType::sysType iSysTy
 	return ((myEffSF[0])*(myEffSF[1]));
 }
 
-bool BEANhelper::PassesCSV(const BNjet& iJet, const char iCSVworkingPoint, const sysType::sysType iSysType){
+bool BEANhelper::PassesCSV(const BNjet& iJet, const char iCSVworkingPoint){
 	CheckSetUp();
 
 	float csvValue = iJet.btagCombinedSecVertex;
@@ -237,25 +237,14 @@ double BEANhelper::GetCSVvalue(const BNjet& iJet, const sysType::sysType iSysTyp
 
 	if(reshapeCSV){
 		switch(iSysType){
-			case sysType::hfSFup:	result = sh_hfSFUp_->GetReshapedCSVvalue(iJet.eta, iJet.pt, iJet.btagCombinedSecVertex, iJet.flavour);		break;
+            case sysType::hfSFup:	result = sh_hfSFUp_->GetReshapedCSVvalue(iJet.eta, iJet.pt, iJet.btagCombinedSecVertex, iJet.flavour);      break;
 			case sysType::hfSFdown:	result = sh_hfSFDown_->GetReshapedCSVvalue(iJet.eta, iJet.pt, iJet.btagCombinedSecVertex, iJet.flavour);	break;
 			case sysType::lfSFup:	result = sh_lfSFUp_->GetReshapedCSVvalue(iJet.eta, iJet.pt, iJet.btagCombinedSecVertex, iJet.flavour);		break;
 			case sysType::lfSFdown:	result = sh_lfSFDown_->GetReshapedCSVvalue(iJet.eta, iJet.pt, iJet.btagCombinedSecVertex, iJet.flavour);	break;
-			default:				result = sh_->GetReshapedCSVvalue(iJet.eta, iJet.pt, iJet.btagCombinedSecVertex, iJet.flavour);				break;
+            default:				result = sh_->GetReshapedCSVvalue(iJet.eta, iJet.pt, iJet.btagCombinedSecVertex, iJet.flavour);				break;
 		}	
 	}
-
-/*	cout << "GetCSVvalue: " << 
-								iJet.eta << "\t" << 
-								iJet.phi << "\t" << 
-								iJet.pt << "\t|\t" << 
-								iJet.btagCombinedSecVertex << "\t|\t"
-	<< sh_->GetReshapedCSVvalue(iJet.eta, iJet.pt, iJet.btagCombinedSecVertex, iJet.flavour) << "\t"
-	<< sh_hfSFUp_->GetReshapedCSVvalue(iJet.eta, iJet.pt, iJet.btagCombinedSecVertex, iJet.flavour) << "\t"
-	<< sh_hfSFDown_->GetReshapedCSVvalue(iJet.eta, iJet.pt, iJet.btagCombinedSecVertex, iJet.flavour) << "\t"
-	<< sh_lfSFUp_->GetReshapedCSVvalue(iJet.eta, iJet.pt, iJet.btagCombinedSecVertex, iJet.flavour) << "\t"
-	<< sh_lfSFDown_->GetReshapedCSVvalue(iJet.eta, iJet.pt, iJet.btagCombinedSecVertex, iJet.flavour) << endl; //*/
-
+    
 	return result;
 }
 
@@ -1115,9 +1104,6 @@ void BEANhelper::setMCsample( int insample, std::string era, bool isLJ, std::str
 
     std::string samplename_pu_input = samplename;
 
-    if (samplename == "ttbar_bb" || samplename == "ttbar_cc") samplename_pu_input = "ttbar";
-    if (samplename == "zjets_lowmass") samplename_pu_input = "zjets";
-    
 	TFile *f_pu_ = new TFile(input_pu_file.c_str());
 
 	TH1D* h_pu_data;
