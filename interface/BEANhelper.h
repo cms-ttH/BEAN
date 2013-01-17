@@ -110,7 +110,7 @@ class BEANhelper{
 
 		// Jets and MET
 		float GetBtagWeight(const BNjet&, const sysType::sysType iSysType=sysType::NA);
-		bool PassesCSV(const BNjet&, const char, const sysType::sysType iSysType=sysType::NA);
+		bool PassesCSV(const BNjet&, const char);
 		bool IsGoodJet(const BNjet&, const float, const float, const jetID::jetID, const char);
 		BNmet GetCorrectedMET(const BNmet&, const BNjetCollection&, const sysType::sysType iSysType=sysType::NA);
 		BNjet GetCorrectedJet(const BNjet&, const sysType::sysType iSysType=sysType::NA);
