@@ -260,8 +260,9 @@ template <typename BNobject> BNmcparticle BEANhelper::GetMatchedMCparticle(const
 	BNmcparticle result;
 	double minDeltaR = 999;
 	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
-		double thisDeltaR = deltaR(MCparticle->eta, MCparticle->phi, iObject.eta, iObject.phi);	
+        double thisDeltaR = deltaR(MCparticle->eta, MCparticle->phi, iObject.eta, iObject.phi);	
 		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*MCparticle); }
+        minDeltaR = std::min(minDeltaR,thisDeltaR);
 	}
 	return result;
 }
