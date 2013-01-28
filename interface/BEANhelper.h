@@ -162,7 +162,8 @@ class BEANhelper{
 		BNmcparticleCollection	GetGenTaus(const BNmcparticleCollection&);
 		BNmcparticleCollection	GetHadronicGenTaus(const BNmcparticleCollection&);
 		BNmcparticle			GetVisGenTau(const BNmcparticle&, const BNmcparticleCollection&);
-        bool                    ttPlusHeavyKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);  
+        bool                    ttPlusHeavyKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);
+        unsigned int            GetNumExtraPartons(const BNmcparticleCollection&);
   
 		// PU reweighing
 		double GetPUweight(const double);
