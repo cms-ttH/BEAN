@@ -14,24 +14,19 @@ BEANhelper::BEANhelper(){
 	my_base_dir			= string(my_pPath);
 	str_eff_file_7TeV	= my_base_dir + "/src/NtupleMaker/BEANmaker/interface/mc_btag_efficiency_7TeV.root";
 	str_eff_file_8TeV	= my_base_dir + "/src/NtupleMaker/BEANmaker/interface/mc_btag_efficiency_8TeV.root";
-	str_pu_file_7TeV	= my_base_dir + "/src/NtupleMaker/BEANmaker/interface/pu_distributions_7TeV.root";
-	str_pu_file_8TeV	= my_base_dir + "/src/NtupleMaker/BEANmaker/interface/pu_distributions_8TeV.root";
 
 	my_pPath		= NULL;
 	h_b_eff_		= NULL;
 	h_c_eff_		= NULL;
 	h_l_eff_		= NULL;
 	h_o_eff_		= NULL;
-	h_PU_ratio_		= NULL;
-	h_PUup_ratio_	= NULL;
-	h_PUdown_ratio_	= NULL;
     h_ele_SF_       = NULL;
     h_mu_SF_        = NULL;
-    
-	PI			= 2.0*acos(0.);
-	TWOPI		= 2.0*PI;
-	ETA_LIMIT	= 15.0;
-	EPSILON		= 1.E-10;
+
+	// PU reweighing
+	h_PU_ratio		= NULL;
+	h_PUup_ratio	= NULL;
+	h_PUdown_ratio	= NULL;
 
 	// CSV reshaping
 	sh_				= NULL;
@@ -51,9 +46,9 @@ BEANhelper::~BEANhelper(){
 	if(h_c_eff_ != NULL){ delete h_c_eff_; h_c_eff_ = NULL; }
 	if(h_l_eff_ != NULL){ delete h_l_eff_; h_l_eff_ = NULL; }
 	if(h_o_eff_ != NULL){ delete h_o_eff_; h_o_eff_ = NULL; }
-	if(h_PU_ratio_ != NULL){ delete h_PU_ratio_; h_PU_ratio_ = NULL; }
-	if(h_PUup_ratio_ != NULL){ delete h_PUup_ratio_; h_PUup_ratio_ = NULL; }
-	if(h_PUdown_ratio_ != NULL){ delete h_PUdown_ratio_; h_PUdown_ratio_ = NULL; }
+	if(h_PU_ratio != NULL){ delete h_PU_ratio; h_PU_ratio = NULL; }
+	if(h_PUup_ratio != NULL){ delete h_PUup_ratio; h_PUup_ratio = NULL; }
+	if(h_PUdown_ratio != NULL){ delete h_PUdown_ratio; h_PUdown_ratio = NULL; }
     if(h_ele_SF_ != NULL){ delete h_ele_SF_; h_ele_SF_ = NULL; }
     if(h_mu_SF_ != NULL){ delete h_mu_SF_; h_mu_SF_ = NULL; }
     
@@ -85,12 +80,316 @@ void BEANhelper::SetUp(string iEra, int iSampleNumber, bool iIsLJ, bool iIsData,
 	if(sampleNumber==0){ ThrowFatalError("'sampleNumber' cannot be '0'."); }
 	if(dataset.length()==0){ ThrowFatalError("'dataset' is blank."); }
 
-	// Set sample
-	setMCsample(sampleNumber, era, isLJ, dataset);
+	// Setup PU reweighing
+	SetUpPUreweighing();
+
+	// Setup CSV reshaping
+	SetUpCSVreshaping();
+
+	// Setup jet efficiency scale factors
+	SetUpJetSF();
+
+	// Setup lepton efficiency scale factors
+	SetUpLeptonSF();
 
 	// Awknowledge setup
 	isSetUp = true;
 
+}
+
+// Set up PU reweighing distributions
+void BEANhelper::SetUpPUreweighing(){
+
+	// Do nothing if we're running on collision data
+	if(isData){ return; }
+
+	// Get sample name from sample number
+	string samplename = GetSampleName();
+
+	// Don't get any of the histograms if the sample is data
+	if( !(sampleNumber>0 && samplename!="data" && !isData) && !(sampleNumber<0 && samplename=="data" && isData) ) {
+		cout << "sample number  '"	<< sampleNumber	<< "'" << endl;
+		cout << "sample name    '"	<< samplename		<< "'" << endl;
+		cout << "isData         "	<< isData			<< endl;
+		assert (samplename == "sampleNumber, samplename, and isData inconsistent"); 
+	}
+	if( samplename == "blank") assert (samplename == "Why is samplename still blank?");
+	if( sampleNumber<0 || samplename=="data" || isData) return;
+
+	// Get PU file path
+	TFile puFile((string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/pu_distributions.root").c_str());
+
+	// Set up mc histo pointer
+	TH1D* h_pu_mc = NULL;
+
+	// Figure out appropriate histo names to obtain from file
+	string samplename_pu_input = samplename;
+
+	if (samplename == "ttbar_bb" || samplename == "ttbar_cc")	samplename_pu_input = "ttbar";
+	if (samplename == "zjets_lowmass")							samplename_pu_input = "zjets";
+
+	// Histo names
+	string mc_histo					= "";
+	string collisions_histo			= "";
+	string collisions_histo_up		= "";
+	string collisions_histo_down	= "";
+
+	if( era=="2012_53x" ){ // === 2012 === //
+
+		// Simulation
+		mc_histo				= "MC_8TeV_53x_S10";
+
+		// Collision data
+		collisions_histo		= "PU_data_190456_208686_69300xSec";
+		collisions_histo_up		= "PU_data_190456_208686_66805xSec";
+		collisions_histo_down	= "PU_data_190456_208686_71795xSec";
+		
+	}else if( era=="2012_52x" ){ // === 2012 === //
+
+		if (samplename == "ttbar" || samplename == "wjets" || samplename == "zjets" ||
+				samplename == "ttH120_FullSim"|| samplename == "ttH120_FastSim")		samplename_pu_input = samplename + "_";
+		else if (samplename == "ttbar_bb" || samplename == "ttbar_cc")					samplename_pu_input = "ttbar_";
+		else if (samplename == "ttbarW" || samplename == "ttbarZ")						samplename_pu_input = "ttZorW_";
+		else if (samplename == "zjets_lowmass")											samplename_pu_input = "zjets_";
+		else																			samplename_pu_input = "";
+
+		// Simulation
+		mc_histo				= samplename_pu_input + "Summer2012_pileup_8TeV";
+
+		// Collision data
+		collisions_histo		= "pileup_8TeV_69300xSec";
+		collisions_histo_up		= "pileup_8TeV_71795xSec";
+		collisions_histo_down	= "pileup_8TeV_66805xSec";
+
+	}else if ( era=="2011") { // === 2011 === //
+
+		string dataset_infix = dataset;
+		if( !(dataset.find("SingleMu")!=string::npos || dataset.find("ElectronHad")!=string::npos) ) dataset_infix = "SingleMu";
+
+		if( samplename == "ttH120" || samplename == "ttbarW" || samplename == "ttbarZ" ){
+			// Simulation
+			if( samplename == "ttH120" ){	mc_histo = "ttH_7TeV_numGenPV";	}
+			else{							mc_histo = "ttV_7TeV_numGenPV";	}
+
+			// Collision data
+			"pileup_7TeV_" + dataset_infix + "_68000_observed";
+			"pileup_7TeV_" + dataset_infix + "_73440_observed";
+			"pileup_7TeV_" + dataset_infix + "_62560_observed";
+
+
+		}else{
+			// Simulation
+			mc_histo = "F2011exp_7TeV";
+
+			// Collision data
+			collisions_histo		= "pileup_7TeV_" + dataset_infix + "_68000_true";
+			collisions_histo_up		= "pileup_7TeV_" + dataset_infix + "_73440_true";
+			collisions_histo_down	= "pileup_7TeV_" + dataset_infix + "_62560_true";
+		}
+
+	}else{ // === Not 2011 or 2012 === //
+		cout << "Era set to '" << era << "'" << endl;
+		assert (era == "either 2012_52x, 2012_53x, or 2011");
+	}
+
+	// Get histos
+	h_pu_mc			= (TH1D*)puFile.Get(string(era + "/" + mc_histo).c_str());
+	h_PU_ratio		= (TH1D*)puFile.Get(string(era + "/" + collisions_histo).c_str());
+	h_PUup_ratio	= (TH1D*)puFile.Get(string(era + "/" + collisions_histo_up).c_str());
+	h_PUdown_ratio	= (TH1D*)puFile.Get(string(era + "/" + collisions_histo_down).c_str());
+
+	// Normalize every histogram to its area
+	h_PU_ratio		->Scale( 1./h_PU_ratio		->Integral() );
+	h_PUup_ratio	->Scale( 1./h_PUup_ratio	->Integral() );
+	h_PUdown_ratio	->Scale( 1./h_PUdown_ratio	->Integral() );
+	h_pu_mc			->Scale( 1./h_pu_mc			->Integral() );
+
+	// Divide copy of the numerator by denominator to get ratio
+	h_PU_ratio		->Divide( h_pu_mc );
+	h_PUup_ratio	->Divide( h_pu_mc );
+	h_PUdown_ratio	->Divide( h_pu_mc );
+
+	// Delete pointer to mc histo
+	if(h_pu_mc != NULL){ delete h_pu_mc; h_pu_mc = NULL; }
+
+}
+
+// Set up CSV reshaping
+void BEANhelper::SetUpCSVreshaping(){
+
+	// Tweak sample name if needed
+	string samplename = GetSampleName();
+	if (samplename == "zjets_lowmass")							samplename = "zjets";
+	if (samplename == "ttbar_bb" || samplename == "ttbar_cc")	samplename = "ttbar";
+
+	// Set charm scale factor
+	double charmFactor = 2.0 - 1.0;
+
+	// Set up CSVreevaluators for each systype
+	sh_				= new CSVreevaluator(samplename, era,    0, charmFactor,  0);
+	sh_hfSFUp_		= new CSVreevaluator(samplename, era,  1.5, charmFactor,  0);
+	sh_hfSFDown_	= new CSVreevaluator(samplename, era, -1.5, charmFactor,  0);
+	sh_lfSFUp_		= new CSVreevaluator(samplename, era,    0, charmFactor,  1);
+	sh_lfSFDown_	= new CSVreevaluator(samplename, era,    0, charmFactor, -1);
+
+}
+
+// Set up jet efficiency scale factors
+void BEANhelper::SetUpJetSF(){
+
+	string com_suffix = "";
+	string filePath = "";
+	if( era=="2012_52x" || era=="2012_53x" ){
+		filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/mc_btag_efficiency_8TeV.root";
+		com_suffix = "_8TeV";
+	}else if( era=="2011" ){
+		filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/mc_btag_efficiency_7TeV.root";
+		com_suffix = "_7TeV";
+	}else{ // === Not 2011 or 2012 === //
+		cout << "Era set to '" << era << "'" << endl;
+		assert (era == "either 2012_52x, 2012_53x, or 2011");
+	}
+
+	TFile file(filePath.c_str());
+
+	string samplename = GetSampleName();
+    if (samplename == "zjets_lowmass")							samplename = "zjets";
+    if (samplename == "ttbar_bb" || samplename == "ttbar_cc")	samplename = "ttbar";
+    
+	h_b_eff_ = (TH2D*)file.Get(string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str())->Clone();
+	h_c_eff_ = (TH2D*)file.Get(string( samplename + com_suffix + "_jet_pt_eta_c_eff" ).c_str())->Clone();
+	h_l_eff_ = (TH2D*)file.Get(string( samplename + com_suffix + "_jet_pt_eta_l_eff" ).c_str())->Clone();
+	h_o_eff_ = (TH2D*)file.Get(string( samplename + com_suffix + "_jet_pt_eta_o_eff" ).c_str())->Clone();
+
+}
+
+// Set up lepton efficiency scale factors
+void BEANhelper::SetUpLeptonSF(){
+
+	string filePath = "";
+	if( era=="2012_52x" || era=="2012_53x" ){
+		filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
+	}else if( era=="2011" ){
+		filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
+	}else{ // === Not 2011 or 2012 === //
+		cout << "Era set to '" << era << "'" << endl;
+		assert (era == "either 2012_52x, 2012_53x, or 2011");
+	}
+
+	TFile file(filePath.c_str());
+	if( isLJ ){
+		h_ele_SF_ = (TH2D*)file.Get(string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
+		h_mu_SF_  = (TH2D*)file.Get(string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
+	}else {
+		h_ele_SF_ = (TH2D*)file.Get(string( "ele_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
+		h_mu_SF_  = (TH2D*)file.Get(string( "mu_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
+	}
+
+}
+
+
+// Return sample name
+string BEANhelper::GetSampleName(){
+
+	string samplename = "";
+
+	// 2012 eras
+	if (era == "2012_53x" || era == "2012_52x") {
+			 if ( sampleNumber<0 ){		samplename = "data";				}
+		else if( sampleNumber==2500 ){	samplename = "ttbar";				}
+		else if( sampleNumber==2544 ){	samplename = "ttbar_cc";			}
+		else if( sampleNumber==2555 ){	samplename = "ttbar_bb";			}
+		else if( sampleNumber==2511 ){	samplename = "ttbar_scaleup";		}
+		else if( sampleNumber==2510 ){	samplename = "ttbar_scaledown";		}
+		else if( sampleNumber==2513 ){	samplename = "ttbar_matchingup";	}
+		else if( sampleNumber==2512 ){	samplename = "ttbar_matchingdown";	}
+		else if( sampleNumber==2566 ){	samplename = "ttbar_jj";			}
+		else if( sampleNumber==2563 ){	samplename = "ttbar_lj";			}
+		else if( sampleNumber==2533 ){	samplename = "ttbar_ll";			}
+		else if( sampleNumber==2576 ){	samplename = "ttbar_cc_jj";			}
+		else if( sampleNumber==2573 ){	samplename = "ttbar_cc_lj";			}
+		else if( sampleNumber==2543 ){	samplename = "ttbar_cc_ll";			}
+		else if( sampleNumber==2586 ){	samplename = "ttbar_bb_jj";			}
+		else if( sampleNumber==2583 ){	samplename = "ttbar_bb_lj";			}
+		else if( sampleNumber==2553 ){	samplename = "ttbar_bb_ll";			}
+		else if( sampleNumber==2400 ){	samplename = "wjets";				}
+		else if( sampleNumber==2401 ){	samplename = "wjets_1p";			}
+		else if( sampleNumber==2402 ){	samplename = "wjets_2p";			}
+		else if( sampleNumber==2403 ){	samplename = "wjets_3p";			}
+		else if( sampleNumber==2404 ){	samplename = "wjets_4p";			}
+		else if( sampleNumber==2850 ){	samplename = "zjets_lowmass";		}
+		else if( sampleNumber==2851 ){	samplename = "zjets_lowmass_1p";	}
+		else if( sampleNumber==2852 ){	samplename = "zjets_lowmass_2p";	}
+		else if( sampleNumber==2800 ){	samplename = "zjets";				}
+		else if( sampleNumber==2801 ){	samplename = "zjets_1p";			}
+		else if( sampleNumber==2802 ){	samplename = "zjets_2p";			}
+		else if( sampleNumber==2803 ){	samplename = "zjets_3p";			}
+		else if( sampleNumber==2804 ){	samplename = "zjets_4p";			}
+		else if( sampleNumber==2600 ){	samplename = "t_schannel";			}
+		else if( sampleNumber==2630 ){	samplename = "t_schannel_ll";		}
+		else if( sampleNumber==2601 ){	samplename = "tbar_schannel";		}
+		else if( sampleNumber==2631 ){	samplename = "tbar_schannel_ll";	}
+		else if( sampleNumber==2602 ){	samplename = "t_tchannel";			}
+		else if( sampleNumber==2632 ){	samplename = "t_tchannel_ll";		}
+		else if( sampleNumber==2603 ){	samplename = "tbar_tchannel";		}
+		else if( sampleNumber==2633 ){	samplename = "tbar_tchannel_ll";	}
+		else if( sampleNumber==2604 ){	samplename = "t_tWchannel";			}
+		else if( sampleNumber==2654 ){	samplename = "t_tWchannel_lj";		}
+		else if( sampleNumber==2664 ){	samplename = "t_tWchannel_jl";		}
+		else if( sampleNumber==2634 ){	samplename = "t_tWchannel_ll";		}
+		else if( sampleNumber==2605 ){	samplename = "tbar_tWchannel";		}
+		else if( sampleNumber==2655 ){	samplename = "tbar_tWchannel_lj";	}
+		else if( sampleNumber==2665 ){	samplename = "tbar_tWchannel_jl";	}
+		else if( sampleNumber==2635 ){	samplename = "tbar_tWchannel_ll";	}
+		else if( sampleNumber==2700 ){	samplename = "ww";					}
+		else if( sampleNumber==2710 ){	samplename = "www";					}
+		else if( sampleNumber==2720 ){	samplename = "wwz";					}
+		else if( sampleNumber==2701 ){	samplename = "wz";					}
+		else if( sampleNumber==2721 ){	samplename = "wzz";					}
+		else if( sampleNumber==2702 ){	samplename = "zz";					}
+		else if( sampleNumber==2722 ){	samplename = "zzz";					}
+		else if( sampleNumber==2524 ){	samplename = "ttbarW";				}
+		else if( sampleNumber==2534 ){	samplename = "ttbarWW";				}
+		else if( sampleNumber==2523 ){	samplename = "ttbarZ";				}
+		else if( sampleNumber==2525 ){	samplename = "ttbarttbar";			}
+		else if( sampleNumber>=9100 && sampleNumber<=9300 ){
+				 if (era == "2012_53x"){	samplename = "ttH120_FullSim";	}
+			else if (era == "2012_52x"){	samplename = "ttH120_FastSim";	}
+			else{ cout << "Era set to '" << era << "'" << endl; assert (era == "either 2012_52x or 2012_53x"); }
+		}else if( sampleNumber>=8100 && sampleNumber<=8300 ){
+				 if (era == "2012_53x"){	samplename = "ttH120_bb";		}
+			else if (era == "2012_52x"){	samplename = "ttH120_FullSim";	}
+			else{	cout << "Era set to '" << era << "'" << endl; assert (era == "either 2012_52x or 2012_53x");	}
+		}else if ( sampleNumber>=7100 && sampleNumber<=7300 && era == "2012_53x" ){
+			samplename = "ttH120_tautau";
+		}else{ cout << "Sample number set to '" << sampleNumber << "'" << endl; assert (samplename == "No good sampleNumber found for 2012_52x or 2012_53x"); }
+
+	}else if (era == "2011") {
+
+			 if( sampleNumber<0 ){							samplename = "data";			}
+		else if( sampleNumber==2300 ){						samplename = "zjets";			}
+		else if( sampleNumber==2310 ){						samplename = "zjets_lowmass";	}
+		else if( sampleNumber==2400 ){						samplename = "wjets";			}
+		else if( sampleNumber==2500 ){						samplename = "ttbar";			}
+		else if( sampleNumber==2544 ){						samplename = "ttbar_cc";		}
+		else if( sampleNumber==2555 ){						samplename = "ttbar_bb";		}
+		else if( sampleNumber==2510 ){						samplename = "ttbar_scaleup";	}
+		else if( sampleNumber==2511 ){						samplename = "ttbar_scaledown";	}
+		else if( sampleNumber==2523 ){						samplename = "ttbarZ";			}
+		else if( sampleNumber==2524 ){						samplename = "ttbarW";			}
+		else if( sampleNumber==2600 ){						samplename = "singlet";			}
+		else if( sampleNumber==2700 ){						samplename = "ww";				}
+		else if( sampleNumber==2701 ){						samplename = "wz";				}
+		else if( sampleNumber==2702 ){						samplename = "zz";				}
+		else if( sampleNumber>=100 && sampleNumber<=300 ){	samplename = "ttH120";			}
+		else{  assert (samplename == "No good sampleNumber found for 2011");				}
+
+	}else{
+		cout << "Era set to '" << era << "'" << endl;
+		assert (era == "either 2012_52x, 2012_53x, or 2011");
+	}
+
+	return samplename;
 }
 
 // Check that we are set up, otherwise inform and quit
@@ -908,571 +1207,21 @@ BNmcparticle BEANhelper::GetVisGenTau(const BNmcparticle& iTau, const BNmcpartic
 // === PU reweighing === //
 double BEANhelper::GetPUweight(const double iNumBX0){
   if (isData) return 1.0;
-  return h_PU_ratio_->GetBinContent( h_PU_ratio_->FindBin( iNumBX0 ) ); }
+  return h_PU_ratio->GetBinContent( h_PU_ratio->FindBin( iNumBX0 ) );
+ }
+
 double BEANhelper::GetPUweightUp(const double iNumBX0){
   if (isData) return 1.0;
-  return h_PUup_ratio_->GetBinContent( h_PUup_ratio_->FindBin( iNumBX0 ) ); }
+  return h_PUup_ratio->GetBinContent( h_PUup_ratio->FindBin( iNumBX0 ) );
+}
+
 double BEANhelper::GetPUweightDown(const double iNumBX0){
   if (isData) return 1.0;
-  return h_PUdown_ratio_->GetBinContent( h_PUdown_ratio_->FindBin( iNumBX0 ) ); }
-
-
-// ******************** OLD ****************** //
-
-void BEANhelper::setMCsample( int insample, std::string era, bool isLJ, std::string dset ){
-
-
-  if (era == "2012_53x" || era == "2012_52x") {
-    if ( insample<0 ) samplename = "data";
-    else if( insample==2500 ) samplename = "ttbar";
-    else if( insample==2544 ) samplename = "ttbar_cc";
-    else if( insample==2555 ) samplename = "ttbar_bb";
-    else if( insample==2511 ) samplename = "ttbar_scaleup";
-    else if( insample==2510 ) samplename = "ttbar_scaledown";
-    else if( insample==2513 ) samplename = "ttbar_matchingup";
-    else if( insample==2512 ) samplename = "ttbar_matchingdown";
-    else if( insample==2566 ) samplename = "ttbar_jj";
-    else if( insample==2563 ) samplename = "ttbar_lj";
-    else if( insample==2533 ) samplename = "ttbar_ll";
-    else if( insample==2576 ) samplename = "ttbar_cc_jj";
-    else if( insample==2573 ) samplename = "ttbar_cc_lj";
-    else if( insample==2543 ) samplename = "ttbar_cc_ll";
-    else if( insample==2586 ) samplename = "ttbar_bb_jj";
-    else if( insample==2583 ) samplename = "ttbar_bb_lj";
-    else if( insample==2553 ) samplename = "ttbar_bb_ll";
-    else if( insample==2400 ) samplename = "wjets";
-    else if( insample==2401 ) samplename = "wjets_1p";
-    else if( insample==2402 ) samplename = "wjets_2p";
-    else if( insample==2403 ) samplename = "wjets_3p";
-    else if( insample==2404 ) samplename = "wjets_4p";
-    else if( insample==2850 ) samplename = "zjets_lowmass";
-    else if( insample==2851 ) samplename = "zjets_lowmass_1p";
-    else if( insample==2852 ) samplename = "zjets_lowmass_2p";
-    else if( insample==2800 ) samplename = "zjets";
-    else if( insample==2801 ) samplename = "zjets_1p";
-    else if( insample==2802 ) samplename = "zjets_2p";
-    else if( insample==2803 ) samplename = "zjets_3p";
-    else if( insample==2804 ) samplename = "zjets_4p";
-    else if( insample==2600 ) samplename = "t_schannel";
-    else if( insample==2630 ) samplename = "t_schannel_ll";
-    else if( insample==2601 ) samplename = "tbar_schannel";
-    else if( insample==2631 ) samplename = "tbar_schannel_ll";
-    else if( insample==2602 ) samplename = "t_tchannel";
-    else if( insample==2632 ) samplename = "t_tchannel_ll";
-    else if( insample==2603 ) samplename = "tbar_tchannel";
-    else if( insample==2633 ) samplename = "tbar_tchannel_ll";
-    else if( insample==2604 ) samplename = "t_tWchannel";
-    else if( insample==2654 ) samplename = "t_tWchannel_lj";
-    else if( insample==2664 ) samplename = "t_tWchannel_jl";
-    else if( insample==2634 ) samplename = "t_tWchannel_ll";
-    else if( insample==2605 ) samplename = "tbar_tWchannel";
-    else if( insample==2655 ) samplename = "tbar_tWchannel_lj";
-    else if( insample==2665 ) samplename = "tbar_tWchannel_jl";
-    else if( insample==2635 ) samplename = "tbar_tWchannel_ll";
-    else if( insample==2700 ) samplename = "ww";
-    else if( insample==2710 ) samplename = "www";
-    else if( insample==2720 ) samplename = "wwz";
-    else if( insample==2701 ) samplename = "wz";
-    else if( insample==2721 ) samplename = "wzz";
-    else if( insample==2702 ) samplename = "zz";
-    else if( insample==2722 ) samplename = "zzz";
-    else if( insample==2524 ) samplename = "ttbarW";
-    else if( insample==2534 ) samplename = "ttbarWW";
-    else if( insample==2523 ) samplename = "ttbarZ";
-    else if( insample==2525 ) samplename = "ttbarttbar";
-    else if( insample>=9100 && insample<=9300 ) {
-      if (era == "2012_53x") samplename = "ttH120_FullSim";
-      else if (era == "2012_52x") samplename = "ttH120_FastSim";
-      else assert (era == "either 2012_52x or 2012_53x");
-    }
-    else if( insample>=8100 && insample<=8300 ) {
-      if (era == "2012_53x") samplename = "ttH120_bb";
-      else if (era == "2012_52x") samplename = "ttH120_FullSim";
-      else assert (era == "either 2012_52x or 2012_53x");
-    }
-    else if ( insample>=7100 && insample<=7300 && era == "2012_53x" ) samplename = "ttH120_tautau";
-    else assert (samplename == "No good insample found for 2012_52x or 2012_53x");
-  }
-  else if (era == "2011") {
-    if( insample<0 ) samplename = "data";
-    else if( insample==2300 ) samplename = "zjets";
-    else if( insample==2310 ) samplename = "zjets_lowmass";
-    else if( insample==2400 ) samplename = "wjets";
-    else if( insample==2500 ) samplename = "ttbar";
-    else if( insample==2544 ) samplename = "ttbar_cc";
-    else if( insample==2555 ) samplename = "ttbar_bb";
-    else if( insample==2510 ) samplename = "ttbar_scaleup";
-    else if( insample==2511 ) samplename = "ttbar_scaledown";
-    else if( insample==2523 ) samplename = "ttbarZ";
-    else if( insample==2524 ) samplename = "ttbarW";
-    else if( insample==2600 ) samplename = "singlet";
-    else if( insample==2700 ) samplename = "ww";
-    else if( insample==2701 ) samplename = "wz";
-    else if( insample==2702 ) samplename = "zz";
-    else if( insample>=100 && insample<=300 ) samplename = "ttH120";
-    else assert (samplename == "No good insample found for 2011" );
-  }
-  else {
-    assert (era == "either 2012_52x, 2012_53x, or 2011");
-  }
-  
-
-  //Don't get any of the histograms if the sample is data
-  if( !(insample>0 && samplename!="data" && !isData) && !(insample<0 && samplename=="data" && isData) ) {
-  	cout << "insample:   " << insample << endl;
-	cout << "samplename: '" << samplename << "'" << endl;
-	cout << "isData:     " << isData << endl;
-    assert (samplename == "insample, samplename, and isData inconsistent"); }
-  if (samplename == "blank") assert (samplename == "Why is samplename still blank?");
-
-  if( insample<0 || samplename=="data" || isData) return;
-      
-      //-------------- Histograms for MC -------------------//
-  
-	char * my_pPath = getenv ("CMSSW_BASE");
-	std::string my_base_dir(my_pPath);
-	std::string str_eff_file_7TeV = my_base_dir + "/src/NtupleMaker/BEANmaker/data/mc_btag_efficiency_7TeV.root";
-	std::string str_eff_file_8TeV = my_base_dir + "/src/NtupleMaker/BEANmaker/data/mc_btag_efficiency_8TeV.root";
-	std::string str_pu_file_7TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/pu_distributions_7TeV.root";
-	std::string str_pu_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/pu_distributions_8TeV.root";
-	std::string str_lep_file_7TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
-	std::string str_lep_file_8TeV  = my_base_dir + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
-	std::string str_csv_file_7TeV = str_eff_file_7TeV;
-	std::string str_csv_file_8TeV = str_eff_file_8TeV;
-
-	bool debug = false;
-
-	std::string input_eff_file = str_eff_file_7TeV;
-	std::string input_csv_file = str_csv_file_7TeV;
-	std::string input_lep_file = str_lep_file_7TeV;
-	std::string input_pu_file  = str_pu_file_7TeV;
-	std::string com_suffix = "_7TeV";
-	if( era=="2012_52x" || era=="2012_53x" ){
-		input_eff_file = str_eff_file_8TeV;
-		input_csv_file = str_csv_file_8TeV;
-		input_lep_file = str_lep_file_8TeV;
-		input_pu_file  = str_pu_file_8TeV;
-		com_suffix = "_8TeV";
-	}
-
-	if (debug)
-		cout << "setMCsample: Opening eff file " << input_eff_file
-			<< ", pu file = " << input_pu_file << endl;
-
-	TFile *f_tag_eff_ = new TFile(input_eff_file.c_str());
-
-	if (f_tag_eff_->IsZombie()){
-		cout << "Oops! Tried to open file " << input_eff_file
-			<< ", but it was a zombie. Crashing" << endl;
-		assert (f_tag_eff_->IsZombie() == false);
-	}
-
-    std::string samplename_jet_eff = samplename;
-    if (samplename == "zjets_lowmass") samplename_jet_eff = "zjets";
-    if (samplename == "ttbar_bb" || samplename == "ttbar_cc") samplename_jet_eff = "ttbar";
-    
-	if (debug)
-		cout << "setMCSample: Looking for histrograms with names like: "
-			<< std::string( samplename + com_suffix + "_jet_pt_eta_b_eff")
-			<< endl;
-
-
-	h_b_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename_jet_eff + com_suffix + "_jet_pt_eta_b_eff" ).c_str());
-	h_c_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename_jet_eff + com_suffix + "_jet_pt_eta_c_eff" ).c_str());
-	h_l_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename_jet_eff + com_suffix + "_jet_pt_eta_l_eff" ).c_str());
-	h_o_eff_ = (TH2D*)f_tag_eff_->Get(std::string( samplename_jet_eff + com_suffix + "_jet_pt_eta_o_eff" ).c_str());
-
-	bool bHistoOK =  (h_b_eff_ != 0);
-	bool cHistoOK =  (h_c_eff_ != 0);
-	bool lHistoOK =  (h_l_eff_ != 0);
-	bool oHistoOK =  (h_o_eff_ != 0);
-
-	if (debug)
-		cout << "setMCSample: bHistoOK = " << bHistoOK << ", cHistoOK = " << cHistoOK << ", lHistoOK = "
-			<< lHistoOK << ", oHistoOK = " << oHistoOK << endl;
-
-	if (!bHistoOK || !cHistoOK || !lHistoOK || !oHistoOK){
-		cout << "setMCSample: Error. We are missing one of the required btag eff histograms. "     
-			<< endl
-			<< "Wanted histos with names like: "
-			<< std::string( samplename_jet_eff + com_suffix + "_jet_pt_eta_b_eff")
-			<< endl;
-		assert ( bHistoOK && cHistoOK && lHistoOK && oHistoOK);
-	}
-
-
-
-    std::string samplename_pu_input = samplename;
-
-	TFile *f_pu_ = new TFile(input_pu_file.c_str());
-
-	TH1D* h_pu_data;
-	TH1D* h_pu_data_up;
-	TH1D* h_pu_data_down;
-	TH1D* h_pu_mc;
-
-	if( era=="2012_52x" || era=="2012_53x" ){
-
-      if (samplename == "ttbar" || samplename == "wjets" || samplename == "zjets" ||
-          samplename == "ttH120_FullSim"|| samplename == "ttH120_FastSim") samplename_pu_input = std::string(samplename+"_");
-      else if (samplename == "ttbar_bb" || samplename == "ttbar_cc") samplename_pu_input = "ttbar_";
-      else if (samplename == "ttbarW" || samplename == "ttbarZ") samplename_pu_input = "ttZorW_";
-      else if (samplename == "zjets_lowmass") samplename_pu_input = "zjets_";
-      else samplename_pu_input = "";
-
-      h_pu_data      = (TH1D*)f_pu_->Get((std::string("pileup_8TeV_69300xSec")).c_str());
-      h_pu_data_up   = (TH1D*)f_pu_->Get((std::string("pileup_8TeV_71795xSec")).c_str());
-      h_pu_data_down = (TH1D*)f_pu_->Get((std::string("pileup_8TeV_66805xSec")).c_str());
-
-      std::string mc_pu_input = "Summer2012";
-      if( !isData ) mc_pu_input = std::string(samplename_pu_input + "Summer2012");
-      
-      h_pu_mc = (TH1D*)f_pu_->Get((std::string(mc_pu_input + "_pileup_8TeV")).c_str());
-	}
-	else if ( era=="2011") {
-		if( !(dset.find("SingleMu")!=std::string::npos || dset.find("ElectronHad")!=std::string::npos) ) dset = "SingleMu";
-
-		if( samplename == "ttH120" || samplename == "ttbarW" || samplename == "ttbarZ" ){
-			h_pu_data      = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_68000_observed")).c_str());
-			h_pu_data_up   = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_73440_observed")).c_str());
-			h_pu_data_down = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_62560_observed")).c_str());
-
-            if( samplename == "ttH120" ) h_pu_mc = (TH1D*)f_pu_->Get("ttH_7TeV_numGenPV");
-            else  h_pu_mc = (TH1D*)f_pu_->Get("ttV_7TeV_numGenPV"); 
-		}
-		else{
-			h_pu_data      = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_68000_true")).c_str());
-			h_pu_data_up   = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_73440_true")).c_str());
-			h_pu_data_down = (TH1D*)f_pu_->Get((std::string("pileup_7TeV_" + dset + "_62560_true")).c_str());
-
-			h_pu_mc = (TH1D*)f_pu_->Get("F2011exp_7TeV");
-		}
-	}
-    else {
-      assert (era == "either 2012_52x, 2012_53x, or 2011");
-    }
-    
-
-	h_pu_data->Scale( 1./h_pu_data->Integral() );
-	h_pu_data_up->Scale( 1./h_pu_data_up->Integral() );
-	h_pu_data_down->Scale( 1./h_pu_data_down->Integral() );
-
-	h_pu_mc->Scale( 1./h_pu_mc->Integral() );
-
-	h_PU_ratio_     = (TH1D*)h_pu_data->Clone();
-	h_PUup_ratio_   = (TH1D*)h_pu_data_up->Clone();
-	h_PUdown_ratio_ = (TH1D*)h_pu_data_down->Clone();
-
-	h_PU_ratio_->Divide( h_pu_mc );
-	h_PUup_ratio_->Divide( h_pu_mc );
-	h_PUdown_ratio_->Divide( h_pu_mc );
-
-    TFile *f_lep_ = new TFile(input_lep_file.c_str());
-    if( isLJ ){
-      h_ele_SF_ = (TH2D*)f_lep_->Get(std::string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str());
-      h_mu_SF_  = (TH2D*)f_lep_->Get(std::string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str());
-    }
-    else {
-      h_ele_SF_ = (TH2D*)f_lep_->Get(std::string( "ele_pt_eta_full_id_iso_8TeV" ).c_str());
-      h_mu_SF_  = (TH2D*)f_lep_->Get(std::string( "mu_pt_eta_full_id_iso_8TeV" ).c_str());
-    }
-
-    std::string samplename_CSV_reevaluator = samplename;
-    if (samplename == "zjets_lowmass") samplename_CSV_reevaluator = "zjets";
-    if (samplename == "ttbar_bb" || samplename == "ttbar_cc") samplename_CSV_reevaluator = "ttbar";
-    
-	double charmFactor = 2.0 - 1.0;
-
-	sh_				= new CSVreevaluator(samplename_CSV_reevaluator, era,    0, charmFactor,  0);
-	sh_hfSFUp_		= new CSVreevaluator(samplename_CSV_reevaluator, era,  1.5, charmFactor,  0);
-	sh_hfSFDown_	= new CSVreevaluator(samplename_CSV_reevaluator, era, -1.5, charmFactor,  0);
-	sh_lfSFUp_		= new CSVreevaluator(samplename_CSV_reevaluator, era,    0, charmFactor,  1);
-	sh_lfSFDown_	= new CSVreevaluator(samplename_CSV_reevaluator, era,    0, charmFactor, -1);
-	//*/
-
-}
-
-void BEANhelper::getPUwgt( double input_numPU, double &PU_scale, double &PUup_scale, double &PUdown_scale ){
-	PU_scale     = GetPUweight(input_numPU);
-	PUup_scale   = GetPUweightUp(input_numPU);
-	PUdown_scale = GetPUweightDown(input_numPU);
+  return h_PUdown_ratio->GetBinContent( h_PUdown_ratio->FindBin( iNumBX0 ) );
 }
 
 
-/////////
-///
-/// Electrons
-///
-////////
-void BEANhelper::electronSelector( const BNelectronCollection &electrons, bool isLJ, std::string era, vint &tightElectrons, vint &looseElectrons ){
-
-	tightElectrons.clear();
-	looseElectrons.clear();
-
-	double tightPt = ( isLJ ) ? 30. : 20.;
-	double loosePt = 10.;
-
-	if( era=="2011" ){
-		for( int i=0; i<int(electrons.size()); i++ ){
-			double eleSCEta = electrons.at(i).scEta;
-			double absSCeta = fabs(eleSCEta);
-			double eleEta = electrons.at(i).eta;
-			double elePt = electrons.at(i).pt;
-
-			bool isCrack = ( (absSCeta>1.4442) && (absSCeta<1.5660) );
-
-			bool kin = ( (elePt>loosePt) && !isCrack && fabs(eleEta)<2.5 );
-
-			if( !kin ) continue;
-
-			double chargedHadronIso = electrons.at(i).chargedHadronIso;
-			double neutralHadronIso = electrons.at(i).neutralHadronIso;
-			double photonIso = electrons.at(i).photonIso;
-
-			double relIso = ( chargedHadronIso + neutralHadronIso + photonIso ) * 1./elePt;
-
-			bool looseIso = ( relIso < 0.2 );
-			bool tightIso = ( relIso < 0.1 );
-
-			int eidHyperTight1MC = electrons.at(i).eidHyperTight1MC;
-			bool eidHyperTight1MC_dec = ( (eidHyperTight1MC & 1)==1 );
-
-			int eidTight = electrons.at(i).eidTight;
-			bool eidTight_dec = ( (eidTight & 1)==1 );
-
-			bool eid = isLJ ? eidHyperTight1MC_dec : eidTight_dec;
-
-			bool d0 = ( fabs(electrons.at(i).correctedD0) < 0.02 );
-			bool dZ = ( fabs(electrons.at(i).correctedDZ) < 1. );
-
-			bool dist  = ( fabs(electrons.at(i).dist)<0.02 );
-			bool dcot  = ( fabs(electrons.at(i).dcot)<0.02 );
-			bool nlost = ( electrons.at(i).numberOfLostHits<1 );
-			bool notConv = ( !(dist && dcot) && nlost );
-
-			bool id = ( eid && d0 && dZ && notConv );
-
-			if( kin && looseIso ){
-				if( ((elePt>tightPt) && id && tightIso) ) tightElectrons.push_back(i);
-				else looseElectrons.push_back(i);
-			}
-		}// end electron loop
-
-	} // end if 2011
-	else if (era=="2012_52x" || era=="2012_53x") { // default is 2012 selection
-		for( int i=0; i<int(electrons.size()); i++ ){
-
-			double eleSCEta = electrons.at(i).scEta;
-			double absSCeta = fabs(eleSCEta);
-			double eleEta = electrons.at(i).eta;
-			double elePt = electrons.at(i).pt;
-
-			bool isCrack = ( (absSCeta>1.4442) && (absSCeta<1.5660) );
-
-			bool kin = ( (elePt>loosePt) && !isCrack && fabs(eleEta)<2.5 );
-
-			if( !kin ) continue;
-
-			double chargedHadronIso = electrons.at(i).chargedHadronIso;
-			double neutralHadronIso = electrons.at(i).neutralHadronIso;
-			double photonIso = electrons.at(i).photonIso;
-
-			double AEffDr03 = electrons.at(i).AEffDr03;
-			double rhoPrime = electrons.at(i).rhoPrime;
-
-			double relIso_rho   = ( chargedHadronIso + max(0.0, neutralHadronIso + photonIso - AEffDr03*rhoPrime) ) * 1./elePt;
-
-			bool looseIso = ( relIso_rho < 0.2 );
-			bool tightIso = ( relIso_rho < 0.1 );
-
-			double mvaID = electrons.at(i).mvaTrigV0;
-			bool passMVAId = ( mvaID>0.0 );
-
-			bool d02 = ( fabs(electrons.at(i).correctedD0Vertex) < 0.02 );
-			bool d04 = ( fabs(electrons.at(i).correctedD0Vertex) < 0.04 );
-			bool dZ = ( fabs(electrons.at(i).correctedDZ) < 1. );
-
-			bool notConv = ( electrons.at(i).passConvVeto );
-
-			bool id = ( passMVAId && d02 && dZ && notConv );
-
-			if( kin && looseIso && passMVAId && d04 && notConv ){
-				if( ((elePt>tightPt) && id && tightIso) ) tightElectrons.push_back(i);
-				else looseElectrons.push_back(i);
-			}
-		}// end electron loop
-	}// end if 2012
-    else {
-      assert (era == "either 2012_52x, 2012_53x, or 2011");
-    }    
-} //end electronSelector
-
-
-/////////
-///
-/// Muons
-///
-////////
-void BEANhelper::muonSelector( const BNmuonCollection &muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons ){
-
-	tightMuons.clear();
-	looseMuons.clear();
-
-	double tightPt = ( isLJ ) ? 30. : 20.;
-	double loosePt = 10.;
-
-	if( era=="2011" ){
-		for( int i=0; i<int(muons.size()); i++ ){
-			double muPt  = muons.at(i).pt;
-			double muEta = muons.at(i).eta;
-			double muAbsEta = fabs(muEta);
-
-			bool kin = ( (muPt>loosePt) && (muAbsEta<2.4) );
-
-			if( !kin ) continue;
-
-			double chargedHadronIso = muons.at(i).chargedHadronIso;
-			double neutralHadronIso = muons.at(i).neutralHadronIso;
-			double photonIso = muons.at(i).photonIso;
-
-			double relIso = ( chargedHadronIso + neutralHadronIso + photonIso ) * 1./muPt;
-
-			bool looseIso = ( relIso<0.2 );
-			bool tightIso = ( relIso<0.125 );
-
-			bool isGlobalMuon = ( muons.at(i).isGlobalMuon==1 );
-			bool isTrackerMuon = ( muons.at(i).isTrackerMuon==1 );
-			bool isGlobalMuonPromptTight = ( muons.at(i).isGlobalMuonPromptTight==1 );
-
-			bool numTrackHits = ( muons.at(i).numberOfValidTrackerHitsInnerTrack > 10 );
-			bool numPixelHits = ( muons.at(i).pixelLayersWithMeasurement>0 );
-			bool numberOfMatches = ( muons.at(i).numberOfMatchedStations>1 );
-
-			bool passd0 = ( fabs(muons.at(i).correctedD0)<0.02 );
-			bool passdz = ( fabs(muons.at(i).correctedDZ)<1. );
-
-			bool id = ( isTrackerMuon && isGlobalMuonPromptTight && numTrackHits && numPixelHits && numberOfMatches && passd0 && passdz );
-
-			if( kin && isGlobalMuon && looseIso ){
-				if( ((muPt>tightPt) && (muAbsEta<2.1) && id && tightIso) ) tightMuons.push_back(i);
-				else looseMuons.push_back(i);
-			}
-		}// end muon loop
-	} // end if 2011
-	else if (era=="2012_52x" || era=="2012_53x") { // default is 2012 selection
-		for( int i=0; i<int(muons.size()); i++ ){
-			double muPt  = muons.at(i).pt;
-			double muEta = muons.at(i).eta;
-			double muAbsEta = fabs(muEta);
-
-			bool kin = ( (muPt>loosePt) && (muAbsEta<2.5) );
-
-			if( !kin ) continue;
-
-			double pfIsoR04SumChargedHadronPt = muons.at(i).pfIsoR04SumChargedHadronPt;
-			double pfIsoR04SumNeutralHadronEt = muons.at(i).pfIsoR04SumNeutralHadronEt;
-			double pfIsoR04SumPhotonEt = muons.at(i).pfIsoR04SumPhotonEt;
-			double pfIsoR04SumPUPt = muons.at(i).pfIsoR04SumPUPt;
-
-			double relIso_dBeta = (pfIsoR04SumChargedHadronPt + max(0.0, pfIsoR04SumNeutralHadronEt + pfIsoR04SumPhotonEt - 0.5*pfIsoR04SumPUPt))/muPt;
-
-			bool looseIso = ( relIso_dBeta<0.20 );
-			bool tightIso = ( relIso_dBeta<0.12 );
-
-			//       bool isPFmuon = ( muons.at(i).isPFMuon==1 );
-			bool isPFmuon = true; //Temporary hack for early 52x BEANhelper that lack this variable... (KPL)
-			bool isGlobalMuon = ( muons.at(i).isGlobalMuon==1 );
-			bool isTrackerMuon = ( muons.at(i).isTrackerMuon==1 );
-
-			bool numberOfLayersWithMeasurement = ( muons.at(i).numberOfLayersWithMeasurement > 5 );
-			bool numberOfValidMuonHits = (muons.at(i).numberOfValidMuonHits > 0);
-			bool numberOfValidPixelHits = (muons.at(i).numberOfValidPixelHits > 0);
-			bool numberOfMatchedStations = (muons.at(i).numberOfMatchedStations > 1);
-
-			bool passd0 = ( fabs(muons.at(i).correctedD0Vertex) < 0.2 );
-			bool dVzPVz = ( fabs(muons.at(i).dVzPVz) < 0.5 );
-
-			bool normChi2 = ( muons.at(i).normalizedChi2 < 10) ;
-
-			bool id = ( isGlobalMuon && normChi2 && passd0 && dVzPVz && 
-					numberOfLayersWithMeasurement && numberOfValidMuonHits && numberOfValidPixelHits && numberOfMatchedStations );
-
-			if( kin && (isGlobalMuon || isTrackerMuon) && looseIso && isPFmuon ){
-				if( ((muPt>tightPt) && (muAbsEta<2.1) && id && tightIso) ) tightMuons.push_back(i);
-				else looseMuons.push_back(i);
-			}
-		}// end muon loop
-	} // end if 2012
-    else {
-      assert (era == "either 2012_52x, 2012_53x, or 2011");
-    }
-    
-} //end muonSelector
-
-
-/////////
-///
-/// PFJets
-///
-////////
-
-
-void BEANhelper::jetSelector( const BNjetCollection &pfjets, std::string sysType, vint &tightJets, vint &tagJets, vint &untagJets, 
-		std::vector<BTagWeight::JetInfo> &myjetinfo, double csvCut ){
-
-	tightJets.clear();
-	tagJets.clear();
-	untagJets.clear();
-	myjetinfo.clear();
-
-	for( int i=0; i<int(pfjets.size()); i++ ){
-		double jetPt = pfjets.at(i).pt;
-		double jetEta = pfjets.at(i).eta;
-		double jetAbsEta = fabs(jetEta);
-
-		bool eta = ( jetAbsEta<2.4 );
-		bool jetId  = ( pfjets.at(i).jetIDLoose==1 );
-
-		double factor=1;
-		if( sysType.compare("data")!=0 ){
-			double genJetPT = pfjets.at(i).genJetPT;
-			if( sysType.compare("JERUp")==0 )        factor = getJERfactor(1,jetAbsEta,genJetPT,jetPt);
-			else if( sysType.compare("JERDown")==0 ) factor = getJERfactor(-1,jetAbsEta,genJetPT,jetPt);
-			else                                     factor = getJERfactor(0,jetAbsEta,genJetPT,jetPt);
-		}
-		jetPt *= factor;
-
-		double unc = pfjets.at(i).JESunc;
-		if( sysType.compare("JESUp")==0 )        jetPt *= (1. + unc);
-		else if( sysType.compare("JESDown")==0 ) jetPt *= (1. - unc);
-
-		double csv = pfjets.at(i).btagCombinedSecVertex;
-		bool csvM = ( csv>csvCut );
-		if( jetPt>30. && eta && jetId ){
-			tightJets.push_back(i);
-			if( csvM ) tagJets.push_back(i);
-			else       untagJets.push_back(i);
-
-
-			if( sysType.compare("data")!=0 ){
-				int flavour = pfjets.at(i).flavour;
-				std::vector<double> myEffSF;
-				if( sysType.compare("hfSFUp")==0 )        myEffSF = getEffSF( 1,  jetPt, jetEta, flavour );
-				else if( sysType.compare("hfSFDown")==0 ) myEffSF = getEffSF( -1, jetPt, jetEta, flavour );
-				else if( sysType.compare("lfSFUp")==0 )   myEffSF = getEffSF( 2,  jetPt, jetEta, flavour );
-				else if( sysType.compare("lfSFDown")==0 ) myEffSF = getEffSF( -2, jetPt, jetEta, flavour );
-				else                                      myEffSF = getEffSF( 0,  jetPt, jetEta, flavour );
-
-
-				BTagWeight::JetInfo myjet( myEffSF[0], myEffSF[1] );
-				myjetinfo.push_back(myjet);
-			}
-		}
-	} // end loop over jets
-}
-
-
-
+// ******************** From BEANsUtilities.h ****************** //
 double BEANhelper::getJERfactor( int returnType, double jetAbsETA, double genjetPT, double recojetPT){
 
     CheckSetUp();
@@ -1614,106 +1363,17 @@ void BEANhelper::getFox(vecTLorentzVector jets, float &h0, float &h1, float &h2,
 }
 
 
-/*void BEANhelper::getFox_mod2(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, double HT,
-  float &h0_mod2, float &h1_mod2, float &h2_mod2, float &h3_mod2, float &h4_mod2,  float &h5_mod2,  
-  float &h6_mod2, float &h7_mod2, float &h8_mod2, float &h9_mod2, float &h10_mod2 ){
-
-  int nJets = int(jets.size());
-
-  int visObjects = nJets + 2; // change if # leps in event selection changes
-
-  float eVis = HT;    
-
-  TLorentzVector all_obj_vect[visObjects];
-
-  for (int k=0; k<nJets; k++)
-  {
-  all_obj_vect[k] = jets[k];
-  }
-
-  all_obj_vect[nJets] = lepton;
-  all_obj_vect[nJets + 1] = met;    
-
-  h0_mod2 = 0.0;
-  h1_mod2 = 0.0;
-  h2_mod2 = 0.0;
-  h3_mod2 = 0.0;
-  h4_mod2 = 0.0;
-  h5_mod2 = 0.0;
-  h6_mod2 = 0.0;
-  h7_mod2 = 0.0;
-  h8_mod2 = 0.0;
-  h9_mod2 = 0.0;
-  h10_mod2 = 0.0;
-
-
-
-// according to original paper, the object pairs are double-counted, and also objects are "autocorrelated."
-// see Fox + Wolfram original paper in Nuc. Phys. B149 (1979) 413  ---- section 8 is relevant section
-
-for (int i=0; i<visObjects; i++)
-{
-for (int j=0; j<visObjects; j++)
-{
-double angle1 = atan(all_obj_vect[i].Py() / all_obj_vect[i].Px());
-
-if (all_obj_vect[i].Px() == -fabs(all_obj_vect[i].Px()))
-{
-angle1 += 2*asin(1.0);
-}
-
-double angle2 = atan(all_obj_vect[j].Py() / all_obj_vect[j].Px());
-
-if (all_obj_vect[j].Px() == -fabs(all_obj_vect[j].Px()))
-{
-angle2 += 2*asin(1.0);
-}
-
-
-double c0 = 1.;
-double c1 = cos(angle1 - angle2);
-double c2 = cos(2*(angle1 - angle2));
-double c3 = cos(3*(angle1 - angle2));
-double c4 = cos(4*(angle1 - angle2));
-double c5 = cos(5*(angle1 - angle2));
-double c6 = cos(6*(angle1 - angle2));
-double c7 = cos(7*(angle1 - angle2));
-double c8 = cos(8*(angle1 - angle2));
-double c9 = cos(9*(angle1 - angle2));
-double c10 = cos(10*(angle1 - angle2));
-
-float pipj = all_obj_vect[i].Perp()*all_obj_vect[j].Perp();
-
-h0_mod2 += (pipj/(eVis*eVis))*c0;
-h1_mod2 += (pipj/(eVis*eVis))*c1;
-h2_mod2 += (pipj/(eVis*eVis))*c2;
-h3_mod2 += (pipj/(eVis*eVis))*c3;
-h4_mod2 += (pipj/(eVis*eVis))*c4;
-h5_mod2 += (pipj/(eVis*eVis))*c5;
-h6_mod2 += (pipj/(eVis*eVis))*c6;
-h7_mod2 += (pipj/(eVis*eVis))*c7;
-h8_mod2 += (pipj/(eVis*eVis))*c8;
-h9_mod2 += (pipj/(eVis*eVis))*c9;
-h10_mod2 += (pipj/(eVis*eVis))*c10;
-
-}
-}
-
-return;
-}
-//*/
-
 vdouble BEANhelper::getEffSF( int returnType, double jetPt, double jetEta, double jetId ){
 
 	vdouble result;
 
-    if (isData) {
-      result.clear();
-      result.push_back(1.0);
-      result.push_back(1.0);
-      return result;
-    }
-  
+	if (isData) {
+		result.clear();
+		result.push_back(1.0);
+		result.push_back(1.0);
+		return result;
+	}
+
 	double m_type = 0.;
 	if( returnType==-1 )      m_type = -1.;
 	else if( returnType==1 )  m_type = 1.;
@@ -1807,6 +1467,7 @@ vdouble BEANhelper::getEffSF( int returnType, double jetPt, double jetEta, doubl
 
 	return result;
 }
+
 
 bool BEANhelper::ttPlusHeavyKeepEvent( const BNmcparticleCollection& iMCparticles,
                                        const BNjetCollection& iJets ) {

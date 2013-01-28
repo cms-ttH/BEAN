@@ -95,7 +95,7 @@ class BEANhelper{
 		virtual ~BEANhelper();
 		
 		// Set up BEANhelper
-  void SetUp(string, int, bool, bool, string, bool, bool);
+		void SetUp(string, int, bool, bool, string, bool, bool);
 
 		template <typename BNobject> void PrintInfo(const BNobject&);
 		template <typename BNobject> BNmcparticle GetMatchedMCparticle(const BNmcparticleCollection&, const BNobject&, const double);
@@ -170,9 +170,14 @@ class BEANhelper{
 		double GetPUweightDown(const double);
 
 	private:
+		void ThrowFatalError(const string);
 		double GetCSVvalue(const BNjet&, const sysType::sysType iSysType=sysType::NA);
 		void CheckSetUp();
-		void ThrowFatalError(const string);
+		void SetUpPUreweighing();
+		void SetUpCSVreshaping();
+		void SetUpJetSF();
+		void SetUpLeptonSF();
+		string GetSampleName();
 
 		// Parameter management
 	private:
@@ -185,15 +190,12 @@ class BEANhelper{
 		bool reshapeCSV;
         bool usePfLeptons;
 
-		// CSV reshaping
-		/*
-		BTagShapeInterface*	  sh_;
-		BTagShapeInterface*	  sh_hfSFUp_;
-		BTagShapeInterface*	  sh_hfSFDown_;
-		BTagShapeInterface*	  sh_lfSFUp_;
-		BTagShapeInterface*	  sh_lfSFDown_;
-		//*/
+		// PU reweighing
+		TH1D*			h_PU_ratio;
+		TH1D*			h_PUup_ratio;
+		TH1D*			h_PUdown_ratio;
 
+		// CSV reshaping
 		CSVreevaluator*	  sh_;
 		CSVreevaluator*	  sh_hfSFUp_;
 		CSVreevaluator*	  sh_hfSFDown_;
@@ -202,22 +204,10 @@ class BEANhelper{
 
 		// Old functions
 	public:
-        void setMCsample( int insample=2500, std::string era="", bool isLJ=true, std::string dset="" );
-		void electronSelector( const BNelectronCollection &electrons, bool isLJ, std::string era, vint &tightElectrons, vint &looseElectrons );
-		void muonSelector( const BNmuonCollection &muons, bool isLJ, std::string era, vint &tightMuons, vint &looseMuons );
-		void jetSelector( const BNjetCollection &pfjets, std::string sysType, vint &tightJets, vint &tagJets, vint &untagJets, 
-				std::vector<BTagWeight::JetInfo> &myjetinfo, double csvCut = 0.679 );
-		void getPUwgt( double input_numPU, double &PU_scale, double &PUup_scale, double &PUdown_scale ); 
 		vdouble getEffSF( int returnType, double jetPts, double jetEtas, double jetIds );
 		double getJERfactor( int returnType, double jetAbsETA, double genjetPT, double recojetPT );
 		void getSp(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, float &aplanarity, float &sphericity);
 		void getFox(vecTLorentzVector jets,float &h0, float &h1, float &h2, float &h3, float &h4);	
-		//void getFox_mod2(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, double HT,
-		//float &h0_mod2, float &h1_mod2, float &h2_mod2, float &h3_mod2, float &h4_mod2,  float &h5_mod2,  
-		//float &h6_mod2, float &h7_mod2, float &h8_mod2, float &h9_mod2, float &h10_mod2 );
-
-
-
 
 	protected:
 
@@ -236,20 +226,13 @@ class BEANhelper{
 		// Old parameters
 		char *			my_pPath;
 		string			my_base_dir;
-		string			str_eff_file_7TeV, str_eff_file_8TeV, str_pu_file_7TeV, str_pu_file_8TeV;
+		string			str_eff_file_7TeV, str_eff_file_8TeV;
 		TH2D*			h_b_eff_;
 		TH2D*			h_c_eff_;
 		TH2D*			h_l_eff_;
 		TH2D*			h_o_eff_;
-		TH1D*			h_PU_ratio_;
-		TH1D*			h_PUup_ratio_;
-		TH1D*			h_PUdown_ratio_;
         TH2D*           h_ele_SF_;
         TH2D*           h_mu_SF_;
-		double			PI;
-		double			TWOPI;
-		float			ETA_LIMIT;
-		float			EPSILON;
         string          samplename;
 
 }; // End of class prototype
