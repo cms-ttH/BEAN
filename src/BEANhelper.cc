@@ -1125,13 +1125,13 @@ unsigned int BEANhelper::GetNumExtraPartons(const BNmcparticleCollection& iMCpar
     int id = iMCparticles.at(i).id;
     int motherID = iMCparticles.at(i).motherId;
     int status = iMCparticles.at(i).status;
-    int mother0Status = iMCparticles.at(i).mother0Status;
-    int mother1Status = iMCparticles.at(i).mother1Status;
+//     int mother0Status = iMCparticles.at(i).mother0Status;
+//     int mother1Status = iMCparticles.at(i).mother1Status;
     int aid = abs(id);
 
     if(status == 3){//only status 3 particles (which are listed first)
       if(nList>6){//dont look at first 6 (incomming event)
-        if(aid>0 && aid<6 || aid ==21 || aid ==9){//udscb gluon
+        if( (aid>0 && aid<6) || aid ==21 || aid ==9){//udscb gluon
           if(abs(motherID) !=23 && abs(motherID) !=24 && abs(motherID) != 25 && abs(motherID)!=6 ){ //not from WZHt
             nPartons++;
           }
