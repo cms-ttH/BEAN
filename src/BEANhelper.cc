@@ -110,7 +110,7 @@ void BEANhelper::SetUpPUreweighing(){
 	if( sampleNumber<0 || samplename=="data" || isData) return;
 
 	// Get PU file path
-	TFile puFile((string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/pu_distributions.root").c_str());
+	TFile* puFile = new TFile ((string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/pu_distributions.root").c_str());
 
 	// Set up mc histo pointer
 	TH1D* h_pu_mc = NULL;
@@ -186,10 +186,10 @@ void BEANhelper::SetUpPUreweighing(){
 	}
 
 	// Get histos
-	h_pu_mc			= (TH1D*)puFile.Get(string(era + "/" + mc_histo).c_str());
-	h_PU_ratio		= (TH1D*)puFile.Get(string(era + "/" + collisions_histo).c_str());
-	h_PUup_ratio	= (TH1D*)puFile.Get(string(era + "/" + collisions_histo_up).c_str());
-	h_PUdown_ratio	= (TH1D*)puFile.Get(string(era + "/" + collisions_histo_down).c_str());
+	h_pu_mc			= (TH1D*)puFile->Get(string(era + "/" + mc_histo).c_str())->Clone();
+	h_PU_ratio		= (TH1D*)puFile->Get(string(era + "/" + collisions_histo).c_str())->Clone();
+	h_PUup_ratio	= (TH1D*)puFile->Get(string(era + "/" + collisions_histo_up).c_str())->Clone();
+	h_PUdown_ratio	= (TH1D*)puFile->Get(string(era + "/" + collisions_histo_down).c_str())->Clone();
 
 	// Normalize every histogram to its area
 	h_PU_ratio		->Scale( 1./h_PU_ratio		->Integral() );
@@ -249,16 +249,16 @@ void BEANhelper::SetUpJetSF(){
 		assert (era == "either 2012_52x, 2012_53x, or 2011");
 	}
 
-	TFile file(filePath.c_str());
+	TFile* file = new TFile (filePath.c_str());
 
 	string samplename = GetSampleName();
     if (samplename == "zjets_lowmass")							samplename = "zjets";
     if (samplename == "ttbar_bb" || samplename == "ttbar_cc")	samplename = "ttbar";
     
-	h_b_eff_ = (TH2D*)file.Get(string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str())->Clone();
-	h_c_eff_ = (TH2D*)file.Get(string( samplename + com_suffix + "_jet_pt_eta_c_eff" ).c_str())->Clone();
-	h_l_eff_ = (TH2D*)file.Get(string( samplename + com_suffix + "_jet_pt_eta_l_eff" ).c_str())->Clone();
-	h_o_eff_ = (TH2D*)file.Get(string( samplename + com_suffix + "_jet_pt_eta_o_eff" ).c_str())->Clone();
+	h_b_eff_ = (TH2D*)file->Get(string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str())->Clone();
+	h_c_eff_ = (TH2D*)file->Get(string( samplename + com_suffix + "_jet_pt_eta_c_eff" ).c_str())->Clone();
+	h_l_eff_ = (TH2D*)file->Get(string( samplename + com_suffix + "_jet_pt_eta_l_eff" ).c_str())->Clone();
+	h_o_eff_ = (TH2D*)file->Get(string( samplename + com_suffix + "_jet_pt_eta_o_eff" ).c_str())->Clone();
 
 }
 
@@ -278,13 +278,13 @@ void BEANhelper::SetUpLeptonSF(){
 		assert (era == "either 2012_52x, 2012_53x, or 2011");
 	}
 
-	TFile file(filePath.c_str());
+	TFile* file = new TFile (filePath.c_str());
 	if( isLJ ){
-		h_ele_SF_ = (TH2D*)file.Get(string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
-		h_mu_SF_  = (TH2D*)file.Get(string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
+		h_ele_SF_ = (TH2D*)file->Get(string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
+		h_mu_SF_  = (TH2D*)file->Get(string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
 	}else {
-		h_ele_SF_ = (TH2D*)file.Get(string( "ele_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
-		h_mu_SF_  = (TH2D*)file.Get(string( "mu_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
+		h_ele_SF_ = (TH2D*)file->Get(string( "ele_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
+		h_mu_SF_  = (TH2D*)file->Get(string( "mu_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
 	}
 
 }
@@ -406,18 +406,23 @@ BNmet BEANhelper::GetCorrectedMET(const BNmet& iMET, const BNjetCollection& iJet
 	// IMPORTANT! iJets is the *UNCORRECTED* jet collection upon which to base the MET correction
 
 	TLorentzVector newMET(iMET.px, iMET.py, 0, 0);
-
+    float minPt = -14000.0; //14 TeV
+    
 	// Correct the MET based on jet pT corrections
 	for( BNjetCollection::const_iterator Jet = iJets.begin(); Jet != iJets.end(); ++Jet ){
 
+      
 		// Get the corrected jet
 		BNjet correctedJet = GetCorrectedJet(*Jet, iSysType);
 
-		// Compute the correction (difference)
-		TLorentzVector jetCorrection((correctedJet.px-Jet->px), (correctedJet.py-Jet->py));
+        // Protect against NAN jets
+        if (correctedJet.px > minPt && Jet->px > minPt && correctedJet.py > minPt && Jet->py > minPt) {
+          // Compute the correction (difference)
+          TLorentzVector jetCorrection((correctedJet.px-Jet->px), (correctedJet.py-Jet->py));
 
-		// Subtract difference from MET
-		newMET -= jetCorrection;
+          // Subtract difference from MET
+          newMET -= jetCorrection;
+        }
 	}
 
 	// Make a copy of the input MET for output and update xy values
@@ -1111,6 +1116,36 @@ BNmcparticleCollection BEANhelper::GetParents(const BNmcparticle& iMCparticle, c
 	return result;
 }
 
+unsigned int BEANhelper::GetNumExtraPartons(const BNmcparticleCollection& iMCparticles){
+
+  int nList = 0;
+  unsigned int nPartons = 0;
+  for( unsigned i=0; i< iMCparticles.size(); i++ ){
+    nList ++;
+    int id = iMCparticles.at(i).id;
+    int motherID = iMCparticles.at(i).motherId;
+    int status = iMCparticles.at(i).status;
+    int mother0Status = iMCparticles.at(i).mother0Status;
+    int mother1Status = iMCparticles.at(i).mother1Status;
+    int aid = abs(id);
+
+    if(status == 3){//only status 3 particles (which are listed first)
+      if(nList>6){//dont look at first 6 (incomming event)
+        if(aid>0 && aid<6 || aid ==21 || aid ==9){//udscb gluon
+          if(abs(motherID) !=23 && abs(motherID) !=24 && abs(motherID) != 25 && abs(motherID)!=6 ){ //not from WZHt
+            nPartons++;
+          }
+        }
+      }
+    }else{
+      break; //break when you run out of stat==3
+    }
+  }
+
+  return nPartons;
+
+}
+
 // (Sort of) draws a feynman diagram with the particle id's of the particle itself, daughters, mothers and grandmothers
 void BEANhelper::DrawFeynman(const BNmcparticle& iMCparticle){
 
@@ -1227,6 +1262,7 @@ double BEANhelper::GetPUweightDown(const double iNumBX0){
 double BEANhelper::getJERfactor( int returnType, double jetAbsETA, double genjetPT, double recojetPT){
 
     CheckSetUp();
+    string samplename = GetSampleName();
 	double factor = 1.;
     
 	double scale_JER = 1., scale_JERup = 1., scale_JERdown = 1.;
@@ -1475,6 +1511,7 @@ bool BEANhelper::ttPlusHeavyKeepEvent( const BNmcparticleCollection& iMCparticle
                                        const BNjetCollection& iJets ) {
 
   CheckSetUp();
+  string samplename = GetSampleName();
 
   // validate input
   bool validInput = false;
