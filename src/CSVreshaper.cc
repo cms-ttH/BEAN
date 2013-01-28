@@ -12,8 +12,6 @@ CSVreshaper::CSVreshaper(CSVmultiplet<double>& iScaleFactors, TH1F* iHistogram){
 	vector<double> newWP; newWP.clear();
 	vector<double> oldWP; oldWP.clear();
 	newWP.push_back(0.0);																					oldWP.push_back(0.0);
-	CSVthresholds.GetLoose();
-	iScaleFactors.GetLoose();
 	newWP.push_back(GetNewThreshold(*CSVthresholds.GetLoose(),	*iScaleFactors.GetLoose(),	iHistogram));	oldWP.push_back(*CSVthresholds.GetLoose());
 	newWP.push_back(GetNewThreshold(*CSVthresholds.GetMedium(),	*iScaleFactors.GetMedium(),	iHistogram));	oldWP.push_back(*CSVthresholds.GetMedium());
 	newWP.push_back(GetNewThreshold(*CSVthresholds.GetTight(),	*iScaleFactors.GetTight(), 	iHistogram));	oldWP.push_back(*CSVthresholds.GetTight());
