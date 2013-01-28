@@ -224,9 +224,6 @@ class BEANhelper{
 		float			CSVLwp, CSVMwp, CSVTwp;
 
 		// Old parameters
-		char *			my_pPath;
-		string			my_base_dir;
-		string			str_eff_file_7TeV, str_eff_file_8TeV;
 		TH2D*			h_b_eff_;
 		TH2D*			h_c_eff_;
 		TH2D*			h_l_eff_;

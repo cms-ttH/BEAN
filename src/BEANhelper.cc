@@ -10,12 +10,6 @@ BEANhelper::BEANhelper(){
 	CSVMwp = 0.679;
 	CSVTwp = 0.898;
 
-	my_pPath			= getenv("CMSSW_BASE");
-	my_base_dir			= string(my_pPath);
-	str_eff_file_7TeV	= my_base_dir + "/src/NtupleMaker/BEANmaker/interface/mc_btag_efficiency_7TeV.root";
-	str_eff_file_8TeV	= my_base_dir + "/src/NtupleMaker/BEANmaker/interface/mc_btag_efficiency_8TeV.root";
-
-	my_pPath		= NULL;
 	h_b_eff_		= NULL;
 	h_c_eff_		= NULL;
 	h_l_eff_		= NULL;
@@ -41,7 +35,6 @@ BEANhelper::BEANhelper(){
 
 
 BEANhelper::~BEANhelper(){
-	if(my_pPath != NULL){ delete my_pPath; my_pPath = NULL; }
 	if(h_b_eff_ != NULL){ delete h_b_eff_; h_b_eff_ = NULL; }
 	if(h_c_eff_ != NULL){ delete h_c_eff_; h_c_eff_ = NULL; }
 	if(h_l_eff_ != NULL){ delete h_l_eff_; h_l_eff_ = NULL; }
@@ -217,6 +210,9 @@ void BEANhelper::SetUpPUreweighing(){
 // Set up CSV reshaping
 void BEANhelper::SetUpCSVreshaping(){
 
+	// Do not set it up if we're running on collision data
+	if(isData){ return; }
+
 	// Tweak sample name if needed
 	string samplename = GetSampleName();
 	if (samplename == "zjets_lowmass")							samplename = "zjets";
@@ -236,6 +232,9 @@ void BEANhelper::SetUpCSVreshaping(){
 
 // Set up jet efficiency scale factors
 void BEANhelper::SetUpJetSF(){
+
+	// Do not set it up if we're running on collision data
+	if(isData){ return; }
 
 	string com_suffix = "";
 	string filePath = "";
@@ -265,6 +264,9 @@ void BEANhelper::SetUpJetSF(){
 
 // Set up lepton efficiency scale factors
 void BEANhelper::SetUpLeptonSF(){
+
+	// Do not set it up if we're running on collision data
+	if(isData){ return; }
 
 	string filePath = "";
 	if( era=="2012_52x" || era=="2012_53x" ){
