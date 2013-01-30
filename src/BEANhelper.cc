@@ -215,9 +215,25 @@ void BEANhelper::SetUpCSVreshaping(){
 
 	// Tweak sample name if needed
 	string samplename = GetSampleName();
-	if (samplename == "zjets_lowmass")							samplename = "zjets";
-	if (samplename == "ttbar_bb" || samplename == "ttbar_cc")	samplename = "ttbar";
+    if (samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_jj" ||
+        samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_jj" ||
+        samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_jj" ||
+        samplename == "ttbar_bb" || samplename == "ttbar_cc")                  samplename = "ttbar";
+    if (samplename == "wjets_1p" || samplename == "wjets_2p" || samplename == "wjets_3p" ||
+        samplename == "wjets_4p")                                              samplename = "wjets";
+	if (samplename == "zjets_1p" || samplename == "zjets_2p" || samplename == "zjets_3p" ||
+        samplename == "zjets_lowmass_1p" || samplename == "zjets_lowmass_1p" ||
+        samplename == "zjets_lowmass")                                         samplename = "zjets";
+    if (samplename == "t_schannel_ll")                                         samplename = "t_schannel";
+    if (samplename == "t_tchannel_ll")                                         samplename = "t_tchannel";
+    if (samplename == "t_tWchannel_jl" || samplename == "t_tWchannel_lj" ||
+        samplename == "t_tWchannel_ll")                                        samplename = "t_tWchannel";
+    if (samplename == "t_schannel_ll")                                         samplename = "t_schannel";
+    if (samplename == "tbar_tchannel_ll")                                      samplename = "tbar_tchannel";
+    if (samplename == "tbar_tWchannel_jl" || samplename == "tbar_tWchannel_lj" ||
+        samplename == "tbar_tWchannel_ll")                                     samplename = "tbar_tWchannel";
 
+    
 	// Set charm scale factor
 	double charmFactor = 2.0 - 1.0;
 
@@ -252,8 +268,23 @@ void BEANhelper::SetUpJetSF(){
 	TFile* file = new TFile (filePath.c_str());
 
 	string samplename = GetSampleName();
-    if (samplename == "zjets_lowmass")							samplename = "zjets";
-    if (samplename == "ttbar_bb" || samplename == "ttbar_cc")	samplename = "ttbar";
+    if (samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_jj" ||
+        samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_jj" ||
+        samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_jj" ||
+        samplename == "ttbar_bb" || samplename == "ttbar_cc")                  samplename = "ttbar";
+    if (samplename == "wjets_1p" || samplename == "wjets_2p" || samplename == "wjets_3p" ||
+        samplename == "wjets_4p")                                              samplename = "wjets";
+	if (samplename == "zjets_1p" || samplename == "zjets_2p" || samplename == "zjets_3p" ||
+        samplename == "zjets_lowmass_1p" || samplename == "zjets_lowmass_1p" ||
+        samplename == "zjets_lowmass")                                         samplename = "zjets";
+    if (samplename == "t_schannel_ll")                                         samplename = "t_schannel";
+    if (samplename == "t_tchannel_ll")                                         samplename = "t_tchannel";
+    if (samplename == "t_tWchannel_jl" || samplename == "t_tWchannel_lj" ||
+        samplename == "t_tWchannel_ll")                                        samplename = "t_tWchannel";
+    if (samplename == "t_schannel_ll")                                         samplename = "t_schannel";
+    if (samplename == "tbar_tchannel_ll")                                      samplename = "tbar_tchannel";
+    if (samplename == "tbar_tWchannel_jl" || samplename == "tbar_tWchannel_lj" ||
+        samplename == "tbar_tWchannel_ll")                                     samplename = "tbar_tWchannel";
     
 	h_b_eff_ = (TH2D*)file->Get(string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str())->Clone();
 	h_c_eff_ = (TH2D*)file->Get(string( samplename + com_suffix + "_jet_pt_eta_c_eff" ).c_str())->Clone();
