@@ -72,8 +72,8 @@ CSVreevaluator::CSVreevaluator(string iSampleName, string iEra, double iScaleBC,
 	vector<double> lightFlavorEtaBins;	lightFlavorEtaBins	+= 0, 0.5, 1.0, 1.5, 2.5;
 	lightFlavorReshapers			= new XYmap<CSVreshaper>(lightFlavorEtaBins, lightFlavorPtBins);
 	for(unsigned int bin = 0; bin < lightFlavorReshapers->size(); bin++){
-		double eta		= charmFlavorReshapers->GetCenterX(bin);
-		double pt		= charmFlavorReshapers->GetCenterY(bin);
+		double eta		= lightFlavorReshapers->GetCenterX(bin);
+		double pt		= lightFlavorReshapers->GetCenterY(bin);
 		double looseSF  = scaleFactorContainer.GetLightFlavorScaleFactor(eta, pt, 'L', iScaleL);
 		double mediumSF = scaleFactorContainer.GetLightFlavorScaleFactor(eta, pt, 'M', iScaleL);
 		double tightSF  = scaleFactorContainer.GetLightFlavorScaleFactor(eta, pt, 'T', iScaleL);
