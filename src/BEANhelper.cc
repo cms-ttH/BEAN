@@ -137,7 +137,7 @@ void BEANhelper::SetUpPUreweighing(string const iCollisionsDS){
 		string datasets = iCollisionsDS;
 		if(datasets == "All" || datasets == "all" || datasets == ""){ datasets = "2012A_13July,2012A_06Aug,2012B_13July,2012C_PR,2012C_24Aug,2012D_PR"; }
 
-		replace(datasets.begin(), datasets.end(), ' ','\0');
+		datasets.erase( remove( datasets.begin(), datasets.end(), ' ' ), datasets.end() );
 		stringstream datasets_ss(datasets);
 		string item;
 		while(getline(datasets_ss, item, ',')){
