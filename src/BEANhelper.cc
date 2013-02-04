@@ -55,7 +55,7 @@ BEANhelper::~BEANhelper(){
 }
 
 // Set up parameters one by one
-void BEANhelper::SetUp(string iEra, int iSampleNumber, bool iIsLJ, bool iIsData, string iDataset, bool iReshapeCSV, bool iPfLeptons = true){
+void BEANhelper::SetUp(string iEra, int iSampleNumber, bool iIsLJ, bool iIsData, string iDataset, bool iReshapeCSV, bool iPfLeptons = true, string iCollisionDS){
 	// Make sure we don't set up more than once
 	if(isSetUp){ ThrowFatalError("Trying to set up 'BEANhelper' for the second time. Check your code."); }
 
@@ -74,7 +74,7 @@ void BEANhelper::SetUp(string iEra, int iSampleNumber, bool iIsLJ, bool iIsData,
 	if(dataset.length()==0){ ThrowFatalError("'dataset' is blank."); }
 
 	// Setup PU reweighing
-	SetUpPUreweighing();
+	SetUpPUreweighing(iCollisionDS);
 
 	// Setup CSV reshaping
 	SetUpCSVreshaping();
@@ -91,7 +91,7 @@ void BEANhelper::SetUp(string iEra, int iSampleNumber, bool iIsLJ, bool iIsData,
 }
 
 // Set up PU reweighing distributions
-void BEANhelper::SetUpPUreweighing(){
+void BEANhelper::SetUpPUreweighing(string const iCollisionsDS){
 
 	// Do nothing if we're running on collision data
 	if(isData){ return; }
@@ -130,12 +130,44 @@ void BEANhelper::SetUpPUreweighing(){
 	if( era=="2012_53x" ){ // === 2012 === //
 
 		// Simulation
-		mc_histo				= "MC_8TeV_53x_S10";
+		mc_histo				= "puDist_MC_8TeV_53x_S10";
 
 		// Collision data
-		collisions_histo		= "PU_data_190456_208686_69300xSec";
-		collisions_histo_up		= "PU_data_190456_208686_66805xSec";
-		collisions_histo_down	= "PU_data_190456_208686_71795xSec";
+		vector<string> datasetNames;
+		string datasets = iCollisionsDS;
+		if(datasets == "All" || datasets == "all" || datasets == ""){ datasets = "2012A_13July,2012A_06Aug,2012B_13July,2012C_PR,2012C_24Aug,2012D_PR"; }
+
+		replace(datasets.begin(), datasets.end(), ' ','\0');
+		stringstream datasets_ss(datasets);
+		string item;
+		while(getline(datasets_ss, item, ',')){
+			if(item.length()==0){ continue; }
+			datasetNames.push_back(item);
+		} 
+		
+		for(unsigned int h=0; h<datasetNames.size(); h++){
+				string histoName		= era + "/" + "puDist_" + datasetNames.at(h) + "_69300xSec";
+				string histoUpName		= era + "/" + "puDist_" + datasetNames.at(h) + "_71795xSec";
+				string histoDownName	= era + "/" + "puDist_" + datasetNames.at(h) + "_66805xSec";
+
+				TH1D* h_PU_ratio_temp		= (TH1D*)puFile->Get(histoName.c_str());
+				TH1D* h_PUup_ratio_temp		= (TH1D*)puFile->Get(histoUpName.c_str());
+				TH1D* h_PUdown_ratio_temp	= (TH1D*)puFile->Get(histoDownName.c_str());
+				if(h_PU_ratio_temp		== NULL){ cerr << "ERROR: '" + histoName		+ "' cannot be found in the PU distributions file." << endl; exit(1); }
+				if(h_PUup_ratio_temp	== NULL){ cerr << "ERROR: '" + histoUpName		+ "' cannot be found in the PU distributions file." << endl; exit(1); }
+				if(h_PUdown_ratio_temp	== NULL){ cerr << "ERROR: '" + histoDownName	+ "' cannot be found in the PU distributions file." << endl; exit(1); }
+
+			if(h==0){
+				h_PU_ratio		= (TH1D*)h_PU_ratio_temp->Clone();
+				h_PUup_ratio	= (TH1D*)h_PUup_ratio_temp->Clone();  
+				h_PUdown_ratio	= (TH1D*)h_PUdown_ratio_temp->Clone();
+			}else{
+				h_PU_ratio		->Add((TH1D*)puFile->Get(histoName.c_str()));
+				h_PUup_ratio	->Add((TH1D*)puFile->Get(histoUpName.c_str()));
+				h_PUdown_ratio	->Add((TH1D*)puFile->Get(histoDownName.c_str()));
+			}
+		}
+
 		
 	}else if( era=="2012_52x" ){ // === 2012 === //
 
@@ -153,6 +185,9 @@ void BEANhelper::SetUpPUreweighing(){
 		collisions_histo		= "pileup_8TeV_69300xSec";
 		collisions_histo_up		= "pileup_8TeV_71795xSec";
 		collisions_histo_down	= "pileup_8TeV_66805xSec";
+		h_PU_ratio		= (TH1D*)puFile->Get(string(era + "/" + collisions_histo).c_str())->Clone();
+		h_PUup_ratio	= (TH1D*)puFile->Get(string(era + "/" + collisions_histo_up).c_str())->Clone();
+		h_PUdown_ratio	= (TH1D*)puFile->Get(string(era + "/" + collisions_histo_down).c_str())->Clone();
 
 	}else if ( era=="2011") { // === 2011 === //
 
@@ -163,22 +198,18 @@ void BEANhelper::SetUpPUreweighing(){
 			// Simulation
 			if( samplename == "ttH120" ){	mc_histo = "ttH_7TeV_numGenPV";	}
 			else{							mc_histo = "ttV_7TeV_numGenPV";	}
-
-			// Collision data
-			"pileup_7TeV_" + dataset_infix + "_68000_observed";
-			"pileup_7TeV_" + dataset_infix + "_73440_observed";
-			"pileup_7TeV_" + dataset_infix + "_62560_observed";
-
-
 		}else{
 			// Simulation
 			mc_histo = "F2011exp_7TeV";
-
-			// Collision data
-			collisions_histo		= "pileup_7TeV_" + dataset_infix + "_68000_true";
-			collisions_histo_up		= "pileup_7TeV_" + dataset_infix + "_73440_true";
-			collisions_histo_down	= "pileup_7TeV_" + dataset_infix + "_62560_true";
 		}
+
+		// Collision data
+		collisions_histo		= "pileup_7TeV_" + dataset_infix + "_68000_true";
+		collisions_histo_up		= "pileup_7TeV_" + dataset_infix + "_73440_true";
+		collisions_histo_down	= "pileup_7TeV_" + dataset_infix + "_62560_true";
+		h_PU_ratio		= (TH1D*)puFile->Get(string(era + "/" + collisions_histo).c_str())->Clone();
+		h_PUup_ratio	= (TH1D*)puFile->Get(string(era + "/" + collisions_histo_up).c_str())->Clone();
+		h_PUdown_ratio	= (TH1D*)puFile->Get(string(era + "/" + collisions_histo_down).c_str())->Clone();
 
 	}else{ // === Not 2011 or 2012 === //
 		cout << "Era set to '" << era << "'" << endl;
@@ -187,9 +218,6 @@ void BEANhelper::SetUpPUreweighing(){
 
 	// Get histos
 	h_pu_mc			= (TH1D*)puFile->Get(string(era + "/" + mc_histo).c_str())->Clone();
-	h_PU_ratio		= (TH1D*)puFile->Get(string(era + "/" + collisions_histo).c_str())->Clone();
-	h_PUup_ratio	= (TH1D*)puFile->Get(string(era + "/" + collisions_histo_up).c_str())->Clone();
-	h_PUdown_ratio	= (TH1D*)puFile->Get(string(era + "/" + collisions_histo_down).c_str())->Clone();
 
 	// Normalize every histogram to its area
 	h_PU_ratio		->Scale( 1./h_PU_ratio		->Integral() );
@@ -203,6 +231,7 @@ void BEANhelper::SetUpPUreweighing(){
 	h_PUdown_ratio	->Divide( h_pu_mc );
 
 	// Delete pointer to mc histo
+	if(puFile != NULL){ delete puFile; puFile = NULL; }
 	if(h_pu_mc != NULL){ delete h_pu_mc; h_pu_mc = NULL; }
 
 }

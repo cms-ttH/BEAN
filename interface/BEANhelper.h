@@ -95,7 +95,7 @@ class BEANhelper{
 		virtual ~BEANhelper();
 		
 		// Set up BEANhelper
-		void SetUp(string, int, bool, bool, string, bool, bool);
+		void SetUp(string, int, bool, bool, string, bool, bool, string iCollisionDS="All");
 
 		template <typename BNobject> void PrintInfo(const BNobject&);
 		template <typename BNobject> BNmcparticle GetMatchedMCparticle(const BNmcparticleCollection&, const BNobject&, const double);
@@ -174,7 +174,7 @@ class BEANhelper{
 		void ThrowFatalError(const string);
 		double GetCSVvalue(const BNjet&, const sysType::sysType iSysType=sysType::NA);
 		void CheckSetUp();
-		void SetUpPUreweighing();
+		void SetUpPUreweighing(string const);
 		void SetUpCSVreshaping();
 		void SetUpJetSF();
 		void SetUpLeptonSF();
