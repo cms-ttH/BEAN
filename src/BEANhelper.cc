@@ -231,7 +231,7 @@ void BEANhelper::SetUpPUreweighing(string const iCollisionsDS){
 	h_PUdown_ratio	->Divide( h_pu_mc );
 
 	// Delete pointer to mc histo
-	if(puFile != NULL){ delete puFile; puFile = NULL; }
+	if(puFile != NULL){ puFile->Close(); puFile = NULL; }
 	if(h_pu_mc != NULL){ delete h_pu_mc; h_pu_mc = NULL; }
 
 }
@@ -321,6 +321,8 @@ void BEANhelper::SetUpJetSF(){
 	h_l_eff_ = (TH2D*)file->Get(string( samplename + com_suffix + "_jet_pt_eta_l_eff" ).c_str())->Clone();
 	h_o_eff_ = (TH2D*)file->Get(string( samplename + com_suffix + "_jet_pt_eta_o_eff" ).c_str())->Clone();
 
+	if(file != NULL){ file->Close(); file = NULL; }
+
 }
 
 // Set up lepton efficiency scale factors
@@ -347,6 +349,8 @@ void BEANhelper::SetUpLeptonSF(){
 		h_ele_SF_ = (TH2D*)file->Get(string( "ele_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
 		h_mu_SF_  = (TH2D*)file->Get(string( "mu_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
 	}
+
+	if(file != NULL){ file->Close(); file = NULL; }
 
 }
 
