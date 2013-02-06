@@ -191,7 +191,11 @@ class BEANhelper{
 		bool reshapeCSV;
         bool usePfLeptons;
 
+		TFile*			jetSFfile;
+		TFile*			leptonSFfile;
+
 		// PU reweighing
+		TFile*			puFile;
 		TH1D*			h_PU_ratio;
 		TH1D*			h_PUup_ratio;
 		TH1D*			h_PUdown_ratio;

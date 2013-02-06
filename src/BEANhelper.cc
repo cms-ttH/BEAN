@@ -10,6 +10,8 @@ BEANhelper::BEANhelper(){
 	CSVMwp = 0.679;
 	CSVTwp = 0.898;
 
+	leptonSFfile	= NULL;
+	jetSFfile		= NULL;
 	h_b_eff_		= NULL;
 	h_c_eff_		= NULL;
 	h_l_eff_		= NULL;
@@ -18,6 +20,7 @@ BEANhelper::BEANhelper(){
     h_mu_SF_        = NULL;
 
 	// PU reweighing
+	puFile			= NULL;
 	h_PU_ratio		= NULL;
 	h_PUup_ratio	= NULL;
 	h_PUdown_ratio	= NULL;
@@ -51,6 +54,11 @@ BEANhelper::~BEANhelper(){
 	if(sh_hfSFDown_ != NULL){ delete sh_hfSFDown_; sh_hfSFDown_ = NULL; }
 	if(sh_lfSFUp_ != NULL){ delete sh_lfSFUp_; sh_lfSFUp_ = NULL; }
 	if(sh_lfSFDown_ != NULL){ delete sh_lfSFDown_; sh_lfSFDown_ = NULL; }
+
+	// Close files
+	if(leptonSFfile != NULL){ leptonSFfile->Close(); leptonSFfile = NULL; }
+	if(jetSFfile != NULL){ jetSFfile->Close(); jetSFfile = NULL; }
+	if(puFile != NULL){ puFile->Close(); puFile = NULL; }
 
 }
 
@@ -110,7 +118,7 @@ void BEANhelper::SetUpPUreweighing(string const iCollisionsDS){
 	if( sampleNumber<0 || samplename=="data" || isData) return;
 
 	// Get PU file path
-	TFile* puFile = new TFile ((string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/pu_distributions.root").c_str());
+	puFile = new TFile ((string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/pu_distributions.root").c_str());
 
 	// Set up mc histo pointer
 	TH1D* h_pu_mc = NULL;
@@ -231,7 +239,6 @@ void BEANhelper::SetUpPUreweighing(string const iCollisionsDS){
 	h_PUdown_ratio	->Divide( h_pu_mc );
 
 	// Delete pointer to mc histo
-	if(puFile != NULL){ puFile->Close(); puFile = NULL; }
 	if(h_pu_mc != NULL){ delete h_pu_mc; h_pu_mc = NULL; }
 
 }
@@ -294,7 +301,7 @@ void BEANhelper::SetUpJetSF(){
 		assert (era == "either 2012_52x, 2012_53x, or 2011");
 	}
 
-	TFile* file = new TFile (filePath.c_str());
+	jetSFfile = new TFile (filePath.c_str());
 
 	string samplename = GetSampleName();
     if (samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll" ||
@@ -316,12 +323,10 @@ void BEANhelper::SetUpJetSF(){
         samplename == "tbar_tWchannel_ll")                                     samplename = "tbar_tWchannel";
 
     
-	h_b_eff_ = (TH2D*)file->Get(string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str())->Clone();
-	h_c_eff_ = (TH2D*)file->Get(string( samplename + com_suffix + "_jet_pt_eta_c_eff" ).c_str())->Clone();
-	h_l_eff_ = (TH2D*)file->Get(string( samplename + com_suffix + "_jet_pt_eta_l_eff" ).c_str())->Clone();
-	h_o_eff_ = (TH2D*)file->Get(string( samplename + com_suffix + "_jet_pt_eta_o_eff" ).c_str())->Clone();
-
-	if(file != NULL){ file->Close(); file = NULL; }
+	h_b_eff_ = (TH2D*)jetSFfile->Get(string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str())->Clone();
+	h_c_eff_ = (TH2D*)jetSFfile->Get(string( samplename + com_suffix + "_jet_pt_eta_c_eff" ).c_str())->Clone();
+	h_l_eff_ = (TH2D*)jetSFfile->Get(string( samplename + com_suffix + "_jet_pt_eta_l_eff" ).c_str())->Clone();
+	h_o_eff_ = (TH2D*)jetSFfile->Get(string( samplename + com_suffix + "_jet_pt_eta_o_eff" ).c_str())->Clone();
 
 }
 
@@ -341,16 +346,14 @@ void BEANhelper::SetUpLeptonSF(){
 		assert (era == "either 2012_52x, 2012_53x, or 2011");
 	}
 
-	TFile* file = new TFile (filePath.c_str());
+	leptonSFfile = new TFile (filePath.c_str());
 	if( isLJ ){
-		h_ele_SF_ = (TH2D*)file->Get(string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
-		h_mu_SF_  = (TH2D*)file->Get(string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
+		h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
+		h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
 	}else {
-		h_ele_SF_ = (TH2D*)file->Get(string( "ele_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
-		h_mu_SF_  = (TH2D*)file->Get(string( "mu_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
+		h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "ele_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
+		h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
 	}
-
-	if(file != NULL){ file->Close(); file = NULL; }
 
 }
 
