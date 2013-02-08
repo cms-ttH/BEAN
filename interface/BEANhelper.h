@@ -48,7 +48,6 @@
 #include "ProductArea/BNcollections/interface/BNprimaryvertex.h"
 
 #include "NtupleMaker/BEANmaker/interface/BtagWeight.h"
-//#include "NtupleMaker/BEANmaker/interface/BTagReshaping.h"
 #include "NtupleMaker/BEANmaker/interface/CSVreevaluator.h"
 
 
@@ -69,6 +68,7 @@ typedef BNjetCollection::const_iterator           JetIter;
 typedef BNmcparticleCollection::const_iterator    MCparIter;
 typedef BNmetCollection::const_iterator           MetIter;
 typedef BNmuonCollection::const_iterator          MuonIter;
+typedef BNtauCollection::const_iterator           TauIter;
 typedef BNphotonCollection::const_iterator        PhotonIter;
 typedef BNprimaryvertexCollection::const_iterator PVIter;
 typedef BNskimbitsCollection::const_iterator      SkimBitIter;
@@ -79,6 +79,7 @@ typedef BNtrigobjCollection::const_iterator       TrigObjIter;
 
 namespace sysType{		enum sysType{		NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup }; }
 namespace jetID{		enum jetID{			jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
+namespace tauID{		enum tauID{			tauVLoose, tauLoose, tauMedium, tauTight }; }
 namespace muonID{		enum muonID{		muonSide, muonLoose, muonTight }; }
 namespace electronID{	enum electronID{	electronSide, electronLoose, electronTight }; }
 
@@ -121,6 +122,15 @@ class BEANhelper{
 		unsigned int GetNumCSVbtags(const BNjetCollection&, const char);
 		unsigned int GetNumNonCSVbtags(const BNjetCollection&, const char);
 		float GetHT(const BNjetCollection&);
+
+		// Taus
+		bool IsVLooseTau(const BNtau&);
+		bool IsLooseTau(const BNtau&);
+		bool IsMediumTau(const BNtau&);
+		bool IsTightTau(const BNtau&);
+		bool IsGoodTau(const BNtau&, const tauID::tauID);
+		float GetTauSF(const BNtau&);
+		BNtauCollection GetSelectedTaus(const BNtauCollection&, const tauID::tauID);
 
 		// Muons
 		bool IsSideMuon(const BNmuon&);

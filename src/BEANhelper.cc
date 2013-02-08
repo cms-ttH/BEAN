@@ -699,6 +699,57 @@ float BEANhelper::GetMuonSF(const BNmuon& iMuon){
   return SF;
 }
 
+// Return whether or not tau passes cuts
+bool BEANhelper::IsVLooseTau(const BNtau& iTau){ return IsGoodTau(iTau, tauID::tauVLoose); }
+bool BEANhelper::IsLooseTau(const BNtau& iTau){ return IsGoodTau(iTau, tauID::tauLoose); }
+bool BEANhelper::IsMediumTau(const BNtau& iTau){ return IsGoodTau(iTau, tauID::tauLoose); }
+bool BEANhelper::IsTightTau(const BNtau& iTau){ return IsGoodTau(iTau, tauID::tauTight); }
+
+bool BEANhelper::IsGoodTau(const BNtau& iTau, const tauID::tauID iTauID){
+	CheckSetUp();
+
+	// Be skeptical about this muon making it through
+	bool passesKinematics	= false;
+	bool passesIso			= false;
+	bool passesID			= false;
+
+	// Check if this muon is good enough
+	switch(iTauID){
+		case tauID::tauVLoose:
+			passesKinematics		= (iTau.pt >= 5) && (fabs(iTau.eta) <= 2.1);
+			passesID				= (iTau.leadingTrackPt >= 5) && (iTau.HPSdecayModeFinding > 0) && (iTau.HPSagainstElectronLoose > 0) && (iTau.HPSagainstMuonLoose > 0);
+			passesIso				= true;
+			break;
+		case tauID::tauLoose:
+			passesKinematics		= (iTau.pt >= 20) && (fabs(iTau.eta) <= 2.1);
+			passesID				= (iTau.leadingTrackPt >= 5) && (iTau.HPSdecayModeFinding > 0) && (iTau.HPSagainstElectronLoose > 0) && (iTau.HPSagainstMuonLoose > 0);
+			passesIso				= (iTau.HPSbyVLooseCombinedIsolationDeltaBetaCorr > 0);
+			break;
+		case tauID::tauMedium:
+			passesKinematics		= (iTau.pt >= 20) && (fabs(iTau.eta) <= 2.1);
+			passesID				= (iTau.leadingTrackPt >= 5) && (iTau.HPSdecayModeFinding > 0) && (iTau.HPSagainstElectronTight > 0) && (iTau.HPSagainstMuonTight > 0);
+			passesIso				= (iTau.HPSbyLooseCombinedIsolationDeltaBetaCorr > 0);
+			break;
+		case tauID::tauTight:
+			passesKinematics		= (iTau.pt >= 20) && (fabs(iTau.eta) <= 2.1);
+			passesID				= (iTau.leadingTrackPt >= 5) && (iTau.HPSdecayModeFinding > 0) && (iTau.HPSagainstElectronTight > 0) && (iTau.HPSagainstMuonTight > 0);
+			passesIso				= (iTau.HPSbyTightCombinedIsolationDeltaBetaCorr > 0);
+			break;
+	}
+
+	return (passesKinematics && passesID && passesIso);
+
+}
+
+// Return collection with objects passing cuts
+BNtauCollection BEANhelper::GetSelectedTaus(const BNtauCollection& iTaus, const tauID::tauID iTauID){
+	CheckSetUp();
+	BNtauCollection result;
+	for( BNtauCollection::const_iterator Tau = iTaus.begin(); Tau != iTaus.end(); ++Tau ){
+		if(IsGoodTau((*Tau), iTauID)){ result.push_back(*Tau); }
+	}
+	return result;
+}
 
 // Return whether or not muon passes cuts
 bool BEANhelper::IsSideMuon(const BNmuon& iMuon){ return IsGoodMuon(iMuon, muonID::muonSide); }
