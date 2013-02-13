@@ -290,8 +290,11 @@ void BEANhelper::SetUpJetSF(){
 
 	string com_suffix = "";
 	string filePath = "";
-	if( era=="2012_52x" || era=="2012_53x" ){
-		filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/mc_btag_efficiency_8TeV.root";
+	if( era=="2012_53x" ){
+		filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/mc_btag_efficiency_8TeV_53x.root";
+		com_suffix = "_8TeV";
+	}else if( era=="2012_52x" ){
+        filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/mc_btag_efficiency_8TeV.root";
 		com_suffix = "_8TeV";
 	}else if( era=="2011" ){
 		filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/mc_btag_efficiency_7TeV.root";

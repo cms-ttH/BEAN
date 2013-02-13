@@ -43,7 +43,8 @@ class CSVreevaluator{
 	protected:
 
 	private:
-		TFile* efficiencyFile;
+		TFile* efficiencyFile1;
+		TFile* efficiencyFile2;
 		XYmap<CSVreshaper>* bottomFlavorReshapers;
 		XYmap<CSVreshaper>* charmFlavorReshapers;
 		XYmap<CSVreshaper>* lightFlavorReshapers;
