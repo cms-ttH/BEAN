@@ -139,7 +139,7 @@ useBTag         = False
 addTriggerMatching = False
 
 # re-run RECO tau production sequence 
-rerunPFTau = False
+rerunPFTau = True
 
 ### Reference selection
 
@@ -163,7 +163,7 @@ electronCut            = 'et > 10. && abs(eta) < 2.5'
 electronCutPF          = 'et > 10. && abs(eta) < 2.5'
 electronCutLoosePF     = 'et > 10. && abs(eta) < 2.5'
 # Tau cut
-tauCut                 = 'pt > 5. && abs(eta) < 2.5 && tauID("decayModeFinding")'
+tauCut                 = 'pt > 5. && abs(eta) < 2.5'
 # Calo jets
 #jetCut                 = ''
 # PF jets
@@ -1195,6 +1195,7 @@ if runStandardPAT:
     process.p += process.step0c
     process.p += process.eidMVASequence
     if rerunPFTau:
+      process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
       process.p += process.PFTau
     if useL1FastJet and useRelVals:
       process.p += process.ak5CaloJetSequence
@@ -1262,6 +1263,7 @@ if runStandardPAT:
     if useL1FastJet:
       pAddPF += process.ak5PFJets
     if rerunPFTau:
+      process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
       pAddPF += process.PFTau
     pAddPF += process.patDefaultSequence
     pAddPF.remove( process.patJetCorrFactors )
@@ -1334,8 +1336,9 @@ if runPF2PAT:
     pPF += process.step0b
   pPF += process.step0c
   pPF += process.eidMVASequence
-  if rerunPFTau:
-    pAddPF += process.PFTau
+  #if rerunPFTau:
+  #  process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
+  #  pAddPF += process.PFTau
   pPF += getattr( process, 'patPF2PATSequence' + postfix )
   pPF += process.looseLeptonSequence
   pPF += getattr( process, 'patAddOnSequence' + postfix )
@@ -1373,9 +1376,6 @@ if runPF2PAT:
     #'keep *',
     ] )
  
-  # don't run extra tau modules if not requested
-  if not rerunPFTau and runStandardPAT:
-    process.patHPSPFTauDiscrimination.remove(process.produceHPSPFTaus)
   
   
 ## Dump python config if wished
