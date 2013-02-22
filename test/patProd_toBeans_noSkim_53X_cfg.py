@@ -1291,9 +1291,9 @@ if runPF2PAT:
     pPF += process.step0b
   pPF += process.step0c
   pPF += process.eidMVASequence
-  if rerunPFTau:
-    process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
-    pAddPF += process.PFTau
+  #if rerunPFTau:
+  #  process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
+  #  pAddPF += process.PFTau
   pPF += getattr( process, 'patPF2PATSequence' + postfix )
   pPF += process.looseLeptonSequence
   pPF += getattr( process, 'patAddOnSequence' + postfix )
@@ -1331,10 +1331,6 @@ if runPF2PAT:
     #'keep *',
     ] )
  
-  # don't run extra tau modules if not requested
-  #if not rerunPFTau and runStandardPAT:
-  #  process.patHPSPFTauDiscrimination.remove(process.produceHPSPFTaus)
-  
   outfile = open('ConfigDump.py','w')
   print >> outfile,process.dumpPython()
   outfile.close()
