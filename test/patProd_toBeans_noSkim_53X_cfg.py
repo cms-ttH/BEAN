@@ -99,7 +99,7 @@ useBTag         = False
 addTriggerMatching = False
 
 # re-run RECO tau production sequence 
-rerunPFTau = False
+rerunPFTau = True
 
 ### Reference selection
 
@@ -123,7 +123,7 @@ electronCut            = 'et > 10. && abs(eta) < 2.5'
 electronCutPF          = 'et > 10. && abs(eta) < 2.5'
 electronCutLoosePF     = 'et > 10. && abs(eta) < 2.5'
 # Tau cut
-tauCut                 = 'et > 5. && abs(eta) < 2.5 && tauID("decayModeFinding")'
+tauCut                 = 'et > 5. && abs(eta) < 2.5'
 # Calo jets
 #jetCut                 = ''
 # PF jets
@@ -214,7 +214,7 @@ globalTagMC   = 'START53_V7F'
 outputFile = 'pat2bean_53x.root'
 
 # event frequency of Fwk report
-fwkReportEvery = 1000
+fwkReportEvery = 10
 
 # switch for 'TrigReport'/'TimeReport' at job end
 wantSummary = True
@@ -259,9 +259,9 @@ if useRelVals:
                                      , maxVersions   = 1
                                      )
 
-#inputFiles = cms.untracked.vstring('/store/data/Run2012A/SingleMu/AOD/PromptReco-v1/000/190/645/FAF2D9E9-7F82-E111-BE0C-003048F1C420.root')
 #inputFiles = cms.untracked.vstring('/store/relval/CMSSW_5_2_3_patch3/RelValTTbar/GEN-SIM-RECO/START52_V9_special_120410-v1/0122/0EF8CDEB-1083-E111-846C-002618943937.root')
-inputFiles = cms.untracked.vstring('/store/mc/Summer12/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S6_START52_V9-v1/0000/FEFAA4F3-63B8-E111-A65A-00304867924A.root')
+inputFiles = cms.untracked.vstring('/store/mc/Summer12_DR53X/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S10_START53_V7A-v1/0000/0046E17E-BCE1-E111-A1D1-003048F02CB2.root')
+#inputFiles = cms.untracked.vstring('/store/data/Run2012D/SingleMu/AOD/PromptReco-v1/000/203/830/A4340525-950B-E211-9681-003048F024DE.root')
 process.source.fileNames = inputFiles
 process.maxEvents.input  = maxInputEvents
 
@@ -1150,6 +1150,7 @@ if runStandardPAT:
     process.p += process.step0c
     process.p += process.eidMVASequence
     if rerunPFTau:
+      process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
       process.p += process.PFTau
     if useL1FastJet and useRelVals:
       process.p += process.ak5CaloJetSequence
@@ -1217,6 +1218,7 @@ if runStandardPAT:
     if useL1FastJet:
       pAddPF += process.ak5PFJets
     if rerunPFTau:
+      process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
       pAddPF += process.PFTau
     pAddPF += process.patDefaultSequence
     pAddPF.remove( process.patJetCorrFactors )
@@ -1290,6 +1292,7 @@ if runPF2PAT:
   pPF += process.step0c
   pPF += process.eidMVASequence
   if rerunPFTau:
+    process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
     pAddPF += process.PFTau
   pPF += getattr( process, 'patPF2PATSequence' + postfix )
   pPF += process.looseLeptonSequence
@@ -1329,9 +1332,9 @@ if runPF2PAT:
     ] )
  
   # don't run extra tau modules if not requested
-  if not rerunPFTau and runStandardPAT:
-    process.patHPSPFTauDiscrimination.remove(process.produceHPSPFTaus)
+  #if not rerunPFTau and runStandardPAT:
+  #  process.patHPSPFTauDiscrimination.remove(process.produceHPSPFTaus)
   
-  outfile = open('JohnsConfig.py','w')
+  outfile = open('ConfigDump.py','w')
   print >> outfile,process.dumpPython()
   outfile.close()

@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.1 2012/10/29 21:01:52 nvallsve Exp $
+// $Id: BEANmaker.cc,v 1.2 2012/11/05 03:43:41 puigh Exp $
 //
 //
 
@@ -3900,22 +3900,51 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		MyTau.numSignalNeutrals								= tau->signalPFNeutrHadrCands().size();
 		MyTau.numSignalPiZeros								= tau->signalPiZeroCandidates().size();
 		MyTau.decayMode										= tau->decayMode();
-		MyTau.emFraction									= tau->emFraction();
-		MyTau.inTheCracks									= tauIsInTheCracks(tau->eta());
-		MyTau.HPSagainstElectronLoose						= tau->tauID("againstElectronLoose");
-		MyTau.HPSagainstElectronMVA							= tau->tauID("againstElectronMVA");
-		MyTau.HPSagainstElectronMedium						= tau->tauID("againstElectronMedium");
-		MyTau.HPSagainstElectronTight						= tau->tauID("againstElectronTight");
-		MyTau.HPSagainstMuonLoose							= tau->tauID("againstMuonLoose");
-		MyTau.HPSagainstMuonMedium							= tau->tauID("againstMuonMedium");
-		MyTau.HPSagainstMuonTight							= tau->tauID("againstMuonTight");
-		MyTau.HPSbyLooseCombinedIsolationDeltaBetaCorr		= tau->tauID("byLooseCombinedIsolationDeltaBetaCorr");
-		MyTau.HPSbyMediumCombinedIsolationDeltaBetaCorr		= tau->tauID("byMediumCombinedIsolationDeltaBetaCorr");
-		MyTau.HPSbyTightCombinedIsolationDeltaBetaCorr		= tau->tauID("byTightCombinedIsolationDeltaBetaCorr");
-		MyTau.HPSbyVLooseCombinedIsolationDeltaBetaCorr		= tau->tauID("byVLooseCombinedIsolationDeltaBetaCorr");
-		MyTau.HPSdecayModeFinding							= tau->tauID("decayModeFinding");
+        MyTau.emFraction									= tau->emFraction();
+        MyTau.inTheCracks									= tauIsInTheCracks(tau->eta());
+        MyTau.HPSagainstElectronDeadECAL = tau->tauID("againstElectronDeadECAL");
+        MyTau.HPSagainstElectronLoose = tau->tauID("againstElectronLoose");
+        MyTau.HPSagainstElectronLooseMVA2 = tau->tauID("againstElectronLooseMVA2");
+        MyTau.HPSagainstElectronLooseMVA3 = tau->tauID("againstElectronLooseMVA3");
+        MyTau.HPSagainstElectronMVA = tau->tauID("againstElectronMVA");
+        MyTau.HPSagainstElectronMVA2category = tau->tauID("againstElectronMVA2category");
+        MyTau.HPSagainstElectronMVA2raw = tau->tauID("againstElectronMVA2raw");
+        MyTau.HPSagainstElectronMVA3category = tau->tauID("againstElectronMVA3category");
+        MyTau.HPSagainstElectronMVA3raw = tau->tauID("againstElectronMVA3raw");
+        MyTau.HPSagainstElectronMedium = tau->tauID("againstElectronMedium");
+        MyTau.HPSagainstElectronMediumMVA2 = tau->tauID("againstElectronMediumMVA2");
+        MyTau.HPSagainstElectronMediumMVA3 = tau->tauID("againstElectronMediumMVA3");
+        MyTau.HPSagainstElectronTight = tau->tauID("againstElectronTight");
+        MyTau.HPSagainstElectronTightMVA2 = tau->tauID("againstElectronTightMVA2");
+        MyTau.HPSagainstElectronTightMVA3 = tau->tauID("againstElectronTightMVA3");
+        MyTau.HPSagainstElectronVLooseMVA2 = tau->tauID("againstElectronVLooseMVA2");
+        MyTau.HPSagainstElectronVTightMVA3 = tau->tauID("againstElectronVTightMVA3");
+        MyTau.HPSagainstMuonLoose = tau->tauID("againstMuonLoose");
+        MyTau.HPSagainstMuonLoose2 = tau->tauID("againstMuonLoose2");
+        MyTau.HPSagainstMuonMedium = tau->tauID("againstMuonMedium");
+        MyTau.HPSagainstMuonMedium2 = tau->tauID("againstMuonMedium2");
+        MyTau.HPSagainstMuonTight = tau->tauID("againstMuonTight");
+        MyTau.HPSagainstMuonTight2 = tau->tauID("againstMuonTight2");
+        MyTau.HPSbyCombinedIsolationDeltaBetaCorrRaw = tau->tauID("byCombinedIsolationDeltaBetaCorrRaw");
+        MyTau.HPSbyCombinedIsolationDeltaBetaCorrRaw3Hits = tau->tauID("byCombinedIsolationDeltaBetaCorrRaw3Hits");
+        MyTau.HPSbyIsolationMVA2raw = tau->tauID("byIsolationMVA2raw");
+        MyTau.HPSbyLooseCombinedIsolationDeltaBetaCorr = tau->tauID("byLooseCombinedIsolationDeltaBetaCorr");
+        MyTau.HPSbyLooseCombinedIsolationDeltaBetaCorr3Hits = tau->tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits");
+        MyTau.HPSbyLooseIsolationMVA = tau->tauID("byLooseIsolationMVA");
+        MyTau.HPSbyLooseIsolationMVA2 = tau->tauID("byLooseIsolationMVA2");
+        MyTau.HPSbyMediumCombinedIsolationDeltaBetaCorr = tau->tauID("byMediumCombinedIsolationDeltaBetaCorr");
+        MyTau.HPSbyMediumCombinedIsolationDeltaBetaCorr3Hits = tau->tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits");
+        MyTau.HPSbyMediumIsolationMVA = tau->tauID("byMediumIsolationMVA");
+        MyTau.HPSbyMediumIsolationMVA2 = tau->tauID("byMediumIsolationMVA2");
+        MyTau.HPSbyTightCombinedIsolationDeltaBetaCorr = tau->tauID("byTightCombinedIsolationDeltaBetaCorr");
+        MyTau.HPSbyTightCombinedIsolationDeltaBetaCorr3Hits = tau->tauID("byTightCombinedIsolationDeltaBetaCorr3Hits");
+        MyTau.HPSbyTightIsolationMVA = tau->tauID("byTightIsolationMVA");
+        MyTau.HPSbyTightIsolationMVA2 = tau->tauID("byTightIsolationMVA2");
+        MyTau.HPSbyVLooseCombinedIsolationDeltaBetaCorr = tau->tauID("byVLooseCombinedIsolationDeltaBetaCorr");
+        MyTau.HPSdecayModeFinding = tau->tauID("decayModeFinding");
+        MyTau.HPSbyIsolationMVAraw = tau->tauID("byIsolationMVAraw");
 
-		if(tau->leadPFChargedHadrCand().isNonnull()){
+        if(tau->leadPFChargedHadrCand().isNonnull()){
 			MyTau.leadingTrackPt				= tau->leadPFChargedHadrCand()->pt();
 			MyTau.charge						= tau->leadPFChargedHadrCand()->charge();
 
