@@ -72,7 +72,8 @@ void CSVscaleFactorContainer::SetBottomFlavorBins(vector<double>& iEtaBins, vect
 double CSVscaleFactorContainer::GetBottomFlavorScaleFactor(double iEta, double iPt, char iWP, double iScaleBC){
 	if(bottom_scaleFactor_errors == NULL){ cerr << "[ERROR]\t'bottom_scaleFactor_errors' has not been initialized." << endl; exit(1); }
 	double result = 0;
-    bool newBottomSF = false;
+    bool newBottomSF_v0 = false;
+    bool newBottomSF_v1 = true;
 
 	if(era == "2011" || era == "2012_52x"){
 	  switch(iWP){
@@ -99,12 +100,20 @@ double CSVscaleFactorContainer::GetBottomFlavorScaleFactor(double iEta, double i
 	else if(era == "2012_53x"){
 	  switch(iWP){
 		case 'L':
-          if (newBottomSF) {
+          if (newBottomSF_v0) {
             if (iPt > 300)     { result = 1.01129-4.50363e-10*pow(fabs(300+47.5028),3.52651);
               result += (2 * iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetLoose()))); }
             else if (iPt < 30) { result = 1.01129-4.50363e-10*pow(fabs(30+47.5028),3.52651);
               result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetLoose()))); }
             else               { result = 1.01129-4.50363e-10*pow(fabs(iPt+47.5028),3.52651);
+              result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetLoose()))); }
+          }
+          else if (newBottomSF_v1) {
+            if (iPt > 240)     { result = 0.994401 + (240<117.72)*(-0.00820274*pow(0.0186967*(240-117.72),3)) + (240>117.72)*(-0.0339154*pow(0.0186967*(240-117.72),2));
+              result += (2 * iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetLoose()))); }
+            else if (iPt < 30) { result = 0.994401 + (30<117.72)*(-0.00820274*pow(0.0186967*(30-117.72),3)) + (30>117.72)*(-0.0339154*pow(0.0186967*(30-117.72),2));
+              result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetLoose()))); }
+            else               { result = 0.994401 + (iPt<117.72)*(-0.00820274*pow(0.0186967*(iPt-117.72),3)) + (iPt>117.72)*(-0.0339154*pow(0.0186967*(iPt-117.72),2));
               result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetLoose()))); }
           }
           else {
@@ -115,13 +124,21 @@ double CSVscaleFactorContainer::GetBottomFlavorScaleFactor(double iEta, double i
           }
           break;
 		case 'M':
-          if (newBottomSF) {
+          if (newBottomSF_v0) {
             if (iPt > 300)     { result = 0.971175-1.48871e-06*pow(fabs(300-36.4402),2.20671);
               result += (2 * iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetMedium()))); }
             else if (iPt < 30) { result = 0.971175-1.48871e-06*pow(fabs(30-36.4402),2.20671);
               result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetMedium()))); }
             else               { result = 0.971175-1.48871e-06*pow(fabs(iPt-36.4402),2.20671);
               result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetMedium()))); }
+          }
+          else if (newBottomSF_v1) {
+            if (iPt > 240)     { result = 0.970772 + (240<117.72)*(-0.0184160*pow(0.0103070*(240-117.72),3)) + (240>117.72)*(-0.0864376*pow(0.0103070*(240-117.72),2));
+              result += (2 * iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetMedium()))); }
+            else if (iPt < 30) { result = 0.970772 + (30<117.72)*(-0.0184160*pow(0.0103070*(30-117.72),3)) + (30>117.72)*(-0.0864376*pow(0.0103070*(30-117.72),2));
+              result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetMedium()))); }
+            else               { result = 0.970772 + (iPt<117.72)*(-0.0184160*pow(0.0103070*(iPt-117.72),3)) + (iPt>117.72)*(-0.0864376*pow(0.0103070*(iPt-117.72),2));
+              result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetMedium()))); } 
           }
           else {
             if (iPt > 800) { result = 0.726981*((1.+(0.253238*800))/(1.+(0.188389*800)));
@@ -131,7 +148,7 @@ double CSVscaleFactorContainer::GetBottomFlavorScaleFactor(double iEta, double i
           }
           break;
 		case 'T':
-          if (newBottomSF) {
+          if (newBottomSF_v0 || newBottomSF_v1) {
             if (iPt > 300)     { result = 0.968551-2.90523e-06*pow(fabs(300-1.73201),2.0);
               result += (2 * iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetTight()))); }
             else if (iPt < 30) { result = 0.968551-2.90523e-06*pow(fabs(30-1.73201),2.0); 
