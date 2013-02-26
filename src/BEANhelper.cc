@@ -917,7 +917,8 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 	bool dist					= ( fabs(iElectron.dist)<0.02 );
 	bool dcot					= ( fabs(iElectron.dcot)<0.02 );
 	bool nlost					= ( iElectron.numberOfLostHits<1 );
-
+    bool no_exp_inner_trkr_hits = ( iElectron.numberOfExpectedInnerHits <= 0 );
+    
 	// 2012 era-specific
 	double mvaID				= iElectron.mvaTrigV0;
 	bool passMVAId				= ( mvaID>0.0 );
@@ -937,7 +938,7 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 
 		if(iElectronID==electronID::electronSide){			return (passMVAId && d04 && notConv); }
 		else if(iElectronID==electronID::electronLoose){  	return (passMVAId && d04 && notConv); }
-		else if(iElectronID==electronID::electronTight){	return id; }
+		else if(iElectronID==electronID::electronTight){	return (id && no_exp_inner_trkr_hits);}
 	}
     else {
       assert (era == "either 2012_52x, 2012_53x, or 2011");
