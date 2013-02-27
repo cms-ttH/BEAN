@@ -80,7 +80,7 @@ typedef BNtrigobjCollection::const_iterator       TrigObjIter;
 namespace sysType{		enum sysType{		NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup }; }
 namespace jetID{		enum jetID{			jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
 namespace tauID{		enum tauID{			tauVLoose, tauLoose, tauMedium, tauTight }; }
-namespace muonID{		enum muonID{		muonSide, muonLoose, muonTight }; }
+namespace muonID{		enum muonID{		muonSide, muonLoose, muonTight, muonPtOnly, muonPtEtaOnly, muonPtEtaIsoOnly, muonPtEtaIsoTrackerOnly }; }
 namespace electronID{	enum electronID{	electronSide, electronLoose, electronTight }; }
 
 using namespace std;
@@ -179,6 +179,44 @@ class BEANhelper{
 		double GetPUweight(const double);
 		double GetPUweightUp(const double);
 		double GetPUweightDown(const double);
+
+  // Trigger utility functions 
+  bool IsAnyTriggerBitFired ( const vector<string> targetTriggers, const BNtriggerCollection triggerBits);
+  
+  bool SingleObjectMatchesAnyTrigger (double recoEta, double recoPhi, const vector<string> targetTriggers,
+                                      BNtrigobjCollection triggerObjects);
+  
+  bool DoubleObjectMatchesAnyTrigger (double firstEta, double firstPhi, double secondEta, double secondPhi,
+                                      const vector<string> targetTriggers,  BNtrigobjCollection triggerObjects,
+                                      bool sumFilterResults = false);
+
+  
+  bool MuonMatchesSingleMuTrigger(const BNmuon& iMuon, const BNtriggerCollection triggerBits,
+                                              const BNtrigobjCollection triggerObjects );
+
+  
+  bool MuonsMatchDoubleMuTrigger(const BNmuon& iMuon, const BNmuon & jMuon,
+                                             const BNtriggerCollection triggerBits,
+                                             const BNtrigobjCollection triggerObjects);
+
+  bool ElectronMatchesSingleEleTrigger(const BNelectron& iEle, const BNtriggerCollection triggerBits,
+                                       const BNtrigobjCollection triggerObjects );
+
+  
+  bool ElectronsMatchDoubleEleTrigger(const BNelectron& iEle, const BNelectron & jEle,
+                                      const BNtriggerCollection triggerBits,
+                                      const BNtrigobjCollection triggerObjects);
+
+  bool MuEGMatchMuEGTrigger(const BNmuon & iEle, const BNelectron & jEle,
+                            const BNtriggerCollection triggerBits,
+                            const BNtrigobjCollection triggerObjects);
+  
+  // Trigger utility variable.
+  const static bool triggerDebug = false;
+
+
+  
+  
 
 	private:
 		void ThrowFatalError(const string);

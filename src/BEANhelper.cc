@@ -813,6 +813,15 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
                                    && (iMuon.numberOfMatchedStations > 1) && (fabs(iMuon.correctedD0) < 0.02) && (fabs(iMuon.correctedDZ) < 1.));
         passesID				= ((iMuon.isGlobalMuon==1) && (iMuon.isGlobalMuonPromptTight==1) && passesTrackerID);
         break;
+      case muonID::muonPtOnly:
+      case muonID::muonPtEtaOnly:
+      case muonID::muonPtEtaIsoOnly:
+      case muonID::muonPtEtaIsoTrackerOnly:
+        cout << "Oops, you asked for loose muon selections in 2011. These aren't defined yet" << endl
+             << "Sorry... we have to crash now" << endl;
+        ThrowFatalError("Asked for a loose muon selection in 2011, which is not possible.");
+        break;
+        
       }
     }// End of 2011 era
     else if (era=="2012_52x" || era=="2012_53x") {
@@ -840,6 +849,41 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
         
         passesID				= (((iMuon.isGlobalMuon==1) || (iMuon.isTrackerMuon==1)) && isPFMuon && passesTrackerID);
         break;
+      case muonID::muonPtOnly:
+        passesKinematics		= ((iMuon.pt >= minTightMuonPt));
+        passesIso				= true;
+        isPFMuon				= true;
+        passesTrackerID	        = true;
+        
+        passesID				= true;
+        break;
+      case muonID::muonPtEtaOnly:
+        passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
+        passesIso				= true;
+        isPFMuon				= true;
+        passesTrackerID	        = true;
+        
+        passesID				= true;
+        break;
+      case muonID::muonPtEtaIsoOnly:
+        passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
+        passesIso				= (GetMuonRelIso(iMuon) < 0.120);
+        isPFMuon				= true;
+        passesTrackerID	        = true;
+        
+        passesID				= true;
+        break;
+      case muonID::muonPtEtaIsoTrackerOnly:
+        passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
+        passesIso				= (GetMuonRelIso(iMuon) < 0.120);
+        isPFMuon				= true;
+        passesTrackerID	        = ((iMuon.isGlobalMuon==1)
+                                   && (iMuon.normalizedChi2 < 10) && (fabs(iMuon.correctedD0Vertex) < 0.2) && (fabs(iMuon.dVzPVz) < 0.5) 
+                                   && (iMuon.numberOfLayersWithMeasurement > 5 ) && (iMuon.numberOfValidMuonHits > 0)
+                                   && (iMuon.numberOfValidPixelHits > 0) && (iMuon.numberOfMatchedStations > 1));
+        
+        passesID				= passesTrackerID;
+        break;
       }
 	}// End of 2012 era
     else {
@@ -849,6 +893,353 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
 	return (passesKinematics && passesIso && passesID);
 
 }
+
+
+bool BEANhelper::IsAnyTriggerBitFired ( const vector<string> targetTriggers, const BNtriggerCollection triggerBits) {
+
+    // check to see if you passed the trigger by looping over the bits
+  // looking for your bit
+  // and see if it is 1
+  bool passTrigger = false;
+
+  
+  for ( BNtriggerCollection::const_iterator iBit = triggerBits.begin();
+        iBit != triggerBits.end();
+        iBit ++ ){
+
+    for (vector<string>::const_iterator iTarget = targetTriggers.begin();
+         iTarget != targetTriggers.end();
+         iTarget++) {
+
+      // if this is the right name and the bit is set to one
+      if ( iBit->name.find((*iTarget)) != std::string::npos && iBit->pass==1) {
+        passTrigger = true;
+      }
+      
+    }// end for each target
+
+  }// end for each bit
+
+  return passTrigger;
+  
+}
+
+bool BEANhelper::SingleObjectMatchesAnyTrigger (double recoEta, double recoPhi, const vector<string> targetTriggers,  BNtrigobjCollection triggerObjects) {
+
+  bool matchTrigger = false;
+  
+  for ( BNtrigobjCollection::const_iterator iObj = triggerObjects.begin();
+        iObj != triggerObjects.end();
+        iObj ++ ) {
+    
+    // look for a matching name again
+    for (vector<string>::const_iterator iTarget = targetTriggers.begin();
+         iTarget != targetTriggers.end();
+         iTarget++) {
+      
+      // if this is the right name 
+      if ( iObj->filter.find((*iTarget)) != std::string::npos) {
+        double deltaR = sqrt ( ( recoEta - iObj->eta ) * ( recoEta - iObj->eta )
+                               + (recoPhi - iObj->phi) * ( recoPhi - iObj->phi)
+                               );
+
+        if (deltaR < 0.3)
+          matchTrigger = true;
+          
+      }
+      
+    }// end for each target
+
+    
+  } // end for each object
+
+
+  return matchTrigger;
+  
+  
+}
+
+
+bool BEANhelper::DoubleObjectMatchesAnyTrigger (double firstEta, double firstPhi, double secondEta, double secondPhi,
+                                                const vector<string> targetTriggers,  BNtrigobjCollection triggerObjects,
+                                                bool sumFilterResults) {
+
+  if (triggerDebug) cout << "DoubleObjectMatchesAnyTrigger:Looking for match to\nDoubleObjectMatchesAnyTrigger: input 1: ("
+                         << firstEta << ", " << firstPhi
+                         << ")\nDoubleObjectMatchesAnyTrigger: input 2: ("
+                         << secondEta << ", " << secondPhi << ")"
+                         << endl;
+
+  // This is trickier than the other case
+  // Need to make sure that you match both objects to the same name
+  // of trigger
+
+  // Define some typedefs so that you
+  // can write shorter code
+  // 
+  // typedef pair< bool, bool> pairOfBools;
+  typedef pair<string, int> trigNameAndMatchedLegs;
+  typedef vector<trigNameAndMatchedLegs> trigNameAndMatchedLegsCollection;
+
+  trigNameAndMatchedLegsCollection myMatches;
+  trigNameAndMatchedLegsCollection myCandidates;
+
+  for ( unsigned iName = 0; iName < targetTriggers.size(); iName++){
+    myMatches.push_back( trigNameAndMatchedLegs ( targetTriggers[iName], 0 ));
+    myCandidates.push_back( trigNameAndMatchedLegs ( targetTriggers[iName], 0 ));    
+  }
+  
+
+  /////////////////////////////////////////////////////////////////
+  
+  
+  for ( BNtrigobjCollection::const_iterator iObj = triggerObjects.begin();
+        iObj != triggerObjects.end();
+        iObj ++ ) {
+
+    // this is very verbose
+    //if (triggerDebug) {
+    //  cout << "DoubleObjectMatchesAnyTrigger: Found an object for filter " << iObj->filter << endl;
+    //}
+    
+    // look for a matching name again
+    unsigned numFilters = 0;
+    for (trigNameAndMatchedLegsCollection::iterator iTarget = myMatches.begin();
+         iTarget != myMatches.end();
+         iTarget++) {
+      
+      // if this is the right name 
+      if ( iObj->filter.find((iTarget->first)) != std::string::npos) {
+        myCandidates[numFilters].second++;
+        if (triggerDebug) {
+          cout << "DoubleObjectMatchesAnyTrigger: Found an object for filter "
+               << iTarget->first << endl
+               << "eta = " << iObj->eta << " phi = " << iObj->phi
+               << endl;          
+        }
+        
+        double firstDR = sqrt ( ( firstEta - iObj->eta ) * ( firstEta - iObj->eta )
+                               + (firstPhi - iObj->phi) * ( firstPhi - iObj->phi)
+                               );
+
+        if (firstDR < 0.3){
+          if (triggerDebug)
+            cout << "DoubleObjectMatchesAnyTrigger: Found a match to first object with DR = " << firstDR << endl;
+          
+          iTarget->second++;
+        }
+
+        double secondDR = sqrt ( ( secondEta - iObj->eta ) * ( secondEta - iObj->eta )
+                               + (secondPhi - iObj->phi) * ( secondPhi - iObj->phi)
+                               );
+
+        if (secondDR < 0.3){
+          if (triggerDebug)
+            cout << "DoubleObjectMatchesAnyTrigger: Found a match to second object with DR = " << secondDR << endl;
+          
+          iTarget->second++;
+        }
+          
+      }
+      numFilters++;
+    }// end for each target
+
+    
+  } // end for each object
+
+
+  bool matchedBothLegsToOneTrigger = false;
+  int totalNumFiltersFired =0;
+  // look at all the triggers whose matches you counted
+  // and see if any had >=2 matches.
+  // It is possible to have more than two matches because the trigger selects on >=2 matches
+  // In the following cases, there are could be more than 2
+  //   1. There are more than two trigger muons in the event
+  //   2. The two muons from the trigger are within a cone of 0.3, in which
+  //      case both muons match both legs
+  //
+  if (triggerDebug)
+    cout << "Done looping over objects, printing results" << endl;
+
+  int numFilters =0;
+  for (trigNameAndMatchedLegsCollection::const_iterator iTarget = myMatches.begin();
+       iTarget != myMatches.end();
+       iTarget++) {
+
+    if (triggerDebug) {
+      cout << "Filter  " << iTarget->first << " matches = "
+           << iTarget->second << endl
+           << "Candidates for filter " << myCandidates[numFilters].first
+           << " numCands = " << myCandidates[numFilters].second
+           << endl;
+
+    }
+
+    totalNumFiltersFired += iTarget->second;
+    
+    if (iTarget->second >=2 )
+      matchedBothLegsToOneTrigger = true;
+
+    numFilters++;
+  }
+
+  // this is false by default
+  // only necessary if you are doing MuEG triggers
+  if (sumFilterResults) {
+    matchedBothLegsToOneTrigger = (totalNumFiltersFired >=2);
+  }
+
+  return matchedBothLegsToOneTrigger;
+  
+  
+}
+
+
+
+
+bool BEANhelper::MuonMatchesSingleMuTrigger(const BNmuon& iMuon, const BNtriggerCollection triggerBits, const BNtrigobjCollection triggerObjects ){
+
+  // Define your target triggers
+  vector<string> singleMuNames;
+  singleMuNames.push_back("HLT_IsoMu24_eta2p1_v");
+  singleMuNames.push_back("HLT_IsoMu24_v");
+
+
+  // Now check to see if there is an HLT object
+  // that corresponds to your trigger
+
+  bool bitFired = IsAnyTriggerBitFired ( singleMuNames, triggerBits);
+
+  if (!bitFired) return false;
+
+  vector<string> singleMuFilters;
+  singleMuFilters.push_back("hltL3crIsoL1sMu16Eta2p1L1f0L2f16QL3f24QL3crIsoRhoFiltered0p15::HLT");
+  singleMuFilters.push_back("hltL3crIsoL1sMu16L1f0L2f16QL3f24QL3crIsoRhoFiltered0p15::HLT");
+  
+  bool matchTrigger = SingleObjectMatchesAnyTrigger(iMuon.eta, iMuon.phi, singleMuFilters, triggerObjects);
+  
+  return matchTrigger;
+  
+}
+
+bool BEANhelper::MuonsMatchDoubleMuTrigger(const BNmuon& iMuon, const BNmuon & jMuon, const BNtriggerCollection triggerBits, const BNtrigobjCollection triggerObjects){
+
+
+  // Define your target triggers
+  vector<string> doubleMuNames;
+  doubleMuNames.push_back("HLT_Mu17_Mu8_v");
+  doubleMuNames.push_back("HLT_Mu17_TkMu8_v");
+
+  bool bitFired = IsAnyTriggerBitFired ( doubleMuNames, triggerBits);
+
+  if (triggerDebug) cout << "MuonsMatchDoubleMuTrigger: Checking to see if trigger fired ... " << bitFired << endl;
+  
+  if (!bitFired) return false;
+
+  vector<string> doubleMuFilters;
+  doubleMuFilters.push_back("hltDiMuonGlb17Glb8DzFiltered0p2::HLT");
+  doubleMuFilters.push_back("hltDiMuonGlb17Trk8DzFiltered0p2::HLT");
+  
+
+  if (triggerDebug) cout << "MuonsMatchDoubleMuTrigger: Now checking for matches" << endl;
+  bool matchTrigger  = DoubleObjectMatchesAnyTrigger ( iMuon.eta, iMuon.phi, jMuon.eta, jMuon.phi, doubleMuFilters, triggerObjects);
+  
+
+  return matchTrigger;
+  
+}
+
+
+bool BEANhelper::ElectronMatchesSingleEleTrigger(const BNelectron& iEle, const BNtriggerCollection triggerBits, const BNtrigobjCollection triggerObjects ){
+
+  // Define your target triggers
+  vector<string> singleEleNames;
+  singleEleNames.push_back("HLT_Ele27_WP80_v");
+  //singleEleNames.push_back("HLT_IsoMu24_v");
+
+
+  // Now check to see if there is an HLT object
+  // that corresponds to your trigger
+
+  bool bitFired = IsAnyTriggerBitFired ( singleEleNames, triggerBits);
+
+  if (!bitFired) return false;
+
+  vector<string> singleEleFilters;
+  singleEleFilters.push_back("hltEle27WP80TrackIsoFilter::HLT");
+  //singleEleFilters.push_back("hltL3crIsoL1sMu16L1f0L2f16QL3f24QL3crIsoRhoFiltered0p15::HLT");
+  
+  bool matchTrigger = SingleObjectMatchesAnyTrigger(iEle.eta, iEle.phi, singleEleFilters, triggerObjects);
+  
+  return matchTrigger;
+  
+}
+
+bool BEANhelper::ElectronsMatchDoubleEleTrigger(const BNelectron& iEle, const BNelectron & jEle, const BNtriggerCollection triggerBits, const BNtrigobjCollection triggerObjects){
+
+
+  // Define your target triggers
+  vector<string> doubleEleNames;
+  doubleEleNames.push_back("HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v");
+  //doubleEleNames.push_back("");
+
+  bool bitFired = IsAnyTriggerBitFired ( doubleEleNames, triggerBits);
+
+  if(triggerDebug) cout << ": Checking to see if trigger fired ... " << bitFired << endl;
+  
+  if (!bitFired) return false;
+
+  vector<string> doubleEleFilters;
+  doubleEleFilters.push_back("hltEle17TightIdLooseIsoEle8TightIdLooseIsoTrackIsoDZ::HLT");
+  //doubleEleFilters.push_back("hltDiMuonGlb17Trk8DzFiltered0p2::HLT");
+  
+
+  if (triggerDebug) cout << ": Now checking for matches" << endl;
+  bool matchTrigger  = DoubleObjectMatchesAnyTrigger ( iEle.eta, iEle.phi, jEle.eta, jEle.phi, doubleEleFilters, triggerObjects);
+  
+
+  return matchTrigger;
+  
+}
+
+
+bool BEANhelper::MuEGMatchMuEGTrigger(const BNmuon& iMuon, const BNelectron & jEle, const BNtriggerCollection triggerBits, const BNtrigobjCollection triggerObjects){
+
+
+  // Define your target triggers
+  vector<string> muEGNames;
+  muEGNames.push_back("HLT_Mu17_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v");
+  muEGNames.push_back("HLT_Mu8_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v");
+
+  bool bitFired = IsAnyTriggerBitFired ( muEGNames, triggerBits);
+
+  if (triggerDebug) cout << ": Checking to see if trigger fired ... " << bitFired << endl;
+  
+  if (!bitFired) return false;
+
+  vector<string> muEGFilters;
+
+  // Start with the Mu8_Ele17 filters
+  muEGFilters.push_back("hltMu8Ele17CaloIdTCaloIsoVLTrkIdVLTrkIsoVLTrackIsoFilter::HLT");
+  muEGFilters.push_back("hltL1sL1Mu3p5EG12ORL1MuOpenEG12L3Filtered8::HLT");
+
+  if (triggerDebug) cout << ": Now checking for matches" << endl;
+  bool match_Mu8_Ele17  = DoubleObjectMatchesAnyTrigger ( iMuon.eta, iMuon.phi, jEle.eta, jEle.phi, muEGFilters, triggerObjects, true);
+
+  muEGFilters.clear();
+  muEGFilters.push_back("hltMu17Ele8CaloIdTCaloIsoVLTrkIdVLTrkIsoVLTrackIsoFilter::HLT");  
+  muEGFilters.push_back("hltL1Mu12EG7L3MuFiltered17::HLT");
+
+  bool match_Mu17_Ele8  = DoubleObjectMatchesAnyTrigger ( iMuon.eta, iMuon.phi, jEle.eta, jEle.phi, muEGFilters, triggerObjects, true);
+
+  if (triggerDebug) cout << ": Results Mu8_Ele17 = " << match_Mu8_Ele17 << ", results Mu17_Ele8 = " << match_Mu17_Ele8 << endl;
+  
+  return (match_Mu8_Ele17 || match_Mu17_Ele8);
+  
+}
+
+
+
 
 // Return collection with objects passing cuts
 BNmuonCollection BEANhelper::GetSelectedMuons(const BNmuonCollection& iMuons, const muonID::muonID iMuonID){
