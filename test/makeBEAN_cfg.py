@@ -163,7 +163,7 @@ electronCut            = 'et > 10. && abs(eta) < 2.5'
 electronCutPF          = 'et > 10. && abs(eta) < 2.5'
 electronCutLoosePF     = 'et > 10. && abs(eta) < 2.5'
 # Tau cut
-tauCut                 = 'pt > 5. && abs(eta) < 2.5'
+tauCut                 = 'pt > 5. && abs(eta) < 2.5 && tauID("decayModeFinding")'
 # Calo jets
 #jetCut                 = ''
 # PF jets
