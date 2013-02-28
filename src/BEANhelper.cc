@@ -529,7 +529,7 @@ BNjet BEANhelper::GetCorrectedJet(const BNjet& iJet, const sysType::sysType iSys
 
 	// Make a copy of the input jet for output and update 4-vector values
 	BNjet result = iJet;
-
+    
 	result.px	    *= jetFactor;
 	result.py	    *= jetFactor;
 	result.pz	    *= jetFactor;
@@ -538,7 +538,7 @@ BNjet BEANhelper::GetCorrectedJet(const BNjet& iJet, const sysType::sysType iSys
 	result.energy	*= jetFactor;
     result.mass     *= jetFactor;
 
-	// Update CSV value (i.e. reshape it if applicable)
+    // Update CSV value (i.e. reshape it if applicable)
 	result.btagCombinedSecVertex = GetCSVvalue(result,iSysType);
 
 	return result;
@@ -750,6 +750,46 @@ BNtauCollection BEANhelper::GetSelectedTaus(const BNtauCollection& iTaus, const 
 	BNtauCollection result;
 	for( BNtauCollection::const_iterator Tau = iTaus.begin(); Tau != iTaus.end(); ++Tau ){
 		if(IsGoodTau((*Tau), iTauID)){ result.push_back(*Tau); }
+	}
+	return result;
+}
+
+BNtau BEANhelper::GetCorrectedTau(const BNtau& iTau, const sysType::sysType iSysType){
+	CheckSetUp();
+
+	// Return original tau if this sample contains collision data
+	if(isData){ return iTau; }
+
+	// Factor by which we will scale all the 4-vector components of the tau
+	double tauFactor = 1.;
+
+	// Make appopriate correction to the components of input tau
+	switch(iSysType){
+		case sysType::TESup:	tauFactor *= (1 + 0.03); break;
+		case sysType::TESdown:	tauFactor *= (1 - 0.03); break;
+		default:				tauFactor *= 1;	 break;
+	}
+
+	// Make a copy of the input tau for output and update 4-vector values
+	BNtau result = iTau;
+    
+	result.px	    *= tauFactor;
+	result.py	    *= tauFactor;
+	result.pz	    *= tauFactor;
+	result.pt	    *= tauFactor;
+    result.et       *= tauFactor;
+	result.energy	*= tauFactor;
+    //result.mass     *= tauFactor;
+
+	return result;
+}
+
+// Return collection with corrected taus
+BNtauCollection BEANhelper::GetCorrectedTaus(const BNtauCollection& iTaus, const sysType::sysType iSysType){
+	CheckSetUp();
+	BNtauCollection result;		
+	for( BNtauCollection::const_iterator Tau = iTaus.begin(); Tau != iTaus.end(); ++Tau ){
+		result.push_back(GetCorrectedTau(*Tau, iSysType));
 	}
 	return result;
 }

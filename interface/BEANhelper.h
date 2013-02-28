@@ -77,7 +77,7 @@ typedef BNtrackCollection::const_iterator         TrackIter;
 typedef BNtriggerCollection::const_iterator       TrigIter;
 typedef BNtrigobjCollection::const_iterator       TrigObjIter;
 
-namespace sysType{		enum sysType{		NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup }; }
+namespace sysType{		enum sysType{		NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup, TESup, TESdown }; }
 namespace jetID{		enum jetID{			jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
 namespace tauID{		enum tauID{			tauVLoose, tauLoose, tauMedium, tauTight }; }
 namespace muonID{		enum muonID{		muonSide, muonLoose, muonTight, muonPtOnly, muonPtEtaOnly, muonPtEtaIsoOnly, muonPtEtaIsoTrackerOnly }; }
@@ -131,6 +131,8 @@ class BEANhelper{
 		bool IsGoodTau(const BNtau&, const tauID::tauID);
 		float GetTauSF(const BNtau&);
 		BNtauCollection GetSelectedTaus(const BNtauCollection&, const tauID::tauID);
+		BNtauCollection GetCorrectedTaus(const BNtauCollection&, const sysType::sysType iSysType=sysType::NA);
+		BNtau GetCorrectedTau(const BNtau&, const sysType::sysType iSysType=sysType::NA);
 
 		// Muons
 		bool IsSideMuon(const BNmuon&);
