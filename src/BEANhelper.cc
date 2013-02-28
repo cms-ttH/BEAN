@@ -773,13 +773,14 @@ BNtau BEANhelper::GetCorrectedTau(const BNtau& iTau, const sysType::sysType iSys
 	// Make a copy of the input tau for output and update 4-vector values
 	BNtau result = iTau;
     
-	result.px	    *= tauFactor;
-	result.py	    *= tauFactor;
-	result.pz	    *= tauFactor;
-	result.pt	    *= tauFactor;
-    result.et       *= tauFactor;
-	result.energy	*= tauFactor;
-    //result.mass     *= tauFactor;
+	result.px                *= tauFactor;
+	result.py                *= tauFactor;
+	result.pz                *= tauFactor;
+	result.pt                *= tauFactor;
+	result.et                *= tauFactor;
+	result.energy            *= tauFactor;
+	result.leadingTrackPt    *= tauFactor;
+	//result.mass            *= tauFactor;
 
 	return result;
 }
