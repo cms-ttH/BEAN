@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.2 2012/11/05 03:43:41 puigh Exp $
+// $Id: BEANmaker.cc,v 1.3 2013/02/22 15:26:42 jkolb Exp $
 //
 //
 
@@ -4390,7 +4390,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        int aId = abs(pdgId);
        bool keep = false;
        if( (status==3) ||
-	   (aId==23 || aId==24 || aId==25 || aId==6 || aId==5 || aId==4 || aId==11 || aId==13 || aId==15) ) keep = true;
+	   (aId==23 || aId==24 || aId==25 || aId==6 || aId==5 || aId==4 || aId==11 || aId==13 || aId==15 || aId==12 || aId==14 || aId==16) ) keep = true;
 
        if( !keep ) continue;
 
