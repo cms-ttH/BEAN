@@ -1788,10 +1788,16 @@ BNmcparticle BEANhelper::GetVisGenTau(const BNmcparticle& iTau, const BNmcpartic
 		}
 	}
 
+	result.mass		= tauP4.M();
 	result.energy	= tauP4.Energy();
+	result.et		= tauP4.Et();
+	result.pt		= tauP4.Pt();
 	result.px		= tauP4.Px();
 	result.py		= tauP4.Py();
 	result.pz		= tauP4.Pz();
+	result.phi		= tauP4.Phi();
+	result.eta		= tauP4.Eta();
+	result.theta	= tauP4.Theta();
 
 	return result;
 }
