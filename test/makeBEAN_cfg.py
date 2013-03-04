@@ -3,7 +3,7 @@ import copy
 import FWCore.ParameterSet.Config as cms
 
 # === Give values to some basic parameters === #
-maxEvents   = 100
+maxEvents   = -1
 reportEvery = 1000
 
 # === Python process === #
@@ -245,12 +245,11 @@ maxInputEvents = 10 # reduce for testing
 #globalTagData = 'GR_R_52_V7'
 #globalTagMC   = 'START52_V9'
 globalTagData = 'GR_R_53_V10'
-globalTagMC   = 'START53_V7F'
+globalTagMC   = 'START53_V7G'
 
 ### Output
 
 # output file
-# outputFile = 'patRefSel_muJets.root'
 outputFile = 'ttH_pat2bean_53x.root'
 
 # switch for 'TrigReport'/'TimeReport' at job end
