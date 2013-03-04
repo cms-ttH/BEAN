@@ -1819,6 +1819,76 @@ double BEANhelper::GetPUweightDown(const double iNumBX0){
 }
 
 
+// === Top Pt reweighting === //
+double BEANhelper::TopPtWeight(double topPt){
+  if( topPt<0 ) return 1;
+
+  if( topPt>714 ) topPt = 714;
+
+  double result = 1.4e-6 * topPt * topPt - 2.0e-3 * topPt + 1.2;
+  return result;
+}
+
+
+double BEANhelper::GetTopPtweight(const BNmcparticleCollection& iMCparticles){
+  string samplename = GetSampleName();
+  bool isTTJets = false;
+  if (samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll" ||
+      samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" ||
+      samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll" ||
+      samplename == "ttbar_bb" || samplename == "ttbar_cc")  isTTJets = true;
+
+  if( !isTTJets ) return 1.;
+
+  double topPt = -1;
+  for( unsigned i=0; i< iMCparticles.size(); i++ ){
+    if( iMCparticles.at(i).id==6 ){ topPt = iMCparticles.at(i).pt; break; }
+  }
+  double topPtSF = BEANhelper::TopPtWeight( topPt );
+ 
+  return topPtSF;
+}
+
+double BEANhelper::GetTopPtweightUp(const BNmcparticleCollection& iMCparticles){
+  string samplename = GetSampleName();
+  bool isTTJets = false;
+  if (samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll" ||
+      samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" ||
+      samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll" ||
+      samplename == "ttbar_bb" || samplename == "ttbar_cc")  isTTJets = true;
+
+  if( !isTTJets ) return 1.;
+
+  double topPt = -1;
+  for( unsigned i=0; i< iMCparticles.size(); i++ ){
+    if( iMCparticles.at(i).id==6 ){ topPt = iMCparticles.at(i).pt; break; }
+  }
+  double topPtSF = BEANhelper::TopPtWeight( topPt );
+
+  return 2*(topPtSF-1) + 1;
+}
+
+double BEANhelper::GetTopPtweightDown(const BNmcparticleCollection& iMCparticles){
+  string samplename = GetSampleName();
+  bool isTTJets = false;
+  if (samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll" ||
+      samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" ||
+      samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll" ||
+      samplename == "ttbar_bb" || samplename == "ttbar_cc")  isTTJets = true;
+
+  if( !isTTJets ) return 1.;
+
+  double topPt = -1;
+  for( unsigned i=0; i< iMCparticles.size(); i++ ){
+    if( iMCparticles.at(i).id==6 ){ topPt = iMCparticles.at(i).pt; break; }
+  }
+  double topPtSF = BEANhelper::TopPtWeight( topPt );
+
+  return 1.;
+}
+
+
+
 // ******************** From BEANsUtilities.h ****************** //
 double BEANhelper::getJERfactor( int returnType, double jetAbsETA, double genjetPT, double recojetPT){
 

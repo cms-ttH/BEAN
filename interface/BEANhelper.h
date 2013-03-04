@@ -182,6 +182,13 @@ class BEANhelper{
 		double GetPUweightUp(const double);
 		double GetPUweightDown(const double);
 
+		// Top PT reweighting
+		double TopPtWeight(double);
+		double GetTopPtweight(const BNmcparticleCollection&);
+		double GetTopPtweightUp(const BNmcparticleCollection&);
+		double GetTopPtweightDown(const BNmcparticleCollection&);
+
+
   // Trigger utility functions 
   bool IsAnyTriggerBitFired ( const vector<string> targetTriggers, const BNtriggerCollection triggerBits);
   
