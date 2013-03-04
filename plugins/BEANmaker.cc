@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.3 2013/02/22 15:26:42 jkolb Exp $
+// $Id: BEANmaker.cc,v 1.4 2013/03/03 17:33:55 nvallsve Exp $
 //
 //
 
@@ -2473,7 +2473,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
        //MyPfjet.Hadfrac = pfjet->energyFractionHadronic();
        MyPfjet.charge = pfjet->jetCharge();
        MyPfjet.mass = pfjet->mass();
-       //MyPfjet.area = pfjet->towersArea();
+       MyPfjet.area = pfjet->jetArea();
        MyPfjet.fHPD = pfjet->jetID().fHPD;
        MyPfjet.flavour = pfjet->partonFlavour();
        MyPfjet.Nconst = pfjet->nConstituents();
