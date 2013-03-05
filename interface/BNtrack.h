@@ -27,7 +27,6 @@ struct BNtrack
     numValidHits(c),
     isHighPurity(c),
     isGoodPtResolution(c),
-    isMatchedPF(c),
     caloEMDeltaRp3(v),
     caloHadDeltaRp3(v),
     caloEMDeltaRp4(v),
@@ -38,24 +37,6 @@ struct BNtrack
     lastHitOuterEta(v),
     lastHitOuterTheta(v),
     lastHitOuterPhi(v),
-    depTrkRp3(v),
-    depEcalRp3(v),
-    depHcalRp3(v),
-    depHoRp3(v),
-    nTracksRp3(v),
-    trackerVetoPtRp3(v),
-    emVetoEtRp3(v),
-    hadVetoEtRp3(v),     
-    hoVetoEtRp3(v),
-    depTrkRp5(v),
-    depEcalRp5(v),
-    depHcalRp5(v),
-    depHoRp5(v),
-    nTracksRp5(v),
-    trackerVetoPtRp5(v),
-    emVetoEtRp5(v),
-    hadVetoEtRp5(v),     
-    hoVetoEtRp5(v),
     nHitsMissingOuter(v),
     nHitsMissingInner(v),
     nHitsMissingMiddle(v) { }
@@ -80,7 +61,6 @@ BNtrack():
     numValidHits(-99),
     isHighPurity(-99),
     isGoodPtResolution(-99),
-    isMatchedPF(-99),
     caloEMDeltaRp3(-99),
     caloHadDeltaRp3(-99),
     caloEMDeltaRp4(-99),
@@ -91,24 +71,6 @@ BNtrack():
     lastHitOuterEta(-99),
     lastHitOuterTheta(-99),
     lastHitOuterPhi(-99),
-    depTrkRp3(-99),
-    depEcalRp3(-99),
-    depHcalRp3(-99),
-    depHoRp3(-99),
-    nTracksRp3(-99),
-    trackerVetoPtRp3(-99),
-    emVetoEtRp3(-99),
-    hadVetoEtRp3(-99),     
-    hoVetoEtRp3(-99),
-    depTrkRp5(-99),
-    depEcalRp5(-99),
-    depHcalRp5(-99),
-    depHoRp5(-99),
-    nTracksRp5(-99),
-    trackerVetoPtRp5(-99),
-    emVetoEtRp5(-99),
-    hadVetoEtRp5(-99),     
-    hoVetoEtRp5(-99),
     nHitsMissingOuter(-99),
     nHitsMissingInner(-99),
     nHitsMissingMiddle(-99) { }
@@ -130,8 +92,7 @@ BNtrack():
   int charge,
     numValidHits,
     isHighPurity,
-    isGoodPtResolution,
-    isMatchedPF;
+    isGoodPtResolution;
 
   //by hand calo calc
   double caloEMDeltaRp3;  
@@ -145,27 +106,6 @@ BNtrack():
   double lastHitOuterEta;
   double lastHitOuterTheta;  
   double lastHitOuterPhi;  
-
-  //calo calc from muon pog
-  double depTrkRp3;
-  double depEcalRp3;
-  double depHcalRp3;
-  double depHoRp3;
-  double nTracksRp3;
-  double trackerVetoPtRp3;
-  double emVetoEtRp3;
-  double hadVetoEtRp3;     
-  double hoVetoEtRp3;
-
-  double depTrkRp5;
-  double depEcalRp5;
-  double depHcalRp5;
-  double depHoRp5;
-  double nTracksRp5;
-  double trackerVetoPtRp5;
-  double emVetoEtRp5;
-  double hadVetoEtRp5;     
-  double hoVetoEtRp5;
 
   int nHitsMissingOuter;
   int nHitsMissingInner;
