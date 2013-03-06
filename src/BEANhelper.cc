@@ -936,7 +936,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
 }
 
 
-bool BEANhelper::IsAnyTriggerBitFired ( const vector<string> targetTriggers, const BNtriggerCollection triggerBits) {
+bool BEANhelper::IsAnyTriggerBitFired ( const vector<string> & targetTriggers, const BNtriggerCollection &  triggerBits) {
 
     // check to see if you passed the trigger by looping over the bits
   // looking for your bit
@@ -965,7 +965,7 @@ bool BEANhelper::IsAnyTriggerBitFired ( const vector<string> targetTriggers, con
   
 }
 
-bool BEANhelper::SingleObjectMatchesAnyTrigger (double recoEta, double recoPhi, const vector<string> targetTriggers,  BNtrigobjCollection triggerObjects) {
+bool BEANhelper::SingleObjectMatchesAnyTrigger (double recoEta, double recoPhi, const vector<string> & targetTriggers,  const BNtrigobjCollection & triggerObjects) {
 
   bool matchTrigger = false;
   
@@ -1002,7 +1002,7 @@ bool BEANhelper::SingleObjectMatchesAnyTrigger (double recoEta, double recoPhi, 
 
 
 bool BEANhelper::DoubleObjectMatchesAnyTrigger (double firstEta, double firstPhi, double secondEta, double secondPhi,
-                                                const vector<string> targetTriggers,  BNtrigobjCollection triggerObjects,
+                                                const vector<string> & targetTriggers,  const BNtrigobjCollection & triggerObjects,
                                                 bool sumFilterResults) {
 
   if (triggerDebug) cout << "DoubleObjectMatchesAnyTrigger:Looking for match to\nDoubleObjectMatchesAnyTrigger: input 1: ("
@@ -1138,7 +1138,7 @@ bool BEANhelper::DoubleObjectMatchesAnyTrigger (double firstEta, double firstPhi
 
 
 
-bool BEANhelper::MuonMatchesSingleMuTrigger(const BNmuon& iMuon, const BNtriggerCollection triggerBits, const BNtrigobjCollection triggerObjects ){
+bool BEANhelper::MuonMatchesSingleMuTrigger(const BNmuon& iMuon, const BNtriggerCollection & triggerBits, const BNtrigobjCollection & triggerObjects ){
 
   // Define your target triggers
   vector<string> singleMuNames;
@@ -1163,7 +1163,7 @@ bool BEANhelper::MuonMatchesSingleMuTrigger(const BNmuon& iMuon, const BNtrigger
   
 }
 
-bool BEANhelper::MuonsMatchDoubleMuTrigger(const BNmuon& iMuon, const BNmuon & jMuon, const BNtriggerCollection triggerBits, const BNtrigobjCollection triggerObjects){
+bool BEANhelper::MuonsMatchDoubleMuTrigger(const BNmuon& iMuon, const BNmuon & jMuon, const BNtriggerCollection & triggerBits, const BNtrigobjCollection & triggerObjects){
 
 
   // Define your target triggers
@@ -1191,7 +1191,7 @@ bool BEANhelper::MuonsMatchDoubleMuTrigger(const BNmuon& iMuon, const BNmuon & j
 }
 
 
-bool BEANhelper::ElectronMatchesSingleEleTrigger(const BNelectron& iEle, const BNtriggerCollection triggerBits, const BNtrigobjCollection triggerObjects ){
+bool BEANhelper::ElectronMatchesSingleEleTrigger(const BNelectron& iEle, const BNtriggerCollection & triggerBits, const BNtrigobjCollection & triggerObjects ){
 
   // Define your target triggers
   vector<string> singleEleNames;
@@ -1216,7 +1216,7 @@ bool BEANhelper::ElectronMatchesSingleEleTrigger(const BNelectron& iEle, const B
   
 }
 
-bool BEANhelper::ElectronsMatchDoubleEleTrigger(const BNelectron& iEle, const BNelectron & jEle, const BNtriggerCollection triggerBits, const BNtrigobjCollection triggerObjects){
+bool BEANhelper::ElectronsMatchDoubleEleTrigger(const BNelectron& iEle, const BNelectron & jEle, const BNtriggerCollection & triggerBits, const BNtrigobjCollection & triggerObjects){
 
 
   // Define your target triggers
@@ -1244,7 +1244,7 @@ bool BEANhelper::ElectronsMatchDoubleEleTrigger(const BNelectron& iEle, const BN
 }
 
 
-bool BEANhelper::MuEGMatchMuEGTrigger(const BNmuon& iMuon, const BNelectron & jEle, const BNtriggerCollection triggerBits, const BNtrigobjCollection triggerObjects){
+bool BEANhelper::MuEGMatchMuEGTrigger(const BNmuon& iMuon, const BNelectron & jEle, const BNtriggerCollection & triggerBits, const BNtrigobjCollection & triggerObjects){
 
 
   // Define your target triggers
