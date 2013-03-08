@@ -23,6 +23,7 @@ CSVscaleFactorContainer::~CSVscaleFactorContainer(){
 // Just a "table" containing a bunch of "magic numbers"
 void CSVscaleFactorContainer::SetBottomFlavorBins(vector<double>& iEtaBins, vector<double>& iPtBins){
 
+    bool newBottomSF_v2 = true;
 	bottom_scaleFactor_errors = new XYmap<CSVmultiplet<double> >(iEtaBins, iPtBins);
 	// For b and c (From btag_payload_b)
     for(unsigned int bin = 0; bin < bottom_scaleFactor_errors->size(); bin++) {
@@ -47,22 +48,42 @@ void CSVscaleFactorContainer::SetBottomFlavorBins(vector<double>& iEtaBins, vect
 	  else bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0188743, 0.0295675, 0.0364717)); //duplicate of pt > 30
 	} 
 	else if(era == "2012_53x"){
-	  if (pt > 600)      bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.0474291, 0.0717567, 0.0898199));
-	  else if (pt > 500) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.0481008, 0.0718173, 0.0769779));
-	  else if (pt > 400) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.0392831, 0.0474666, 0.0575776));
-	  else if (pt > 320) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.0386531, 0.0465748, 0.0580424));
-	  else if (pt > 260) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.0198805, 0.0248119, 0.0503182));
-	  else if (pt > 210) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.019182,  0.0216242, 0.0474663));
-	  else if (pt > 160) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.0136017, 0.0184615, 0.0295603));
-	  else if (pt > 120) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.0126209, 0.0229375, 0.031102));
-	  else if (pt > 100) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.0160836, 0.0240102, 0.0317642));
-	  else if (pt > 80)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0168479, 0.0264232, 0.0333786));
-	  else if (pt > 70)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0131145, 0.0200453, 0.024608));
-	  else if (pt > 60)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0145441, 0.0208719, 0.0303327));
-	  else if (pt > 50)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0141137, 0.0230073, 0.0342831));
-	  else if (pt > 40)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0120027, 0.0207019, 0.0263491));
-	  else if (pt > 30)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0126178, 0.0209663, 0.0266907));
-	  else bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0484285, 0.0554504, 0.0567059)); //calculated for 20 < pt < 30
+      if (newBottomSF_v2) {
+        if (pt > 600)      bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>( 0.0747965,  0.101629,   0.10906));
+        else if (pt > 500) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>( 0.0747965,  0.101629,   0.10906));
+        else if (pt > 400) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>( 0.0747965,  0.101629,   0.10906));
+        else if (pt > 320) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>( 0.0747965,  0.101629,   0.10906));
+        else if (pt > 260) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>( 0.0747965,  0.101629,   0.10906));
+        else if (pt > 210) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>( 0.0747965,  0.101629,   0.10906));
+        else if (pt > 160) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>( 0.0747965, 0.101629,   0.10906));
+        else if (pt > 120) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>( 0.0305871, 0.0420299,  0.0612941));
+        else if (pt > 100) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>( 0.0141775, 0.0172625,  0.0364341));
+        else if (pt > 80)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0109184, 0.0105367,  0.0228189));
+        else if (pt > 70)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.012204,  0.00988229, 0.0157072));
+        else if (pt > 60)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0174548, 0.0103078,  0.0145078));
+        else if (pt > 50)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0297479, 0.0128422,  0.0171366));
+        else if (pt > 40)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0524382/sqrt(2.0), 0.0209609,  0.0224664));
+        else if (pt > 30)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0889434/2.0, 0.0376163,  0.0292908));
+        else bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(              0.0889434/2.0, 0.0376163,  0.0292908)); //calculated for 20 < pt < 30
+      }
+      else {
+        if (pt > 600)      bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.0474291, 0.0717567, 0.0898199));
+        else if (pt > 500) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.0481008, 0.0718173, 0.0769779));
+        else if (pt > 400) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.0392831, 0.0474666, 0.0575776));
+        else if (pt > 320) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.0386531, 0.0465748, 0.0580424));
+        else if (pt > 260) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.0198805, 0.0248119, 0.0503182));
+        else if (pt > 210) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.019182,  0.0216242, 0.0474663));
+        else if (pt > 160) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.0136017, 0.0184615, 0.0295603));
+        else if (pt > 120) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.0126209, 0.0229375, 0.031102));
+        else if (pt > 100) bottom_scaleFactor_errors->Set(bin, CSVmultiplet<double>(0.0160836, 0.0240102, 0.0317642));
+        else if (pt > 80)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0168479, 0.0264232, 0.0333786));
+        else if (pt > 70)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0131145, 0.0200453, 0.024608));
+        else if (pt > 60)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0145441, 0.0208719, 0.0303327));
+        else if (pt > 50)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0141137, 0.0230073, 0.0342831));
+        else if (pt > 40)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0120027, 0.0207019, 0.0263491));
+        else if (pt > 30)  bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0126178, 0.0209663, 0.0266907));
+        else bottom_scaleFactor_errors->Set(bin,  CSVmultiplet<double>(0.0484285, 0.0554504, 0.0567059)); //calculated for 20 < pt < 30
+      }        
 	}
 	else { assert (era == "is "+era+", should be either 2012_52x, 2012_53x, or 2011"); }
     }// End for(unsigned int bin = 0 
@@ -72,8 +93,7 @@ void CSVscaleFactorContainer::SetBottomFlavorBins(vector<double>& iEtaBins, vect
 double CSVscaleFactorContainer::GetBottomFlavorScaleFactor(double iEta, double iPt, char iWP, double iScaleBC){
 	if(bottom_scaleFactor_errors == NULL){ cerr << "[ERROR]\t'bottom_scaleFactor_errors' has not been initialized." << endl; exit(1); }
 	double result = 0;
-    bool newBottomSF_v0 = false;
-    bool newBottomSF_v1 = true;
+    bool newBottomSF_v2 = true;
 
 	if(era == "2011" || era == "2012_52x"){
 	  switch(iWP){
@@ -100,20 +120,12 @@ double CSVscaleFactorContainer::GetBottomFlavorScaleFactor(double iEta, double i
 	else if(era == "2012_53x"){
 	  switch(iWP){
 		case 'L':
-          if (newBottomSF_v0) {
-            if (iPt > 300)     { result = 1.01129-4.50363e-10*pow(fabs(300+47.5028),3.52651);
+          if (newBottomSF_v2) {
+            if (iPt > 240)     { result = 0.993424 + (240<88.5294)*(-0.158233*pow(0.0107664*(240-88.5294),3)) + (240>88.5294)*(-0.0584069*pow(0.0107664*(240-88.5294),2));
               result += (2 * iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetLoose()))); }
-            else if (iPt < 30) { result = 1.01129-4.50363e-10*pow(fabs(30+47.5028),3.52651);
+            else if (iPt < 30) { result = 0.993424 + (30<88.5294)*(-0.158233*pow(0.0107664*(30-88.5294),3)) + (30>88.5294)*(-0.0584069*pow(0.0107664*(30-88.5294),2));
               result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetLoose()))); }
-            else               { result = 1.01129-4.50363e-10*pow(fabs(iPt+47.5028),3.52651);
-              result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetLoose()))); }
-          }
-          else if (newBottomSF_v1) {
-            if (iPt > 240)     { result = 0.994401 + (240<117.72)*(-0.00820274*pow(0.0186967*(240-117.72),3)) + (240>117.72)*(-0.0339154*pow(0.0186967*(240-117.72),2));
-              result += (2 * iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetLoose()))); }
-            else if (iPt < 30) { result = 0.994401 + (30<117.72)*(-0.00820274*pow(0.0186967*(30-117.72),3)) + (30>117.72)*(-0.0339154*pow(0.0186967*(30-117.72),2));
-              result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetLoose()))); }
-            else               { result = 0.994401 + (iPt<117.72)*(-0.00820274*pow(0.0186967*(iPt-117.72),3)) + (iPt>117.72)*(-0.0339154*pow(0.0186967*(iPt-117.72),2));
+            else               { result = 0.993424 + (iPt<88.5294)*(-0.158233*pow(0.0107664*(iPt-88.5294),3)) + (iPt>88.5294)*(-0.0584069*pow(0.0107664*(iPt-88.5294),2));
               result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetLoose()))); }
           }
           else {
@@ -124,20 +136,12 @@ double CSVscaleFactorContainer::GetBottomFlavorScaleFactor(double iEta, double i
           }
           break;
 		case 'M':
-          if (newBottomSF_v0) {
-            if (iPt > 300)     { result = 0.971175-1.48871e-06*pow(fabs(300-36.4402),2.20671);
+          if (newBottomSF_v2) {
+            if (iPt > 240)     { result = 0.964662 + (240<80.0)*(-0.224599*pow(0.010822*(240-80.0),3)) + (240>80.0)*(-0.0726237*pow(0.010822*(240-80.0),2));
               result += (2 * iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetMedium()))); }
-            else if (iPt < 30) { result = 0.971175-1.48871e-06*pow(fabs(30-36.4402),2.20671);
+            else if (iPt < 30) { result = 0.964662 + (30<80.0)*(-0.224599*pow(0.010822*(30-80.0),3)) + (30>80.0)*(-0.0726237*pow(0.010822*(30-80.0),2));
               result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetMedium()))); }
-            else               { result = 0.971175-1.48871e-06*pow(fabs(iPt-36.4402),2.20671);
-              result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetMedium()))); }
-          }
-          else if (newBottomSF_v1) {
-            if (iPt > 240)     { result = 0.970772 + (240<117.72)*(-0.0184160*pow(0.0103070*(240-117.72),3)) + (240>117.72)*(-0.0864376*pow(0.0103070*(240-117.72),2));
-              result += (2 * iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetMedium()))); }
-            else if (iPt < 30) { result = 0.970772 + (30<117.72)*(-0.0184160*pow(0.0103070*(30-117.72),3)) + (30>117.72)*(-0.0864376*pow(0.0103070*(30-117.72),2));
-              result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetMedium()))); }
-            else               { result = 0.970772 + (iPt<117.72)*(-0.0184160*pow(0.0103070*(iPt-117.72),3)) + (iPt>117.72)*(-0.0864376*pow(0.0103070*(iPt-117.72),2));
+            else               { result = 0.964662 + (iPt<80.0)*(-0.224599*pow(0.010822*(iPt-80.0),3)) + (iPt>80.0)*(-0.0726237*pow(0.010822*(iPt-80.0),2));
               result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetMedium()))); } 
           }
           else {
@@ -148,12 +152,12 @@ double CSVscaleFactorContainer::GetBottomFlavorScaleFactor(double iEta, double i
           }
           break;
 		case 'T':
-          if (newBottomSF_v0 || newBottomSF_v1) {
-            if (iPt > 300)     { result = 0.968551-2.90523e-06*pow(fabs(300-1.73201),2.0);
+          if (newBottomSF_v2) {
+            if (iPt > 300)     { result = 0.960317-0.00000872437*pow(fabs(300-65.5981),2.0);
               result += (2 * iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetTight()))); }
-            else if (iPt < 30) { result = 0.968551-2.90523e-06*pow(fabs(30-1.73201),2.0); 
+            else if (iPt < 30) { result = 0.960317-0.00000872437*pow(fabs(30-65.5981),2.0); 
               result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetTight()))); }
-            else               { result = 0.968551-2.90523e-06*pow(fabs(iPt-1.73201),2.0); 
+            else               { result = 0.960317-0.00000872437*pow(fabs(iPt-65.5981),2.0); 
               result += (iScaleBC * (*(bottom_scaleFactor_errors->GetSafeObject(iEta, iPt)->GetTight()))); }
           }
           else {
