@@ -34,6 +34,7 @@
 //Headers for the data items
 #include "ProductArea/BNcollections/interface/BNelectron.h"
 #include "ProductArea/BNcollections/interface/BNevent.h"
+#include "ProductArea/BNcollections/interface/BNgenjet.h"
 #include "ProductArea/BNcollections/interface/BNjet.h"
 #include "ProductArea/BNcollections/interface/BNtau.h"
 #include "ProductArea/BNcollections/interface/BNmcparticle.h"
@@ -100,6 +101,10 @@ class BEANhelper{
 
 		template <typename BNobject> void PrintInfo(const BNobject&);
 		template <typename BNobject> BNmcparticle GetMatchedMCparticle(const BNmcparticleCollection&, const BNobject&, const double);
+		template <typename BNobject> BNgenjet GetMatchedGenjet(const BNgenjetCollection&, const BNobject&, const double);
+		template <typename BNobject> BNmcparticle GetMatchedGentau(const BNmcparticleCollection&, const BNobject&, const double);
+		template <typename BNobject> BNmcparticle GetMatchedVisGentau(const BNmcparticleCollection&, const BNobject&, const double);
+		template <typename BNobject> BNtau GetMatchedTau(const BNtauCollection&, const BNobject&, const double);
 
 		// Union, intersection, difference
 		template <typename BNcollection> BNcollection GetSortedByPt(const BNcollection&);
@@ -304,6 +309,53 @@ template <typename BNobject> BNmcparticle BEANhelper::GetMatchedMCparticle(const
 	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
         double thisDeltaR = deltaR(MCparticle->eta, MCparticle->phi, iObject.eta, iObject.phi);	
 		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*MCparticle); }
+        minDeltaR = std::min(minDeltaR,thisDeltaR);
+	}
+	return result;
+}
+
+template <typename BNobject> BNgenjet BEANhelper::GetMatchedGenjet(const BNgenjetCollection& iGenjets, const BNobject& iObject, const double iMaxDeltaR){
+	BNgenjet result;
+	double minDeltaR = 999;
+	for( BNgenjetCollection::const_iterator Genjet = iGenjets.begin(); Genjet != iGenjets.end(); ++Genjet){
+        double thisDeltaR = deltaR(Genjet->eta, Genjet->phi, iObject.eta, iObject.phi);	
+		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*Genjet); }
+        minDeltaR = std::min(minDeltaR,thisDeltaR);
+	}
+	return result;
+}
+
+template <typename BNobject> BNmcparticle BEANhelper::GetMatchedGentau(const BNmcparticleCollection& iMCparticles, const BNobject& iObject, const double iMaxDeltaR){
+	BNmcparticle result;
+	double minDeltaR = 999;
+	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle){
+		if(abs(MCparticle->id) != 15){ continue; }
+        double thisDeltaR = deltaR(MCparticle->eta, MCparticle->phi, iObject.eta, iObject.phi);	
+		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*MCparticle); }
+        minDeltaR = std::min(minDeltaR,thisDeltaR);
+	}
+	return result;
+}
+
+template <typename BNobject> BNmcparticle BEANhelper::GetMatchedVisGentau(const BNmcparticleCollection& iMCparticles, const BNobject& iObject, const double iMaxDeltaR){
+	BNmcparticle result;
+	double minDeltaR = 999;
+	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle){
+		if(abs(MCparticle->id) != 15){ continue; }
+		BNmcparticle visGenTau = GetVisGenTau(*MCparticle, iMCparticles);
+        double thisDeltaR = deltaR(visGenTau.eta, visGenTau.phi, iObject.eta, iObject.phi);	
+		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = visGenTau; }
+        minDeltaR = std::min(minDeltaR,thisDeltaR);
+	}
+	return result;
+}
+
+template <typename BNobject> BNtau BEANhelper::GetMatchedTau(const BNtauCollection& iTaus, const BNobject& iObject, const double iMaxDeltaR){
+	BNtau result;
+	double minDeltaR = 999;
+	for( BNtauCollection::const_iterator Tau = iTaus.begin(); Tau != iTaus.end(); ++Tau){
+        double thisDeltaR = deltaR(Tau->eta, Tau->phi, iObject.eta, iObject.phi);	
+		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*Tau); }
         minDeltaR = std::min(minDeltaR,thisDeltaR);
 	}
 	return result;
