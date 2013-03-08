@@ -1391,12 +1391,12 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 		bool id						= ( passMVAId && d02 && dZ && notConv );
 
 		if(iElectronID==electronID::electronSide){			return (passMVAId && d04 && notConv); }
-		else if(iElectronID==electronID::electronLoose){  	return (passMVAId && d04 && notConv); }
-		else if(iElectronID==electronID::electronTight){	return (id && no_exp_inner_trkr_hits);}
-        else if ( iElectronID == electronID::electronTightPlusTrigPresel ){
-          return (id && no_exp_inner_trkr_hits && myTrigPresel);
-        } else if ( iElectronID == electronID::electronLoosePlusTrigPresel ){
-          return (passMVAId && d04 && notConv && myTrigPresel);
+		else if(iElectronID==electronID::electronLoose){  	return (passMVAId && no_exp_inner_trkr_hits && d04 && notConv && myTrigPresel); }
+		else if(iElectronID==electronID::electronTight){	return (id && no_exp_inner_trkr_hits && myTrigPresel);}
+        else if ( iElectronID == electronID::electronTightMinusTrigPresel ){
+          return (id && no_exp_inner_trkr_hits);
+        } else if ( iElectronID == electronID::electronLooseMinusTrigPresel ){
+          return (passMVAId && no_exp_inner_trkr_hits && d04 && notConv);
         }
 	}
     else {
@@ -1450,14 +1450,14 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
         break;
         
       case electronID::electronLoose:
-      case electronID::electronLoosePlusTrigPresel:
+      case electronID::electronLooseMinusTrigPresel:
         passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.eta) <= maxLooseElectronAbsEta) && (!inCrack));
         passesIso			= (GetElectronRelIso(iElectron) < 0.200);
         passesID			= GetElectronIDresult(iElectron, iElectronID);
         break;
 
       case electronID::electronTight:
-      case electronID::electronTightPlusTrigPresel:
+      case electronID::electronTightMinusTrigPresel:
         passesKinematics	= ((iElectron.pt >= minTightElectronPt) && (fabs(iElectron.eta) <= maxTightElectronAbsEta) && (!inCrack));
         passesIso			= (GetElectronRelIso(iElectron) < 0.100);
         passesID			= GetElectronIDresult(iElectron, iElectronID);
@@ -1473,14 +1473,14 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
         break;
         
       case electronID::electronLoose:
-      case electronID::electronLoosePlusTrigPresel:
+      case electronID::electronLooseMinusTrigPresel:
         passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.eta) <= maxLooseElectronAbsEta) && (!inCrack));
         passesIso			= (GetElectronRelIso(iElectron) < 0.200);
         passesID			= GetElectronIDresult(iElectron, iElectronID);
         break;
         
       case electronID::electronTight:
-      case electronID::electronTightPlusTrigPresel:
+      case electronID::electronTightMinusTrigPresel:
         passesKinematics	= ((iElectron.pt >= minTightElectronPt) && (fabs(iElectron.eta) <= maxTightElectronAbsEta) && (!inCrack));
         passesIso			= (GetElectronRelIso(iElectron) < 0.100);
         passesID			= GetElectronIDresult(iElectron, iElectronID);
@@ -1909,11 +1909,11 @@ double BEANhelper::GetTopPtweightDown(const BNmcparticleCollection& iMCparticles
 
   if( !isTTJets ) return 1.;
 
-  double topPt = -1;
-  for( unsigned i=0; i< iMCparticles.size(); i++ ){
-    if( iMCparticles.at(i).id==6 ){ topPt = iMCparticles.at(i).pt; break; }
-  }
-  double topPtSF = BEANhelper::TopPtWeight( topPt );
+//   double topPt = -1;
+//   for( unsigned i=0; i< iMCparticles.size(); i++ ){
+//     if( iMCparticles.at(i).id==6 ){ topPt = iMCparticles.at(i).pt; break; }
+//   }
+//   double topPtSF = BEANhelper::TopPtWeight( topPt );
 
   return 1.;
 }

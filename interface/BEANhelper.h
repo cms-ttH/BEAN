@@ -82,7 +82,7 @@ namespace sysType{		enum sysType{		NA, JERup, JERdown, JESup, JESdown, hfSFup, h
 namespace jetID{		enum jetID{			jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
 namespace tauID{		enum tauID{			tauVLoose, tauLoose, tauMedium, tauTight }; }
 namespace muonID{		enum muonID{		muonSide, muonLoose, muonTight, muonPtOnly, muonPtEtaOnly, muonPtEtaIsoOnly, muonPtEtaIsoTrackerOnly }; }
-namespace electronID{	enum electronID{	electronSide, electronLoose, electronTight, electronTightPlusTrigPresel, electronLoosePlusTrigPresel }; }
+namespace electronID{	enum electronID{	electronSide, electronLoose, electronTight, electronTightMinusTrigPresel, electronLooseMinusTrigPresel }; }
 
 using namespace std;
 
