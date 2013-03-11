@@ -1854,9 +1854,11 @@ double BEANhelper::GetPUweightDown(const double iNumBX0){
 double BEANhelper::TopPtWeight(double topPt){
   if( topPt<0 ) return 1;
 
-  if( topPt>714 ) topPt = 714;
+  double p0 = 1.18246e+00;
+  double p1 = 4.63312e+02;
+  double p2 = 2.10061e-06;
 
-  double result = 1.4e-6 * topPt * topPt - 2.0e-3 * topPt + 1.2;
+  double result = p0 + p2 * topPt * ( topPt - 2 * p1 );
   return result;
 }
 
