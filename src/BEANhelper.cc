@@ -718,20 +718,25 @@ bool BEANhelper::IsGoodTau(const BNtau& iTau, const tauID::tauID iTauID){
 
 	// Check if this muon is good enough
 	switch(iTauID){
-		case tauID::tauVLoose:
-			passesKinematics		= (iTau.pt >= 5) && (fabs(iTau.eta) <= 2.1);
+		case tauID::tauNonIso:
+			passesKinematics		= (iTau.pt >= 20) && (fabs(iTau.eta) <= 2.1);
 			passesID				= (iTau.leadingTrackPt >= 5) && (iTau.HPSdecayModeFinding > 0) && (iTau.HPSagainstElectronLoose > 0) && (iTau.HPSagainstMuonLoose > 0);
 			passesIso				= true;
 			break;
-		case tauID::tauLoose:
+		case tauID::tauVLoose:
 			passesKinematics		= (iTau.pt >= 20) && (fabs(iTau.eta) <= 2.1);
 			passesID				= (iTau.leadingTrackPt >= 5) && (iTau.HPSdecayModeFinding > 0) && (iTau.HPSagainstElectronLoose > 0) && (iTau.HPSagainstMuonLoose > 0);
 			passesIso				= (iTau.HPSbyVLooseCombinedIsolationDeltaBetaCorr > 0);
 			break;
+		case tauID::tauLoose:
+			passesKinematics		= (iTau.pt >= 20) && (fabs(iTau.eta) <= 2.1);
+			passesID				= (iTau.leadingTrackPt >= 5) && (iTau.HPSdecayModeFinding > 0) && (iTau.HPSagainstElectronLoose > 0) && (iTau.HPSagainstMuonLoose > 0);
+			passesIso				= (iTau.HPSbyLooseCombinedIsolationDeltaBetaCorr > 0);
+			break;
 		case tauID::tauMedium:
 			passesKinematics		= (iTau.pt >= 20) && (fabs(iTau.eta) <= 2.1);
 			passesID				= (iTau.leadingTrackPt >= 5) && (iTau.HPSdecayModeFinding > 0) && (iTau.HPSagainstElectronTight > 0) && (iTau.HPSagainstMuonTight > 0);
-			passesIso				= (iTau.HPSbyLooseCombinedIsolationDeltaBetaCorr > 0);
+			passesIso				= (iTau.HPSbyMediumCombinedIsolationDeltaBetaCorr > 0);
 			break;
 		case tauID::tauTight:
 			passesKinematics		= (iTau.pt >= 20) && (fabs(iTau.eta) <= 2.1);
@@ -1831,6 +1836,36 @@ BNmcparticle BEANhelper::GetVisGenTau(const BNmcparticle& iTau, const BNmcpartic
 	result.theta	= tauP4.Theta();
 
 	return result;
+}
+
+// Is this event kept by tautaulepton analysis?
+bool BEANhelper::IsTauTauLeptonEvent(const BNtauCollection& iTaus, const BNjetCollection& iJets, const BNelectronCollection& iElectrons, const BNmuonCollection& iMuons, const sysType::sysType iSysType){
+
+	// B-jets: veto out events with 3 or more CSVM-tags
+	BNjetCollection correctedJets				= GetCorrectedJets(iJets, iSysType);
+	BNjetCollection selectedCorrectedCSVMJets	= GetSelectedJets(correctedJets, 30, 2.4, jetID::jetLoose, 'M');
+	if(selectedCorrectedCSVMJets.size() >= 3){ return false; }
+
+	// Leptons: Select events with exactly one 'tight' lepton and zero 'exclusively loose' leptons
+	BNelectronCollection looseElectrons		= GetSelectedElectrons(iElectrons, electronID::electronLoose);
+	BNelectronCollection tightElectrons		= GetSelectedElectrons(iElectrons, electronID::electronTight);
+	//BNelectronCollection exLooseElectrons	= GetDifference(looseElectrons, tightElectrons);
+	BNmuonCollection looseMuons				= GetSelectedMuons(iMuons, muonID::muonLoose);
+	BNmuonCollection tightMuons				= GetSelectedMuons(iMuons, muonID::muonTight);
+	//BNmuonCollection exLooseMuons			= GetDifference(looseMuons, tightMuons);
+	if(tightMuons.size() + tightElectrons.size() != 1){ return false; }
+	if(looseMuons.size() + looseElectrons.size() != 1){ return false; } // Note 'loose' includes 'tight'
+
+	// Taus: Clean taus which are also reconstructed as leptons (loose, i.e. exLoose + tight)
+	BNtauCollection correctedTaus	= GetCorrectedTaus(iTaus, iSysType);
+	BNtauCollection muonlessTaus	= GetDifference(correctedTaus, looseMuons, 0.25);
+	BNtauCollection leptonlessTaus	= GetDifference(muonlessTaus, looseElectrons, 0.25);
+	BNtauCollection nonIsoTaus		= GetSelectedTaus(leptonlessTaus, tauID::tauNonIso);
+	BNtauCollection vlooseTaus		= GetSelectedTaus(nonIsoTaus, tauID::tauVLoose);
+	if(nonIsoTaus.size() < 2){ return false; }
+	if(vlooseTaus.size() < 1){ return false; }
+		
+	return true;
 }
 
 // === PU reweighing === //

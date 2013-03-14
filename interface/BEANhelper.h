@@ -80,15 +80,13 @@ typedef BNtrigobjCollection::const_iterator       TrigObjIter;
 
 namespace sysType{		enum sysType{		NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup, TESup, TESdown }; }
 namespace jetID{		enum jetID{			jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
-namespace tauID{		enum tauID{			tauVLoose, tauLoose, tauMedium, tauTight }; }
+namespace tauID{		enum tauID{			tauNonIso, tauVLoose, tauLoose, tauMedium, tauTight }; }
 namespace muonID{		enum muonID{		muonSide, muonLoose, muonTight, muonPtOnly, muonPtEtaOnly, muonPtEtaIsoOnly, muonPtEtaIsoTrackerOnly }; }
 namespace electronID{	enum electronID{	electronSide, electronLoose, electronTight, electronTightMinusTrigPresel, electronLooseMinusTrigPresel }; }
 
 using namespace std;
 
 class BEANhelper{
-	public:
-
 
 	// === Functions === //
 	public: 
@@ -112,6 +110,7 @@ class BEANhelper{
 		template <typename BNcollection> BNcollection GetIntersection(const BNcollection&, const BNcollection&);
 		template <typename BNcollection> BNcollection GetDifference(const BNcollection&, const BNcollection&);
 		template <typename BNcollection> BNcollection GetSymmetricDifference(const BNcollection&, const BNcollection&);
+		template <typename BNcollection1, typename BNcollection2> BNcollection1 GetDifference(const BNcollection1&, const BNcollection2&, const double);
 		template <typename BNcollection> BNcollection GetUnionUnsorted(const BNcollection&, const BNcollection&);
 
 		// Jets and MET
@@ -138,6 +137,7 @@ class BEANhelper{
 		BNtauCollection GetSelectedTaus(const BNtauCollection&, const tauID::tauID);
 		BNtauCollection GetCorrectedTaus(const BNtauCollection&, const sysType::sysType iSysType=sysType::NA);
 		BNtau GetCorrectedTau(const BNtau&, const sysType::sysType iSysType=sysType::NA);
+		bool IsTauTauLeptonEvent(const BNtauCollection&, const BNjetCollection&, const BNelectronCollection&, const BNmuonCollection&, const sysType::sysType iSysType=sysType::NA);
 
 		// Muons
 		bool IsSideMuon(const BNmuon&);
@@ -535,6 +535,36 @@ template <typename BNcollection> BNcollection BEANhelper::GetDifference(const BN
 // === Return the symmetric difference of the two input collections, sorted by descending pT === //
 template <typename BNcollection> BNcollection BEANhelper::GetSymmetricDifference(const BNcollection& iBNcollection1, const BNcollection& iBNcollection2){
 	return GetUnion(GetDifference(iBNcollection1, iBNcollection2), GetDifference(iBNcollection2, iBNcollection1));
+}
+
+// === Return the difference of the two input collections of different type, sorted by descending pT === //
+template <typename BNcollection1, typename BNcollection2> BNcollection1 BEANhelper::GetDifference(const BNcollection1& iBNcollection1, const BNcollection2& iBNcollection2, const double iDeltaR){
+	// Start off with an empty collection
+	BNcollection1 result;
+
+	// Check to see what objects in the first collection need to be added, and do so
+	for(typename BNcollection1::const_iterator Object1 = iBNcollection1.begin(); Object1 != iBNcollection1.end(); ++Object1 ){
+
+		// Look for Object1 in the second collection
+		bool presentInSecondCollection = false;
+		for(typename BNcollection2::const_iterator Object2 = iBNcollection2.begin(); Object2 != iBNcollection2.end(); ++Object2 ){
+
+			// If two objects match in deltaR, check that they have virtually the same momentum. Throw fatal error
+			// if we get two matching objects with different momenta, as this probably mean that we're mixing corrected and uncorrected
+			// input collections
+			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < iDeltaR){
+				presentInSecondCollection = true;
+				break;
+			}
+		}
+
+		// If no match found, add it!
+		if(!presentInSecondCollection){ result.push_back(*Object1); }
+
+	}
+
+	// Sort by descending pT
+	return GetSortedByPt(result);
 }
 
 // === Print basic object info === //
