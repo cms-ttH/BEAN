@@ -1391,7 +1391,20 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 		else if(iElectronID==electronID::electronLoose){    return true; }
 		else if(iElectronID==electronID::electronTight){	return id; }
 	}
-    else if(era=="2012_52x" || era=="2012_53x"){
+    else if(era=="2012_52x"){
+		bool notConv				= ( iElectron.passConvVeto );
+		bool id						= ( passMVAId && d02 && dZ && notConv );
+
+		if(iElectronID==electronID::electronSide){			return (passMVAId && d04 && notConv); }
+		else if(iElectronID==electronID::electronLoose){  	return (passMVAId && d04 && notConv && myTrigPresel); }
+		else if(iElectronID==electronID::electronTight){	return (id && myTrigPresel);}
+        else if ( iElectronID == electronID::electronTightMinusTrigPresel ){
+          return id;
+        } else if ( iElectronID == electronID::electronLooseMinusTrigPresel ){
+          return (passMVAId && d04 && notConv);
+        }
+	}
+    else if(era=="2012_53x"){
 		bool notConv				= ( iElectron.passConvVeto );
 		bool id						= ( passMVAId && d02 && dZ && notConv );
 
@@ -1403,7 +1416,7 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
         } else if ( iElectronID == electronID::electronLooseMinusTrigPresel ){
           return (passMVAId && no_exp_inner_trkr_hits && d04 && notConv);
         }
-	}
+	}    
     else {
       assert (era == "either 2012_52x, 2012_53x, or 2011");
     }
