@@ -434,7 +434,7 @@ string BEANhelper::GetSampleName(){
 			else if (era == "2012_52x"){	samplename = "ttH120_FullSim";	}
 			else{	cout << "Era set to '" << era << "'" << endl; assert (era == "either 2012_52x or 2012_53x");	}
 		}else if ( sampleNumber>=7100 && sampleNumber<=7300 && era == "2012_53x" ){
-			samplename = "ttH120_tautau";
+			samplename = "ttH120_FullSim";
 		}else{ cout << "Sample number set to '" << sampleNumber << "'" << endl; assert (samplename == "No good sampleNumber found for 2012_52x or 2012_53x"); }
 
 	}else if (era == "2011") {
