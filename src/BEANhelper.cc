@@ -1906,6 +1906,8 @@ double BEANhelper::TopPtWeight(double topPt){
   double p1 = 4.63312e+02;
   double p2 = 2.10061e-06;
 
+  if( topPt>p1 ) topPt = p1;
+
   double result = p0 + p2 * topPt * ( topPt - 2 * p1 );
   return result;
 }
