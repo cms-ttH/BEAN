@@ -83,6 +83,9 @@ namespace jetID{		enum jetID{			jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
 namespace tauID{		enum tauID{			tauNonIso, tauVLoose, tauLoose, tauMedium, tauTight }; }
 namespace muonID{		enum muonID{		muonSide, muonLoose, muonTight, muonPtOnly, muonPtEtaOnly, muonPtEtaIsoOnly, muonPtEtaIsoTrackerOnly }; }
 namespace electronID{	enum electronID{	electronSide, electronLoose, electronTight, electronTightMinusTrigPresel, electronLooseMinusTrigPresel }; }
+namespace hdecayType{	enum hdecayType{ hbb, hww, hzz, htt, hvv }; }
+
+
 
 using namespace std;
 
@@ -179,9 +182,11 @@ class BEANhelper{
 		BNmcparticleCollection	GetGenTaus(const BNmcparticleCollection&);
 		BNmcparticleCollection	GetHadronicGenTaus(const BNmcparticleCollection&);
 		BNmcparticle			GetVisGenTau(const BNmcparticle&, const BNmcparticleCollection&);
-        bool                    ttPlusHeavyKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);
-        unsigned int            GetNumExtraPartons(const BNmcparticleCollection&);
-  
+		bool                    ttPlusHeavyKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);
+		unsigned int            GetNumExtraPartons(const BNmcparticleCollection&);
+ 		hdecayType::hdecayType  GetHdecayType(const BNmcparticleCollection&);
+		bool                    keepHdecayType(const BNmcparticleCollection&, const hdecayType::hdecayType);
+
 		// PU reweighing
 		double GetPUweight(const double);
 		double GetPUweightUp(const double);
@@ -193,6 +198,9 @@ class BEANhelper{
 		double GetTopPtweightUp(const BNmcparticleCollection&);
 		double GetTopPtweightDown(const BNmcparticleCollection&);
 
+		// Q^2 systematic
+		double GetQ2ScaleUp(const BNevent&);
+		double GetQ2ScaleDown(const BNevent&);
 
   // Trigger utility functions 
   bool IsAnyTriggerBitFired ( const vector<string> & targetTriggers, const BNtriggerCollection & triggerBits);
