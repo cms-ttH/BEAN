@@ -1750,6 +1750,57 @@ unsigned int BEANhelper::GetNumExtraPartons(const BNmcparticleCollection& iMCpar
 
 }
 
+
+hdecayType::hdecayType BEANhelper::GetHdecayType(const BNmcparticleCollection& iMCparticles){
+
+  int numH=0;
+  int daughter0id = -99, daughter1id = -99;
+  for( unsigned i=0; i< iMCparticles.size(); i++ ){
+    int id = iMCparticles.at(i).id;
+    int status = iMCparticles.at(i).status;
+    if( id!=25 || status!=3 ) continue;
+
+    numH++;
+
+    daughter0id = iMCparticles.at(i).daughter0Id;
+    daughter1id = iMCparticles.at(i).daughter1Id;
+  }
+
+  if( numH!=1 ) std::cout << "  Expected to find 1 Higgs and found " << numH << " Higg(es) " << std::endl;
+
+  daughter0id = abs(daughter0id);
+  daughter1id = abs(daughter1id);
+
+  hdecayType::hdecayType decayType = hdecayType::hvv;
+  if( daughter0id==24 && daughter1id==24 )      decayType = hdecayType::hww;
+  else if( daughter0id==23 && daughter1id==23 ) decayType = hdecayType::hzz;
+  else if( (daughter0id==5 && daughter1id==5) ||
+	   (daughter0id==4 && daughter1id==4))  decayType = hdecayType::hbb;
+  else if( daughter0id==3  && daughter1id==3  ) decayType = hdecayType::hbb;
+  else if( daughter0id==2  && daughter1id==2  ) decayType = hdecayType::hbb;
+  else if( daughter0id==1  && daughter1id==1  ) decayType = hdecayType::hbb;
+  else if( daughter0id==11 && daughter1id==11 ) decayType = hdecayType::htt;
+  else if( daughter0id==13 && daughter1id==13 ) decayType = hdecayType::htt;
+  else if( daughter0id==15 && daughter1id==15 ) decayType = hdecayType::htt;
+  else if( (daughter0id==23 && daughter1id==22) || 
+	   (daughter1id==23 && daughter0id==22) ||
+	   (daughter1id==22 && daughter0id==22) ||
+	   (daughter1id==21 && daughter0id==21)) decayType = hdecayType::hvv;
+  else{
+    std::cout << "\t UNCLASSIFIED EVENT !! daughter0id = " << daughter0id << ",\t daughter1id = " << daughter1id << std::endl;
+  }
+
+  return decayType;
+}
+
+bool BEANhelper::keepHdecayType(const BNmcparticleCollection& iMCparticles, const hdecayType::hdecayType targetType){
+
+  hdecayType::hdecayType eventType = BEANhelper::GetHdecayType( iMCparticles );
+  bool keepEvent = ( targetType==eventType );
+  return keepEvent;
+}
+
+
 // (Sort of) draws a feynman diagram with the particle id's of the particle itself, daughters, mothers and grandmothers
 void BEANhelper::DrawFeynman(const BNmcparticle& iMCparticle){
 
@@ -1958,16 +2009,49 @@ double BEANhelper::GetTopPtweightDown(const BNmcparticleCollection& iMCparticles
       samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" ||
       samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll" ||
       samplename == "ttbar_bb" || samplename == "ttbar_cc")  isTTJets = true;
+  if( !isTTJets ) return 1.;
+
+  return 1.;
+}
+
+
+/*
+Function to get the Q^2 scale weight
+
+For the scale systematics samples, those should be normalized to the same expected yield as the nominal ttbar sample (before any cuts), 
+e.g. cross section x integrated luminosity / number generated  
+
+The functions Q2ScaleUpWgt and Q2ScaleDownWgt have an average weight that is different than 1.0.  That is, they would change the expected yield of these scale samples.  These numbers, 1.402 and 0.683, correct the systematics samples so that they have the same MC expectation as the nominal ttbar sample without any cuts.
+
+The numbers above were derived running on the ttbar samples and adding up these weights (up and down), and taking the inverse.  This was done without placing any cuts whatsoever on the ttbar samples.  Running on the semi-leptonic, fully-hadronic, and fully-leptonic ttbar samples produce consistent numbers, so the scale factors above were derived running over each of these samples.
+
+Another thing I want to make sure is clear: the Q^2 scale shape uncertainty (using the weights in the BEANs) is only applicable for ttbar samples.  Another procedure or a dedicated sample would be needed to get the systematics for W and Z.  For now, we apply a rate systematic for that uncertainty (it's already included in the datacards), because these are such small uncertainties for most of our analyses, but that may change in the future.
+*/
+
+double BEANhelper::GetQ2ScaleUp(const BNevent& event){
+  string samplename = GetSampleName();
+  bool isTTJets = false;
+  if (samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll" ||
+      samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" ||
+      samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll" ||
+      samplename == "ttbar_bb" || samplename == "ttbar_cc")  isTTJets = true;
 
   if( !isTTJets ) return 1.;
 
-//   double topPt = -1;
-//   for( unsigned i=0; i< iMCparticles.size(); i++ ){
-//     if( iMCparticles.at(i).id==6 ){ topPt = iMCparticles.at(i).pt; break; }
-//   }
-//   double topPtSF = BEANhelper::TopPtWeight( topPt );
+  return 1.402 * event.Q2ScaleUpWgt;
+}
 
-  return 1.;
+double BEANhelper::GetQ2ScaleDown(const BNevent& event){
+  string samplename = GetSampleName();
+  bool isTTJets = false;
+  if (samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll" ||
+      samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" ||
+      samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll" ||
+      samplename == "ttbar_bb" || samplename == "ttbar_cc")  isTTJets = true;
+
+  if( !isTTJets ) return 1.;
+
+  return 0.683 * event.Q2ScaleDownWgt;
 }
 
 
