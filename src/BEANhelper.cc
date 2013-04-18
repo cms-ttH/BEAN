@@ -397,6 +397,7 @@ void BEANhelper::SetUpLeptonSF(){
 
 		h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "ele_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
 		h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
+	}
 
         if ( era=="2012_53x") {
           h_doubleMuTrigSF  = (TH2D*) doubleMuonTriggerFile->Get("eta2d_scalefactor_with_syst")->Clone("DoubleMuSF");
@@ -421,7 +422,7 @@ void BEANhelper::SetUpLeptonSF(){
         }
         
 
-	}
+	
 
     if ( h_ele_SF_ == NULL
          || h_mu_SF_ == NULL
