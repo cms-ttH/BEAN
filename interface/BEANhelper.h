@@ -149,6 +149,16 @@ class BEANhelper{
 		bool IsGoodMuon(const BNmuon&, const muonID::muonID);
 		float GetMuonRelIso(const BNmuon&);
 		float GetMuonSF(const BNmuon&);
+  float GetDoubleMuonTriggerSF ( const BNmuon&, const BNmuon& );
+  float GetMuonEleTriggerSF ( const BNmuon&, const BNelectron & );
+
+  // Test only
+  float TestSingleMuonTriggerNew ( const BNmuon& );
+  float TestSingleEleTriggerNew ( const BNelectron & );
+  float TestSingleMuonTriggerOld ( const BNmuon& );
+  float TestSingleEleTriggerOld ( const BNelectron & );
+  
+  
 		BNmuonCollection GetSelectedMuons(const BNmuonCollection&, const muonID::muonID);
 
 		// Electrons
@@ -157,6 +167,7 @@ class BEANhelper{
 		bool IsTightElectron(const BNelectron&);
 		float GetElectronRelIso(const BNelectron&);
 		float GetElectronSF(const BNelectron&);
+  float GetDoubleElectronTriggerSF (const BNelectron&, const BNelectron&);
 		bool GetElectronIDresult(const BNelectron& iElectron, const electronID::electronID);
 		bool IsGoodElectron(const BNelectron&, const electronID::electronID);
 		BNelectronCollection GetSelectedElectrons(const BNelectronCollection&, const electronID::electronID);
@@ -263,6 +274,10 @@ class BEANhelper{
 
 		TFile*			jetSFfile;
 		TFile*			leptonSFfile;
+  TFile*          doubleMuonTriggerFile;
+  TFile*          doubleEleTriggerFile;
+  TFile*          muonEleTriggerFile;
+  TFile*          oldLeptonScaleFactFile;
 
 		// PU reweighing
 		TFile*			puFile;
@@ -305,6 +320,15 @@ class BEANhelper{
 		TH2D*			h_o_eff_;
         TH2D*           h_ele_SF_;
         TH2D*           h_mu_SF_;
+  TH2D*           h_doubleMuTrigSF;
+  TH2D*           h_doubleEleTrigSF;
+  TH2D*           h_muonEleTrigSF;
+  // testing -- temporary only
+  TH2D*           h_testSingleMuNew;
+  TH2D*           h_testSingleMuOld;
+  TH2D*           h_testSingleEleNew;
+  TH2D*           h_testSingleEleOld;
+  
         string          samplename;
 
 }; // End of class prototype

@@ -11,6 +11,12 @@ BEANhelper::BEANhelper(){
 	CSVTwp = 0.898;
 
 	leptonSFfile	= NULL;
+
+    // new files
+    doubleMuonTriggerFile = NULL;
+    doubleEleTriggerFile = NULL;
+    muonEleTriggerFile = NULL;
+    
 	jetSFfile		= NULL;
 	h_b_eff_		= NULL;
 	h_c_eff_		= NULL;
@@ -59,6 +65,10 @@ BEANhelper::~BEANhelper(){
 	if(leptonSFfile != NULL){ leptonSFfile->Close(); leptonSFfile = NULL; }
 	if(jetSFfile != NULL){ jetSFfile->Close(); jetSFfile = NULL; }
 	if(puFile != NULL){ puFile->Close(); puFile = NULL; }
+
+    if (doubleMuonTriggerFile != NULL){ doubleMuonTriggerFile->Close(); doubleMuonTriggerFile = NULL;}
+    if (doubleEleTriggerFile != NULL){ doubleEleTriggerFile->Close(); doubleEleTriggerFile = NULL;}
+    if (muonEleTriggerFile != NULL) { muonEleTriggerFile->Close(); muonEleTriggerFile= NULL;}
 
 }
 
@@ -340,8 +350,32 @@ void BEANhelper::SetUpLeptonSF(){
 	if(isData){ return; }
 
 	string filePath = "";
-	if( era=="2012_52x" || era=="2012_53x" ){
-		filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
+    string doubleEleFilePath = "";
+    string doubleMuonFilePath = "";
+    string muonEleFilePath = "";
+    string oldFilePath = "";
+    
+    if ( era=="2012_53x" ){
+      
+      filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV_53x.root";
+      doubleEleFilePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/trigger_SF_ee.root";
+      doubleMuonFilePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/trigger_SF_mumu.root";
+      muonEleFilePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/trigger_SF_emu.root";
+      oldFilePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
+
+
+      doubleMuonTriggerFile = new TFile ( doubleMuonFilePath.c_str() );
+      doubleEleTriggerFile = new TFile ( doubleEleFilePath.c_str() );
+      muonEleTriggerFile = new TFile ( muonEleFilePath.c_str() );
+      oldLeptonScaleFactFile = new TFile (oldFilePath.c_str() );
+
+      //cout << "Trying to open old lepton file " << oldLeptonScaleFactFile->GetName() << endl;
+      
+      //cout <<" ... is zombie ? " << oldLeptonScaleFactFile->IsZombie()
+      //     << endl;
+      
+	} else if( era=="2012_52x"  ){
+      filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
 	}else if( era=="2011" ){
 		filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
 	}else{ // === Not 2011 or 2012 === //
@@ -350,13 +384,59 @@ void BEANhelper::SetUpLeptonSF(){
 	}
 
 	leptonSFfile = new TFile (filePath.c_str());
+    
+    
 	if( isLJ ){
-		h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
+
+        h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "h_ele_pt_eta_full_id_iso_hlt_pass" ).c_str())->Clone();
+      //h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
 		h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
+
+        
 	}else {
+
 		h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "ele_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
 		h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
+
+        if ( era=="2012_53x") {
+          h_doubleMuTrigSF  = (TH2D*) doubleMuonTriggerFile->Get("eta2d_scalefactor_with_syst")->Clone("DoubleMuSF");
+          h_doubleEleTrigSF = (TH2D*) doubleEleTriggerFile->Get("eta2d_scalefactor_with_syst")->Clone("DoubleEleSF");
+          h_muonEleTrigSF   = (TH2D*) muonEleTriggerFile->Get("eta2d_scalefactor_with_syst")->Clone("MuonEleSF");
+
+          cout << "Getting lepton sf histos" << endl;
+          h_testSingleMuNew = (TH2D*) leptonSFfile->Get("mu_pt_eta_full_id_iso_hlt_8TeV")->Clone("MuNewTest");          
+          h_testSingleEleNew = (TH2D*) leptonSFfile->Get("h_ele_pt_eta_full_id_iso_hlt_pass")->Clone("EleNewTest");
+
+          h_testSingleMuOld = (TH2D*) oldLeptonScaleFactFile->Get("mu_pt_eta_full_id_iso_hlt_8TeV")->Clone("MuOldTest");
+          h_testSingleEleOld = (TH2D*) oldLeptonScaleFactFile->Get("ele_pt_eta_full_id_iso_hlt_8TeV")->Clone("EleOldTest");          
+          
+          if (h_testSingleMuNew == NULL
+              || h_testSingleEleNew == NULL
+              || h_testSingleMuOld == NULL
+              || h_testSingleEleOld == NULL ) {
+            ThrowFatalError ("Can't read test histos");
+          }
+            
+          cout << "Got Histos successfully" << endl;
+        }
+        
+
 	}
+
+    if ( h_ele_SF_ == NULL
+         || h_mu_SF_ == NULL
+         || h_doubleMuTrigSF == NULL
+         || h_doubleEleTrigSF == NULL
+         || h_muonEleTrigSF == NULL
+         ) {
+
+      std::cout << "Sorry! could not find lepton SF histograms in file " << filePath
+                << "end. Without SF histograms I cannot continue. Crashing..."
+                << endl;
+
+     ThrowFatalError("NO LEP SF HISTOS");
+
+    }
 
 }
 
@@ -696,11 +776,162 @@ float BEANhelper::GetMuonSF(const BNmuon& iMuon){
   if (isData) return SF;
   
   double usePT = std::min( iMuon.pt, 499. );
-  double useEta = ( iMuon.eta>0. ) ? std::min( 2.09, iMuon.eta ) : std::max( -2.09, iMuon.eta );
+  // now SF is symmetric in eta
+  //double useEta = ( iMuon.eta>0. ) ? std::min( 2.09, iMuon.eta ) : std::max( -2.09, iMuon.eta );
+  double useEta = std::min( fabs(iMuon.eta), 2.09);
+  
   SF = h_mu_SF_->GetBinContent( h_mu_SF_->FindBin(usePT, useEta) );
 
   return SF;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////// Double Lepton Trigger SF ///////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+// double muon
+float BEANhelper::GetDoubleMuonTriggerSF ( const BNmuon & firstMuon, const BNmuon & secondMuon) {
+
+  CheckSetUp();
+  if (era != "2012_53x") ThrowFatalError("We can only do trigger SF in 2012_53x. Please use that era.");
+
+  float SF = 1.0;
+
+  if (isData) return SF;
+
+  float useLep1Eta = std::min (fabs(firstMuon.eta), 2.09);
+  float useLep2Eta = std::min (fabs(secondMuon.eta), 2.49);
+
+  SF = h_doubleMuTrigSF->GetBinContent(h_doubleMuTrigSF->FindBin(useLep1Eta, useLep2Eta));
+    
+  
+  return SF;
+
+}
+
+// double electron
+float BEANhelper::GetDoubleElectronTriggerSF ( const BNelectron & firstEle, const BNelectron & secondEle) {
+
+  CheckSetUp();
+  if (era != "2012_53x") ThrowFatalError("We can only do trigger SF in 2012_53x. Please use that era.");
+  
+  float SF = 1.0;
+
+  if (isData) return SF;
+
+  float useLep1Eta = std::min (fabs(firstEle.eta), 2.09);
+  float useLep2Eta = std::min (fabs(secondEle.eta), 2.49);
+
+  SF = h_doubleEleTrigSF->GetBinContent(h_doubleEleTrigSF->FindBin(useLep1Eta, useLep2Eta));
+    
+  
+  return SF;
+
+}
+
+
+// muon electron
+float BEANhelper::GetMuonEleTriggerSF ( const BNmuon & firstMuon, const BNelectron & secondEle) {
+
+  CheckSetUp();
+  if (era != "2012_53x") ThrowFatalError("We can only do trigger SF in 2012_53x. Please use that era.");
+  float SF = 1.0;
+
+  if (isData) return SF;
+
+  float useLep1Eta = std::min (fabs(firstMuon.eta), 2.49);
+  float useLep2Eta = std::min (fabs(secondEle.eta), 2.49);
+
+  SF = h_muonEleTrigSF->GetBinContent(h_muonEleTrigSF->FindBin(useLep1Eta, useLep2Eta));
+    
+  
+  return SF;
+
+}
+
+// test only
+float BEANhelper::TestSingleMuonTriggerNew ( const BNmuon & iMuon) {
+  //cout << "Inside Test single muon trigger new" << endl;
+  CheckSetUp();
+  if (era != "2012_53x") ThrowFatalError("We can only do trigger SF in 2012_53x. Please use that era.");
+  float SF = 1.0;
+
+  if (isData) return SF;
+
+  
+  float usePt = std::min(iMuon.pt, 499.0);
+  usePt = std::max (11.0, iMuon.pt);
+
+  float useEta = fabs (std::min(iMuon.eta, 2.05)) ;
+
+  SF =  h_testSingleMuNew->GetBinContent(h_testSingleMuNew->FindBin(usePt, useEta));
+  //cout << "returning..." << endl;
+  return SF;
+  
+}
+
+float BEANhelper::TestSingleEleTriggerNew ( const BNelectron & iEle) {
+  //cout << "Inside Test single ele trigger new" << endl;
+  CheckSetUp();
+  if (era != "2012_53x") ThrowFatalError("We can only do trigger SF in 2012_53x. Please use that era.");
+  float SF = 1.0;
+
+  if (isData) return SF;
+
+  float usePt = std::min(iEle.pt, 149.0);
+  usePt = std::max (21.0, iEle.pt);
+
+  float useEta = fabs (std::min(iEle.eta, 2.48)) ;
+
+  SF = h_testSingleEleNew->GetBinContent(h_testSingleEleNew->FindBin(usePt, useEta));
+  //cout << "returning..." << endl;
+  return SF;
+
+}
+
+float BEANhelper::TestSingleMuonTriggerOld ( const BNmuon & iMuon) {
+  //cout << "Inside Test single muon trigger old" << endl;
+  CheckSetUp();
+  if (era != "2012_53x") ThrowFatalError("We can only do trigger SF in 2012_53x. Please use that era.");
+  float SF = 1.0;
+
+  if (isData) return SF;
+
+  
+  float usePt = std::min(iMuon.pt, 499.0);
+  usePt = std::max (11.0, iMuon.pt);
+
+  float useEta = std::min(iMuon.eta, 2.05);
+
+  SF =  h_testSingleMuOld->GetBinContent(h_testSingleMuOld->FindBin(usePt, useEta));
+  //cout << "returning..." << endl;
+  return SF;
+  
+}
+
+float BEANhelper::TestSingleEleTriggerOld ( const BNelectron & iEle) {
+  //cout << "Inside Test single ele trigger old" << endl;
+  CheckSetUp();
+  if (era != "2012_53x") ThrowFatalError("We can only do trigger SF in 2012_53x. Please use that era.");
+  float SF = 1.0;
+
+  if (isData) return SF;
+
+  float usePt = std::min(iEle.pt, 499.0);
+  usePt = std::max (11.0, iEle.pt);
+
+  float useEta = std::min(iEle.eta, 2.48);
+
+  SF = h_testSingleEleOld->GetBinContent(h_testSingleEleOld->FindBin(usePt, useEta));
+  
+  //cout << "returning..." << endl;
+  return SF;
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////
+    
 
 // Return whether or not tau passes cuts
 bool BEANhelper::IsVLooseTau(const BNtau& iTau){ return IsGoodTau(iTau, tauID::tauVLoose); }
@@ -1331,8 +1562,12 @@ float BEANhelper::GetElectronSF(const BNelectron& iElectron){
   double SF = 1.0;
   if (isData) return SF;
 
-  double usePT = std::min( iElectron.pt, 499. );
-  double useEta = ( iElectron.eta>0. ) ? std::min( 2.09, iElectron.eta ) : std::max( -2.09, iElectron.eta );
+  // current binning is only 20 to 150
+  // so fix  it!
+  double usePT = std::min( iElectron.pt, 149. );
+  usePT = std::max(21.0, usePT);
+  //double useEta = ( iElectron.eta>0. ) ? std::min( 2.09, iElectron.eta ) : std::max( -2.09, iElectron.eta );
+  double useEta = std::min(fabs(iElectron.eta), 2.49);
   SF = h_ele_SF_->GetBinContent( h_ele_SF_->FindBin(usePT, useEta) );
 
   return SF;
