@@ -22,14 +22,22 @@ BEANhelper::BEANhelper(){
 	h_c_eff_		= NULL;
 	h_l_eff_		= NULL;
 	h_o_eff_		= NULL;
-    h_ele_SF_       = NULL;
-    h_mu_SF_        = NULL;
+	h_ele_SF_       = NULL;
+	h_mu_SF_        = NULL;
 
 	// PU reweighing
 	puFile			= NULL;
 	h_PU_ratio		= NULL;
 	h_PUup_ratio	= NULL;
 	h_PUdown_ratio	= NULL;
+
+	// CSV reweighting
+	for( int iSys=0; iSys<9; iSys++ ){
+	  for( int iPt=0; iPt<5; iPt++ ) h_csv_wgt_hf[iSys][iPt] = NULL;
+	  for( int iPt=0; iPt<3; iPt++ ){
+	    for( int iEta=0; iEta<3; iEta++ )h_csv_wgt_lf[iSys][iPt][iEta] = NULL;
+	  }
+	}
 
 	// CSV reshaping
 	sh_				= NULL;
@@ -51,9 +59,21 @@ BEANhelper::~BEANhelper(){
 	if(h_PU_ratio != NULL){ delete h_PU_ratio; h_PU_ratio = NULL; }
 	if(h_PUup_ratio != NULL){ delete h_PUup_ratio; h_PUup_ratio = NULL; }
 	if(h_PUdown_ratio != NULL){ delete h_PUdown_ratio; h_PUdown_ratio = NULL; }
-    if(h_ele_SF_ != NULL){ delete h_ele_SF_; h_ele_SF_ = NULL; }
-    if(h_mu_SF_ != NULL){ delete h_mu_SF_; h_mu_SF_ = NULL; }
-    
+	if(h_ele_SF_ != NULL){ delete h_ele_SF_; h_ele_SF_ = NULL; }
+	if(h_mu_SF_ != NULL){ delete h_mu_SF_; h_mu_SF_ = NULL; }
+	
+	// CSV reweighting
+
+	// CSV reweighting
+	for( int iSys=0; iSys<9; iSys++ ){
+	  for( int iPt=0; iPt<5; iPt++ ){ if(h_csv_wgt_hf[iSys][iPt] != NULL){ delete h_csv_wgt_hf[iSys][iPt]; h_csv_wgt_hf[iSys][iPt] = NULL;} }
+	  for( int iPt=0; iPt<3; iPt++ ){
+	    for( int iEta=0; iEta<3; iEta++ ){
+	      if(h_csv_wgt_lf[iSys][iPt][iEta] != NULL){ delete h_csv_wgt_lf[iSys][iPt][iEta]; h_csv_wgt_lf[iSys][iPt][iEta] = NULL;}
+	    }
+	  }
+	}
+
 	// CSV reshaping
 	if(sh_ != NULL){ delete sh_; sh_ = NULL; }
 	if(sh_hfSFUp_ != NULL){ delete sh_hfSFUp_; sh_hfSFUp_ = NULL; }
@@ -65,6 +85,9 @@ BEANhelper::~BEANhelper(){
 	if(leptonSFfile != NULL){ leptonSFfile->Close(); leptonSFfile = NULL; }
 	if(jetSFfile != NULL){ jetSFfile->Close(); jetSFfile = NULL; }
 	if(puFile != NULL){ puFile->Close(); puFile = NULL; }
+	if(f_CSVwgt_HF != NULL){ f_CSVwgt_HF->Close(); f_CSVwgt_HF = NULL; }
+	if(f_CSVwgt_LF != NULL){ f_CSVwgt_LF->Close(); f_CSVwgt_LF = NULL; }
+
 
     if (doubleMuonTriggerFile != NULL){ doubleMuonTriggerFile->Close(); doubleMuonTriggerFile = NULL;}
     if (doubleEleTriggerFile != NULL){ doubleEleTriggerFile->Close(); doubleEleTriggerFile = NULL;}
@@ -93,6 +116,9 @@ void BEANhelper::SetUp(string iEra, int iSampleNumber, bool iIsLJ, bool iIsData,
 
 	// Setup PU reweighing
 	SetUpPUreweighing(iCollisionDS);
+
+	// Setup CSV reweighting
+	SetUpCSVreweighting();
 
 	// Setup CSV reshaping
 	SetUpCSVreshaping();
@@ -253,6 +279,70 @@ void BEANhelper::SetUpPUreweighing(string const iCollisionsDS){
 
 }
 
+
+// Set up CSV reshaping
+void BEANhelper::SetUpCSVreweighting(){
+
+  // Do not set it up if we're running on collision data
+  if(isData){ return; }
+
+  f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/csv_rwt_hf_IT.root").c_str());
+  f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/csv_rwt_lf_IT.root").c_str());
+
+
+  // CSV reweighting
+  for( int iSys=0; iSys<9; iSys++ ){
+    TString syst_csv_suffix_hf = "final";
+    TString syst_csv_suffix_lf = "final";
+    
+    switch( iSys ){
+    case 0:
+      // this is the nominal case
+      break;
+    case 1:
+      // JESUp
+      syst_csv_suffix_hf = "final_JESUp"; syst_csv_suffix_lf = "final_JESUp";
+      break;
+    case 2:
+      // JESDown
+      syst_csv_suffix_hf = "final_JESDown"; syst_csv_suffix_lf = "final_JESDown";
+      break;
+    case 3:
+      // purity up
+      syst_csv_suffix_hf = "final_LFUp"; syst_csv_suffix_lf = "final_HFUp";
+      break;
+    case 4:
+      // purity down
+      syst_csv_suffix_hf = "final_LFDown"; syst_csv_suffix_lf = "final_HFDown";
+      break;
+    case 5:
+      // stats1 up
+      syst_csv_suffix_hf = "final_Stats1Up"; syst_csv_suffix_lf = "final_Stats1Up";
+      break;
+    case 6:
+      // stats1 down
+      syst_csv_suffix_hf = "final_Stats1Down"; syst_csv_suffix_lf = "final_Stats1Down";
+      break;
+    case 7:
+      // stats2 up
+      syst_csv_suffix_hf = "final_Stats2Up"; syst_csv_suffix_lf = "final_Stats2Up";
+      break;
+    case 8:
+      // stats2 down
+      syst_csv_suffix_hf = "final_Stats2Down"; syst_csv_suffix_lf = "final_Stats2Down";
+      break;
+    }
+
+    for( int iPt=0; iPt<5; iPt++ ) h_csv_wgt_hf[iSys][iPt] = (TH1D*)f_CSVwgt_HF->Get( Form("csv_ratio_Pt%i_Eta0_%s",iPt,syst_csv_suffix_hf.Data()) );
+
+    for( int iPt=0; iPt<3; iPt++ ){
+      for( int iEta=0; iEta<3; iEta++ )h_csv_wgt_lf[iSys][iPt][iEta] = (TH1D*)f_CSVwgt_LF->Get( Form("csv_ratio_Pt%i_Eta%i_%s",iPt,iEta,syst_csv_suffix_lf.Data()) );
+    }
+  }
+
+}
+
+
 // Set up CSV reshaping
 void BEANhelper::SetUpCSVreshaping(){
 
@@ -384,22 +474,21 @@ void BEANhelper::SetUpLeptonSF(){
 	}
 
 	leptonSFfile = new TFile (filePath.c_str());
-    
-    
+
+
+
 	if( isLJ ){
-
-        h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "h_ele_pt_eta_full_id_iso_hlt_pass" ).c_str())->Clone();
-      //h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
-		h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
-
+	  h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "h_ele_pt_eta_full_id_iso_hlt_pass" ).c_str())->Clone();
+	  //h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
+	  h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
         
 	}else {
 
-		h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "ele_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
-		h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
+	  h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "ele_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
+	  h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
 	}
 
-        if ( era=="2012_53x") {
+	if ( era=="2012_53x") {
           h_doubleMuTrigSF  = (TH2D*) doubleMuonTriggerFile->Get("eta2d_scalefactor_with_syst")->Clone("DoubleMuSF");
           h_doubleEleTrigSF = (TH2D*) doubleEleTriggerFile->Get("eta2d_scalefactor_with_syst")->Clone("DoubleEleSF");
           h_muonEleTrigSF   = (TH2D*) muonEleTriggerFile->Get("eta2d_scalefactor_with_syst")->Clone("MuonEleSF");
@@ -418,26 +507,26 @@ void BEANhelper::SetUpLeptonSF(){
             ThrowFatalError ("Can't read test histos");
           }
             
-          cout << "Got Histos successfully" << endl;
-        }
-        
+          cout << "Got scale factor Histos successfully" << endl;
+	}
+    
 
 	
 
-    if ( h_ele_SF_ == NULL
-         || h_mu_SF_ == NULL
-         || h_doubleMuTrigSF == NULL
-         || h_doubleEleTrigSF == NULL
-         || h_muonEleTrigSF == NULL
-         ) {
+	if ( h_ele_SF_ == NULL
+	     || h_mu_SF_ == NULL
+	     || h_doubleMuTrigSF == NULL
+	     || h_doubleEleTrigSF == NULL
+	     || h_muonEleTrigSF == NULL
+	     ) {
 
-      std::cout << "Sorry! could not find lepton SF histograms in file " << filePath
-                << "end. Without SF histograms I cannot continue. Crashing..."
-                << endl;
+	  std::cout << "Sorry! could not find lepton SF histograms in file " << filePath
+		    << "end. Without SF histograms I cannot continue. Crashing..."
+		    << endl;
 
-     ThrowFatalError("NO LEP SF HISTOS");
+	  ThrowFatalError("NO LEP SF HISTOS");
 
-    }
+	}
 
 }
 
@@ -859,15 +948,15 @@ float BEANhelper::TestSingleMuonTriggerNew ( const BNmuon & iMuon) {
   if (isData) return SF;
 
   
-  float usePt = std::min(iMuon.pt, 499.0);
-  usePt = std::max (11.0, iMuon.pt);
+  double usePt = std::min(iMuon.pt, 499.0);
+  usePt = std::max (27.0, usePt);
 
-  float useEta = fabs (std::min(iMuon.eta, 2.05)) ;
+  float useEta = std::min(fabs(iMuon.eta), 2.05) ;
 
   SF =  h_testSingleMuNew->GetBinContent(h_testSingleMuNew->FindBin(usePt, useEta));
   //cout << "returning..." << endl;
   return SF;
-  
+
 }
 
 float BEANhelper::TestSingleEleTriggerNew ( const BNelectron & iEle) {
@@ -878,10 +967,13 @@ float BEANhelper::TestSingleEleTriggerNew ( const BNelectron & iEle) {
 
   if (isData) return SF;
 
-  float usePt = std::min(iEle.pt, 149.0);
-  usePt = std::max (21.0, iEle.pt);
+  double usePt = std::min(iEle.pt, 499.0);
+  usePt = std::max (30.0, usePt);
 
-  float useEta = fabs (std::min(iEle.eta, 2.48)) ;
+  // eventually, but not now
+  //float useEta = fabs (std::min(iEle.eta, 2.48)) ;
+  //float useEta = std::min(iEle.eta, 2.48) ;
+  float useEta = iEle.eta;
 
   SF = h_testSingleEleNew->GetBinContent(h_testSingleEleNew->FindBin(usePt, useEta));
   //cout << "returning..." << endl;
@@ -898,15 +990,15 @@ float BEANhelper::TestSingleMuonTriggerOld ( const BNmuon & iMuon) {
   if (isData) return SF;
 
   
-  float usePt = std::min(iMuon.pt, 499.0);
-  usePt = std::max (11.0, iMuon.pt);
+  double usePt = std::min(iMuon.pt, 499.0);
+  usePt = std::max (27.0, usePt);
 
-  float useEta = std::min(iMuon.eta, 2.05);
+  float useEta = iMuon.eta;
 
   SF =  h_testSingleMuOld->GetBinContent(h_testSingleMuOld->FindBin(usePt, useEta));
   //cout << "returning..." << endl;
   return SF;
-  
+
 }
 
 float BEANhelper::TestSingleEleTriggerOld ( const BNelectron & iEle) {
@@ -917,8 +1009,8 @@ float BEANhelper::TestSingleEleTriggerOld ( const BNelectron & iEle) {
 
   if (isData) return SF;
 
-  float usePt = std::min(iEle.pt, 499.0);
-  usePt = std::max (11.0, iEle.pt);
+  double usePt = std::min(iEle.pt, 499.0);
+  usePt = std::max (30.0, usePt);
 
   float useEta = std::min(iEle.eta, 2.48);
 
@@ -1563,13 +1655,26 @@ float BEANhelper::GetElectronSF(const BNelectron& iElectron){
   double SF = 1.0;
   if (isData) return SF;
 
-  // current binning is only 20 to 150
-  // so fix  it!
-  double usePT = std::min( iElectron.pt, 149. );
-  usePT = std::max(21.0, usePT);
-  //double useEta = ( iElectron.eta>0. ) ? std::min( 2.09, iElectron.eta ) : std::max( -2.09, iElectron.eta );
-  double useEta = std::min(fabs(iElectron.eta), 2.49);
-  SF = h_ele_SF_->GetBinContent( h_ele_SF_->FindBin(usePT, useEta) );
+  if ( !isLJ ) {
+
+    // current binning is only 20 to 150
+    // so fix  it!
+    double usePT = std::min( iElectron.pt, 149. );
+    usePT = std::max(21.0, usePT);
+    //double useEta = ( iElectron.eta>0. ) ? std::min( 2.09, iElectron.eta ) : std::max( -2.09, iElectron.eta );
+    double useEta = std::min(fabs(iElectron.eta), 2.49);
+    SF = h_ele_SF_->GetBinContent( h_ele_SF_->FindBin(usePT, useEta) );
+
+  } else {
+    // current binning is only 20 to 150
+    // so fix  it!
+    double usePT = std::min( iElectron.pt, 499. );
+    usePT = std::max(11.0, usePT);
+    //double useEta = ( iElectron.eta>0. ) ? std::min( 2.09, iElectron.eta ) : std::max( -2.09, iElectron.eta );
+    double useEta = iElectron.eta;
+    
+    SF = h_ele_SF_->GetBinContent( h_ele_SF_->FindBin(usePT, useEta) );
+  }
 
   return SF;
 }
@@ -2183,6 +2288,89 @@ double BEANhelper::GetPUweightDown(const double iNumBX0){
   if (isData) return 1.0;
   return h_PUdown_ratio->GetBinContent( h_PUdown_ratio->FindBin( iNumBX0 ) );
 }
+
+
+
+// === Jet CSV reweighting === //
+double BEANhelper::GetCSVweight(const BNjetCollection& iJets, const sysType::sysType iSysType){
+  if (isData) return 1.0;
+
+  CheckSetUp();
+  // IMPORTANT! iJets is the *SELECTED* jet collection which you use for your analysis
+
+  int iSysHF = 0;
+  switch(iSysType){
+  case sysType::JESup:	         iSysHF=1; break;
+  case sysType::JESdown:         iSysHF=2; break;
+  case sysType::CSVLFup:         iSysHF=3; break;
+  case sysType::CSVLFdown:       iSysHF=4; break;
+  case sysType::CSVHFStats1up:	 iSysHF=5; break;
+  case sysType::CSVHFStats1down: iSysHF=6; break;
+  case sysType::CSVHFStats2up:	 iSysHF=7; break;
+  case sysType::CSVHFStats2down: iSysHF=8; break;
+  default : iSysHF = 0; break;
+  }
+
+  int iSysLF = 0;
+  switch(iSysType){
+  case sysType::JESup:	         iSysLF=1; break;
+  case sysType::JESdown:         iSysLF=2; break;
+  case sysType::CSVHFup:         iSysLF=3; break;
+  case sysType::CSVHFdown:       iSysLF=4; break;
+  case sysType::CSVLFStats1up:	 iSysLF=5; break;
+  case sysType::CSVLFStats1down: iSysLF=6; break;
+  case sysType::CSVLFStats2up:	 iSysLF=7; break;
+  case sysType::CSVLFStats2down: iSysLF=8; break;
+  default : iSysLF = 0; break;
+  }
+
+  double csvWgthf = 1.;
+  double csvWgtlf = 1.;
+
+  for( BNjetCollection::const_iterator iJet = iJets.begin(); iJet != iJets.end(); ++iJet ){ 
+
+    double csv = iJet->btagCombinedSecVertex;
+    double jetPt = iJet->pt;
+    double jetAbsEta = fabs( iJet->eta );
+    int flavor = abs( iJet->flavour );
+
+    int iPt = -1; int iEta = -1;
+    if (jetPt >=29.99 && jetPt<40) iPt = 0;
+    else if (jetPt >=40 && jetPt<60) iPt = 1;
+    else if (jetPt >=60 && jetPt<100) iPt = 2;
+    else if (jetPt >=100 && jetPt<160) iPt = 3;
+    else if (jetPt >=160 && jetPt<10000) iPt = 4;
+
+    if (jetAbsEta >=0 &&  jetAbsEta<0.8) iEta = 0;
+    else if ( jetAbsEta>=0.8 && jetAbsEta<1.6) iEta = 1;
+    else if ( jetAbsEta>=1.6 && jetAbsEta<2.41) iEta = 2;
+
+    if (iPt < 0 || iEta < 0) std::cout << "Error, couldn't find Pt, Eta bins for this b-flavor jet, jetPt = " << jetPt << ", jetAbsEta = " << jetAbsEta << std::endl;
+
+    if (abs(flavor) == 5 || abs(flavor) == 4){
+      int useCSVBin = (csv>=0.) ? h_csv_wgt_hf[iSysHF][iPt]->FindBin(csv) : 1;
+      double iCSVWgtHF = h_csv_wgt_hf[iSysHF][iPt]->GetBinContent(useCSVBin);
+      if( iCSVWgtHF!=0 ) csvWgthf *= iCSVWgtHF;
+
+      // if( iSysHF==0 ) printf(" iJet,\t flavor=%d,\t pt=%.1f,\t eta=%.2f,\t csv=%.3f,\t wgt=%.2f \n",
+      // 			     flavor, jetPt, iJet->eta, csv, iCSVWgtHF );
+    }
+    else {
+      if (iPt >=2) iPt=2;       /// [30-40], [40-60] and [60-10000] only 3 Pt bins for lf
+      int useCSVBin = (csv>=0.) ? h_csv_wgt_lf[iSysLF][iPt][iEta]->FindBin(csv) : 1;
+      double iCSVWgtLF = h_csv_wgt_lf[iSysLF][iPt][iEta]->GetBinContent(useCSVBin);
+      if( iCSVWgtLF!=0 ) csvWgtlf *= iCSVWgtLF;
+
+      // if( iSysLF==0 ) printf(" iJet,\t flavor=%d,\t pt=%.1f,\t eta=%.2f,\t csv=%.3f,\t wgt=%.2f \n",
+      // 			     flavor, jetPt, iJet->eta, csv, iCSVWgtLF );
+    }
+  }
+
+  double csvWgtTotal = csvWgthf* csvWgtlf;
+
+  return csvWgtTotal;
+}
+
 
 
 // === Top Pt reweighting === //
