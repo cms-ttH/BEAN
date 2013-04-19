@@ -78,7 +78,7 @@ typedef BNtrackCollection::const_iterator         TrackIter;
 typedef BNtriggerCollection::const_iterator       TrigIter;
 typedef BNtrigobjCollection::const_iterator       TrigObjIter;
 
-namespace sysType{		enum sysType{		NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup, TESup, TESdown }; }
+namespace sysType{		enum sysType{		NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup, TESup, TESdown, CSVLFup, CSVLFdown, CSVHFup, CSVHFdown, CSVHFStats1up, CSVHFStats1down, CSVLFStats1up, CSVLFStats1down, CSVHFStats2up, CSVHFStats2down, CSVLFStats2up, CSVLFStats2down }; }
 namespace jetID{		enum jetID{			jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
 namespace tauID{		enum tauID{			tauNonIso, tauVLoose, tauLoose, tauMedium, tauTight }; }
 namespace muonID{		enum muonID{		muonSide, muonLoose, muonTight, muonPtOnly, muonPtEtaOnly, muonPtEtaIsoOnly, muonPtEtaIsoTrackerOnly }; }
@@ -203,6 +203,9 @@ class BEANhelper{
 		double GetPUweightUp(const double);
 		double GetPUweightDown(const double);
 
+		// CSV reweighting
+		double GetCSVweight(const BNjetCollection&, const sysType::sysType iSysType=sysType::NA);
+
 		// Top PT reweighting
 		double TopPtWeight(double);
 		double GetTopPtweight(const BNmcparticleCollection&);
@@ -256,6 +259,7 @@ class BEANhelper{
 		double GetCSVvalue(const BNjet&, const sysType::sysType iSysType=sysType::NA);
 		void CheckSetUp();
 		void SetUpPUreweighing(string const);
+		void SetUpCSVreweighting();
 		void SetUpCSVreshaping();
 		void SetUpJetSF();
 		void SetUpLeptonSF();
@@ -285,6 +289,11 @@ class BEANhelper{
 		TH1D*			h_PUup_ratio;
 		TH1D*			h_PUdown_ratio;
 
+		// CSV reweighting
+		TFile* f_CSVwgt_HF;
+		TFile* f_CSVwgt_LF;
+
+
 		// CSV reshaping
 		CSVreevaluator*	  sh_;
 		CSVreevaluator*	  sh_hfSFUp_;
@@ -312,6 +321,11 @@ class BEANhelper{
 	private:
 		mparams			params;
 		float			CSVLwp, CSVMwp, CSVTwp;
+
+		// CSV reweighting
+		TH1D* h_csv_wgt_hf[9][5];
+		TH1D* h_csv_wgt_lf[9][3][3];
+
 
 		// Old parameters
 		TH2D*			h_b_eff_;
