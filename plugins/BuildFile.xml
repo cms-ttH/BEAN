@@ -21,6 +21,7 @@
 	<use name="DataFormats/METReco"/>
 	<use name="DataFormats/MuonReco"/>
 	<use name="DataFormats/PatCandidates"/>
+        <use name="DataFormats/RecoCandidate"/>
 	<use name="DataFormats/Scalers"/>
 	<use name="DataFormats/TrackReco"/>
 	<use name="DataFormats/VertexReco"/>
@@ -42,6 +43,8 @@
 	<use name="RecoEcal/EgammaCoreTools"/>
 	<use name="RecoEgamma/EgammaTools"/>
 	<use name="RecoLocalCalo/EcalRecAlgos"/>
+        <use name="RecoMuon/MuonIsolationProducers"/>
+        <use name="RecoTracker/TransientTrackingRecHit"/>
 	<use name="SimDataFormats/GeneratorProducts"/>
 	<use name="SimDataFormats/PileupSummaryInfo"/>
 </library>
