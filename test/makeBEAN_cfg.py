@@ -154,7 +154,7 @@ muonCut                = 'isGlobalMuon && pt > 10. && abs(eta) < 2.5'
 #tightMuonCut           = ''
 # PF muons
 muonCutPF              = 'isGlobalMuon && pt > 10. && abs(eta) < 2.5'
-muonCutLoosePF         = 'isGlobalMuon && pt > 10. && abs(eta) < 2.5'
+muonCutLoosePF         = 'pt > 10. && abs(eta) < 2.5'
 #looseMuonCutPF         = ''
 #tightMuonCutPF         = ''
 # Standard electrons
@@ -298,9 +298,10 @@ if useRelVals:
 #inputFiles = cms.untracked.vstring('/store/data/Run2012A/SingleMu/AOD/PromptReco-v1/000/190/645/FAF2D9E9-7F82-E111-BE0C-003048F1C420.root')
 #inputFiles = cms.untracked.vstring('/store/relval/CMSSW_5_2_3_patch3/RelValTTbar/GEN-SIM-RECO/START52_V9_special_120410-v1/0122/0EF8CDEB-1083-E111-846C-002618943937.root')
 inputFiles = cms.untracked.vstring(
-#	'/store/mc/Summer12/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S6_START52_V9-v1/0000/FEFAA4F3-63B8-E111-A65A-00304867924A.root',
+	#	'/store/mc/Summer12/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S6_START52_V9-v1/0000/FEFAA4F3-63B8-E111-A65A-00304867924A.root',
 	'/store/user/puigh/TTH_HToAll_M_120_8TeV_FastSim_pythia6/TTH_HToAll_M_120_8TeV_FastSim_pythia6/95111b4e2be5b1aa536a508d15d97f92/TTH_HToAll_M_120_8TeV_FastSim_v1_12_1_gDX.root'
 )
+
 process.source.fileNames = inputFiles
 process.maxEvents.input  = maxInputEvents
 
@@ -1069,7 +1070,13 @@ if runPF2PAT:
 
 
 ### Darren Specific Stuff for BEAN
-###
+
+## Needed for calculating track isolation quantities
+from RecoMuon.MuonIsolationProducers.caloExtractorByAssociatorBlocks_cff import * 
+from RecoMuon.MuonIsolationProducers.trackExtractorBlocks_cff import * 
+process.load('Configuration.StandardSequences.MagneticField_38T_cff')
+process.load('Configuration.StandardSequences.Reconstruction_cff')
+
 process.BNproducer = cms.EDProducer('BEANmaker',
                                     calometTag = cms.InputTag("none"),
                                     pfmetTag = cms.InputTag("patMETsPFlow"),
@@ -1108,6 +1115,9 @@ process.BNproducer = cms.EDProducer('BEANmaker',
                                     minTrackPt = cms.double(10),
                                     verbose = cms.bool(True),
                                     fillTrackHitInfo = cms.bool(False), 
+                                    fillTrackIsoInfo = cms.bool(False), 
+                                    CaloExtractorPSet  = cms.PSet(MIsoCaloExtractorByAssociatorTowersBlock),
+                                    TrackExtractorPSet = cms.PSet(MIsoTrackExtractorBlock),
                                     sample = cms.int32(sampleNumber),
                                     maxAbsZ = cms.untracked.double(24)
                                     )
