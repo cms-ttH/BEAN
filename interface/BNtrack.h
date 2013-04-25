@@ -26,20 +26,42 @@ struct BNtrack
     charge(c),
     numValidHits(c),
     isHighPurity(c),
-    isGoodPtResolution(c),
+    nHitsMissingOuter(v),
+    nHitsMissingInner(v),
+    nHitsMissingMiddle(v),
+    layersWithMeasurement(v),
+    numberOfHits(v),
+    numberOfLostHits(v), 
+    numberOfValidPixelHits(v),
+    numberOfValidStripHits(v),
+    lastHitOuterRadius(v),
+    lastHitOuterEta(v),
+    lastHitOuterTheta(v),
+    lastHitOuterPhi(v),
     caloEMDeltaRp3(v),
     caloHadDeltaRp3(v),
     caloEMDeltaRp4(v),
     caloHadDeltaRp4(v),
     caloEMDeltaRp5(v),
     caloHadDeltaRp5(v),
-    lastHitOuterRadius(v),
-    lastHitOuterEta(v),
-    lastHitOuterTheta(v),
-    lastHitOuterPhi(v),
-    nHitsMissingOuter(v),
-    nHitsMissingInner(v),
-    nHitsMissingMiddle(v) { }
+    depTrkRp3(v),
+    depEcalRp3(v),
+    depHcalRp3(v),
+    depHoRp3(v),
+    nTracksRp3(v),
+    trackerVetoPtRp3(v),
+    emVetoEtRp3(v),
+    hadVetoEtRp3(v),     
+    hoVetoEtRp3(v),
+    depTrkRp5(v),
+    depEcalRp5(v),
+    depHcalRp5(v),
+    depHoRp5(v),
+    nTracksRp5(v),
+    trackerVetoPtRp5(v),
+    emVetoEtRp5(v),
+    hadVetoEtRp5(v),     
+    hoVetoEtRp5(v) { }
 
 BNtrack():
   pt(-99),
@@ -60,20 +82,43 @@ BNtrack():
     charge(-99),
     numValidHits(-99),
     isHighPurity(-99),
-    isGoodPtResolution(-99),
+    nHitsMissingOuter(-99),
+    nHitsMissingInner(-99),
+    nHitsMissingMiddle(-99), 
+    layersWithMeasurement(-99),
+    numberOfHits(-99),
+    numberOfLostHits(-99), 
+    numberOfValidPixelHits(-99),
+    numberOfValidStripHits(-99),
+    lastHitOuterRadius(-99),
+    lastHitOuterEta(-99),
+    lastHitOuterTheta(-99),
+    lastHitOuterPhi(-99),
     caloEMDeltaRp3(-99),
     caloHadDeltaRp3(-99),
     caloEMDeltaRp4(-99),
     caloHadDeltaRp4(-99),
     caloEMDeltaRp5(-99),
     caloHadDeltaRp5(-99),
-    lastHitOuterRadius(-99),
-    lastHitOuterEta(-99),
-    lastHitOuterTheta(-99),
-    lastHitOuterPhi(-99),
-    nHitsMissingOuter(-99),
-    nHitsMissingInner(-99),
-    nHitsMissingMiddle(-99) { }
+    depTrkRp3(-99),
+    depEcalRp3(-99),
+    depHcalRp3(-99),
+    depHoRp3(-99),
+    nTracksRp3(-99),
+    trackerVetoPtRp3(-99),
+    emVetoEtRp3(-99),
+    hadVetoEtRp3(-99),     
+    hoVetoEtRp3(-99),
+    depTrkRp5(-99),
+    depEcalRp5(-99),
+    depHcalRp5(-99),
+    depHoRp5(-99),
+    nTracksRp5(-99),
+    trackerVetoPtRp5(-99),
+    emVetoEtRp5(-99),
+    hadVetoEtRp5(-99),     
+    hoVetoEtRp5(-99) { }
+
   double pt,    
     ptError,
     px,
@@ -91,10 +136,24 @@ BNtrack():
     vz;
   int charge,
     numValidHits,
-    isHighPurity,
-    isGoodPtResolution;
+    isHighPurity;
 
-  //by hand calo calc
+  int nHitsMissingOuter;
+  int nHitsMissingInner;
+  int nHitsMissingMiddle;
+
+  int layersWithMeasurement; 
+  int numberOfHits; 
+  int numberOfLostHits;  
+  int numberOfValidPixelHits;
+  int numberOfValidStripHits;
+
+  double lastHitOuterRadius;
+  double lastHitOuterEta;
+  double lastHitOuterTheta;  
+  double lastHitOuterPhi;  
+  
+  // calorimeter isolation energy 
   double caloEMDeltaRp3;  
   double caloHadDeltaRp3;  
   double caloEMDeltaRp4;  
@@ -102,15 +161,27 @@ BNtrack():
   double caloEMDeltaRp5;  
   double caloHadDeltaRp5;  
 
-  double lastHitOuterRadius;
-  double lastHitOuterEta;
-  double lastHitOuterTheta;  
-  double lastHitOuterPhi;  
+  // isolation quantities based on muon isolation   
+  double depTrkRp3;
+  double depEcalRp3;
+  double depHcalRp3;
+  double depHoRp3;
+  double nTracksRp3;
+  double trackerVetoPtRp3;
+  double emVetoEtRp3;
+  double hadVetoEtRp3;     
+  double hoVetoEtRp3;
 
-  int nHitsMissingOuter;
-  int nHitsMissingInner;
-  int nHitsMissingMiddle;
-  
+  double depTrkRp5;
+  double depEcalRp5;
+  double depHcalRp5;
+  double depHoRp5;
+  double nTracksRp5;
+  double trackerVetoPtRp5;
+  double emVetoEtRp5;
+  double hadVetoEtRp5;     
+  double hoVetoEtRp5;
+
   std::vector<int> subDetIdHits;
   std::vector<int> rawDetIdHits;
   std::vector<bool> isValidHits;
