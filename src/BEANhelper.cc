@@ -38,6 +38,8 @@ BEANhelper::BEANhelper(){
 	    for( int iEta=0; iEta<3; iEta++ )h_csv_wgt_lf[iSys][iPt][iEta] = NULL;
 	  }
 	}
+    f_CSVwgt_HF = NULL;
+    f_CSVwgt_LF = NULL;
 
 	// CSV reshaping
 	sh_				= NULL;
@@ -61,7 +63,6 @@ BEANhelper::~BEANhelper(){
 	if(h_PUdown_ratio != NULL){ delete h_PUdown_ratio; h_PUdown_ratio = NULL; }
 	if(h_ele_SF_ != NULL){ delete h_ele_SF_; h_ele_SF_ = NULL; }
 	if(h_mu_SF_ != NULL){ delete h_mu_SF_; h_mu_SF_ = NULL; }
-	
 	// CSV reweighting
 
 	// CSV reweighting
@@ -80,7 +81,6 @@ BEANhelper::~BEANhelper(){
 	if(sh_hfSFDown_ != NULL){ delete sh_hfSFDown_; sh_hfSFDown_ = NULL; }
 	if(sh_lfSFUp_ != NULL){ delete sh_lfSFUp_; sh_lfSFUp_ = NULL; }
 	if(sh_lfSFDown_ != NULL){ delete sh_lfSFDown_; sh_lfSFDown_ = NULL; }
-
 	// Close files
 	if(leptonSFfile != NULL){ leptonSFfile->Close(); leptonSFfile = NULL; }
 	if(jetSFfile != NULL){ jetSFfile->Close(); jetSFfile = NULL; }
@@ -88,11 +88,9 @@ BEANhelper::~BEANhelper(){
 	if(f_CSVwgt_HF != NULL){ f_CSVwgt_HF->Close(); f_CSVwgt_HF = NULL; }
 	if(f_CSVwgt_LF != NULL){ f_CSVwgt_LF->Close(); f_CSVwgt_LF = NULL; }
 
-
     if (doubleMuonTriggerFile != NULL){ doubleMuonTriggerFile->Close(); doubleMuonTriggerFile = NULL;}
     if (doubleEleTriggerFile != NULL){ doubleEleTriggerFile->Close(); doubleEleTriggerFile = NULL;}
     if (muonEleTriggerFile != NULL) { muonEleTriggerFile->Close(); muonEleTriggerFile= NULL;}
-
 }
 
 // Set up parameters one by one
@@ -285,7 +283,6 @@ void BEANhelper::SetUpCSVreweighting(){
 
   // Do not set it up if we're running on collision data
   if(isData){ return; }
-
   f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/csv_rwt_hf_IT.root").c_str());
   f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/csv_rwt_lf_IT.root").c_str());
 
