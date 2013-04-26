@@ -205,6 +205,7 @@ class BEANhelper{
 
 		// CSV reweighting
 		double GetCSVweight(const BNjetCollection&, const sysType::sysType iSysType=sysType::NA);
+		vdouble GetCSVweights(const BNjetCollection&, const sysType::sysType iSysType=sysType::NA);
 
 		// Top PT reweighting
 		double TopPtWeight(double);

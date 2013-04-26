@@ -706,7 +706,7 @@ BNjet BEANhelper::GetCorrectedJet(const BNjet& iJet, const sysType::sysType iSys
     result.mass     *= jetFactor;
 
     // Update CSV value (i.e. reshape it if applicable)
-	result.btagCombinedSecVertex = GetCSVvalue(result,iSysType);
+// 	result.btagCombinedSecVertex = GetCSVvalue(result,iSysType);
 
 	return result;
 }
@@ -2369,6 +2369,94 @@ double BEANhelper::GetCSVweight(const BNjetCollection& iJets, const sysType::sys
   return csvWgtTotal;
 }
 
+// === Jet CSV reweighting: return lfSF and hfSF separately === //
+vdouble BEANhelper::GetCSVweights(const BNjetCollection& iJets, const sysType::sysType iSysType){
+  vdouble result;
+  
+  if (isData) {
+    result.clear();
+    result.push_back(1.0);
+    result.push_back(1.0);
+    return result;
+  }
+
+  CheckSetUp();
+  // IMPORTANT! iJets is the *SELECTED* jet collection which you use for your analysis
+
+  int iSysHF = 0;
+  switch(iSysType){
+  case sysType::JESup:	         iSysHF=1; break;
+  case sysType::JESdown:         iSysHF=2; break;
+  case sysType::CSVLFup:         iSysHF=3; break;
+  case sysType::CSVLFdown:       iSysHF=4; break;
+  case sysType::CSVHFStats1up:	 iSysHF=5; break;
+  case sysType::CSVHFStats1down: iSysHF=6; break;
+  case sysType::CSVHFStats2up:	 iSysHF=7; break;
+  case sysType::CSVHFStats2down: iSysHF=8; break;
+  default : iSysHF = 0; break;
+  }
+
+  int iSysLF = 0;
+  switch(iSysType){
+  case sysType::JESup:	         iSysLF=1; break;
+  case sysType::JESdown:         iSysLF=2; break;
+  case sysType::CSVHFup:         iSysLF=3; break;
+  case sysType::CSVHFdown:       iSysLF=4; break;
+  case sysType::CSVLFStats1up:	 iSysLF=5; break;
+  case sysType::CSVLFStats1down: iSysLF=6; break;
+  case sysType::CSVLFStats2up:	 iSysLF=7; break;
+  case sysType::CSVLFStats2down: iSysLF=8; break;
+  default : iSysLF = 0; break;
+  }
+
+  double csvWgthf = 1.;
+  double csvWgtlf = 1.;
+
+  for( BNjetCollection::const_iterator iJet = iJets.begin(); iJet != iJets.end(); ++iJet ){ 
+
+    double csv = iJet->btagCombinedSecVertex;
+    double jetPt = iJet->pt;
+    double jetAbsEta = fabs( iJet->eta );
+    int flavor = abs( iJet->flavour );
+
+    int iPt = -1; int iEta = -1;
+    if (jetPt >=29.99 && jetPt<40) iPt = 0;
+    else if (jetPt >=40 && jetPt<60) iPt = 1;
+    else if (jetPt >=60 && jetPt<100) iPt = 2;
+    else if (jetPt >=100 && jetPt<160) iPt = 3;
+    else if (jetPt >=160 && jetPt<10000) iPt = 4;
+
+    if (jetAbsEta >=0 &&  jetAbsEta<0.8) iEta = 0;
+    else if ( jetAbsEta>=0.8 && jetAbsEta<1.6) iEta = 1;
+    else if ( jetAbsEta>=1.6 && jetAbsEta<2.41) iEta = 2;
+
+    if (iPt < 0 || iEta < 0) std::cout << "Error, couldn't find Pt, Eta bins for this b-flavor jet, jetPt = " << jetPt << ", jetAbsEta = " << jetAbsEta << std::endl;
+
+    if (abs(flavor) == 5 || abs(flavor) == 4){
+      int useCSVBin = (csv>=0.) ? h_csv_wgt_hf[iSysHF][iPt]->FindBin(csv) : 1;
+      double iCSVWgtHF = h_csv_wgt_hf[iSysHF][iPt]->GetBinContent(useCSVBin);
+      if( iCSVWgtHF!=0 ) csvWgthf *= iCSVWgtHF;
+
+      // if( iSysHF==0 ) printf(" iJet,\t flavor=%d,\t pt=%.1f,\t eta=%.2f,\t csv=%.3f,\t wgt=%.2f \n",
+      // 			     flavor, jetPt, iJet->eta, csv, iCSVWgtHF );
+    }
+    else {
+      if (iPt >=2) iPt=2;       /// [30-40], [40-60] and [60-10000] only 3 Pt bins for lf
+      int useCSVBin = (csv>=0.) ? h_csv_wgt_lf[iSysLF][iPt][iEta]->FindBin(csv) : 1;
+      double iCSVWgtLF = h_csv_wgt_lf[iSysLF][iPt][iEta]->GetBinContent(useCSVBin);
+      if( iCSVWgtLF!=0 ) csvWgtlf *= iCSVWgtLF;
+
+      // if( iSysLF==0 ) printf(" iJet,\t flavor=%d,\t pt=%.1f,\t eta=%.2f,\t csv=%.3f,\t wgt=%.2f \n",
+      // 			     flavor, jetPt, iJet->eta, csv, iCSVWgtLF );
+    }
+  }
+
+  result.clear();
+  result.push_back(csvWgthf);
+  result.push_back(csvWgtlf);
+  
+  return result;
+}
 
 
 // === Top Pt reweighting === //
