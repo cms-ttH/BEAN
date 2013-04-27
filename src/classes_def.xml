@@ -39,6 +39,11 @@
   <class pattern="edm::Wrapper<BNmet>"/>
   <class name="edm::Wrapper<std::vector<BNmet> >" />
 
+  <class name="BNlepton" />
+  <class name="std::vector<BNlepton>" />
+  <class pattern="edm::Wrapper<BNlepton>"/>
+  <class name="edm::Wrapper<std::vector<BNlepton> >" />
+
   <class name="BNmuon" />
   <class name="std::vector<BNmuon>" />
   <class pattern="edm::Wrapper<BNmuon>"/>

@@ -10,6 +10,7 @@
 #include "ProductArea/BNcollections/interface/BNmcparticle.h"
 #include "ProductArea/BNcollections/interface/BNmet.h"
 #include "ProductArea/BNcollections/interface/BNmuon.h"
+#include "ProductArea/BNcollections/interface/BNlepton.h"
 #include "ProductArea/BNcollections/interface/BNphoton.h"
 #include "ProductArea/BNcollections/interface/BNsupercluster.h"
 #include "ProductArea/BNcollections/interface/BNtrack.h"
@@ -67,6 +68,11 @@ namespace {
      edm::Wrapper<BNmuon> muondummy1;
      std::vector<BNmuon> muondummy2;
      edm::Wrapper<std::vector<BNmuon> > muondummy3;
+
+     BNlepton leptondummy0;
+     edm::Wrapper<BNlepton> leptondummy1;
+     std::vector<BNlepton> leptondummy2;
+     edm::Wrapper<std::vector<BNlepton> > leptondummy3;
 
      BNphoton photondummy0;
      edm::Wrapper<BNphoton> photondummy1;
