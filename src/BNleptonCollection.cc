@@ -7,6 +7,21 @@ BNleptonCollection::~BNleptonCollection(){
 	for(auto it = begin(); it != end(); ++it){ delete *it; }
 }
 
+void BNleptonCollection::sort(){
+	for(BNleptonCollection::iterator it1 = begin(); it1 != end(); ++it1){
+
+		BNleptonCollection::iterator largestPtIt = it1;
+		for(BNleptonCollection::iterator it2 = (largestPtIt); it2 != end(); ++it2){
+			if((*it2)->pt > (*largestPtIt)->pt){ largestPtIt = it2; }
+		}
+
+		BNlepton* tempObject = *it1;
+		*it1 = *largestPtIt;
+		*largestPtIt = tempObject;
+
+	}
+}
+
 void BNleptonCollection::push_back(BNelectron* iElectron){
 	vector<BNlepton*>::push_back(new BNelectron(*iElectron));
 	back()->isElectron = 1;
