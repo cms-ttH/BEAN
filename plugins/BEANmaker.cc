@@ -13,7 +13,7 @@
 //
 // Original Author:  Darren Michael Puigh
 //         Created:  Wed Oct 28 18:09:28 CET 2009
-// $Id: BEANmaker.cc,v 1.13 2013/04/22 21:43:58 wulsin Exp $
+// $Id: BEANmaker.cc,v 1.6 2013/04/25 21:27:10 wulsin Exp $
 //
 //
 
@@ -999,6 +999,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyElectron.tkEta = ele->gsfTrack()->eta();
 	MyElectron.tkPhi = ele->gsfTrack()->phi();
 	MyElectron.tkDZ = ele->gsfTrack()->dz();
+	MyElectron.tkDZerr = ele->gsfTrack()->dzError();
 	MyElectron.tkD0 = ele->gsfTrack()->d0();
 	MyElectron.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
 	MyElectron.tkD0err = ele->gsfTrack()->d0Error();
@@ -1439,6 +1440,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyPfelectron.tkEta = pfele->gsfTrack()->eta();
 	MyPfelectron.tkPhi = pfele->gsfTrack()->phi();
 	MyPfelectron.tkDZ = pfele->gsfTrack()->dz();
+	MyPfelectron.tkDZerr = pfele->gsfTrack()->dzError();
 	MyPfelectron.tkD0 = pfele->gsfTrack()->d0();
 	MyPfelectron.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
 	MyPfelectron.tkD0err = pfele->gsfTrack()->d0Error();
@@ -1891,6 +1893,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyPfelectronLoose.tkEta = pfele->gsfTrack()->eta();
 	MyPfelectronLoose.tkPhi = pfele->gsfTrack()->phi();
 	MyPfelectronLoose.tkDZ = pfele->gsfTrack()->dz();
+	MyPfelectronLoose.tkDZerr = pfele->gsfTrack()->dzError();
 	MyPfelectronLoose.tkD0 = pfele->gsfTrack()->d0();
 	MyPfelectronLoose.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
 	MyPfelectronLoose.tkD0err = pfele->gsfTrack()->d0Error();
@@ -2758,6 +2761,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyMuon.tkEta = muon->track()->eta();
 	MyMuon.tkPhi = muon->track()->phi();
 	MyMuon.tkDZ = muon->track()->dz();
+	MyMuon.tkDZerr = muon->track()->dzError();
 	MyMuon.tkD0 = muon->track()->d0();
 	MyMuon.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
 	MyMuon.tkD0err = muon->track()->d0Error();
@@ -2778,6 +2782,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyMuon.samEta = muon->standAloneMuon()->eta();
 	MyMuon.samPhi = muon->standAloneMuon()->phi();
 	MyMuon.samDZ = muon->standAloneMuon()->dz();
+	MyMuon.samDZerr = muon->standAloneMuon()->dzError();
 	MyMuon.samD0 = muon->standAloneMuon()->d0();
 	MyMuon.samD0bs = (samvx-BSx)*sampy/sampt-(samvy-BSy)*sampx/sampt;
 	MyMuon.samD0err = muon->standAloneMuon()->d0Error();
@@ -2798,6 +2803,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyMuon.comEta = muon->combinedMuon()->eta();
 	MyMuon.comPhi = muon->combinedMuon()->phi();
 	MyMuon.comDZ = muon->combinedMuon()->dz();
+	MyMuon.comDZerr = muon->combinedMuon()->dzError();
 	MyMuon.comD0 = muon->combinedMuon()->d0();
 	MyMuon.comD0bs = (comvx-BSx)*compy/compt-(comvy-BSy)*compx/compt;
 	MyMuon.comD0err = muon->combinedMuon()->d0Error();
@@ -3140,6 +3146,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyPfmuon.tkEta = pfmuon->track()->eta();
 	MyPfmuon.tkPhi = pfmuon->track()->phi();
 	MyPfmuon.tkDZ = pfmuon->track()->dz();
+	MyPfmuon.tkDZerr = pfmuon->track()->dzError();
 	MyPfmuon.tkD0 = pfmuon->track()->d0();
 	MyPfmuon.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
 	MyPfmuon.tkD0err = pfmuon->track()->d0Error();
@@ -3160,6 +3167,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyPfmuon.samEta = pfmuon->standAloneMuon()->eta();
 	MyPfmuon.samPhi = pfmuon->standAloneMuon()->phi();
 	MyPfmuon.samDZ = pfmuon->standAloneMuon()->dz();
+	MyPfmuon.samDZerr = pfmuon->standAloneMuon()->dzError();
 	MyPfmuon.samD0 = pfmuon->standAloneMuon()->d0();
 	MyPfmuon.samD0bs = (samvx-BSx)*sampy/sampt-(samvy-BSy)*sampx/sampt;
 	MyPfmuon.samD0err = pfmuon->standAloneMuon()->d0Error();
@@ -3180,6 +3188,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyPfmuon.comEta = pfmuon->combinedMuon()->eta();
 	MyPfmuon.comPhi = pfmuon->combinedMuon()->phi();
 	MyPfmuon.comDZ = pfmuon->combinedMuon()->dz();
+	MyPfmuon.comDZerr = pfmuon->combinedMuon()->dzError();
 	MyPfmuon.comD0 = pfmuon->combinedMuon()->d0();
 	MyPfmuon.comD0bs = (comvx-BSx)*compy/compt-(comvy-BSy)*compx/compt;
 	MyPfmuon.comD0err = pfmuon->combinedMuon()->d0Error();
@@ -3524,6 +3533,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyPfmuonLoose.tkEta = pfmuon->track()->eta();
 	MyPfmuonLoose.tkPhi = pfmuon->track()->phi();
 	MyPfmuonLoose.tkDZ = pfmuon->track()->dz();
+	MyPfmuonLoose.tkDZerr = pfmuon->track()->dzError();
 	MyPfmuonLoose.tkD0 = pfmuon->track()->d0();
 	MyPfmuonLoose.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
 	MyPfmuonLoose.tkD0err = pfmuon->track()->d0Error();
@@ -3544,6 +3554,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyPfmuonLoose.samEta = pfmuon->standAloneMuon()->eta();
 	MyPfmuonLoose.samPhi = pfmuon->standAloneMuon()->phi();
 	MyPfmuonLoose.samDZ = pfmuon->standAloneMuon()->dz();
+	MyPfmuonLoose.samDZerr = pfmuon->standAloneMuon()->dzError();
 	MyPfmuonLoose.samD0 = pfmuon->standAloneMuon()->d0();
 	MyPfmuonLoose.samD0bs = (samvx-BSx)*sampy/sampt-(samvy-BSy)*sampx/sampt;
 	MyPfmuonLoose.samD0err = pfmuon->standAloneMuon()->d0Error();
@@ -3564,6 +3575,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyPfmuonLoose.comEta = pfmuon->combinedMuon()->eta();
 	MyPfmuonLoose.comPhi = pfmuon->combinedMuon()->phi();
 	MyPfmuonLoose.comDZ = pfmuon->combinedMuon()->dz();
+	MyPfmuonLoose.comDZerr = pfmuon->combinedMuon()->dzError();
 	MyPfmuonLoose.comD0 = pfmuon->combinedMuon()->d0();
 	MyPfmuonLoose.comD0bs = (comvx-BSx)*compy/compt-(comvy-BSy)*compx/compt;
 	MyPfmuonLoose.comD0err = pfmuon->combinedMuon()->d0Error();
@@ -3842,6 +3854,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyCocktailmuon.tkEta = cocktailmuon->track()->eta();
 	MyCocktailmuon.tkPhi = cocktailmuon->track()->phi();
 	MyCocktailmuon.tkDZ = cocktailmuon->track()->dz();
+	MyCocktailmuon.tkDZerr = cocktailmuon->track()->dzError();
 	MyCocktailmuon.tkD0 = cocktailmuon->track()->d0();
 	MyCocktailmuon.tkD0bs = (tkvx-BSx)*tkpy/tkpt-(tkvy-BSy)*tkpx/tkpt;
 	MyCocktailmuon.tkD0err = cocktailmuon->track()->d0Error();
@@ -3862,6 +3875,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyCocktailmuon.samEta = cocktailmuon->standAloneMuon()->eta();
 	MyCocktailmuon.samPhi = cocktailmuon->standAloneMuon()->phi();
 	MyCocktailmuon.samDZ = cocktailmuon->standAloneMuon()->dz();
+	MyCocktailmuon.samDZerr = cocktailmuon->standAloneMuon()->dzError();
 	MyCocktailmuon.samD0 = cocktailmuon->standAloneMuon()->d0();
 	MyCocktailmuon.samD0bs = (samvx-BSx)*sampy/sampt-(samvy-BSy)*sampx/sampt;
 	MyCocktailmuon.samD0err = cocktailmuon->standAloneMuon()->d0Error();
@@ -3882,6 +3896,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyCocktailmuon.comEta = cocktailmuon->combinedMuon()->eta();
 	MyCocktailmuon.comPhi = cocktailmuon->combinedMuon()->phi();
 	MyCocktailmuon.comDZ = cocktailmuon->combinedMuon()->dz();
+	MyCocktailmuon.comDZerr = cocktailmuon->combinedMuon()->dzError();
 	MyCocktailmuon.comD0 = cocktailmuon->combinedMuon()->d0();
 	MyCocktailmuon.comD0bs = (comvx-BSx)*compy/compt-(comvy-BSy)*compx/compt;
 	MyCocktailmuon.comD0err = cocktailmuon->combinedMuon()->d0Error();
