@@ -148,7 +148,7 @@ class BEANhelper{
 		bool IsTightMuon(const BNmuon&);
 		bool IsGoodMuon(const BNmuon&, const muonID::muonID);
 		float GetMuonRelIso(const BNmuon&);
-		float GetMuonSF(const BNmuon&);
+  float GetMuonSF(const BNmuon&, const muonID::muonID m = muonID::muonTight );
   float GetDoubleMuonTriggerSF ( const BNmuon&, const BNmuon& );
   float GetMuonEleTriggerSF ( const BNmuon&, const BNelectron & );
 
@@ -166,7 +166,7 @@ class BEANhelper{
 		bool IsLooseElectron(const BNelectron&);
 		bool IsTightElectron(const BNelectron&);
 		float GetElectronRelIso(const BNelectron&);
-		float GetElectronSF(const BNelectron&);
+  float GetElectronSF(const BNelectron&, const electronID::electronID e = electronID::electronTight );
   float GetDoubleElectronTriggerSF (const BNelectron&, const BNelectron&);
 		bool GetElectronIDresult(const BNelectron& iElectron, const electronID::electronID);
 		bool IsGoodElectron(const BNelectron&, const electronID::electronID);
@@ -334,14 +334,18 @@ class BEANhelper{
 		TH2D*			h_l_eff_;
 		TH2D*			h_o_eff_;
         TH2D*           h_ele_SF_;
+        TH2D*           h_SingleEle_trig_SF_;
         TH2D*           h_mu_SF_;
   TH2D*           h_doubleMuTrigSF;
   TH2D*           h_doubleEleTrigSF;
   TH2D*           h_muonEleTrigSF;
+  TH2D*           h_looseMuonSF;
+  TH2D*           h_looseEleSF;
   // testing -- temporary only
   TH2D*           h_testSingleMuNew;
   TH2D*           h_testSingleMuOld;
   TH2D*           h_testSingleEleNew;
+  TH2D*           h_testTrigSingleEleNew;
   TH2D*           h_testSingleEleOld;
   
         string          samplename;

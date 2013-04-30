@@ -437,29 +437,17 @@ void BEANhelper::SetUpLeptonSF(){
 	if(isData){ return; }
 
 	string filePath = "";
-    string doubleEleFilePath = "";
-    string doubleMuonFilePath = "";
-    string muonEleFilePath = "";
+    
     string oldFilePath = "";
     
     if ( era=="2012_53x" ){
       
-      filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV_53x.root";
-      doubleEleFilePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/trigger_SF_ee.root";
-      doubleMuonFilePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/trigger_SF_mumu.root";
-      muonEleFilePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/trigger_SF_emu.root";
+      filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV_53x_baseline.root";
+      
       oldFilePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
 
-
-      doubleMuonTriggerFile = new TFile ( doubleMuonFilePath.c_str() );
-      doubleEleTriggerFile = new TFile ( doubleEleFilePath.c_str() );
-      muonEleTriggerFile = new TFile ( muonEleFilePath.c_str() );
       oldLeptonScaleFactFile = new TFile (oldFilePath.c_str() );
 
-      //cout << "Trying to open old lepton file " << oldLeptonScaleFactFile->GetName() << endl;
-      
-      //cout <<" ... is zombie ? " << oldLeptonScaleFactFile->IsZombie()
-      //     << endl;
       
 	} else if( era=="2012_52x"  ){
       filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
@@ -473,26 +461,34 @@ void BEANhelper::SetUpLeptonSF(){
 	leptonSFfile = new TFile (filePath.c_str());
 
 
-
+    // Careful! This might not be compatible with 2012_52x anymore.
 	if( isLJ ){
-	  h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "h_ele_pt_eta_full_id_iso_hlt_pass" ).c_str())->Clone();
+	  //h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "h_ele_pt_eta_full_id_iso_hlt_pass" ).c_str())->Clone();
 	  //h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
+      h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "TightEleIdIsoSF" ).c_str())->Clone();      
 	  h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
         
 	}else {
 
-	  h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "ele_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
+	  h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "TightEleIdIsoSF" ).c_str())->Clone();
 	  h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
 	}
 
 	if ( era=="2012_53x") {
-          h_doubleMuTrigSF  = (TH2D*) doubleMuonTriggerFile->Get("eta2d_scalefactor_with_syst")->Clone("DoubleMuSF");
-          h_doubleEleTrigSF = (TH2D*) doubleEleTriggerFile->Get("eta2d_scalefactor_with_syst")->Clone("DoubleEleSF");
-          h_muonEleTrigSF   = (TH2D*) muonEleTriggerFile->Get("eta2d_scalefactor_with_syst")->Clone("MuonEleSF");
+          h_doubleMuTrigSF  = (TH2D*) leptonSFfile->Get("TwoMuonTriggerSF")->Clone("DoubleMuSF");
+          h_doubleEleTrigSF = (TH2D*) leptonSFfile->Get("TwoEleTriggerSF")->Clone("DoubleEleSF");
+          h_muonEleTrigSF   = (TH2D*) leptonSFfile->Get("MuonEleTriggerSF")->Clone("MuonEleSF");
+
+
+          h_SingleEle_trig_SF_ = (TH2D*) leptonSFfile->Get(string("TightEleTriggerSF").c_str())->Clone();
+          
+          h_looseMuonSF = (TH2D*)  leptonSFfile->Get(string( "LooseMuonIdIsoSF" ).c_str())->Clone();
+          h_looseEleSF =  (TH2D*)  leptonSFfile->Get(string( "LooseEleIdIsoSF" ).c_str())->Clone();
 
           cout << "Getting lepton sf histos" << endl;
           h_testSingleMuNew = (TH2D*) leptonSFfile->Get("mu_pt_eta_full_id_iso_hlt_8TeV")->Clone("MuNewTest");          
-          h_testSingleEleNew = (TH2D*) leptonSFfile->Get("h_ele_pt_eta_full_id_iso_hlt_pass")->Clone("EleNewTest");
+          h_testSingleEleNew = (TH2D*) leptonSFfile->Get("TightEleIdIsoSF")->Clone("EleNewTest");
+          h_testTrigSingleEleNew = (TH2D*) leptonSFfile->Get("TightEleTriggerSF")->Clone("EleTrigNewTest");
 
           h_testSingleMuOld = (TH2D*) oldLeptonScaleFactFile->Get("mu_pt_eta_full_id_iso_hlt_8TeV")->Clone("MuOldTest");
           h_testSingleEleOld = (TH2D*) oldLeptonScaleFactFile->Get("ele_pt_eta_full_id_iso_hlt_8TeV")->Clone("EleOldTest");          
@@ -500,7 +496,8 @@ void BEANhelper::SetUpLeptonSF(){
           if (h_testSingleMuNew == NULL
               || h_testSingleEleNew == NULL
               || h_testSingleMuOld == NULL
-              || h_testSingleEleOld == NULL ) {
+              || h_testSingleEleOld == NULL
+              || h_testTrigSingleEleNew == NULL ) {
             ThrowFatalError ("Can't read test histos");
           }
             
@@ -856,18 +853,46 @@ float BEANhelper::GetMuonRelIso(const BNmuon& iMuon){
 	return result;
 }
 
-float BEANhelper::GetMuonSF(const BNmuon& iMuon){
+float BEANhelper::GetMuonSF( const BNmuon& iMuon, const muonID::muonID inputID ){
   CheckSetUp();
   double SF = 1.0;
 
   if (isData) return SF;
+
+  double usePT = -10;
+  double useEta = -10;
   
-  double usePT = std::min( iMuon.pt, 499. );
-  // now SF is symmetric in eta
-  //double useEta = ( iMuon.eta>0. ) ? std::min( 2.09, iMuon.eta ) : std::max( -2.09, iMuon.eta );
-  double useEta = std::min( fabs(iMuon.eta), 2.09);
-  
-  SF = h_mu_SF_->GetBinContent( h_mu_SF_->FindBin(usePT, useEta) );
+  switch (inputID) {
+    // Tight selection
+  case muonID::muonTight:
+    usePT = std::min( iMuon.pt, 499. );
+    useEta = std::min( fabs(iMuon.eta), 2.09);  
+    SF = h_mu_SF_->GetBinContent( h_mu_SF_->FindBin(usePT, useEta) );
+    break;
+    
+    // Treat all other selections as loose
+    // Loose SF is closest for these in any case.
+  case muonID::muonLoose:
+  case muonID::muonSide:
+  case muonID::muonPtOnly:
+  case muonID::muonPtEtaOnly:
+  case muonID::muonPtEtaIsoOnly:
+  case muonID::muonPtEtaIsoTrackerOnly:
+    
+    usePT = std::min( iMuon.pt, 200. );
+    useEta = std::min( fabs(iMuon.eta), 2.09);
+    // for this histo x = eta y = pt
+    SF = h_looseMuonSF->GetBinContent( h_looseMuonSF->FindBin(useEta, usePT) );
+    break;
+    
+  }
+
+  if (SF < 0.005) {
+    TString message = Form("Error! Muon SF too small (%f).\nCalled GetMuonSF with pt = %f eta = %f and tight = %d ",
+                           SF, iMuon.pt, iMuon.eta, inputID==muonID::muonTight);
+    ThrowFatalError(message.Data());
+
+  }
 
   return SF;
 }
@@ -1647,32 +1672,71 @@ float BEANhelper::GetElectronRelIso(const BNelectron& iElectron){
 	return result;
 }
 
-float BEANhelper::GetElectronSF(const BNelectron& iElectron){
+float BEANhelper::GetElectronSF(const BNelectron& iElectron, const electronID::electronID inputID){
   CheckSetUp();
   double SF = 1.0;
   if (isData) return SF;
 
-  if ( !isLJ ) {
+  double usePT = -10;
+  double useEta = -10;
+  
+  switch (inputID) {
 
-    // current binning is only 20 to 150
-    // so fix  it!
-    double usePT = std::min( iElectron.pt, 149. );
-    usePT = std::max(21.0, usePT);
-    //double useEta = ( iElectron.eta>0. ) ? std::min( 2.09, iElectron.eta ) : std::max( -2.09, iElectron.eta );
-    double useEta = std::min(fabs(iElectron.eta), 2.49);
-    SF = h_ele_SF_->GetBinContent( h_ele_SF_->FindBin(usePT, useEta) );
+  case electronID::electronTight:
+  case electronID::electronTightMinusTrigPresel:
+    usePT = std::min (iElectron.pt, 199.0);
+    useEta = std::min (fabs(iElectron.eta), 2.39);
+    // ID*ISO and trigger are split 
+    SF = h_ele_SF_->GetBinContent(h_ele_SF_->FindBin(useEta,usePT));
+    if (isLJ)
+      SF = SF * h_SingleEle_trig_SF_->GetBinContent(h_SingleEle_trig_SF_->FindBin(useEta, usePT));
+    break;
 
-  } else {
-    // current binning is only 20 to 150
-    // so fix  it!
-    double usePT = std::min( iElectron.pt, 499. );
-    usePT = std::max(11.0, usePT);
-    //double useEta = ( iElectron.eta>0. ) ? std::min( 2.09, iElectron.eta ) : std::max( -2.09, iElectron.eta );
-    double useEta = iElectron.eta;
-    
-    SF = h_ele_SF_->GetBinContent( h_ele_SF_->FindBin(usePT, useEta) );
+  case electronID::electronLoose:
+  case electronID::electronSide:
+  case electronID::electronLooseMinusTrigPresel:
+    usePT = std::min (iElectron.pt, 199.0);
+    usePT = std::max (usePT, 15.1);
+    useEta = std::min (fabs(iElectron.eta), 2.39);                                                  
+    SF = h_looseEleSF->GetBinContent(h_looseEleSF->FindBin(useEta, usePT));    
+    break;
+
   }
 
+//   if ( !isLJ ) {
+
+//     // current binning is only 20 to 150
+//     // so fix  it!
+//     double usePT = std::min( iElectron.pt, 149. );
+//     usePT = std::max(21.0, usePT);
+//     //double useEta = ( iElectron.eta>0. ) ? std::min( 2.09, iElectron.eta ) : std::max( -2.09, iElectron.eta );
+//     double useEta = std::min(fabs(iElectron.eta), 2.49);
+//     SF = h_ele_SF_->GetBinContent( h_ele_SF_->FindBin(usePT, useEta) );
+
+//   } else {
+//     // current binning is only 20 to 150
+//     // so fix  it!
+//     double usePT = std::min( iElectron.pt, 499. );
+//     usePT = std::max(11.0, usePT);
+//     //double useEta = ( iElectron.eta>0. ) ? std::min( 2.09, iElectron.eta ) : std::max( -2.09, iElectron.eta );
+//     double useEta = iElectron.eta;
+    
+//     SF = h_ele_SF_->GetBinContent( h_ele_SF_->FindBin(usePT, useEta) );
+//   }
+
+
+  // Do a quick sanity check for the SF.
+  // If it is below half a percent, then it is
+  // probably way too small, and there was likely a bug
+  // reading it from the histo.
+  //---------->>>>>> Throw an exception
+  if (SF < 0.005) {
+    TString message = Form("Error! Electron SF too small (%f).\nCalled GetElectronSF with pt = %f eta = %f and tight = %d ",
+                           SF, iElectron.pt, iElectron.eta, inputID==electronID::electronTight);
+    ThrowFatalError(message.Data());
+
+  }
+  
   return SF;
 }
 
