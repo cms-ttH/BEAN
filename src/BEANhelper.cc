@@ -119,7 +119,7 @@ void BEANhelper::SetUp(string iEra, int iSampleNumber, bool iIsLJ, bool iIsData,
 	SetUpCSVreweighting();
 
 	// Setup CSV reshaping
-	SetUpCSVreshaping();
+	if(reshapeCSV) SetUpCSVreshaping();
 
 	// Setup jet efficiency scale factors
 	SetUpJetSF();
