@@ -34,6 +34,19 @@ void BNleptonCollection::push_back(BNmuon* iMuon){
 	back()->isMuon = 1;
 }
 
+void BNleptonCollection::push_back(BNlepton* iLepton){
+	BNlepton* newLepton = NULL;
+	if(iLepton->isElectron){
+		newLepton = new BNelectron(*((BNelectron*)iLepton));
+	}else if(iLepton->isMuon){
+		newLepton = new BNmuon(*((BNmuon*)iLepton));
+	}else{
+		cerr << "ERROR: Unknown type of lepton." << endl; exit(1);	
+	}
+
+	vector<BNlepton*>::push_back(newLepton);
+}
+
 void BNleptonCollection::push_back(BNelectron const & iElectron){
 	vector<BNlepton*>::push_back(new BNelectron(iElectron));
 	back()->isElectron = 1;
