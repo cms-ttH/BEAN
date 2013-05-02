@@ -94,14 +94,14 @@ BEANhelper::~BEANhelper(){
 }
 
 // Set up parameters one by one
-void BEANhelper::SetUp(string iEra, int iSampleNumber, bool iIsLJ, bool iIsData, string iDataset, bool iReshapeCSV, bool iPfLeptons = true, string iCollisionDS){
+void BEANhelper::SetUp(string iEra, int iSampleNumber,  const analysisType::analysisType iAnalysis, bool iIsData, string iDataset, bool iReshapeCSV, bool iPfLeptons = true, string iCollisionDS){
 	// Make sure we don't set up more than once
 	if(isSetUp){ ThrowFatalError("Trying to set up 'BEANhelper' for the second time. Check your code."); }
 
 	// Bring in the external values
 	era				= iEra;
 	sampleNumber	= iSampleNumber;
-	isLJ			= iIsLJ;
+	analysis		= iAnalysis;
 	isData			= iIsData;
 	dataset			= iDataset;
 	reshapeCSV		= iReshapeCSV;
@@ -462,17 +462,23 @@ void BEANhelper::SetUpLeptonSF(){
 
 
     // Careful! This might not be compatible with 2012_52x anymore.
-	if( isLJ ){
-	  //h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "h_ele_pt_eta_full_id_iso_hlt_pass" ).c_str())->Clone();
-	  //h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
-      h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "TightEleIdIsoSF" ).c_str())->Clone();      
-	  h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
-        
-	}else {
-
-	  h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "TightEleIdIsoSF" ).c_str())->Clone();
-	  h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
+	switch(analysis){
+		case analysisType::LJ: case analysisType::Tau:
+			//h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "h_ele_pt_eta_full_id_iso_hlt_pass" ).c_str())->Clone();
+			//h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
+			h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "TightEleIdIsoSF" ).c_str())->Clone();      
+			h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
+			break;
+		case analysisType::DIL:
+			h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "TightEleIdIsoSF" ).c_str())->Clone();
+			h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
+			break;
+		default:
+			assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau");
+			break;
 	}
+
+
 
 	if ( era=="2012_53x") {
           h_doubleMuTrigSF  = (TH2D*) leptonSFfile->Get("TwoMuonTriggerSF")->Clone("DoubleMuSF");
@@ -1164,13 +1170,23 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
 
     if (era=="2011") {
       minLooseMuonPt		= 10;
-      minTightMuonPt		= ( isLJ ) ? 30. : 20.;
+	  switch(analysis){
+		  case analysisType::LJ:	minTightMuonPt = 30.;	break;
+		  case analysisType::Tau:	minTightMuonPt = 20.;	break;
+		  case analysisType::DIL:	minTightMuonPt = 20.;	break;
+		  default: assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau"); break;
+	  }
       maxLooseMuonAbsEta	= 2.4;
       maxTightMuonAbsEta	= 2.1;
     }
     else if (era=="2012_52x" || era=="2012_53x") {
       minLooseMuonPt		= 10;
-      minTightMuonPt		= ( isLJ ) ? 30. : 20.;
+	  switch(analysis){
+		  case analysisType::LJ:	minTightMuonPt = 30.;	break;
+		  case analysisType::Tau:	minTightMuonPt = 20.;	break;
+		  case analysisType::DIL:	minTightMuonPt = 20.;	break;
+		  default: assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau"); break;
+	  }
       maxLooseMuonAbsEta	= 2.5;
       maxTightMuonAbsEta	= 2.1;
     }
@@ -1688,7 +1704,7 @@ float BEANhelper::GetElectronSF(const BNelectron& iElectron, const electronID::e
     useEta = std::min (fabs(iElectron.eta), 2.39);
     // ID*ISO and trigger are split 
     SF = h_ele_SF_->GetBinContent(h_ele_SF_->FindBin(useEta,usePT));
-    if (isLJ)
+    if( (analysis == analysisType::LJ) || (analysis == analysisType::Tau))
       SF = SF * h_SingleEle_trig_SF_->GetBinContent(h_SingleEle_trig_SF_->FindBin(useEta, usePT));
     break;
 
@@ -1750,7 +1766,15 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 	bool eidHyperTight1MC_dec	= ( (eidHyperTight1MC & 1)==1 );
 	int eidTight				= iElectron.eidTight;
 	bool eidTight_dec			= ( (eidTight & 1)==1 );
-	bool eid					= isLJ ? eidHyperTight1MC_dec : eidTight_dec;
+
+	bool eid					= 0;
+	switch(analysis){
+		case analysisType::LJ:	eid = eidHyperTight1MC_dec;	break;
+		case analysisType::Tau:	eid = eidHyperTight1MC_dec;	break;
+		case analysisType::DIL:	eid = eidTight_dec;			break;
+		default: assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau"); break;
+	}
+
 	bool d0						= ( fabs(iElectron.correctedD0) < 0.02 );
 	bool dZ						= ( fabs(iElectron.correctedDZ) < 1. );
 	bool dist					= ( fabs(iElectron.dist)<0.02 );
@@ -1840,13 +1864,23 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
 
     if (era=="2011") {
       minLooseElectronPt		= 10;
-      minTightElectronPt		= ( isLJ ) ? 30. : 20.;
+	  switch(analysis){
+		  case analysisType::LJ:	minTightElectronPt = 30; break;
+		  case analysisType::Tau:	minTightElectronPt = 20; break;
+		  case analysisType::DIL:	minTightElectronPt = 20; break;
+		  default: assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau"); break;
+	  }
       maxLooseElectronAbsEta	= 2.5;
       maxTightElectronAbsEta	= 2.5;
     }
     else if (era=="2012_52x" || era=="2012_53x") {
       minLooseElectronPt		= 10;
-      minTightElectronPt		= ( isLJ ) ? 30. : 20.;
+	  switch(analysis){
+		  case analysisType::LJ:	minTightElectronPt = 30; break;
+		  case analysisType::Tau:	minTightElectronPt = 20; break;
+		  case analysisType::DIL:	minTightElectronPt = 20; break;
+		  default: assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau"); break;
+	  }
       maxLooseElectronAbsEta	= 2.5;
       maxTightElectronAbsEta	= 2.5;
     }

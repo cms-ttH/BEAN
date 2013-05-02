@@ -78,6 +78,7 @@ typedef BNtrackCollection::const_iterator         TrackIter;
 typedef BNtriggerCollection::const_iterator       TrigIter;
 typedef BNtrigobjCollection::const_iterator       TrigObjIter;
 
+namespace analysisType{	enum analysisType{ LJ, DIL, Tau }; }		
 namespace sysType{		enum sysType{		NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup, TESup, TESdown, CSVLFup, CSVLFdown, CSVHFup, CSVHFdown, CSVHFStats1up, CSVHFStats1down, CSVLFStats1up, CSVLFStats1down, CSVHFStats2up, CSVHFStats2down, CSVLFStats2up, CSVLFStats2down }; }
 namespace jetID{		enum jetID{			jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
 namespace tauID{		enum tauID{			tauNonIso, tauVLoose, tauLoose, tauMedium, tauTight }; }
@@ -98,7 +99,7 @@ class BEANhelper{
 		virtual ~BEANhelper();
 		
 		// Set up BEANhelper
-		void SetUp(string, int, bool, bool, string, bool, bool, string iCollisionDS="All");
+		void SetUp(string, int, const analysisType::analysisType, bool, string, bool, bool, string iCollisionDS="All");
 
 		template <typename BNobject> void PrintInfo(const BNobject&);
 		template <typename BNobject> BNmcparticle GetMatchedMCparticle(const BNmcparticleCollection&, const BNobject&, const double);
@@ -271,7 +272,7 @@ class BEANhelper{
 		bool isSetUp;
 		string era;
 		int sampleNumber;
-		bool isLJ;
+		analysisType::analysisType analysis;
 		bool isData;
 		string dataset;
 		bool reshapeCSV;
