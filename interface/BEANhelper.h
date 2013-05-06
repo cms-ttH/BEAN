@@ -110,6 +110,7 @@ class BEANhelper{
 
 		// Union, intersection, difference
 		template <typename BNcollection> BNcollection GetSortedByPt(const BNcollection&);
+		template <typename BNcollection> BNcollection GetSortedByCSV(const BNcollection&);
 		template <typename BNcollection> BNcollection GetUnion(const BNcollection&, const BNcollection&);
 		template <typename BNcollection> BNcollection GetIntersection(const BNcollection&, const BNcollection&);
 		template <typename BNcollection> BNcollection GetDifference(const BNcollection&, const BNcollection&);
@@ -429,6 +430,27 @@ template <typename BNcollection> BNcollection BEANhelper::GetSortedByPt(const BN
 
 		result.push_back(*largestPtElement);
 		tempCollection.erase(largestPtElement);
+	}
+	result.push_back(*(tempCollection.begin()));
+
+	return result;
+}
+
+// === Returned sorted input collection, by descending CSV === //
+template <typename BNcollection> BNcollection BEANhelper::GetSortedByCSV(const BNcollection& iBNcollection){
+	BNcollection result;
+	BNcollection tempCollection = iBNcollection;
+
+    if (tempCollection.size() == 0) { return tempCollection; }
+
+	while(tempCollection.size() > 1){
+		typename BNcollection::iterator largestCSVElement = tempCollection.begin();
+		for(typename BNcollection::iterator Object = (tempCollection.begin()+1); Object != tempCollection.end(); ++Object ){
+			if(Object->btagCombinedSecVertex > largestCSVElement->btagCombinedSecVertex){ largestCSVElement = Object; }
+		}
+
+		result.push_back(*largestCSVElement);
+		tempCollection.erase(largestCSVElement);
 	}
 	result.push_back(*(tempCollection.begin()));
 
