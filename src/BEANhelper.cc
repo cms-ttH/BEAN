@@ -1347,9 +1347,10 @@ bool BEANhelper::SingleObjectMatchesAnyTrigger (double recoEta, double recoPhi, 
       
       // if this is the right name 
       if ( iObj->filter.find((*iTarget)) != std::string::npos) {
-        double deltaR = sqrt ( ( recoEta - iObj->eta ) * ( recoEta - iObj->eta )
-                               + (recoPhi - iObj->phi) * ( recoPhi - iObj->phi)
-                               );
+//         double deltaR = sqrt ( ( recoEta - iObj->eta ) * ( recoEta - iObj->eta )
+//                                + (recoPhi - iObj->phi) * ( recoPhi - iObj->phi)
+//                                );
+	double deltaR = reco::deltaR(recoEta, recoPhi, iObj->eta, iObj->phi); 
 
         if (deltaR < 0.3)
           matchTrigger = true;
