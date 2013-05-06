@@ -588,9 +588,15 @@ string BEANhelper::GetSampleName(){
 		else if( sampleNumber==2710 ){	samplename = "www";					}
 		else if( sampleNumber==2720 ){	samplename = "wwz";					}
 		else if( sampleNumber==2701 ){	samplename = "wz";					}
+        else if( sampleNumber==2731 ){  samplename = "wz_lll";              }
+        else if( sampleNumber==2761 ){  samplename = "wz_lljj";             }
+        else if( sampleNumber==2791 ){  samplename = "wz_ljj";              }
 		else if( sampleNumber==2721 ){	samplename = "wzz";					}
 		else if( sampleNumber==2702 ){	samplename = "zz";					}
+		else if( sampleNumber==2732 ){	samplename = "zz_llll";				}
+		else if( sampleNumber==2762 ){	samplename = "zz_lljj";				}
 		else if( sampleNumber==2722 ){	samplename = "zzz";					}
+		else if( sampleNumber==2560 ){	samplename = "ttbarG";				}
 		else if( sampleNumber==2524 ){	samplename = "ttbarW";				}
 		else if( sampleNumber==2534 ){	samplename = "ttbarWW";				}
 		else if( sampleNumber==2523 ){	samplename = "ttbarZ";				}
