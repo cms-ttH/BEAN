@@ -196,6 +196,9 @@ class BEANhelper{
 		BNmcparticleCollection	GetHadronicGenTaus(const BNmcparticleCollection&);
 		BNmcparticle			GetVisGenTau(const BNmcparticle&, const BNmcparticleCollection&);
 		bool                    ttPlusHeavyKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);
+		bool                    ttPlusHFKeepEvent(int sampleNumber, const BNmcparticleCollection&, const BNjetCollection&);
+		int                     ttPlusBBClassifyEvent(const BNmcparticleCollection&, const BNjetCollection&);
+		int                     ttPlusCCClassifyEvent(const BNmcparticleCollection&, const BNjetCollection&);
 		unsigned int            GetNumExtraPartons(const BNmcparticleCollection&);
  		hdecayType::hdecayType  GetHdecayType(const BNmcparticleCollection&);
 		bool                    keepHdecayType(const BNmcparticleCollection&, const hdecayType::hdecayType);

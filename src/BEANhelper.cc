@@ -654,10 +654,9 @@ BNmet BEANhelper::GetCorrectedMET(const BNmet& iMET, const BNjetCollection& iJet
 
 	TLorentzVector newMET(iMET.px, iMET.py, 0, 0);
     float minPt = -14000.0; //14 TeV
-    
+
 	// Correct the MET based on jet pT corrections
 	for( BNjetCollection::const_iterator Jet = iJets.begin(); Jet != iJets.end(); ++Jet ){
-
       
 		// Get the corrected jet
 		BNjet correctedJet = GetCorrectedJet(*Jet, iSysType);
@@ -3109,3 +3108,257 @@ bool BEANhelper::ttPlusHeavyKeepEvent( const BNmcparticleCollection& iMCparticle
   return keepEvent;
 
 }
+
+
+
+
+bool BEANhelper::ttPlusHFKeepEvent( int sampleNumber, const BNmcparticleCollection& iMCparticles,
+                                       const BNjetCollection& iJets ) {
+
+  CheckSetUp();
+  string samplename = GetSampleName();
+
+  // validate input
+  bool validInput = false;
+  if (samplename == "ttbar" || samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll") validInput = true;
+  if (samplename == "ttbar_cc" || samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll") validInput = true;
+  if (samplename == "ttbar_bb" || samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll") validInput = true;
+
+  if (!validInput ){
+    cout << "ttPlusHeavyKeepEvent: could not recognize samplename " << samplename <<"... failing" <<endl;
+  }
+
+  bool validEra = false;
+  if (era == "2011" ) validEra = true;
+  if (era == "2012_52x" || era == "2012_53x" ) validEra = true;
+
+  if (!validEra ){
+    cout << "ttPlusHeavyKeepEvent: could not recognize era " << era <<"... failing" <<endl;
+  }
+
+  bool keepEvent = false;
+  bool debug_ = false;
+
+  int ttbb_algo_result = BEANhelper::ttPlusBBClassifyEvent( iMCparticles, iJets );
+  int ttcc_algo_result = BEANhelper::ttPlusCCClassifyEvent( iMCparticles, iJets );
+
+
+  bool isBBbarEvent = false, isCCbarEvent = false;
+  if( ttbb_algo_result>0 )      isBBbarEvent = true;
+  else if( ttcc_algo_result>0 ) isCCbarEvent = true;
+
+
+
+  if( (samplename == "ttbar" || samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll") && !isBBbarEvent && !isCCbarEvent ) keepEvent = true;
+  else if( (samplename == "ttbar_bb" || samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll") &&  isBBbarEvent && !isCCbarEvent ) keepEvent = true;
+  else if( (samplename == "ttbar_cc" || samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll")  && !isBBbarEvent && isCCbarEvent  ) keepEvent = true;
+
+  if (debug_) cout << "Filter result = " << keepEvent << endl
+                   << "isBBbarEvent = " << isBBbarEvent << endl
+                   << "isCCbarEvent = " << isCCbarEvent << endl
+                   << "... will we skip this? " << (!keepEvent) << endl;
+
+  if( sampleNumber==2583 && isBBbarEvent ) keepEvent = true;
+  else if( sampleNumber==2573 && isCCbarEvent ) keepEvent = true;
+  else if( sampleNumber==2563 && !isBBbarEvent && !isCCbarEvent ) keepEvent = true;
+
+  return keepEvent;
+}
+
+
+
+
+
+int BEANhelper::ttPlusBBClassifyEvent( const BNmcparticleCollection& iMCparticles,
+				       const BNjetCollection& iJets ) {
+
+  std::vector<int> list_b;
+  bool hasT = false;
+  bool hasTbar = false;
+  int startHere = -1;
+
+  // Loop over MC particles and get a list of all b quarks that satisfy:
+  // 1) Are b quarks
+  // 2) Have a mother that is not a top
+  //    or, if they have more than one mother or no mother match
+  //    that one of their two mothers is not a top
+  // 3) Have a daughter that is 92 or 91, indicates Lund fragmentation string/cluster
+  //    ensures final state parton
+  //
+  for( int i=0; i<int(iMCparticles.size()); i++ ){
+    int id = iMCparticles.at(i).id;
+    int absId = abs(id);
+    int motherID = iMCparticles.at(i).motherId;
+    int motherAbsID = abs(motherID);
+    int mother0ID = iMCparticles.at(i).mother0Id;
+    int mother0AbsID = abs(mother0ID);
+    int mother1ID = iMCparticles.at(i).mother1Id;
+    int mother1AbsID = abs(mother1ID);
+
+    int daughter0ID = iMCparticles.at(i).daughter0Id;
+    int daughter1ID = iMCparticles.at(i).daughter1Id;
+
+    if( absId==5 && motherAbsID!=6 && mother0AbsID!=6 && mother1AbsID!=6 && 
+	(daughter0ID==91 || daughter0ID==92 || daughter0ID==93 || daughter1ID==91 || daughter1ID==92 || daughter1ID==93) ) list_b.push_back(i);
+    if( id==6  ) hasT = true;
+    if( id==-6 ) hasTbar = true;
+    if( hasT && hasTbar && startHere<0 ) startHere = i;
+  }
+
+
+  // Loop over those b's that are not from top
+  std::vector<int> list_matched_jets;
+  std::vector<int> list_b_match;
+  for( int i=0; i<int(list_b.size()); i++ ){
+    int ind = list_b[i];
+
+    bool isMatched = false;
+    int matchedJet = -1;
+    int myJet = -1;
+    double minDR = 99;
+    // Get the jet that is closest in dR
+    for( BNjetCollection::const_iterator iJet = iJets.begin(); iJet != iJets.end(); iJet++ ){
+      double dR = reco::deltaR( iJet->eta, iJet->phi, iMCparticles.at(ind).eta, iMCparticles.at(ind).phi );
+      myJet++;
+      if( dR<minDR ){
+	minDR = dR;
+	matchedJet = myJet;
+      }
+    }
+
+    // If dR(b,closest jet) < 0.5, consider matched
+    if( minDR<0.5 ) isMatched=true;
+    // Don't continue if the b is not close to any jet
+    if( !isMatched ) continue;
+
+    // If this b came before the t and tbar, it is not going to be a final state particle
+    if( ind<startHere ) continue;
+
+	  
+    // Check if the jet matched to this b is the same as a previous b-matched jet
+    bool previousMatch = false;
+    for( int iJet = 0; iJet < int(list_matched_jets.size()); iJet++ ){
+      if( matchedJet==list_matched_jets[iJet] ){
+	previousMatch = true;
+	break;
+      }
+    }
+    if( !previousMatch ) list_matched_jets.push_back(matchedJet);
+    list_b_match.push_back(ind);
+
+  } // end loop over list of b's
+
+
+  int numberOfBs = int(list_b_match.size());
+  int numberOfMatchedJets = int(list_matched_jets.size());
+
+
+  int result = 0;
+  if( numberOfBs==1 ) result = 1;
+  else if( numberOfBs==2 && numberOfMatchedJets==1 ) result = 2;
+  else if( numberOfBs==2 && numberOfMatchedJets==2 ) result = 3;
+  else if( numberOfBs>=3 ) result = 4;
+
+
+  return result;
+
+}
+
+
+
+int BEANhelper::ttPlusCCClassifyEvent( const BNmcparticleCollection& iMCparticles,
+				       const BNjetCollection& iJets ) {
+
+  std::vector<int> list_c;
+  bool hasT = false;
+  bool hasTbar = false;
+  int startHere = -1;
+
+  // Loop over MC particles and get a list of all b quarks that satisfy:
+  // 1) Are b quarks
+  // 2) Have a mother that is not a top
+  //    or, if they have more than one mother or no mother match
+  //    that one of their two mothers is not a top
+  // 3) Have a daughter that is 92 or 91, indicates Lund fragmentation string/cluster
+  //    ensures final state parton
+  //
+  for( int i=0; i<int(iMCparticles.size()); i++ ){
+    int id = iMCparticles.at(i).id;
+    int absId = abs(id);
+    int motherID = iMCparticles.at(i).motherId;
+    int motherAbsID = abs(motherID);
+    int mother0ID = iMCparticles.at(i).mother0Id;
+    int mother0AbsID = abs(mother0ID);
+    int mother1ID = iMCparticles.at(i).mother1Id;
+    int mother1AbsID = abs(mother1ID);
+
+    int daughter0ID = iMCparticles.at(i).daughter0Id;
+    int daughter1ID = iMCparticles.at(i).daughter1Id;
+
+    if( absId==4 && motherAbsID!=5 && mother0AbsID!=5 && mother1AbsID!=5 && motherAbsID!=24 && mother0AbsID!=24 && mother1AbsID!=24 && 
+	(daughter0ID==91 || daughter0ID==92 || daughter0ID==93 || daughter1ID==91 || daughter1ID==92 || daughter1ID==93) ) list_c.push_back(i);
+    if( id==6  ) hasT = true;
+    if( id==-6 ) hasTbar = true;
+    if( hasT && hasTbar && startHere<0 ) startHere = i;
+  }
+
+
+  // Loop over those c's that are not W or b
+  std::vector<int> list_matched_jets;
+  std::vector<int> list_c_match;
+  for( int i=0; i<int(list_c.size()); i++ ){
+    int ind = list_c[i];
+
+    bool isMatched = false;
+    int matchedJet = -1;
+    int myJet = -1;
+    double minDR = 99;
+    // Get the jet that is closest in dR
+    for( BNjetCollection::const_iterator iJet = iJets.begin(); iJet != iJets.end(); iJet++ ){
+      double dR = reco::deltaR( iJet->eta, iJet->phi, iMCparticles.at(ind).eta, iMCparticles.at(ind).phi );
+      myJet++;
+      if( dR<minDR ){
+	minDR = dR;
+	matchedJet = myJet;
+      }
+    }
+
+    // If dR(b,closest jet) < 0.5, consider matched
+    if( minDR<0.5 ) isMatched=true;
+    // Don't continue if the c is not close to any jet
+    if( !isMatched ) continue;
+
+
+    // If this c came before the t and tbar, it is not going to be a final state particle
+    if( ind<startHere ) continue;
+
+	  
+    // Check if the jet matched to this c is the same as a previous c-matched jet
+    bool previousMatch = false;
+    for( int iJet = 0; iJet < int(list_matched_jets.size()); iJet++ ){
+      if( matchedJet==list_matched_jets[iJet] ){
+	previousMatch = true;
+	break;
+      }
+    }
+    if( !previousMatch ) list_matched_jets.push_back(matchedJet);
+    list_c_match.push_back(ind);
+
+  } // end loop over list of c's
+
+
+  int numberOfCs = int(list_c_match.size());
+  int numberOfMatchedJets = int(list_matched_jets.size());
+
+
+  int result = 0;
+  if( numberOfCs==1 ) result = 1;
+  else if( numberOfCs==2 && numberOfMatchedJets==1 ) result = 2;
+  else if( numberOfCs==2 && numberOfMatchedJets==2 ) result = 3;
+  else if( numberOfCs>=3 ) result = 4;
+
+
+  return result;
+
+}
+
