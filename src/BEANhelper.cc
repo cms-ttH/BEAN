@@ -3112,8 +3112,8 @@ bool BEANhelper::ttPlusHeavyKeepEvent( const BNmcparticleCollection& iMCparticle
 
 
 
-bool BEANhelper::ttPlusHFKeepEvent( int sampleNumber, const BNmcparticleCollection& iMCparticles,
-                                       const BNjetCollection& iJets ) {
+bool BEANhelper::ttPlusHFKeepEvent( const BNmcparticleCollection& iMCparticles,
+				    const BNjetCollection& iJets ) {
 
   CheckSetUp();
   string samplename = GetSampleName();
@@ -3136,11 +3136,16 @@ bool BEANhelper::ttPlusHFKeepEvent( int sampleNumber, const BNmcparticleCollecti
     cout << "ttPlusHeavyKeepEvent: could not recognize era " << era <<"... failing" <<endl;
   }
 
+  BNjetCollection correctedJets          = BEANhelper::GetCorrectedJets( iJets, sysType::NA );
+  BNjetCollection selectedJets_unsorted  = BEANhelper::GetSelectedJets( correctedJets, 30., 2.4, jetID::jetLoose, '-' ); 
+  BNjetCollection selectedJets           = BEANhelper::GetSortedByPt( selectedJets_unsorted );
+
+
   bool keepEvent = false;
   bool debug_ = false;
 
-  int ttbb_algo_result = BEANhelper::ttPlusBBClassifyEvent( iMCparticles, iJets );
-  int ttcc_algo_result = BEANhelper::ttPlusCCClassifyEvent( iMCparticles, iJets );
+  int ttbb_algo_result = BEANhelper::ttPlusBBClassifyEvent( iMCparticles, selectedJets );
+  int ttcc_algo_result = BEANhelper::ttPlusCCClassifyEvent( iMCparticles, selectedJets );
 
 
   bool isBBbarEvent = false, isCCbarEvent = false;
@@ -3157,10 +3162,6 @@ bool BEANhelper::ttPlusHFKeepEvent( int sampleNumber, const BNmcparticleCollecti
                    << "isBBbarEvent = " << isBBbarEvent << endl
                    << "isCCbarEvent = " << isCCbarEvent << endl
                    << "... will we skip this? " << (!keepEvent) << endl;
-
-  if( sampleNumber==2583 && isBBbarEvent ) keepEvent = true;
-  else if( sampleNumber==2573 && isCCbarEvent ) keepEvent = true;
-  else if( sampleNumber==2563 && !isBBbarEvent && !isCCbarEvent ) keepEvent = true;
 
   return keepEvent;
 }
