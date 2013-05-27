@@ -349,7 +349,8 @@ void BEANhelper::SetUpCSVreshaping(){
 	// Tweak sample name if needed
 	string samplename = GetSampleName();
     if (samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll" ||
-        samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" ||
+        samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" || 
+	samplename == "ttbar_b_jj" || samplename == "ttbar_b_lj" || samplename == "ttbar_b_ll" ||
         samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll" ||
         samplename == "ttbar_bb" || samplename == "ttbar_cc")                  samplename = "ttbar";
     if (samplename == "wjets_1p" || samplename == "wjets_2p" || samplename == "wjets_3p" ||
@@ -406,6 +407,7 @@ void BEANhelper::SetUpJetSF(){
 	string samplename = GetSampleName();
     if (samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll" ||
         samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" ||
+        samplename == "ttbar_b_jj" || samplename == "ttbar_b_lj" || samplename == "ttbar_b_ll" ||
         samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll" ||
         samplename == "ttbar_bb" || samplename == "ttbar_cc")                  samplename = "ttbar";
     if (samplename == "wjets_1p" || samplename == "wjets_2p" || samplename == "wjets_3p" ||
@@ -555,6 +557,9 @@ string BEANhelper::GetSampleName(){
 		else if( sampleNumber==2586 ){	samplename = "ttbar_bb_jj";			}
 		else if( sampleNumber==2583 ){	samplename = "ttbar_bb_lj";			}
 		else if( sampleNumber==2553 ){	samplename = "ttbar_bb_ll";			}
+		else if( sampleNumber==2596 ){	samplename = "ttbar_b_jj";			}
+		else if( sampleNumber==2593 ){	samplename = "ttbar_b_lj";			}
+		else if( sampleNumber==2599 ){	samplename = "ttbar_b_ll";			}
 		else if( sampleNumber==2400 ){	samplename = "wjets";				}
 		else if( sampleNumber==2401 ){	samplename = "wjets_1p";			}
 		else if( sampleNumber==2402 ){	samplename = "wjets_2p";			}
@@ -2585,6 +2590,7 @@ double BEANhelper::GetTopPtweight(const BNmcparticleCollection& iMCparticles){
   bool isTTJets = false;
   if (samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll" ||
       samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" ||
+      samplename == "ttbar_b_jj" || samplename == "ttbar_b_lj" || samplename == "ttbar_b_ll" ||
       samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll" ||
       samplename == "ttbar_bb" || samplename == "ttbar_cc")  isTTJets = true;
 
@@ -2603,7 +2609,8 @@ double BEANhelper::GetTopPtweightUp(const BNmcparticleCollection& iMCparticles){
   string samplename = GetSampleName();
   bool isTTJets = false;
   if (samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll" ||
-      samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" ||
+      samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" || 
+      samplename == "ttbar_b_jj" || samplename == "ttbar_b_lj" || samplename == "ttbar_b_ll" ||
       samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll" ||
       samplename == "ttbar_bb" || samplename == "ttbar_cc")  isTTJets = true;
 
@@ -2622,7 +2629,8 @@ double BEANhelper::GetTopPtweightDown(const BNmcparticleCollection& iMCparticles
   string samplename = GetSampleName();
   bool isTTJets = false;
   if (samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll" ||
-      samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" ||
+      samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" || 
+      samplename == "ttbar_b_jj" || samplename == "ttbar_b_lj" || samplename == "ttbar_b_ll" ||
       samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll" ||
       samplename == "ttbar_bb" || samplename == "ttbar_cc")  isTTJets = true;
   if( !isTTJets ) return 1.;
@@ -2648,7 +2656,8 @@ double BEANhelper::GetQ2ScaleUp(const BNevent& event){
   string samplename = GetSampleName();
   bool isTTJets = false;
   if (samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll" ||
-      samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" ||
+      samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" || 
+      samplename == "ttbar_b_jj" || samplename == "ttbar_b_lj" || samplename == "ttbar_b_ll" ||
       samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll" ||
       samplename == "ttbar_bb" || samplename == "ttbar_cc")  isTTJets = true;
 
@@ -2662,6 +2671,7 @@ double BEANhelper::GetQ2ScaleDown(const BNevent& event){
   bool isTTJets = false;
   if (samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll" ||
       samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" ||
+      samplename == "ttbar_b_jj" || samplename == "ttbar_b_lj" || samplename == "ttbar_b_ll" ||
       samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll" ||
       samplename == "ttbar_bb" || samplename == "ttbar_cc")  isTTJets = true;
 
@@ -3123,6 +3133,7 @@ bool BEANhelper::ttPlusHFKeepEvent( const BNmcparticleCollection& iMCparticles,
   if (samplename == "ttbar" || samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll") validInput = true;
   if (samplename == "ttbar_cc" || samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll") validInput = true;
   if (samplename == "ttbar_bb" || samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll") validInput = true;
+  if (samplename == "ttbar_b_jj" || samplename == "ttbar_b_lj" || samplename == "ttbar_b_ll") validInput = true;
 
   if (!validInput ){
     cout << "ttPlusHeavyKeepEvent: could not recognize samplename " << samplename <<"... failing" <<endl;
@@ -3148,15 +3159,17 @@ bool BEANhelper::ttPlusHFKeepEvent( const BNmcparticleCollection& iMCparticles,
   int ttcc_algo_result = BEANhelper::ttPlusCCClassifyEvent( iMCparticles, selectedJets );
 
 
-  bool isBBbarEvent = false, isCCbarEvent = false;
-  if( ttbb_algo_result>0 )      isBBbarEvent = true;
+  bool isBBbarEvent = false;  bool isBEvent = false, isCCbarEvent = false;
+  if( ttbb_algo_result==1 || ttbb_algo_result==2 )      isBEvent = true;
+  else if( ttbb_algo_result==3 || ttbb_algo_result==4 )      isBBbarEvent = true;
   else if( ttcc_algo_result>0 ) isCCbarEvent = true;
 
 
 
-  if( (samplename == "ttbar" || samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll") && !isBBbarEvent && !isCCbarEvent ) keepEvent = true;
-  else if( (samplename == "ttbar_bb" || samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll") &&  isBBbarEvent && !isCCbarEvent ) keepEvent = true;
-  else if( (samplename == "ttbar_cc" || samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll")  && !isBBbarEvent && isCCbarEvent  ) keepEvent = true;
+  if( (samplename == "ttbar" || samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll") && !isBBbarEvent && !isBEvent && !isCCbarEvent ) keepEvent = true;
+  else if( (samplename == "ttbar_bb" || samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll") &&  isBBbarEvent && !isBEvent && !isCCbarEvent ) keepEvent = true;
+  else if( (samplename == "ttbar_b_jj" || samplename == "ttbar_b_lj" || samplename == "ttbar_b_ll" ) &&  isBEvent &&  !isBBbarEvent && !isCCbarEvent ) keepEvent = true;
+  else if( (samplename == "ttbar_cc" || samplename == "ttbar_cc_jj" || samplename == "ttbar_cc_lj" || samplename == "ttbar_cc_ll")  && !isBBbarEvent && !isBEvent && isCCbarEvent  ) keepEvent = true;
 
   if (debug_) cout << "Filter result = " << keepEvent << endl
                    << "isBBbarEvent = " << isBBbarEvent << endl
@@ -3352,7 +3365,9 @@ int BEANhelper::ttPlusCCClassifyEvent( const BNmcparticleCollection& iMCparticle
 	(daughter0ID==91 || daughter0ID==92 || daughter0ID==93 || daughter1ID==91 || daughter1ID==92 || daughter1ID==93) ) list_c.push_back(i);
     if( absId==4 && (motherAbsID==5 || mother0AbsID==5 || mother1AbsID==5 || motherAbsID==24 || mother0AbsID==24 || mother1AbsID==24) && 
 	(daughter0ID==91 || daughter0ID==92 || daughter0ID==93 || daughter1ID==91 || daughter1ID==92 || daughter1ID==93) ) list_c_from_bW.push_back(i);
-    if( absId==5 && (motherAbsID==6 || mother0AbsID==6 || mother1AbsID==6) &&
+//     if( absId==5 && (motherAbsID==6 || mother0AbsID==6 || mother1AbsID==6) &&
+// 	(daughter0ID==91 || daughter0ID==92 || daughter0ID==93 || daughter1ID==91 || daughter1ID==92 || daughter1ID==93) ) list_b_from_t.push_back(i);
+    if( absId==5 &&
 	(daughter0ID==91 || daughter0ID==92 || daughter0ID==93 || daughter1ID==91 || daughter1ID==92 || daughter1ID==93) ) list_b_from_t.push_back(i);
     if( id==6  ) hasT = true;
     if( id==-6 ) hasTbar = true;
