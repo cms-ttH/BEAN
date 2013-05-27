@@ -1230,7 +1230,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
       case muonID::muonSide:
         passesKinematics		= ((iMuon.pt >= minSideMuonPt) && (fabs(iMuon.eta) <= maxSideMuonAbsEta));
         passesIso				= (GetMuonRelIso(iMuon) < 0.400);
-        passesSIP               = (fabs(iMuon.IP/iMuon.IPError) < 10.0);
+        passesSIP               = (fabs(iMuon.IP/iMuon.IPError) < 10.0 && fabs(iMuon.correctedD0) < 0.5 && fabs(iMuon.correctedDZ) < 1.0);
         passesID				= (iMuon.isPFMuon==1 && (iMuon.isGlobalMuon==1 || iMuon.isTrackerMuon==1) && passesSIP);
         break;
       case muonID::muonLoose:
@@ -1262,7 +1262,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
         passesKinematics		= ((iMuon.pt >= minSideMuonPt) && (fabs(iMuon.eta) <= maxSideMuonAbsEta));
         passesIso				= (GetMuonRelIso(iMuon) < 0.400);
         isPFMuon				= true;
-        passesSIP               = (fabs(iMuon.IP/iMuon.IPError) < 10.0);
+        passesSIP               = (fabs(iMuon.IP/iMuon.IPError) < 10.0 && fabs(iMuon.correctedD0) < 0.5 && fabs(iMuon.correctedDZ) < 1.0);
         passesID				= (((iMuon.isGlobalMuon==1) || (iMuon.isTrackerMuon==1)) && isPFMuon && passesSIP);
         break;
       case muonID::muonLoose:
@@ -1808,7 +1808,7 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 	bool nlost					= ( iElectron.numberOfLostHits<1 );
     bool no_exp_inner_trkr_hits = ( iElectron.numberOfExpectedInnerHits <= 0 );
     bool one_exp_inner_trkr_hits = ( iElectron.numberOfExpectedInnerHits <= 1 );
-    bool SIP                    = ( fabs(iElectron.IP/iElectron.IPError) < 10.0 );
+    bool SIP                    = ( fabs(iElectron.IP/iElectron.IPError) < 10.0 && fabs(iElectron.correctedD0) < 0.5 && fabs(iElectron.correctedDZ) < 1.0 );
     bool nonTrigMvaID           = ( ( fabs(iElectron.eta) <= 0.8 && iElectron.mvaNonTrigV0 > 0.5 )
                                     || ( (fabs(iElectron.eta) > 0.8 && fabs(iElectron.eta) <= 1.479) && iElectron.mvaNonTrigV0 > 0.12 )
                                     || ( fabs(iElectron.eta) > 1.479 && iElectron.mvaNonTrigV0 > 0.6 ) );
