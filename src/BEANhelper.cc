@@ -366,7 +366,13 @@ void BEANhelper::SetUpCSVreshaping(){
     if (samplename == "tbar_tchannel_ll")                                      samplename = "tbar_tchannel";
     if (samplename == "tbar_tWchannel_jl" || samplename == "tbar_tWchannel_lj" ||
         samplename == "tbar_tWchannel_ll")                                     samplename = "tbar_tWchannel";
-
+    if (samplename == "ttbarG" || samplename == "ttbarWW" ||
+        samplename == "ttbarttbar")                                            samplename = "ttbarZ";
+    if (samplename == "ww_ll" || samplename == "wz_lll" ||
+        samplename == "wz_lljj" || samplename == "wz_ljj" )                    samplename = "wz";
+    if (samplename == "www" || samplename == "wwz" || samplename == "wzz"
+        || samplename == "zzz" )                                               samplename = "wz";
+    if (samplename == "zz_llll" || samplename == "zz_lljj" )                   samplename = "zz";
     
 	// Set charm scale factor
 	double charmFactor = 2.0 - 1.0;
@@ -1173,12 +1179,15 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
 	CheckSetUp();
 
 	// Set default kinematic thresholds
+	float minSideMuonPt		    = 9999;
 	float minLooseMuonPt		= 9999;
 	float minTightMuonPt		= 9999;
+	float maxSideMuonAbsEta	    = 0;
 	float maxLooseMuonAbsEta	= 0;
 	float maxTightMuonAbsEta	= 0;
 
     if (era=="2011") {
+      minSideMuonPt		    = 10;
       minLooseMuonPt		= 10;
 	  switch(analysis){
 		  case analysisType::LJ:	minTightMuonPt = 30.;	break;
@@ -1186,10 +1195,12 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
 		  case analysisType::DIL:	minTightMuonPt = 20.;	break;
 		  default: assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau"); break;
 	  }
+      maxSideMuonAbsEta	    = 2.4;
       maxLooseMuonAbsEta	= 2.4;
       maxTightMuonAbsEta	= 2.1;
     }
     else if (era=="2012_52x" || era=="2012_53x") {
+      minSideMuonPt		    = 10;
       minLooseMuonPt		= 10;
 	  switch(analysis){
 		  case analysisType::LJ:	minTightMuonPt = 30.;	break;
@@ -1197,6 +1208,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
 		  case analysisType::DIL:	minTightMuonPt = 20.;	break;
 		  default: assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau"); break;
 	  }
+      maxSideMuonAbsEta	    = 2.4;
       maxLooseMuonAbsEta	= 2.5;
       maxTightMuonAbsEta	= 2.1;
     }
@@ -1210,14 +1222,16 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
 	bool passesID			= false;
 	bool isPFMuon			= false;
 	bool passesTrackerID    = false;
+	bool passesSIP          = false;
 
 	// Check if this muon is good enough
     if (era=="2011") { 
       switch(iMuonID){
       case muonID::muonSide:
-        passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
-        passesIso				= (GetMuonRelIso(iMuon) < 0.800);
-        passesID				= (iMuon.isGlobalMuon==1);
+        passesKinematics		= ((iMuon.pt >= minSideMuonPt) && (fabs(iMuon.eta) <= maxSideMuonAbsEta));
+        passesIso				= (GetMuonRelIso(iMuon) < 0.400);
+        passesSIP               = (fabs(iMuon.IP/iMuon.IPError) < 10.0);
+        passesID				= (iMuon.isPFMuon==1 && (iMuon.isGlobalMuon==1 || iMuon.isTrackerMuon==1) && passesSIP);
         break;
       case muonID::muonLoose:
         passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
@@ -1245,10 +1259,11 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
     else if (era=="2012_52x" || era=="2012_53x") {
       switch(iMuonID){
       case muonID::muonSide:
-        passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
-        passesIso				= (GetMuonRelIso(iMuon) < 0.800);
+        passesKinematics		= ((iMuon.pt >= minSideMuonPt) && (fabs(iMuon.eta) <= maxSideMuonAbsEta));
+        passesIso				= (GetMuonRelIso(iMuon) < 0.400);
         isPFMuon				= true;
-        passesID				= (((iMuon.isGlobalMuon==1) || (iMuon.isTrackerMuon==1)) && isPFMuon);
+        passesSIP               = (fabs(iMuon.IP/iMuon.IPError) < 10.0);
+        passesID				= (((iMuon.isGlobalMuon==1) || (iMuon.isTrackerMuon==1)) && isPFMuon && passesSIP);
         break;
       case muonID::muonLoose:
         passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
@@ -1792,6 +1807,11 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 	bool dcot					= ( fabs(iElectron.dcot)<0.02 );
 	bool nlost					= ( iElectron.numberOfLostHits<1 );
     bool no_exp_inner_trkr_hits = ( iElectron.numberOfExpectedInnerHits <= 0 );
+    bool one_exp_inner_trkr_hits = ( iElectron.numberOfExpectedInnerHits <= 1 );
+    bool SIP                    = ( fabs(iElectron.IP/iElectron.IPError) < 10.0 );
+    bool nonTrigMvaID           = ( ( fabs(iElectron.eta) <= 0.8 && iElectron.mvaNonTrigV0 > 0.5 )
+                                    || ( (fabs(iElectron.eta) > 0.8 && fabs(iElectron.eta) <= 1.479) && iElectron.mvaNonTrigV0 > 0.12 )
+                                    || ( fabs(iElectron.eta) > 1.479 && iElectron.mvaNonTrigV0 > 0.6 ) );
     
 	// 2012 era-specific
 	double mvaID				= iElectron.mvaTrigV0;
@@ -1825,15 +1845,18 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 	if(era=="2011"){
 		bool notConv				= ( !(dist && dcot) && nlost );
 		bool id						= ( eid && d0 && dZ && notConv );
-		if(iElectronID==electronID::electronSide){			return true; }
+        bool cernID                 = ( one_exp_inner_trkr_hits && SIP && nonTrigMvaID );
+
+		if(iElectronID==electronID::electronSide){			return cernID; }
 		else if(iElectronID==electronID::electronLoose){    return true; }
 		else if(iElectronID==electronID::electronTight){	return id; }
 	}
     else if(era=="2012_52x"){
 		bool notConv				= ( iElectron.passConvVeto );
 		bool id						= ( passMVAId && d02 && dZ && notConv );
+        bool cernID                 = ( one_exp_inner_trkr_hits && SIP && nonTrigMvaID );
 
-		if(iElectronID==electronID::electronSide){			return (passMVAId && d04 && notConv); }
+		if(iElectronID==electronID::electronSide){			return cernID; }
 		else if(iElectronID==electronID::electronLoose){  	return (passMVAId && d04 && notConv && myTrigPresel); }
 		else if(iElectronID==electronID::electronTight){	return (id && myTrigPresel);}
         else if ( iElectronID == electronID::electronTightMinusTrigPresel ){
@@ -1845,8 +1868,9 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
     else if(era=="2012_53x"){
 		bool notConv				= ( iElectron.passConvVeto );
 		bool id						= ( passMVAId53x && d02 && dZ && notConv );
+        bool cernID                 = ( one_exp_inner_trkr_hits && SIP && nonTrigMvaID );
 
-		if(iElectronID==electronID::electronSide){			return (passMVAId53x && d04 && notConv); }
+		if(iElectronID==electronID::electronSide){			return cernID; }
 		else if(iElectronID==electronID::electronLoose){  	return (passMVAId53x && no_exp_inner_trkr_hits && d04 && notConv && myTrigPresel); }
 		else if(iElectronID==electronID::electronTight){	return (id && no_exp_inner_trkr_hits && myTrigPresel);}
         else if ( iElectronID == electronID::electronTightMinusTrigPresel ){
@@ -1868,12 +1892,15 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
 	CheckSetUp();
 
 	// Set default kinematic thresholds
+	float minSideElectronPt	    	= 9999;
 	float minLooseElectronPt		= 9999;
 	float minTightElectronPt		= 9999;
+	float maxSideElectronAbsEta	    = 0;
 	float maxLooseElectronAbsEta	= 0;
 	float maxTightElectronAbsEta	= 0;
 
     if (era=="2011") {
+      minSideElectronPt	    	= 10;
       minLooseElectronPt		= 10;
 	  switch(analysis){
 		  case analysisType::LJ:	minTightElectronPt = 30; break;
@@ -1881,10 +1908,12 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
 		  case analysisType::DIL:	minTightElectronPt = 20; break;
 		  default: assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau"); break;
 	  }
+      maxSideElectronAbsEta	    = 2.5;
       maxLooseElectronAbsEta	= 2.5;
       maxTightElectronAbsEta	= 2.5;
     }
     else if (era=="2012_52x" || era=="2012_53x") {
+      minSideElectronPt		    = 10;
       minLooseElectronPt		= 10;
 	  switch(analysis){
 		  case analysisType::LJ:	minTightElectronPt = 30; break;
@@ -1892,6 +1921,7 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
 		  case analysisType::DIL:	minTightElectronPt = 20; break;
 		  default: assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau"); break;
 	  }
+      maxSideElectronAbsEta	    = 2.5;
       maxLooseElectronAbsEta	= 2.5;
       maxTightElectronAbsEta	= 2.5;
     }
@@ -1910,8 +1940,8 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
     if (era=="2011") {
       switch(iElectronID){
       case electronID::electronSide:
-        passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.eta) <= maxLooseElectronAbsEta) && (!inCrack));
-        passesIso			= (GetElectronRelIso(iElectron) < 0.800);
+        passesKinematics	= ((iElectron.pt >= minSideElectronPt) && (fabs(iElectron.eta) <= maxSideElectronAbsEta));
+        passesIso			= (GetElectronRelIso(iElectron) < 0.400);
         passesID			= GetElectronIDresult(iElectron, iElectronID);
         break;
         
@@ -1933,8 +1963,8 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
     else if (era=="2012_52x" || era=="2012_53x") {
       switch(iElectronID){
       case electronID::electronSide:
-        passesKinematics	= ((iElectron.pt >= minLooseElectronPt) && (fabs(iElectron.eta) <= maxLooseElectronAbsEta) && (!inCrack));
-        passesIso			= (GetElectronRelIso(iElectron) < 0.800);
+        passesKinematics	= ((iElectron.pt >= minSideElectronPt) && (fabs(iElectron.eta) <= maxSideElectronAbsEta));
+        passesIso			= (GetElectronRelIso(iElectron) < 0.400);
         passesID			= GetElectronIDresult(iElectron, iElectronID);
         break;
         
