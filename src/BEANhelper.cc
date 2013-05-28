@@ -1200,7 +1200,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
       maxTightMuonAbsEta	= 2.1;
     }
     else if (era=="2012_52x" || era=="2012_53x") {
-      minSideMuonPt		    = 10;
+      minSideMuonPt		    = 5;
       minLooseMuonPt		= 10;
 	  switch(analysis){
 		  case analysisType::LJ:	minTightMuonPt = 30.;	break;
@@ -1262,7 +1262,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID){
         passesKinematics		= ((iMuon.pt >= minSideMuonPt) && (fabs(iMuon.eta) <= maxSideMuonAbsEta));
         passesIso				= (GetMuonRelIso(iMuon) < 0.400);
         isPFMuon				= true;
-        passesSIP               = (fabs(iMuon.IP/iMuon.IPError) < 10.0 && fabs(iMuon.correctedD0) < 0.5 && fabs(iMuon.correctedDZ) < 1.0);
+        passesSIP               = (fabs(iMuon.IP/iMuon.IPError) < 10.0 && fabs(iMuon.correctedD0Vertex) < 0.5 && fabs(iMuon.correctedDZ) < 1.0);
         passesID				= (((iMuon.isGlobalMuon==1) || (iMuon.isTrackerMuon==1)) && isPFMuon && passesSIP);
         break;
       case muonID::muonLoose:
@@ -1808,10 +1808,10 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 	bool nlost					= ( iElectron.numberOfLostHits<1 );
     bool no_exp_inner_trkr_hits = ( iElectron.numberOfExpectedInnerHits <= 0 );
     bool one_exp_inner_trkr_hits = ( iElectron.numberOfExpectedInnerHits <= 1 );
-    bool SIP                    = ( fabs(iElectron.IP/iElectron.IPError) < 10.0 && fabs(iElectron.correctedD0) < 0.5 && fabs(iElectron.correctedDZ) < 1.0 );
-    bool nonTrigMvaID           = ( ( fabs(iElectron.eta) <= 0.8 && iElectron.mvaNonTrigV0 > 0.5 )
-                                    || ( (fabs(iElectron.eta) > 0.8 && fabs(iElectron.eta) <= 1.479) && iElectron.mvaNonTrigV0 > 0.12 )
-                                    || ( fabs(iElectron.eta) > 1.479 && iElectron.mvaNonTrigV0 > 0.6 ) );
+    bool SIP                    = ( fabs(iElectron.IP/iElectron.IPError) < 10.0 && fabs(iElectron.correctedD0Vertex) < 0.5 && fabs(iElectron.correctedDZ) < 1.0 );
+    bool nonTrigMvaID           = ( ( fabs(iElectron.scEta) <= 0.8 && iElectron.mvaNonTrigV0 > 0.5 )
+                                    || ( (fabs(iElectron.scEta) > 0.8 && fabs(iElectron.scEta) <= 1.479) && iElectron.mvaNonTrigV0 > 0.12 )
+                                    || ( fabs(iElectron.scEta) > 1.479 && iElectron.mvaNonTrigV0 > 0.6 ) );
     
 	// 2012 era-specific
 	double mvaID				= iElectron.mvaTrigV0;
@@ -1913,7 +1913,7 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
       maxTightElectronAbsEta	= 2.5;
     }
     else if (era=="2012_52x" || era=="2012_53x") {
-      minSideElectronPt		    = 10;
+      minSideElectronPt		    = 7;
       minLooseElectronPt		= 10;
 	  switch(analysis){
 		  case analysisType::LJ:	minTightElectronPt = 30; break;
