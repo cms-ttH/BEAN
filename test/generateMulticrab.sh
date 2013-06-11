@@ -12,11 +12,11 @@
 ##########################################################################################
 
 ### User-defined parameters (change these as needed)
-project="BEAN_53xOn53x_V02_CV01"
-workingDir="/afs/crc.nd.edu/user/a/abrinke1/CMSSW_5_3_2_patch4/src/NtupleMaker/BEANmaker/test/crabDir/53xOn53x_BackgroundCore/"
+project="BEANS_V01"
+workingDir="crab_directory"
 pset="makeBEAN_cfg.py"
 storageElement="T3_US_NotreDame"
-numJobs=450
+numJobs=100
 
 
 ##########################################################################################
