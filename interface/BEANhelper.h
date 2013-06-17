@@ -84,7 +84,7 @@ namespace jetID{		enum jetID{			jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
 namespace tauID{		enum tauID{			tauNonIso, tauVLoose, tauLoose, tauMedium, tauTight }; }
 namespace muonID{		enum muonID{		muonSide, muonLoose, muonTight, muonPtOnly, muonPtEtaOnly, muonPtEtaIsoOnly, muonPtEtaIsoTrackerOnly }; }
 namespace electronID{	enum electronID{	electronSide, electronLoose, electronTight, electronTightMinusTrigPresel, electronLooseMinusTrigPresel }; }
-namespace hdecayType{	enum hdecayType{ hbb, hww, hzz, htt, hvv }; }
+namespace hdecayType{	enum hdecayType{ hbb, hww, hzz, htt, hgg, hvv }; }
 
 
 

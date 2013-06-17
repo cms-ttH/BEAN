@@ -2260,9 +2260,9 @@ hdecayType::hdecayType BEANhelper::GetHdecayType(const BNmcparticleCollection& i
   else if( daughter0id==11 && daughter1id==11 ) decayType = hdecayType::htt;
   else if( daughter0id==13 && daughter1id==13 ) decayType = hdecayType::htt;
   else if( daughter0id==15 && daughter1id==15 ) decayType = hdecayType::htt;
+  else if( daughter0id==22 && daughter1id==22 ) decayType = hdecayType::hgg;
   else if( (daughter0id==23 && daughter1id==22) || 
 	   (daughter1id==23 && daughter0id==22) ||
-	   (daughter1id==22 && daughter0id==22) ||
 	   (daughter1id==21 && daughter0id==21)) decayType = hdecayType::hvv;
   else{
     std::cout << "\t UNCLASSIFIED EVENT !! daughter0id = " << daughter0id << ",\t daughter1id = " << daughter1id << std::endl;
