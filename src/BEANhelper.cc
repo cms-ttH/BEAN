@@ -38,6 +38,10 @@ BEANhelper::BEANhelper(){
 	    for( int iEta=0; iEta<3; iEta++ )h_csv_wgt_lf[iSys][iPt][iEta] = NULL;
 	  }
 	}
+	for( int iSys=0; iSys<5; iSys++ ){
+	  for( int iPt=0; iPt<5; iPt++ ) c_csv_wgt_hf[iSys][iPt] = NULL;
+	}
+
     f_CSVwgt_HF = NULL;
     f_CSVwgt_LF = NULL;
 
@@ -73,6 +77,9 @@ BEANhelper::~BEANhelper(){
 	      if(h_csv_wgt_lf[iSys][iPt][iEta] != NULL){ delete h_csv_wgt_lf[iSys][iPt][iEta]; h_csv_wgt_lf[iSys][iPt][iEta] = NULL;}
 	    }
 	  }
+	}
+	for( int iSys=0; iSys<5; iSys++ ){
+	  for( int iPt=0; iPt<5; iPt++ ){ if(c_csv_wgt_hf[iSys][iPt] != NULL){ delete c_csv_wgt_hf[iSys][iPt]; c_csv_wgt_hf[iSys][iPt] = NULL;} }
 	}
 
 	// CSV reshaping
@@ -290,6 +297,7 @@ void BEANhelper::SetUpCSVreweighting(){
   // CSV reweighting
   for( int iSys=0; iSys<9; iSys++ ){
     TString syst_csv_suffix_hf = "final";
+    TString syst_csv_suffix_c  = "final";
     TString syst_csv_suffix_lf = "final";
     
     switch( iSys ){
@@ -299,18 +307,22 @@ void BEANhelper::SetUpCSVreweighting(){
     case 1:
       // JESUp
       syst_csv_suffix_hf = "final_JESUp"; syst_csv_suffix_lf = "final_JESUp";
+      syst_csv_suffix_c  = "final_cErr1Up";
       break;
     case 2:
       // JESDown
       syst_csv_suffix_hf = "final_JESDown"; syst_csv_suffix_lf = "final_JESDown";
+      syst_csv_suffix_c  = "final_cErr1Down";
       break;
     case 3:
       // purity up
       syst_csv_suffix_hf = "final_LFUp"; syst_csv_suffix_lf = "final_HFUp";
+      syst_csv_suffix_c  = "final_cErr2Up";
       break;
     case 4:
       // purity down
       syst_csv_suffix_hf = "final_LFDown"; syst_csv_suffix_lf = "final_HFDown";
+      syst_csv_suffix_c  = "final_cErr2Down";
       break;
     case 5:
       // stats1 up
@@ -331,6 +343,10 @@ void BEANhelper::SetUpCSVreweighting(){
     }
 
     for( int iPt=0; iPt<5; iPt++ ) h_csv_wgt_hf[iSys][iPt] = (TH1D*)f_CSVwgt_HF->Get( Form("csv_ratio_Pt%i_Eta0_%s",iPt,syst_csv_suffix_hf.Data()) );
+
+    if( iSys<5 ){
+      for( int iPt=0; iPt<5; iPt++ ) c_csv_wgt_hf[iSys][iPt] = (TH1D*)f_CSVwgt_HF->Get( Form("c_csv_ratio_Pt%i_Eta0_%s",iPt,syst_csv_suffix_c.Data()) );
+    }
 
     for( int iPt=0; iPt<3; iPt++ ){
       for( int iEta=0; iEta<3; iEta++ )h_csv_wgt_lf[iSys][iPt][iEta] = (TH1D*)f_CSVwgt_LF->Get( Form("csv_ratio_Pt%i_Eta%i_%s",iPt,iEta,syst_csv_suffix_lf.Data()) );
@@ -2450,6 +2466,15 @@ double BEANhelper::GetCSVweight(const BNjetCollection& iJets, const sysType::sys
   default : iSysHF = 0; break;
   }
 
+  int iSysC = 0;
+  switch(iSysType){
+  case sysType::CSVCErr1up:   iSysC=1; break;
+  case sysType::CSVCErr1down: iSysC=2; break;
+  case sysType::CSVCErr2up:   iSysC=3; break;
+  case sysType::CSVCErr2down: iSysC=4; break;
+  default : iSysC = 0; break;
+  }
+
   int iSysLF = 0;
   switch(iSysType){
   case sysType::JESup:	         iSysLF=1; break;
@@ -2464,6 +2489,7 @@ double BEANhelper::GetCSVweight(const BNjetCollection& iJets, const sysType::sys
   }
 
   double csvWgthf = 1.;
+  double csvWgtC  = 1.;
   double csvWgtlf = 1.;
 
   for( BNjetCollection::const_iterator iJet = iJets.begin(); iJet != iJets.end(); ++iJet ){ 
@@ -2486,13 +2512,22 @@ double BEANhelper::GetCSVweight(const BNjetCollection& iJets, const sysType::sys
 
     if (iPt < 0 || iEta < 0) std::cout << "Error, couldn't find Pt, Eta bins for this b-flavor jet, jetPt = " << jetPt << ", jetAbsEta = " << jetAbsEta << std::endl;
 
-    if (abs(flavor) == 5 || abs(flavor) == 4){
+    //if (abs(flavor) == 5 || abs(flavor) == 4){
+    if (abs(flavor) == 5 ){
       int useCSVBin = (csv>=0.) ? h_csv_wgt_hf[iSysHF][iPt]->FindBin(csv) : 1;
       double iCSVWgtHF = h_csv_wgt_hf[iSysHF][iPt]->GetBinContent(useCSVBin);
       if( iCSVWgtHF!=0 ) csvWgthf *= iCSVWgtHF;
 
       // if( iSysHF==0 ) printf(" iJet,\t flavor=%d,\t pt=%.1f,\t eta=%.2f,\t csv=%.3f,\t wgt=%.2f \n",
       // 			     flavor, jetPt, iJet->eta, csv, iCSVWgtHF );
+    }
+    else if( abs(flavor) == 4 ){
+      // do nothing
+      int useCSVBin = (csv>=0.) ? c_csv_wgt_hf[iSysC][iPt]->FindBin(csv) : 1;
+      double iCSVWgtC = c_csv_wgt_hf[iSysC][iPt]->GetBinContent(useCSVBin);
+      if( iCSVWgtC!=0 ) csvWgtC *= iCSVWgtC;
+      // if( iSysC==0 ) printf(" iJet,\t flavor=%d,\t pt=%.1f,\t eta=%.2f,\t csv=%.3f,\t wgt=%.2f \n",
+      // 			     flavor, jetPt, iJet->eta, csv, iCSVWgtC );
     }
     else {
       if (iPt >=2) iPt=2;       /// [30-40], [40-60] and [60-10000] only 3 Pt bins for lf
@@ -2505,7 +2540,8 @@ double BEANhelper::GetCSVweight(const BNjetCollection& iJets, const sysType::sys
     }
   }
 
-  double csvWgtTotal = csvWgthf* csvWgtlf;
+  //double csvWgtTotal = csvWgthf* csvWgtlf;
+  double csvWgtTotal = csvWgthf * csvWgtC * csvWgtlf;
 
   return csvWgtTotal;
 }
