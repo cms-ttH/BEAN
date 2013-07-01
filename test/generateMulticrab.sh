@@ -17,6 +17,7 @@ workingDir="crab_directory"
 pset="makeBEAN_cfg.py"
 storageElement="T3_US_NotreDame"
 numJobs=100
+eventsPerJob=10000
 
 
 ##########################################################################################
@@ -198,7 +199,6 @@ CMSSW.number_of_jobs            = $numJobs"
 if [[ "$DS" == *Run20* ]]; then 
 echo "$common
 CMSSW.total_number_of_lumis     = -1
-#CMSSW.runselection              = 190456-196531
 CMSSW.lumi_mask                 = $(getJSON $3)
 CMSSW.pycfg_params              = jobParams=${era}_${subEra}_data-$(getRecoType $DS)_$NUM"
 elif [[ "$DS" == /TTH* ]]; then 
@@ -227,7 +227,9 @@ echo "Found $(cat $tempfile | wc -l) datasets:"
 while read line; do
 	num=`echo $line | awk '{print $1}'`
 	ds=`echo $line | awk '{print $2}'`
-	echo -ne "${PURPLE}Preparing '${NOCOLOR}${ORANGE}$ds${PURPLE}'...${NOCOLOR}"
+	numEvents=`echo $line | awk '{print $3}'`
+	let numJobs=numEvents/eventsPerJob
+	echo -ne "${PURPLE}Preparing '${NOCOLOR}${ORANGE}$ds${PURPLE}'...${NOCOLOR}"	
 	getBlock "$ds" "$num" "$line" >> "$output"
 	echo -e "${GREEN} done!${NOCOLOR}";
 done < "$tempfile"
