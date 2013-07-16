@@ -143,6 +143,8 @@ class BEANhelper{
 		BNtauCollection GetCorrectedTaus(const BNtauCollection&, const sysType::sysType iSysType=sysType::NA);
 		BNtau GetCorrectedTau(const BNtau&, const sysType::sysType iSysType=sysType::NA);
 		bool IsTauEvent(const BNtauCollection&, const BNjetCollection&, const BNelectronCollection&, const BNmuonCollection&, const sysType::sysType iSysType=sysType::NA);
+		bool IsTauLeptonLeptonEvent(const BNtauCollection&, const BNjetCollection&, const BNelectronCollection&, const BNmuonCollection&, const sysType::sysType iSysType=sysType::NA);
+		bool IsTauTauLeptonEvent(const BNtauCollection&, const BNjetCollection&, const BNelectronCollection&, const BNmuonCollection&, const sysType::sysType iSysType=sysType::NA);
 
 		// Muons
 		bool IsSideMuon(const BNmuon&);
