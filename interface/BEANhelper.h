@@ -17,7 +17,9 @@
 #include "TH2.h"
 #include "TH1D.h"
 #include "TH2D.h"
-
+#include "TMVA/Tools.h"
+#include "TMVA/Reader.h"
+#include "TMVA/MethodCuts.h"
 
 #ifdef __MAKECINT__
 #pragma link C++ class std::vector< TLorentzVector >+; 
@@ -79,11 +81,11 @@ typedef BNtriggerCollection::const_iterator       TrigIter;
 typedef BNtrigobjCollection::const_iterator       TrigObjIter;
 
 namespace analysisType{	enum analysisType{ LJ, DIL, Tau }; }		
-namespace sysType{		enum sysType{		NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup, TESup, TESdown, CSVLFup, CSVLFdown, CSVHFup, CSVHFdown, CSVHFStats1up, CSVHFStats1down, CSVLFStats1up, CSVLFStats1down, CSVHFStats2up, CSVHFStats2down, CSVLFStats2up, CSVLFStats2down, CSVCErr1up, CSVCErr1down, CSVCErr2up, CSVCErr2down }; }
-namespace jetID{		enum jetID{			jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
+namespace sysType{enum sysType{NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup, TESup, TESdown, CSVLFup, CSVLFdown, CSVHFup, CSVHFdown, CSVHFStats1up, CSVHFStats1down, CSVLFStats1up, CSVLFStats1down, CSVHFStats2up, CSVHFStats2down, CSVLFStats2up, CSVLFStats2down, CSVCErr1up, CSVCErr1down, CSVCErr2up, CSVCErr2down }; }
+namespace jetID{		enum jetID{			none, jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
 namespace tauID{		enum tauID{			tauNonIso, tauVLoose, tauLoose, tauMedium, tauTight }; }
-namespace muonID{		enum muonID{		muonSide, muonLoose, muonTight, muonPtOnly, muonPtEtaOnly, muonPtEtaIsoOnly, muonPtEtaIsoTrackerOnly }; }
-namespace electronID{	enum electronID{	electronSide, electronLoose, electronTight, electronTightMinusTrigPresel, electronLooseMinusTrigPresel }; }
+namespace muonID{		enum muonID{		muonSide, muonSideLooseMVA, muonSideTightMVA, muonLoose, muonTight, muonPtOnly, muonPtEtaOnly, muonPtEtaIsoOnly, muonPtEtaIsoTrackerOnly }; }
+namespace electronID{	enum electronID{	electronSide, electronSideLooseMVA, electronSideTightMVA, electronLoose, electronTight, electronTightMinusTrigPresel, electronLooseMinusTrigPresel }; }
 namespace hdecayType{	enum hdecayType{ hbb, hww, hzz, htt, hgg, hvv }; }
 
 
@@ -107,6 +109,8 @@ class BEANhelper{
 		template <typename BNobject> BNmcparticle GetMatchedGentau(const BNmcparticleCollection&, const BNobject&, const double);
 		template <typename BNobject> BNmcparticle GetMatchedVisGentau(const BNmcparticleCollection&, const BNobject&, const double);
 		template <typename BNobject> BNtau GetMatchedTau(const BNtauCollection&, const BNobject&, const double);
+        template <typename BNobject> BNjet GetClosestJet(const BNjetCollection&, const BNobject&, const double);
+        template <typename BNobject> BNtrack GetClosestTrack(const BNtrackCollection&, const BNobject&, const double);
 
 		// Union, intersection, difference
 		template <typename BNcollection> BNcollection GetSortedByPt(const BNcollection&);
@@ -143,18 +147,21 @@ class BEANhelper{
 		BNtauCollection GetCorrectedTaus(const BNtauCollection&, const sysType::sysType iSysType=sysType::NA);
 		BNtau GetCorrectedTau(const BNtau&, const sysType::sysType iSysType=sysType::NA);
 		bool IsTauEvent(const BNtauCollection&, const BNjetCollection&, const BNelectronCollection&, const BNmuonCollection&, const sysType::sysType iSysType=sysType::NA);
-		bool IsTauLeptonLeptonEvent(const BNtauCollection&, const BNjetCollection&, const BNelectronCollection&, const BNmuonCollection&, const sysType::sysType iSysType=sysType::NA);
-		bool IsTauTauLeptonEvent(const BNtauCollection&, const BNjetCollection&, const BNelectronCollection&, const BNmuonCollection&, const sysType::sysType iSysType=sysType::NA);
-
+        bool IsTauLeptonLeptonEvent(const BNtauCollection&, const BNjetCollection&, const BNelectronCollection&, const BNmuonCollection&, const sysType::sysType iSysType=sysType::NA);
+        bool IsTauTauLeptonEvent(const BNtauCollection&, const BNjetCollection&, const BNelectronCollection&, const BNmuonCollection&, const sysType::sysType iSysType=sysType::NA);
+  
 		// Muons
 		bool IsSideMuon(const BNmuon&);
+        bool IsSideMuonLooseMVA(const BNmuon&, const BNjetCollection* = 0);
+        bool IsSideMuonTightMVA(const BNmuon&, const BNjetCollection* = 0);
 		bool IsLooseMuon(const BNmuon&);
 		bool IsTightMuon(const BNmuon&);
-		bool IsGoodMuon(const BNmuon&, const muonID::muonID);
+        bool IsGoodMuon(const BNmuon&, const muonID::muonID, const BNjetCollection* = 0);
 		float GetMuonRelIso(const BNmuon&);
-  float GetMuonSF(const BNmuon&, const muonID::muonID m = muonID::muonTight );
-  float GetDoubleMuonTriggerSF ( const BNmuon&, const BNmuon& );
-  float GetMuonEleTriggerSF ( const BNmuon&, const BNelectron & );
+        float GetMuonSF(const BNmuon&, const muonID::muonID m = muonID::muonTight );
+        float GetDoubleMuonTriggerSF ( const BNmuon&, const BNmuon& );
+        float GetMuonEleTriggerSF ( const BNmuon&, const BNelectron & );
+        float GetMuonLepMVA( const BNmuon&, const BNjetCollection* = 0);
 
   // Test only
   float TestSingleMuonTriggerNew ( const BNmuon& );
@@ -163,19 +170,25 @@ class BEANhelper{
   float TestSingleEleTriggerOld ( const BNelectron & );
   
   
-		BNmuonCollection GetSelectedMuons(const BNmuonCollection&, const muonID::muonID);
+        BNmuonCollection GetSelectedMuons(const BNmuonCollection&, const muonID::muonID, const BNjetCollection* = 0);
 
 		// Electrons
 		bool IsSideElectron(const BNelectron&);
-		bool IsLooseElectron(const BNelectron&);
+        bool IsSideElectronLooseMVA(const BNelectron&, const BNjetCollection* = 0);
+        bool IsSideElectronTightMVA(const BNelectron&, const BNjetCollection* = 0);
+        bool IsLooseElectron(const BNelectron&);
 		bool IsTightElectron(const BNelectron&);
 		float GetElectronRelIso(const BNelectron&);
-  float GetElectronSF(const BNelectron&, const electronID::electronID e = electronID::electronTight );
-  float GetDoubleElectronTriggerSF (const BNelectron&, const BNelectron&);
+        float GetElectronSF(const BNelectron&, const electronID::electronID e = electronID::electronTight );
+        float GetDoubleElectronTriggerSF (const BNelectron&, const BNelectron&);
 		bool GetElectronIDresult(const BNelectron& iElectron, const electronID::electronID);
-		bool IsGoodElectron(const BNelectron&, const electronID::electronID);
-		BNelectronCollection GetSelectedElectrons(const BNelectronCollection&, const electronID::electronID);
+        bool IsGoodElectron(const BNelectron&, const electronID::electronID, const BNjetCollection* = 0);
+        BNelectronCollection GetSelectedElectrons(const BNelectronCollection&, const electronID::electronID, const BNjetCollection* = 0);
+        float GetElectronLepMVA( const BNelectron&, const BNjetCollection* = 0);
 
+        // General lepton functions
+        float GetDBCorrectedRelIsoDR04(const BNlepton& iLepton, const float& dBeta_factor);
+  
 		// MCparticles
 		BNmcparticleCollection	GetSelectedMCparticlesByGrandParentPDGid(const BNmcparticleCollection&, const vector<int>);
 		BNmcparticleCollection	GetSelectedMCparticlesByParentPDGid(const BNmcparticleCollection&, const vector<int>);
@@ -309,6 +322,29 @@ class BEANhelper{
 		CSVreevaluator*	  sh_lfSFUp_;
 		CSVreevaluator*	  sh_lfSFDown_;
 
+        // lepMVA TMVA readers
+        TMVA::Reader*     mu_reader_high_b;
+        TMVA::Reader*     mu_reader_high_e;
+        TMVA::Reader*     mu_reader_low_b;
+        TMVA::Reader*     mu_reader_low_e;
+        TMVA::Reader*     ele_reader_high_cb;
+        TMVA::Reader*     ele_reader_high_fb;
+        TMVA::Reader*     ele_reader_high_ec;
+        TMVA::Reader*     ele_reader_low_cb;
+        TMVA::Reader*     ele_reader_low_fb;
+        TMVA::Reader*     ele_reader_low_ec;
+
+        Float_t varneuRelIso;
+        Float_t varchRelIso;
+        Float_t varjetDR_in;
+        Float_t varjetPtRatio_in;
+        Float_t varjetBTagCSV_in;
+        Float_t varsip3d;
+        Float_t varmvaId;
+        Float_t varinnerHits;
+        Float_t vardxy;
+        Float_t vardz;
+   
 		// Old functions
 	public:
 		vdouble getEffSF( int returnType, double jetPts, double jetEtas, double jetIds );
@@ -332,7 +368,7 @@ class BEANhelper{
 
 		// CSV reweighting
 		TH1D* h_csv_wgt_hf[9][5];
-		TH1D* c_csv_wgt_hf[9][5];
+        TH1D* c_csv_wgt_hf[9][5];
 		TH1D* h_csv_wgt_lf[9][3][3];
 
 
@@ -366,8 +402,8 @@ template <typename BNobject> BNmcparticle BEANhelper::GetMatchedMCparticle(const
 	BNmcparticle result;
 	double minDeltaR = 999;
 	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
-        double thisDeltaR = deltaR(MCparticle->eta, MCparticle->phi, iObject.eta, iObject.phi);	
-		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*MCparticle); }
+        double thisDeltaR = deltaR(MCparticle->eta, MCparticle->phi, iObject.eta, iObject.phi);
+        if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*MCparticle); }
         minDeltaR = std::min(minDeltaR,thisDeltaR);
 	}
 	return result;
@@ -415,6 +451,28 @@ template <typename BNobject> BNtau BEANhelper::GetMatchedTau(const BNtauCollecti
 	for( BNtauCollection::const_iterator Tau = iTaus.begin(); Tau != iTaus.end(); ++Tau){
         double thisDeltaR = deltaR(Tau->eta, Tau->phi, iObject.eta, iObject.phi);	
 		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*Tau); }
+        minDeltaR = std::min(minDeltaR,thisDeltaR);
+	}
+	return result;
+}
+
+template <typename BNobject> BNjet BEANhelper::GetClosestJet(const BNjetCollection& iJets, const BNobject& iObject, const double iMaxDeltaR){
+	BNjet result;
+	double minDeltaR = 999;
+	for( BNjetCollection::const_iterator Jet = iJets.begin(); Jet != iJets.end(); ++Jet){
+        double thisDeltaR = deltaR(Jet->eta, Jet->phi, iObject.eta, iObject.phi);	
+		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*Jet); }
+        minDeltaR = std::min(minDeltaR,thisDeltaR);
+	}
+	return result;
+}
+
+template <typename BNobject> BNtrack BEANhelper::GetClosestTrack(const BNtrackCollection& iTracks, const BNobject& iObject, const double iMaxDeltaR){
+	BNtrack result;
+	double minDeltaR = 999;
+	for( BNtrackCollection::const_iterator Track = iTracks.begin(); Track != iTracks.end(); ++Track){
+        double thisDeltaR = deltaR(Track->eta, Track->phi, iObject.eta, iObject.phi);	
+		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*Track); }
         minDeltaR = std::min(minDeltaR,thisDeltaR);
 	}
 	return result;
