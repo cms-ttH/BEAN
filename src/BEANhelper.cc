@@ -2397,18 +2397,28 @@ BNelectronCollection BEANhelper::GetSelectedElectrons(const BNelectronCollection
 	return result;
 }
 
-BNjetCollection BEANhelper::GetCleanJets(const BNjetCollection& iJets, const vector<TLorentzVector>& iToUnmatch, const float iDeltaR){
-	CheckSetUp();
-	BNjetCollection result;
-	for( BNjetCollection::const_iterator Jet = iJets.begin(); Jet != iJets.end(); ++Jet ){
-		bool matched = false;
-		for(unsigned int m = 0; m < iToUnmatch.size(); m++){
-			if(deltaR(Jet->eta, Jet->phi, iToUnmatch.at(m).Eta(), iToUnmatch.at(m).Phi()) < iDeltaR){ matched = true; break; }
-		}
+BNjetCollection
+BEANhelper::GetCleanJets(const BNjetCollection& iJets, const vector<TLorentzVector>& iToUnmatch, const float iDeltaR, std::vector<unsigned int>* jet_indices)
+{
+    CheckSetUp();
+    BNjetCollection result;
+    unsigned int i = 0; // Current jet index -> saved as clean jet index
+    for (BNjetCollection::const_iterator Jet = iJets.begin(); Jet != iJets.end(); ++Jet, ++i) {
+        bool matched = false;
+        for (unsigned int m = 0; m < iToUnmatch.size(); m++) {
+            if (deltaR(Jet->eta, Jet->phi, iToUnmatch.at(m).Eta(), iToUnmatch.at(m).Phi()) < iDeltaR) {
+                matched = true;
+                break;
+            }
+        }
 
-		if(!matched){ result.push_back(*Jet); }
-	}
-	return result;
+        if (!matched) {
+            result.push_back(*Jet);
+            if (jet_indices)
+                jet_indices->push_back(i);
+        }
+    }
+    return result;
 }
 
 unsigned int BEANhelper::GetNumCSVbtags(const BNjetCollection& iJets, const char iCSVwp){
