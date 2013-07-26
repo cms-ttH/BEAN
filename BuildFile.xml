@@ -3,6 +3,7 @@
 <use name="DataFormats/Math"/>
 <use name="ProductArea/BNcollections"/>
 <use name="root"/>
+<use name="roottmva"/>
 <export>
   <lib   name="1"/>
 </export>
