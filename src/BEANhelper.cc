@@ -2800,8 +2800,9 @@ bool BEANhelper::IsTauEvent(const BNtauCollection& iTaus, const BNjetCollection&
 	return ( IsTauTauLeptonEvent(iTaus, iJets, iElectrons, iMuons, iSysType) || IsTauLeptonLeptonEvent(iTaus, iJets, iElectrons, iMuons, iSysType) );
 }
 
-bool BEANhelper::IsTauLeptonLeptonEvent(const BNtauCollection& iTaus, const BNjetCollection& iJets, const BNelectronCollection& iElectrons, const BNmuonCollection& iMuons, const sysType::sysType iSysType){
-
+bool
+BEANhelper::IsTauLeptonLeptonEvent(const BNtauCollection& iTaus, const BNjetCollection& iJets, const BNelectronCollection& iElectrons, const BNmuonCollection& iMuons, const sysType::sysType iSysType)
+{
 	// B-jets: veto out events with 3 or more CSVM-tags
 	BNjetCollection correctedJets				= GetCorrectedJets(iJets, iSysType);
 	BNjetCollection selectedCorrectedCSVMJets	= GetSelectedJets(correctedJets, 30, 2.4, jetID::jetLoose, 'M');
@@ -2816,8 +2817,10 @@ bool BEANhelper::IsTauLeptonLeptonEvent(const BNtauCollection& iTaus, const BNje
 	//BNmuonCollection exLooseMuons			= GetDifference(looseMuons, tightMuons);
 	unsigned int numTightLeptons = tightMuons.size() + tightElectrons.size();
 	unsigned int numLooseLeptons = looseMuons.size() + looseElectrons.size();
-	if(numTightLeptons != 2){ return false; }
-	if(numLooseLeptons != 2){ return false; }
+
+    if ((numTightLeptons < 1 || numTightLeptons > 2) ||
+        (numLooseLeptons < 1 || numLooseLeptons > 2))
+        return false;
 
 	// Taus: Clean taus which are also reconstructed as leptons (loose, i.e. exLoose + tight)
 	BNtauCollection correctedTaus	= GetCorrectedTaus(iTaus, iSysType);
@@ -2830,8 +2833,9 @@ bool BEANhelper::IsTauLeptonLeptonEvent(const BNtauCollection& iTaus, const BNje
 	return true;
 }
 
-bool BEANhelper::IsTauTauLeptonEvent(const BNtauCollection& iTaus, const BNjetCollection& iJets, const BNelectronCollection& iElectrons, const BNmuonCollection& iMuons, const sysType::sysType iSysType){
-
+bool
+BEANhelper::IsTauTauLeptonEvent(const BNtauCollection& iTaus, const BNjetCollection& iJets, const BNelectronCollection& iElectrons, const BNmuonCollection& iMuons, const sysType::sysType iSysType)
+{
 	// B-jets: veto out events with 3 or more CSVM-tags
 	BNjetCollection correctedJets				= GetCorrectedJets(iJets, iSysType);
 	BNjetCollection selectedCorrectedCSVMJets	= GetSelectedJets(correctedJets, 30, 2.4, jetID::jetLoose, 'M');
@@ -2846,8 +2850,9 @@ bool BEANhelper::IsTauTauLeptonEvent(const BNtauCollection& iTaus, const BNjetCo
 	//BNmuonCollection exLooseMuons			= GetDifference(looseMuons, tightMuons);
 	unsigned int numTightLeptons = tightMuons.size() + tightElectrons.size();
 	unsigned int numLooseLeptons = looseMuons.size() + looseElectrons.size();
-	if(numTightLeptons < 1 || 1 < numTightLeptons){ return false; }
-	if(numLooseLeptons < 1 || 1 < numLooseLeptons){ return false; }
+
+    if (numTightLeptons != 1 || numLooseLeptons != 1)
+        return false;
 
 	// Taus: Clean taus which are also reconstructed as leptons (loose, i.e. exLoose + tight)
 	BNtauCollection correctedTaus	= GetCorrectedTaus(iTaus, iSysType);
