@@ -1487,6 +1487,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
         passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
         passesIso				= (GetMuonRelIso(iMuon) < 0.200);
         passesID				= (iMuon.isGlobalMuon==1);
+	passesSIP = true;
         break;
       case muonID::muonTight:
         passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
@@ -1494,6 +1495,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
         passesTrackerID	        = ((iMuon.isTrackerMuon) && (iMuon.numberOfValidTrackerHitsInnerTrack > 10) && (iMuon.pixelLayersWithMeasurement > 0)
                                    && (iMuon.numberOfMatchedStations > 1) && (fabs(iMuon.correctedD0) < 0.02) && (fabs(iMuon.correctedDZ) < 1.));
         passesID				= ((iMuon.isGlobalMuon==1) && (iMuon.isGlobalMuonPromptTight==1) && passesTrackerID);
+	passesSIP = true;
         break;
       case muonID::muonPtOnly:
       case muonID::muonPtEtaOnly:
@@ -1533,6 +1535,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
         passesIso				= (GetMuonRelIso(iMuon) < 0.200);
         isPFMuon				= true;
         passesID				= (((iMuon.isGlobalMuon==1) || (iMuon.isTrackerMuon==1)) && isPFMuon);
+	passesSIP = true;
         break;
       case muonID::muonTight:
         passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
@@ -1544,6 +1547,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
                                    && (iMuon.numberOfValidPixelHits > 0) && (iMuon.numberOfMatchedStations > 1));
         
         passesID				= (((iMuon.isGlobalMuon==1) || (iMuon.isTrackerMuon==1)) && isPFMuon && passesTrackerID);
+	passesSIP = true;
         break;
       case muonID::muonPtOnly:
         passesKinematics		= ((iMuon.pt >= minTightMuonPt));
@@ -1552,6 +1556,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
         passesTrackerID	        = true;
         
         passesID				= true;
+	passesSIP = true;
         break;
       case muonID::muonPtEtaOnly:
         passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
@@ -1560,6 +1565,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
         passesTrackerID	        = true;
         
         passesID				= true;
+	passesSIP = true;
         break;
       case muonID::muonPtEtaIsoOnly:
         passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
@@ -1568,6 +1574,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
         passesTrackerID	        = true;
         
         passesID				= true;
+	passesSIP = true;
         break;
       case muonID::muonPtEtaIsoTrackerOnly:
         passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
@@ -1579,6 +1586,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
                                    && (iMuon.numberOfValidPixelHits > 0) && (iMuon.numberOfMatchedStations > 1));
         
         passesID				= passesTrackerID;
+	passesSIP = true;
         break;
       }
 	}// End of 2012 era
@@ -2655,21 +2663,22 @@ hdecayType::hdecayType BEANhelper::GetHdecayType(const BNmcparticleCollection& i
   daughter0id = abs(daughter0id);
   daughter1id = abs(daughter1id);
 
-  hdecayType::hdecayType decayType = hdecayType::hvv;
-  if( daughter0id==24 && daughter1id==24 )      decayType = hdecayType::hww;
-  else if( daughter0id==23 && daughter1id==23 ) decayType = hdecayType::hzz;
+  hdecayType::hdecayType decayType = hdecayType::hgg;
+  if( daughter0id==24 && daughter1id==24 )       decayType = hdecayType::hww; // WW
+  else if( daughter0id==23 && daughter1id==23 )  decayType = hdecayType::hzz; // ZZ
   else if( (daughter0id==5 && daughter1id==5) ||
-	   (daughter0id==4 && daughter1id==4))  decayType = hdecayType::hbb;
-  else if( daughter0id==3  && daughter1id==3  ) decayType = hdecayType::hbb;
-  else if( daughter0id==2  && daughter1id==2  ) decayType = hdecayType::hbb;
-  else if( daughter0id==1  && daughter1id==1  ) decayType = hdecayType::hbb;
-  else if( daughter0id==11 && daughter1id==11 ) decayType = hdecayType::htt;
-  else if( daughter0id==13 && daughter1id==13 ) decayType = hdecayType::htt;
-  else if( daughter0id==15 && daughter1id==15 ) decayType = hdecayType::htt;
-  else if( daughter0id==22 && daughter1id==22 ) decayType = hdecayType::hgg;
+	   (daughter0id==3 && daughter1id==3) ||
+	   (daughter0id==1 && daughter1id==1) )  decayType = hdecayType::hbb; // bb,ss,dd
+  else if( (daughter0id==6 && daughter1id==6) ||
+	   (daughter0id==4 && daughter1id==4) ||
+	   (daughter0id==2 && daughter1id==2) )  decayType = hdecayType::hcc; // cc,uu,tt
+  else if( (daughter0id==11 && daughter1id==11) ||
+	   (daughter0id==13 && daughter1id==13) ||
+	   (daughter0id==15 && daughter1id==15)) decayType = hdecayType::htt; // tau-tau,mu-mu,e-e
+  else if( daughter0id==22 && daughter1id==22 )  decayType = hdecayType::hgg; // gamma-gamma
+  else if( daughter0id==21 && daughter1id==21 )  decayType = hdecayType::hjj; // gluon-gluon
   else if( (daughter0id==23 && daughter1id==22) || 
-	   (daughter1id==23 && daughter0id==22) ||
-	   (daughter1id==21 && daughter0id==21)) decayType = hdecayType::hvv;
+	   (daughter1id==23 && daughter0id==22)) decayType = hdecayType::hzg; // Z-gamma
   else{
     std::cout << "\t UNCLASSIFIED EVENT !! daughter0id = " << daughter0id << ",\t daughter1id = " << daughter1id << std::endl;
   }
