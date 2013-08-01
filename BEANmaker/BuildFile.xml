@@ -1,7 +1,7 @@
+<use name="BEAN/Collections"/>
 <use name="CommonTools/Utils"/>
 <use name="DataFormats/FWLite"/>
 <use name="DataFormats/Math"/>
-<use name="ProductArea/BNcollections"/>
 <use name="root"/>
 <use name="roottmva"/>
 <export>

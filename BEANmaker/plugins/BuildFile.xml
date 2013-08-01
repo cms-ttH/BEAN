@@ -2,6 +2,8 @@
 </export>
 <flags   EDM_PLUGIN="1"/>
 <library name="1" file="*.cc">
+	<use name="BEAN/BEANmaker"/>
+	<use name="BEAN/Collections"/>
 	<use name="CMGTools/External"/>
 	<use name="CondFormats/DataRecord"/>
 	<use name="CondFormats/JetMETObjects"/>
@@ -36,10 +38,8 @@
 	<use name="MagneticField/Engine"/>
 	<use name="MagneticField/Records"/>
 	<use name="Muon/MuonAnalysisTools"/>
-	<use name="NtupleMaker/BEANmaker"/>
 	<use name="PhysicsTools/SelectorUtils"/>
 	<use name="PhysicsTools/Utilities"/>
-	<use name="ProductArea/BNcollections"/>
 	<use name="RecoEcal/EgammaCoreTools"/>
 	<use name="RecoEgamma/EgammaTools"/>
 	<use name="RecoLocalCalo/EcalRecAlgos"/>

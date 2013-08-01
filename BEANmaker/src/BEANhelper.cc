@@ -277,16 +277,16 @@ void BEANhelper::SetUp(string iEra, int iSampleNumber,  const analysisType::anal
     mu_reader_low_e->AddVariable( "dxy", &vardxy );
     mu_reader_low_e->AddVariable( "dz", &vardz );
   
-    mu_reader_high_b->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepMVA/mu_pteta_high_b_BDTG.weights.xml");
-    mu_reader_high_e->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepMVA/mu_pteta_high_e_BDTG.weights.xml");
-    mu_reader_low_b->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepMVA/mu_pteta_low_b_BDTG.weights.xml");
-    mu_reader_low_e->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepMVA/mu_pteta_low_e_BDTG.weights.xml");
-    ele_reader_high_cb->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepMVA/el_pteta_high_cb_BDTG.weights.xml");
-    ele_reader_high_fb->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepMVA/el_pteta_high_fb_BDTG.weights.xml");
-    ele_reader_high_ec->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepMVA/el_pteta_high_ec_BDTG.weights.xml");
-    ele_reader_low_cb->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepMVA/el_pteta_low_cb_BDTG.weights.xml");
-    ele_reader_low_fb->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepMVA/el_pteta_low_fb_BDTG.weights.xml");
-    ele_reader_low_ec->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepMVA/el_pteta_low_ec_BDTG.weights.xml");
+    mu_reader_high_b->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/lepMVA/mu_pteta_high_b_BDTG.weights.xml");
+    mu_reader_high_e->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/lepMVA/mu_pteta_high_e_BDTG.weights.xml");
+    mu_reader_low_b->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/lepMVA/mu_pteta_low_b_BDTG.weights.xml");
+    mu_reader_low_e->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/lepMVA/mu_pteta_low_e_BDTG.weights.xml");
+    ele_reader_high_cb->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/lepMVA/el_pteta_high_cb_BDTG.weights.xml");
+    ele_reader_high_fb->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/lepMVA/el_pteta_high_fb_BDTG.weights.xml");
+    ele_reader_high_ec->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/lepMVA/el_pteta_high_ec_BDTG.weights.xml");
+    ele_reader_low_cb->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/lepMVA/el_pteta_low_cb_BDTG.weights.xml");
+    ele_reader_low_fb->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/lepMVA/el_pteta_low_fb_BDTG.weights.xml");
+    ele_reader_low_ec->BookMVA( "BDTG method", string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/lepMVA/el_pteta_low_ec_BDTG.weights.xml");
 
 	// Awknowledge setup
 	isSetUp = true;
@@ -313,7 +313,7 @@ void BEANhelper::SetUpPUreweighing(string const iCollisionsDS){
 	if( sampleNumber<0 || samplename=="data" || isData) return;
 
 	// Get PU file path
-	puFile = new TFile ((string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/pu_distributions.root").c_str());
+	puFile = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/pu_distributions.root").c_str());
 
 	// Set up mc histo pointer
 	TH1D* h_pu_mc = NULL;
@@ -444,8 +444,8 @@ void BEANhelper::SetUpCSVreweighting(){
 
   // Do not set it up if we're running on collision data
   if(isData){ return; }
-  f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/csv_rwt_hf_IT.root").c_str());
-  f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/csv_rwt_lf_IT.root").c_str());
+  f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/csv_rwt_hf_IT.root").c_str());
+  f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/csv_rwt_lf_IT.root").c_str());
 
 
   // CSV reweighting
@@ -565,13 +565,13 @@ void BEANhelper::SetUpJetSF(){
 	string com_suffix = "";
 	string filePath = "";
 	if( era=="2012_53x" ){
-		filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/mc_btag_efficiency_8TeV_53x.root";
+		filePath = string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/mc_btag_efficiency_8TeV_53x.root";
 		com_suffix = "_8TeV";
 	}else if( era=="2012_52x" ){
-        filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/mc_btag_efficiency_8TeV.root";
+        filePath = string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/mc_btag_efficiency_8TeV.root";
 		com_suffix = "_8TeV";
 	}else if( era=="2011" ){
-		filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/mc_btag_efficiency_7TeV.root";
+		filePath = string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/mc_btag_efficiency_7TeV.root";
 		com_suffix = "_7TeV";
 	}else{ // === Not 2011 or 2012 === //
 		cout << "Era set to '" << era << "'" << endl;
@@ -620,17 +620,17 @@ void BEANhelper::SetUpLeptonSF(){
     
     if ( era=="2012_53x" ){
       
-      filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV_53x_baseline.root";
+      filePath = string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/lepton_SF_8TeV_53x_baseline.root";
       
-      oldFilePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
+      oldFilePath = string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/lepton_SF_8TeV.root";
 
       oldLeptonScaleFactFile = new TFile (oldFilePath.c_str() );
 
       
 	} else if( era=="2012_52x"  ){
-      filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
+      filePath = string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/lepton_SF_8TeV.root";
 	}else if( era=="2011" ){
-		filePath = string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/lepton_SF_8TeV.root";
+		filePath = string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/lepton_SF_8TeV.root";
 	}else{ // === Not 2011 or 2012 === //
 		cout << "Era set to '" << era << "'" << endl;
 		assert (era == "either 2012_52x, 2012_53x, or 2011");

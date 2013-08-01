@@ -11,8 +11,8 @@ CSVreevaluator::CSVreevaluator(string iSampleName, string iEra, double iScaleBC,
 	lightFlavorReshapers	= NULL;
 
 	// File and histo paths
-	string pathToEfficiencyFile1 = (string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/");
-	string pathToEfficiencyFile2 = (string(getenv("CMSSW_BASE")) + "/src/NtupleMaker/BEANmaker/data/");
+	string pathToEfficiencyFile1 = (string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/");
+	string pathToEfficiencyFile2 = (string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/");
     string histoName1 = "";
     string histoName2 = "";
 

@@ -3,7 +3,7 @@
 // Package:    BEANmaker
 // Class:      BEANmaker
 // 
-/**\class BEANmaker BEANmaker.cc NtupleMaker/BEANmaker/src/BEANmaker.cc
+/**\class BEANmaker BEANmaker.cc BEAN/BEANmaker/src/BEANmaker.cc
 
    Description: <one line class summary>
 
@@ -41,21 +41,21 @@
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
 #include "JetMETCorrections/Objects/interface/JetCorrectionsRecord.h"
 
-#include "ProductArea/BNcollections/interface/BNelectron.h"
-#include "ProductArea/BNcollections/interface/BNevent.h"
-#include "ProductArea/BNcollections/interface/BNjet.h"
-#include "ProductArea/BNcollections/interface/BNgenjet.h"
-#include "ProductArea/BNcollections/interface/BNmcparticle.h"
-#include "ProductArea/BNcollections/interface/BNmet.h"
-#include "ProductArea/BNcollections/interface/BNmuon.h"
-#include "ProductArea/BNcollections/interface/BNphoton.h"
-#include "ProductArea/BNcollections/interface/BNsupercluster.h"
-#include "ProductArea/BNcollections/interface/BNtau.h"
-#include "ProductArea/BNcollections/interface/BNtrack.h"
-#include "ProductArea/BNcollections/interface/BNtrigger.h"
-#include "ProductArea/BNcollections/interface/BNbxlumi.h"
-#include "ProductArea/BNcollections/interface/BNtrigobj.h"
-#include "ProductArea/BNcollections/interface/BNprimaryvertex.h"
+#include "BEAN/Collections/interface/BNelectron.h"
+#include "BEAN/Collections/interface/BNevent.h"
+#include "BEAN/Collections/interface/BNjet.h"
+#include "BEAN/Collections/interface/BNgenjet.h"
+#include "BEAN/Collections/interface/BNmcparticle.h"
+#include "BEAN/Collections/interface/BNmet.h"
+#include "BEAN/Collections/interface/BNmuon.h"
+#include "BEAN/Collections/interface/BNphoton.h"
+#include "BEAN/Collections/interface/BNsupercluster.h"
+#include "BEAN/Collections/interface/BNtau.h"
+#include "BEAN/Collections/interface/BNtrack.h"
+#include "BEAN/Collections/interface/BNtrigger.h"
+#include "BEAN/Collections/interface/BNbxlumi.h"
+#include "BEAN/Collections/interface/BNtrigobj.h"
+#include "BEAN/Collections/interface/BNprimaryvertex.h"
 
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerReadoutSetup.h"
@@ -138,7 +138,7 @@
 
 #include "CMGTools/External/interface/PileupJetIdentifier.h"
 
-#include "NtupleMaker/BEANmaker/interface/AnglesUtil.h"
+#include "BEAN/BEANmaker/interface/AnglesUtil.h"
 
 //Needed for calculation of isolation energy for tracks
 #include "PhysicsTools/IsolationAlgos/interface/IsoDepositExtractorFactory.h"

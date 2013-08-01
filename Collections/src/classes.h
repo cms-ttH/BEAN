@@ -1,28 +1,28 @@
 #include "DataFormats/Common/interface/Wrapper.h"
 
 //Add includes for your classes here
-#include "ProductArea/BNcollections/interface/SampleProd.h"
-#include "ProductArea/BNcollections/interface/BNbxlumi.h"
-#include "ProductArea/BNcollections/interface/BNelectron.h"
-#include "ProductArea/BNcollections/interface/BNtau.h"
-#include "ProductArea/BNcollections/interface/BNevent.h"
-#include "ProductArea/BNcollections/interface/BNjet.h"
-#include "ProductArea/BNcollections/interface/BNmcparticle.h"
-#include "ProductArea/BNcollections/interface/BNmet.h"
-#include "ProductArea/BNcollections/interface/BNmuon.h"
-#include "ProductArea/BNcollections/interface/BNlepton.h"
-#include "ProductArea/BNcollections/interface/BNphoton.h"
-#include "ProductArea/BNcollections/interface/BNsupercluster.h"
-#include "ProductArea/BNcollections/interface/BNtrack.h"
-#include "ProductArea/BNcollections/interface/BNtrigger.h"
-#include "ProductArea/BNcollections/interface/BNskimbits.h"
-#include "ProductArea/BNcollections/interface/BNtrigobj.h"
-#include "ProductArea/BNcollections/interface/BNprimaryvertex.h"
-#include "ProductArea/BNcollections/interface/BNgenjet.h"
+#include "BEAN/Collections/interface/SampleProd.h"
+#include "BEAN/Collections/interface/BNbxlumi.h"
+#include "BEAN/Collections/interface/BNelectron.h"
+#include "BEAN/Collections/interface/BNtau.h"
+#include "BEAN/Collections/interface/BNevent.h"
+#include "BEAN/Collections/interface/BNjet.h"
+#include "BEAN/Collections/interface/BNmcparticle.h"
+#include "BEAN/Collections/interface/BNmet.h"
+#include "BEAN/Collections/interface/BNmuon.h"
+#include "BEAN/Collections/interface/BNlepton.h"
+#include "BEAN/Collections/interface/BNphoton.h"
+#include "BEAN/Collections/interface/BNsupercluster.h"
+#include "BEAN/Collections/interface/BNtrack.h"
+#include "BEAN/Collections/interface/BNtrigger.h"
+#include "BEAN/Collections/interface/BNskimbits.h"
+#include "BEAN/Collections/interface/BNtrigobj.h"
+#include "BEAN/Collections/interface/BNprimaryvertex.h"
+#include "BEAN/Collections/interface/BNgenjet.h"
 #include <vector>
 
 namespace {
-   struct ProductArea_BNcollections {
+   struct BEAN_Collections {
       //add 'dummy' Wrapper variable for each class type you put into the Event
      SampleProd dummy0;
      edm::Wrapper<SampleProd> dummy1;
