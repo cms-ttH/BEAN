@@ -1,0 +1,102 @@
+<lcgdict>
+  <class name="SampleProd" />
+  <class name="std::vector<SampleProd>" />
+  <class pattern="edm::Wrapper<SampleProd>"/>
+  <class name="edm::Wrapper<std::vector<SampleProd> >" />
+
+  <class name="BNbxlumi" />
+  <class name="std::vector<BNbxlumi>" />
+  <class pattern="edm::Wrapper<BNbxlumi>"/>
+  <class name="edm::Wrapper<std::vector<BNbxlumi> >" />
+
+  <class name="BNelectron" />
+  <class name="std::vector<BNelectron>" />
+  <class pattern="edm::Wrapper<BNelectron>"/>
+  <class name="edm::Wrapper<std::vector<BNelectron> >" />
+
+  <class name="BNtau" />
+  <class name="std::vector<BNtau>" />
+  <class pattern="edm::Wrapper<BNtau>"/>
+  <class name="edm::Wrapper<std::vector<BNtau> >" />
+
+  <class name="BNjet" />
+  <class name="std::vector<BNjet>" />
+  <class pattern="edm::Wrapper<BNjet>"/>
+  <class name="edm::Wrapper<std::vector<BNjet> >" />
+
+  <class name="BNevent" />
+  <class name="std::vector<BNevent>" />
+  <class pattern="edm::Wrapper<BNevent>"/>
+  <class name="edm::Wrapper<std::vector<BNevent> >" />
+
+  <class name="BNmcparticle" />
+  <class name="std::vector<BNmcparticle>" />
+  <class pattern="edm::Wrapper<BNmcparticle>"/>
+  <class name="edm::Wrapper<std::vector<BNmcparticle> >" />
+
+  <class name="BNmet" />
+  <class name="std::vector<BNmet>" />
+  <class pattern="edm::Wrapper<BNmet>"/>
+  <class name="edm::Wrapper<std::vector<BNmet> >" />
+
+  <class name="BNlepton" />
+  <class name="std::vector<BNlepton>" />
+  <class pattern="edm::Wrapper<BNlepton>"/>
+  <class name="edm::Wrapper<std::vector<BNlepton> >" />
+
+  <class name="BNmuon" />
+  <class name="std::vector<BNmuon>" />
+  <class pattern="edm::Wrapper<BNmuon>"/>
+  <class name="edm::Wrapper<std::vector<BNmuon> >" />
+
+  <class name="BNphoton" />
+  <class name="std::vector<BNphoton>" />
+  <class pattern="edm::Wrapper<BNphoton>"/>
+  <class name="edm::Wrapper<std::vector<BNphoton> >" />
+
+  <class name="BNsupercluster" />
+  <class name="std::vector<BNsupercluster>" />
+  <class pattern="edm::Wrapper<BNsupercluster>"/>
+  <class name="edm::Wrapper<std::vector<BNsupercluster> >" />
+
+  <class name="BNtrack" />
+  <class name="std::vector<BNtrack>" />
+  <class pattern="edm::Wrapper<BNtrack>"/>
+  <class name="edm::Wrapper<std::vector<BNtrack> >" />
+
+  <class name="BNtrigger" />
+  <class name="std::vector<BNtrigger>" />
+  <class pattern="edm::Wrapper<BNtrigger>"/>
+  <class name="edm::Wrapper<std::vector<BNtrigger> >" />
+
+  <class name="BNskimbit" />
+  <class name="std::vector<BNskimbit>" />
+  <class pattern="edm::Wrapper<BNskimbit>"/>
+  <class name="edm::Wrapper<std::vector<BNskimbit> >" />
+
+  <class name="BNtrigobj" />
+  <class name="std::vector<BNtrigobj>" />
+  <class pattern="edm::Wrapper<BNtrigobj>"/>
+  <class name="edm::Wrapper<std::vector<BNtrigobj> >" />
+
+  <class name="BNprimaryvertex" />
+  <class name="std::vector<BNprimaryvertex>" />
+  <class pattern="edm::Wrapper<BNprimaryvertex>"/>
+  <class name="edm::Wrapper<std::vector<BNprimaryvertex> >" />
+
+  <class name="BNgenjet" />
+  <class name="std::vector<BNgenjet>" />
+  <class pattern="edm::Wrapper<BNgenjet>"/>
+  <class name="edm::Wrapper<std::vector<BNgenjet> >" />
+
+  <!--
+    These classes are commented out because they are used more rarely. If you need them, move them
+    outside the comments and make the corresponding change in classes.h
+
+uncomment_xml_here
+
+  <class pattern="edm::Ref<std::vector<SampleProd>,*>" />
+  <class pattern="edm::RefVector<std::vector<SampleProd>,*>" />
+  <class name="edm::RefProd<std::vector<SampleProd> >" />
+  -->
+</lcgdict>
