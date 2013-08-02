@@ -2850,7 +2850,8 @@ BEANhelper::IsTauTauLeptonEvent(const BNtauCollection& iTaus, const BNjetCollect
 	unsigned int numTightLeptons = tightMuons.size() + tightElectrons.size();
 	unsigned int numLooseLeptons = looseMuons.size() + looseElectrons.size();
 
-    if (numTightLeptons != 1 || numLooseLeptons != 1)
+    if ((numTightLeptons < 1 || 2 < numTightLeptons) ||
+          (numLooseLeptons < 1 || 2 < numLooseLeptons))
         return false;
 
 	// Taus: Clean taus which are also reconstructed as leptons (loose, i.e. exLoose + tight)
