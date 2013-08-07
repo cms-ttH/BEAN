@@ -1366,7 +1366,7 @@ float BEANhelper::GetMuonLepMVA(const BNmuon& iMuon, const BNjetCollection* iJet
 
   varneuRelIso = max(0.0, iMuon.neutralHadronIsoDR04 + iMuon.photonIsoDR04 - 0.5*iMuon.puChargedHadronIsoDR04)/iMuon.pt;
   //  varneuRelIso = max(0.0, iMuon.pfIsoR04SumNeutralHadronEt + iMuon.pfIsoR04SumPhotonEt - 0.5*iMuon.pfIsoR04SumPUPt)/iMuon.pt;
-  varchRelIso = iMuon.chargedHadronIso/iMuon.pt;
+  varchRelIso = iMuon.chargedHadronIsoDR04/iMuon.pt;
   //  varchRelIso = iMuon.pfIsoR04SumChargedHadronPt/iMuon.pt;  
   varjetDR_in = min(muV.DeltaR(jetV),0.5);
   varjetPtRatio_in = 1.5;
@@ -1374,7 +1374,7 @@ float BEANhelper::GetMuonLepMVA(const BNmuon& iMuon, const BNjetCollection* iJet
   varjetBTagCSV_in = 0.0;
   if (muV.DeltaR(jetV) <= 0.5) varjetBTagCSV_in = max(iJet.btagCombinedSecVertex, 0.0);
   varsip3d = fabs(iMuon.IP/iMuon.IPError);
-  vardxy = log(fabs(iMuon.correctedD0));
+  vardxy = log(fabs(iMuon.correctedD0Vertex));
   vardz = log(fabs(iMuon.correctedDZ));
 
 //   std::cout << "varneuRelIso: " << varneuRelIso << std::endl;
