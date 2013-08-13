@@ -1062,7 +1062,7 @@ float BEANhelper::GetMuonSF( const BNmuon& iMuon, const muonID::muonID inputID )
     // Tight selection
   case muonID::muonTight:
     usePT = std::min( iMuon.pt, 499. );
-    usePT = std::max( iMuon.pt, 10. );    
+    usePT = std::max( usePT, 10. );    
     useEta = std::min( fabs(iMuon.eta), 2.09);  
     SF = h_mu_SF_->GetBinContent( h_mu_SF_->FindBin(usePT, useEta) );
     break;
