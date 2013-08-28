@@ -2462,6 +2462,23 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       MyPfjet.leadCandVz = leadCandVz;
       MyPfjet.leadCandDistFromPV = leadCandDistFromPV;
 
+      double sumMomentum = 0;
+      double sumMomentumQ = 0;
+      for(std::vector<reco::PFCandidatePtr>::const_iterator i_candidate = PFJetPart.begin(); i_candidate != PFJetPart.end(); ++i_candidate){
+          const int charge = (*i_candidate)->charge();
+          if(charge == 0) continue;
+
+          const double constituentPx = (*i_candidate)->px();
+          const double constituentPy = (*i_candidate)->py();
+          const double constituentPz = (*i_candidate)->pz();
+          const double product = constituentPx*pfjet->px() + constituentPy*pfjet->py() + constituentPz*pfjet->pz();
+
+          sumMomentum += product;
+          sumMomentumQ += static_cast<double>(charge)*product;
+      }
+      const double jetChargeRelativePtWeighted(sumMomentum>0 ? sumMomentumQ/sumMomentum : 0);
+      MyPfjet.jetChargeRelativePtWeighted = jetChargeRelativePtWeighted;
+       
       if (QGLikelihoodDiscriminantHandle.isValid()) {
           double QGLD = (*QGLikelihoodDiscriminantHandle)[pfjets.refAt(idx)];
           MyPfjet.QGLD = QGLD;
