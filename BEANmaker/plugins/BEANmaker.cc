@@ -2367,6 +2367,12 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
     PileupJetIdentifier puIdentifier;
 
+    //Quark gluon discriminant
+    Handle<ValueMap<float> >  QGLikelihoodDiscriminantHandle;
+    Handle<ValueMap<float> >  QGMLPHandle;    
+    iEvent.getByLabel("QGTaggerPFlow","qgLikelihood", QGLikelihoodDiscriminantHandle);
+    iEvent.getByLabel("QGTaggerPFlow","qgMLP", QGMLPHandle);
+
     for( edm::View<pat::Jet>::const_iterator pfjet = pfjets.begin(); pfjet != pfjets.end(); ++ pfjet ) {
 
       if( !(pfjet->pt()>minJetPt_) ) continue;
@@ -2456,6 +2462,15 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       MyPfjet.leadCandVz = leadCandVz;
       MyPfjet.leadCandDistFromPV = leadCandDistFromPV;
 
+      if (QGLikelihoodDiscriminantHandle.isValid()) {
+          double QGLD = (*QGLikelihoodDiscriminantHandle)[pfjets.refAt(idx)];
+          MyPfjet.QGLD = QGLD;
+      }
+
+      if (QGMLPHandle.isValid()) {
+          double QGMLP = (*QGMLPHandle)[pfjets.refAt(idx)];
+          MyPfjet.QGMLP = QGMLP;
+      }
 
       MyPfjet.dZ = puIdentifier.dZ();
       MyPfjet.dR2Mean = puIdentifier.dR2Mean();
