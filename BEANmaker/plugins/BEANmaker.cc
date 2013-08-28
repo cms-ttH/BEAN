@@ -1238,6 +1238,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       MyElectron.isHEEP = ( isHEEP ) ? 1 : 0;
       MyElectron.isHEEPnoEt = ( isHEEPnoEt ) ? 1 : 0;
 
+      MyElectron.isGsfCtfScPixChargeConsistent = ele->isGsfCtfScPixChargeConsistent();
+       
       bnelectrons->push_back(MyElectron);
 
     }
@@ -1689,6 +1691,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyPfelectron.AEffDr04 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso04, pfeleEta, ElectronEffectiveArea::kEleEAFall11MC); 
       }
 
+      MyPfelectron.isGsfCtfScPixChargeConsistent = pfele->isGsfCtfScPixChargeConsistent();
+      
       bnpfelectrons->push_back(MyPfelectron);
 
     }
@@ -2141,6 +2145,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyPfelectronLoose.AEffDr03 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso03, pfeleEta, ElectronEffectiveArea::kEleEAFall11MC);
 	MyPfelectronLoose.AEffDr04 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso04, pfeleEta, ElectronEffectiveArea::kEleEAFall11MC); 
       }
+
+      MyPfelectronLoose.isGsfCtfScPixChargeConsistent = pfele->isGsfCtfScPixChargeConsistent();      
 
       bnpfelectronsLoose->push_back(MyPfelectronLoose);
 
@@ -2738,6 +2744,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyMuon.ptErr = muon->globalTrack()->ptError();
       }
       if( (muon->innerTrack().isAvailable()) ){
+    MyMuon.innerTrackPt = muon->innerTrack()->pt();
+    MyMuon.innerTrackPtError = muon->innerTrack()->ptError();          
 	MyMuon.numberOfValidTrackerHitsInnerTrack = muon->innerTrack()->numberOfValidHits();
 	MyMuon.pixelLayersWithMeasurement = muon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
 	MyMuon.numberOfValidPixelHits = muon->innerTrack()->hitPattern().numberOfValidPixelHits();
@@ -3122,6 +3130,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyPfmuon.ptErr = pfmuon->globalTrack()->ptError();
       }
       if( (pfmuon->innerTrack().isAvailable()) ){
+    MyPfmuon.innerTrackPt = pfmuon->innerTrack()->pt();
+    MyPfmuon.innerTrackPtError = pfmuon->innerTrack()->ptError();                     
 	MyPfmuon.innerTrackNormChi2 = pfmuon->innerTrack()->normalizedChi2();
 	MyPfmuon.numberOfValidTrackerHitsInnerTrack = pfmuon->innerTrack()->numberOfValidHits();
 	MyPfmuon.pixelLayersWithMeasurement = pfmuon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
@@ -3509,6 +3519,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyPfmuonLoose.ptErr = pfmuon->globalTrack()->ptError();
       }
       if( (pfmuon->innerTrack().isAvailable()) ){
+    MyPfmuonLoose.innerTrackPt = pfmuon->innerTrack()->pt();
+    MyPfmuonLoose.innerTrackPtError = pfmuon->innerTrack()->ptError();                                
 	MyPfmuonLoose.innerTrackNormChi2 = pfmuon->innerTrack()->normalizedChi2();
 	MyPfmuonLoose.numberOfValidTrackerHitsInnerTrack = pfmuon->innerTrack()->numberOfValidHits();
 	MyPfmuonLoose.pixelLayersWithMeasurement = pfmuon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
@@ -3831,6 +3843,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyCocktailmuon.ptErr = cocktailmuon->globalTrack()->ptError();
       }
       if( (cocktailmuon->innerTrack().isAvailable()) ){
+    MyCocktailmuon.innerTrackPt = cocktailmuon->innerTrack()->pt();
+    MyCocktailmuon.innerTrackPtError = cocktailmuon->innerTrack()->ptError();                                
 	MyCocktailmuon.numberOfValidTrackerHitsInnerTrack = cocktailmuon->innerTrack()->numberOfValidHits();
 	MyCocktailmuon.pixelLayersWithMeasurement = cocktailmuon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
 	MyCocktailmuon.numberOfValidPixelHits = cocktailmuon->innerTrack()->hitPattern().numberOfValidPixelHits();
