@@ -38,17 +38,17 @@
 #include "BEAN/Collections/interface/BNevent.h"
 #include "BEAN/Collections/interface/BNgenjet.h"
 #include "BEAN/Collections/interface/BNjet.h"
-#include "BEAN/Collections/interface/BNtau.h"
 #include "BEAN/Collections/interface/BNmcparticle.h"
 #include "BEAN/Collections/interface/BNmet.h"
 #include "BEAN/Collections/interface/BNmuon.h"
 #include "BEAN/Collections/interface/BNphoton.h"
+#include "BEAN/Collections/interface/BNprimaryvertex.h"
+#include "BEAN/Collections/interface/BNskimbits.h"
 #include "BEAN/Collections/interface/BNsupercluster.h"
+#include "BEAN/Collections/interface/BNtau.h"
 #include "BEAN/Collections/interface/BNtrack.h"
 #include "BEAN/Collections/interface/BNtrigger.h"
-#include "BEAN/Collections/interface/BNskimbits.h"
 #include "BEAN/Collections/interface/BNtrigobj.h"
-#include "BEAN/Collections/interface/BNprimaryvertex.h"
 
 #include "BEAN/BEANmaker/interface/BtagWeight.h"
 #include "BEAN/BEANmaker/interface/CSVreevaluator.h"
@@ -65,20 +65,20 @@ typedef std::vector<std::string> vstring;
 typedef std::vector<double> vdouble;
 typedef std::vector<int> vint;
 
-typedef BNeventCollection::const_iterator         EventIter;
-typedef BNelectronCollection::const_iterator      EleIter;
-typedef BNjetCollection::const_iterator           JetIter;
-typedef BNmcparticleCollection::const_iterator    MCparIter;
-typedef BNmetCollection::const_iterator           MetIter;
-typedef BNmuonCollection::const_iterator          MuonIter;
-typedef BNtauCollection::const_iterator           TauIter;
-typedef BNphotonCollection::const_iterator        PhotonIter;
+typedef BNeventCollection::const_iterator		  EventIter;
+typedef BNelectronCollection::const_iterator	  EleIter;
+typedef BNjetCollection::const_iterator			  JetIter;
+typedef BNmcparticleCollection::const_iterator	  MCparIter;
+typedef BNmetCollection::const_iterator			  MetIter;
+typedef BNmuonCollection::const_iterator		  MuonIter;
+typedef BNtauCollection::const_iterator			  TauIter;
+typedef BNphotonCollection::const_iterator		  PhotonIter;
 typedef BNprimaryvertexCollection::const_iterator PVIter;
-typedef BNskimbitsCollection::const_iterator      SkimBitIter;
+typedef BNskimbitsCollection::const_iterator	  SkimBitIter;
 typedef BNsuperclusterCollection::const_iterator  SCIter;
-typedef BNtrackCollection::const_iterator         TrackIter;
-typedef BNtriggerCollection::const_iterator       TrigIter;
-typedef BNtrigobjCollection::const_iterator       TrigObjIter;
+typedef BNtrackCollection::const_iterator		  TrackIter;
+typedef BNtriggerCollection::const_iterator		  TrigIter;
+typedef BNtrigobjCollection::const_iterator		  TrigObjIter;
 
 namespace analysisType{	enum analysisType{ LJ, DIL, Tau }; }		
 namespace sysType{enum sysType{NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup, TESup, TESdown, CSVLFup, CSVLFdown, CSVHFup, CSVHFdown, CSVHFStats1up, CSVHFStats1down, CSVLFStats1up, CSVLFStats1down, CSVHFStats2up, CSVHFStats2down, CSVLFStats2up, CSVLFStats2down, CSVCErr1up, CSVCErr1down, CSVCErr2up, CSVCErr2down }; }
@@ -109,8 +109,8 @@ class BEANhelper{
 		template <typename BNobject> BNmcparticle GetMatchedGentau(const BNmcparticleCollection&, const BNobject&, const double);
 		template <typename BNobject> BNmcparticle GetMatchedVisGentau(const BNmcparticleCollection&, const BNobject&, const double);
 		template <typename BNobject> BNtau GetMatchedTau(const BNtauCollection&, const BNobject&, const double);
-        template <typename BNobject> BNjet GetClosestJet(const BNjetCollection&, const BNobject&, const double);
-        template <typename BNobject> BNtrack GetClosestTrack(const BNtrackCollection&, const BNobject&, const double);
+		template <typename BNobject> BNjet GetClosestJet(const BNjetCollection&, const BNobject&, const double);
+		template <typename BNobject> BNtrack GetClosestTrack(const BNtrackCollection&, const BNobject&, const double);
 
 		// Union, intersection, difference
 		template <typename BNcollection> BNcollection GetSortedByPt(const BNcollection&);
@@ -118,9 +118,10 @@ class BEANhelper{
 		template <typename BNcollection> BNcollection GetUnion(const BNcollection&, const BNcollection&);
 		template <typename BNcollection> BNcollection GetIntersection(const BNcollection&, const BNcollection&);
 		template <typename BNcollection> BNcollection GetDifference(const BNcollection&, const BNcollection&);
-		template <typename BNcollection> BNcollection GetSymmetricDifference(const BNcollection&, const BNcollection&);
 		template <typename BNcollection1, typename BNcollection2> BNcollection1 GetDifference(const BNcollection1&, const BNcollection2&, const double);
+		template <typename BNcollection> BNcollection GetSymmetricDifference(const BNcollection&, const BNcollection&);
 		template <typename BNcollection> BNcollection GetUnionUnsorted(const BNcollection&, const BNcollection&);
+
 
 		// Jets and MET
 		float GetBtagWeight(const BNjet&, const sysType::sysType iSysType=sysType::NA);
@@ -147,21 +148,21 @@ class BEANhelper{
 		BNtauCollection GetCorrectedTaus(const BNtauCollection&, const sysType::sysType iSysType=sysType::NA);
 		BNtau GetCorrectedTau(const BNtau&, const sysType::sysType iSysType=sysType::NA);
 		bool IsTauEvent(const BNtauCollection&, const BNjetCollection&, const BNelectronCollection&, const BNmuonCollection&, const sysType::sysType iSysType=sysType::NA);
-        bool IsTauLeptonLeptonEvent(const BNtauCollection&, const BNjetCollection&, const BNelectronCollection&, const BNmuonCollection&, const sysType::sysType iSysType=sysType::NA);
-        bool IsTauTauLeptonEvent(const BNtauCollection&, const BNjetCollection&, const BNelectronCollection&, const BNmuonCollection&, const sysType::sysType iSysType=sysType::NA);
+		bool IsTauLeptonLeptonEvent(const BNtauCollection&, const BNjetCollection&, const BNelectronCollection&, const BNmuonCollection&, const sysType::sysType iSysType=sysType::NA);
+		bool IsTauTauLeptonEvent(const BNtauCollection&, const BNjetCollection&, const BNelectronCollection&, const BNmuonCollection&, const sysType::sysType iSysType=sysType::NA);
   
 		// Muons
 		bool IsSideMuon(const BNmuon&);
-        bool IsSideMuonLooseMVA(const BNmuon&, const BNjetCollection* = 0);
-        bool IsSideMuonTightMVA(const BNmuon&, const BNjetCollection* = 0);
+		bool IsSideMuonLooseMVA(const BNmuon&, const BNjetCollection* = 0);
+		bool IsSideMuonTightMVA(const BNmuon&, const BNjetCollection* = 0);
 		bool IsLooseMuon(const BNmuon&);
 		bool IsTightMuon(const BNmuon&);
-        bool IsGoodMuon(const BNmuon&, const muonID::muonID, const BNjetCollection* = 0);
+		bool IsGoodMuon(const BNmuon&, const muonID::muonID, const BNjetCollection* = 0);
 		float GetMuonRelIso(const BNmuon&);
-        float GetMuonSF(const BNmuon&, const muonID::muonID m = muonID::muonTight );
-        float GetDoubleMuonTriggerSF ( const BNmuon&, const BNmuon& );
-        float GetMuonEleTriggerSF ( const BNmuon&, const BNelectron & );
-        float GetMuonLepMVA( const BNmuon&, const BNjetCollection* = 0);
+		float GetMuonSF(const BNmuon&, const muonID::muonID m = muonID::muonTight );
+		float GetDoubleMuonTriggerSF ( const BNmuon&, const BNmuon& );
+		float GetMuonEleTriggerSF ( const BNmuon&, const BNelectron & );
+		float GetMuonLepMVA( const BNmuon&, const BNjetCollection* = 0);
 
   // Test only
   float TestSingleMuonTriggerNew ( const BNmuon& );
@@ -170,24 +171,24 @@ class BEANhelper{
   float TestSingleEleTriggerOld ( const BNelectron & );
   
   
-        BNmuonCollection GetSelectedMuons(const BNmuonCollection&, const muonID::muonID, const BNjetCollection* = 0);
+		BNmuonCollection GetSelectedMuons(const BNmuonCollection&, const muonID::muonID, const BNjetCollection* = 0);
 
 		// Electrons
 		bool IsSideElectron(const BNelectron&);
-        bool IsSideElectronLooseMVA(const BNelectron&, const BNjetCollection* = 0);
-        bool IsSideElectronTightMVA(const BNelectron&, const BNjetCollection* = 0);
-        bool IsLooseElectron(const BNelectron&);
+		bool IsSideElectronLooseMVA(const BNelectron&, const BNjetCollection* = 0);
+		bool IsSideElectronTightMVA(const BNelectron&, const BNjetCollection* = 0);
+		bool IsLooseElectron(const BNelectron&);
 		bool IsTightElectron(const BNelectron&);
 		float GetElectronRelIso(const BNelectron&);
-        float GetElectronSF(const BNelectron&, const electronID::electronID e = electronID::electronTight );
-        float GetDoubleElectronTriggerSF (const BNelectron&, const BNelectron&);
+		float GetElectronSF(const BNelectron&, const electronID::electronID e = electronID::electronTight );
+		float GetDoubleElectronTriggerSF (const BNelectron&, const BNelectron&);
 		bool GetElectronIDresult(const BNelectron& iElectron, const electronID::electronID);
-        bool IsGoodElectron(const BNelectron&, const electronID::electronID, const BNjetCollection* = 0);
-        BNelectronCollection GetSelectedElectrons(const BNelectronCollection&, const electronID::electronID, const BNjetCollection* = 0);
-        float GetElectronLepMVA( const BNelectron&, const BNjetCollection* = 0);
+		bool IsGoodElectron(const BNelectron&, const electronID::electronID, const BNjetCollection* = 0);
+		BNelectronCollection GetSelectedElectrons(const BNelectronCollection&, const electronID::electronID, const BNjetCollection* = 0);
+		float GetElectronLepMVA( const BNelectron&, const BNjetCollection* = 0);
 
-        // General lepton functions
-        float GetDBCorrectedRelIsoDR04(const BNlepton& iLepton, const float& dBeta_factor);
+		// General lepton functions
+		float GetDBCorrectedRelIsoDR04(const BNlepton& iLepton, const float& dBeta_factor);
   
 		// MCparticles
 		BNmcparticleCollection	GetSelectedMCparticlesByGrandParentPDGid(const BNmcparticleCollection&, const vector<int>);
@@ -206,17 +207,17 @@ class BEANhelper{
 		BNmcparticleCollection	GetSelectedMCparticlesByChildStatus(const BNmcparticleCollection&, const bool, const bool, const bool);
 
 		BNmcparticleCollection	GetParents(const BNmcparticle&, const BNmcparticleCollection&);
-		void 					DrawFeynman(const BNmcparticle&);
+		void					DrawFeynman(const BNmcparticle&);
 		BNmcparticleCollection	GetGenTaus(const BNmcparticleCollection&);
 		BNmcparticleCollection	GetHadronicGenTaus(const BNmcparticleCollection&);
 		BNmcparticle			GetVisGenTau(const BNmcparticle&, const BNmcparticleCollection&);
-		bool                    ttPlusHeavyKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);
-		bool                    ttPlusHFKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);
-		int                     ttPlusBBClassifyEvent(const BNmcparticleCollection&, const BNjetCollection&);
-		int                     ttPlusCCClassifyEvent(const BNmcparticleCollection&, const BNjetCollection&);
-		unsigned int            GetNumExtraPartons(const BNmcparticleCollection&);
- 		hdecayType::hdecayType  GetHdecayType(const BNmcparticleCollection&);
-		bool                    keepHdecayType(const BNmcparticleCollection&, const hdecayType::hdecayType);
+		bool					ttPlusHeavyKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);
+		bool					ttPlusHFKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);
+		int						ttPlusBBClassifyEvent(const BNmcparticleCollection&, const BNjetCollection&);
+		int						ttPlusCCClassifyEvent(const BNmcparticleCollection&, const BNjetCollection&);
+		unsigned int			GetNumExtraPartons(const BNmcparticleCollection&);
+		hdecayType::hdecayType	GetHdecayType(const BNmcparticleCollection&);
+		bool					keepHdecayType(const BNmcparticleCollection&, const hdecayType::hdecayType);
 
 		// PU reweighing
 		double GetPUweight(const double);
@@ -241,32 +242,32 @@ class BEANhelper{
   bool IsAnyTriggerBitFired ( const vector<string> & targetTriggers, const BNtriggerCollection & triggerBits);
   
   bool SingleObjectMatchesAnyTrigger (double recoEta, double recoPhi, const vector<string> & targetTriggers,
-                                      const BNtrigobjCollection & triggerObjects);
+									  const BNtrigobjCollection & triggerObjects);
   
   bool DoubleObjectMatchesAnyTrigger (double firstEta, double firstPhi, double secondEta, double secondPhi,
-                                      const vector<string> & targetTriggers,  const BNtrigobjCollection & triggerObjects,
-                                      bool sumFilterResults = false);
+									  const vector<string> & targetTriggers,  const BNtrigobjCollection & triggerObjects,
+									  bool sumFilterResults = false);
 
   
   bool MuonMatchesSingleMuTrigger(const BNmuon& iMuon, const BNtriggerCollection & triggerBits,
-                                              const BNtrigobjCollection & triggerObjects );
+											  const BNtrigobjCollection & triggerObjects );
 
   
   bool MuonsMatchDoubleMuTrigger(const BNmuon& iMuon, const BNmuon & jMuon,
-                                             const BNtriggerCollection & triggerBits,
-                                             const BNtrigobjCollection & triggerObjects);
+											 const BNtriggerCollection & triggerBits,
+											 const BNtrigobjCollection & triggerObjects);
 
   bool ElectronMatchesSingleEleTrigger(const BNelectron& iEle, const BNtriggerCollection & triggerBits,
-                                       const BNtrigobjCollection & triggerObjects );
+									   const BNtrigobjCollection & triggerObjects );
 
   
   bool ElectronsMatchDoubleEleTrigger(const BNelectron& iEle, const BNelectron & jEle,
-                                      const BNtriggerCollection & triggerBits,
-                                      const BNtrigobjCollection & triggerObjects);
+									  const BNtriggerCollection & triggerBits,
+									  const BNtrigobjCollection & triggerObjects);
 
   bool MuEGMatchMuEGTrigger(const BNmuon & iEle, const BNelectron & jEle,
-                            const BNtriggerCollection & triggerBits,
-                            const BNtrigobjCollection & triggerObjects);
+							const BNtriggerCollection & triggerBits,
+							const BNtrigobjCollection & triggerObjects);
   
   // Trigger utility variable.
   const static bool triggerDebug = false;
@@ -295,14 +296,14 @@ class BEANhelper{
 		bool isData;
 		string dataset;
 		bool reshapeCSV;
-        bool usePfLeptons;
+		bool usePfLeptons;
 
 		TFile*			jetSFfile;
 		TFile*			leptonSFfile;
-  TFile*          doubleMuonTriggerFile;
-  TFile*          doubleEleTriggerFile;
-  TFile*          muonEleTriggerFile;
-  TFile*          oldLeptonScaleFactFile;
+  TFile*		  doubleMuonTriggerFile;
+  TFile*		  doubleEleTriggerFile;
+  TFile*		  muonEleTriggerFile;
+  TFile*		  oldLeptonScaleFactFile;
 
 		// PU reweighing
 		TFile*			puFile;
@@ -322,28 +323,28 @@ class BEANhelper{
 		CSVreevaluator*	  sh_lfSFUp_;
 		CSVreevaluator*	  sh_lfSFDown_;
 
-        // lepMVA TMVA readers
-        TMVA::Reader*     mu_reader_high_b;
-        TMVA::Reader*     mu_reader_high_e;
-        TMVA::Reader*     mu_reader_low_b;
-        TMVA::Reader*     mu_reader_low_e;
-        TMVA::Reader*     ele_reader_high_cb;
-        TMVA::Reader*     ele_reader_high_fb;
-        TMVA::Reader*     ele_reader_high_ec;
-        TMVA::Reader*     ele_reader_low_cb;
-        TMVA::Reader*     ele_reader_low_fb;
-        TMVA::Reader*     ele_reader_low_ec;
+		// lepMVA TMVA readers
+		TMVA::Reader*	  mu_reader_high_b;
+		TMVA::Reader*	  mu_reader_high_e;
+		TMVA::Reader*	  mu_reader_low_b;
+		TMVA::Reader*	  mu_reader_low_e;
+		TMVA::Reader*	  ele_reader_high_cb;
+		TMVA::Reader*	  ele_reader_high_fb;
+		TMVA::Reader*	  ele_reader_high_ec;
+		TMVA::Reader*	  ele_reader_low_cb;
+		TMVA::Reader*	  ele_reader_low_fb;
+		TMVA::Reader*	  ele_reader_low_ec;
 
-        Float_t varneuRelIso;
-        Float_t varchRelIso;
-        Float_t varjetDR_in;
-        Float_t varjetPtRatio_in;
-        Float_t varjetBTagCSV_in;
-        Float_t varsip3d;
-        Float_t varmvaId;
-        Float_t varinnerHits;
-        Float_t vardxy;
-        Float_t vardz;
+		Float_t varneuRelIso;
+		Float_t varchRelIso;
+		Float_t varjetDR_in;
+		Float_t varjetPtRatio_in;
+		Float_t varjetBTagCSV_in;
+		Float_t varsip3d;
+		Float_t varmvaId;
+		Float_t varinnerHits;
+		Float_t vardxy;
+		Float_t vardz;
    
 		// Old functions
 	public:
@@ -368,7 +369,7 @@ class BEANhelper{
 
 		// CSV reweighting
 		TH1D* h_csv_wgt_hf[9][5];
-        TH1D* c_csv_wgt_hf[9][5];
+		TH1D* c_csv_wgt_hf[9][5];
 		TH1D* h_csv_wgt_lf[9][3][3];
 
 
@@ -377,22 +378,22 @@ class BEANhelper{
 		TH2D*			h_c_eff_;
 		TH2D*			h_l_eff_;
 		TH2D*			h_o_eff_;
-        TH2D*           h_ele_SF_;
-        TH2D*           h_SingleEle_trig_SF_;
-        TH2D*           h_mu_SF_;
-  TH2D*           h_doubleMuTrigSF;
-  TH2D*           h_doubleEleTrigSF;
-  TH2D*           h_muonEleTrigSF;
-  TH2D*           h_looseMuonSF;
-  TH2D*           h_looseEleSF;
+		TH2D*			h_ele_SF_;
+		TH2D*			h_SingleEle_trig_SF_;
+		TH2D*			h_mu_SF_;
+  TH2D*			  h_doubleMuTrigSF;
+  TH2D*			  h_doubleEleTrigSF;
+  TH2D*			  h_muonEleTrigSF;
+  TH2D*			  h_looseMuonSF;
+  TH2D*			  h_looseEleSF;
   // testing -- temporary only
-  TH2D*           h_testSingleMuNew;
-  TH2D*           h_testSingleMuOld;
-  TH2D*           h_testSingleEleNew;
-  TH2D*           h_testTrigSingleEleNew;
-  TH2D*           h_testSingleEleOld;
+  TH2D*			  h_testSingleMuNew;
+  TH2D*			  h_testSingleMuOld;
+  TH2D*			  h_testSingleEleNew;
+  TH2D*			  h_testTrigSingleEleNew;
+  TH2D*			  h_testSingleEleOld;
   
-        string          samplename;
+		string			samplename;
 
 }; // End of class prototype
 
@@ -402,9 +403,9 @@ template <typename BNobject> BNmcparticle BEANhelper::GetMatchedMCparticle(const
 	BNmcparticle result;
 	double minDeltaR = 999;
 	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
-        double thisDeltaR = deltaR(MCparticle->eta, MCparticle->phi, iObject.eta, iObject.phi);
-        if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*MCparticle); }
-        minDeltaR = std::min(minDeltaR,thisDeltaR);
+		double thisDeltaR = deltaR(MCparticle->eta, MCparticle->phi, iObject.eta, iObject.phi);
+		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*MCparticle); }
+		minDeltaR = std::min(minDeltaR,thisDeltaR);
 	}
 	return result;
 }
@@ -413,9 +414,9 @@ template <typename BNobject> BNgenjet BEANhelper::GetMatchedGenjet(const BNgenje
 	BNgenjet result;
 	double minDeltaR = 999;
 	for( BNgenjetCollection::const_iterator Genjet = iGenjets.begin(); Genjet != iGenjets.end(); ++Genjet){
-        double thisDeltaR = deltaR(Genjet->eta, Genjet->phi, iObject.eta, iObject.phi);	
+		double thisDeltaR = deltaR(Genjet->eta, Genjet->phi, iObject.eta, iObject.phi);	
 		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*Genjet); }
-        minDeltaR = std::min(minDeltaR,thisDeltaR);
+		minDeltaR = std::min(minDeltaR,thisDeltaR);
 	}
 	return result;
 }
@@ -425,9 +426,9 @@ template <typename BNobject> BNmcparticle BEANhelper::GetMatchedGentau(const BNm
 	double minDeltaR = 999;
 	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle){
 		if(abs(MCparticle->id) != 15){ continue; }
-        double thisDeltaR = deltaR(MCparticle->eta, MCparticle->phi, iObject.eta, iObject.phi);	
+		double thisDeltaR = deltaR(MCparticle->eta, MCparticle->phi, iObject.eta, iObject.phi);	
 		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*MCparticle); }
-        minDeltaR = std::min(minDeltaR,thisDeltaR);
+		minDeltaR = std::min(minDeltaR,thisDeltaR);
 	}
 	return result;
 }
@@ -438,9 +439,9 @@ template <typename BNobject> BNmcparticle BEANhelper::GetMatchedVisGentau(const 
 	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle){
 		if(abs(MCparticle->id) != 15){ continue; }
 		BNmcparticle visGenTau = GetVisGenTau(*MCparticle, iMCparticles);
-        double thisDeltaR = deltaR(visGenTau.eta, visGenTau.phi, iObject.eta, iObject.phi);	
+		double thisDeltaR = deltaR(visGenTau.eta, visGenTau.phi, iObject.eta, iObject.phi);	
 		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = visGenTau; }
-        minDeltaR = std::min(minDeltaR,thisDeltaR);
+		minDeltaR = std::min(minDeltaR,thisDeltaR);
 	}
 	return result;
 }
@@ -449,9 +450,9 @@ template <typename BNobject> BNtau BEANhelper::GetMatchedTau(const BNtauCollecti
 	BNtau result;
 	double minDeltaR = 999;
 	for( BNtauCollection::const_iterator Tau = iTaus.begin(); Tau != iTaus.end(); ++Tau){
-        double thisDeltaR = deltaR(Tau->eta, Tau->phi, iObject.eta, iObject.phi);	
+		double thisDeltaR = deltaR(Tau->eta, Tau->phi, iObject.eta, iObject.phi);	
 		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*Tau); }
-        minDeltaR = std::min(minDeltaR,thisDeltaR);
+		minDeltaR = std::min(minDeltaR,thisDeltaR);
 	}
 	return result;
 }
@@ -460,9 +461,9 @@ template <typename BNobject> BNjet BEANhelper::GetClosestJet(const BNjetCollecti
 	BNjet result;
 	double minDeltaR = 999;
 	for( BNjetCollection::const_iterator Jet = iJets.begin(); Jet != iJets.end(); ++Jet){
-        double thisDeltaR = deltaR(Jet->eta, Jet->phi, iObject.eta, iObject.phi);	
+		double thisDeltaR = deltaR(Jet->eta, Jet->phi, iObject.eta, iObject.phi);	
 		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*Jet); }
-        minDeltaR = std::min(minDeltaR,thisDeltaR);
+		minDeltaR = std::min(minDeltaR,thisDeltaR);
 	}
 	return result;
 }
@@ -471,9 +472,9 @@ template <typename BNobject> BNtrack BEANhelper::GetClosestTrack(const BNtrackCo
 	BNtrack result;
 	double minDeltaR = 999;
 	for( BNtrackCollection::const_iterator Track = iTracks.begin(); Track != iTracks.end(); ++Track){
-        double thisDeltaR = deltaR(Track->eta, Track->phi, iObject.eta, iObject.phi);	
+		double thisDeltaR = deltaR(Track->eta, Track->phi, iObject.eta, iObject.phi);	
 		if((thisDeltaR <= iMaxDeltaR) && (thisDeltaR < minDeltaR)){ result = (*Track); }
-        minDeltaR = std::min(minDeltaR,thisDeltaR);
+		minDeltaR = std::min(minDeltaR,thisDeltaR);
 	}
 	return result;
 }
@@ -484,7 +485,7 @@ template <typename BNcollection> BNcollection BEANhelper::GetSortedByPt(const BN
 	BNcollection result;
 	BNcollection tempCollection = iBNcollection;
 
-    if (tempCollection.size() == 0) { return tempCollection; }
+	if (tempCollection.size() == 0) { return tempCollection; }
 
 	while(tempCollection.size() > 1){
 		typename BNcollection::iterator largestPtElement = tempCollection.begin();
@@ -505,7 +506,7 @@ template <typename BNcollection> BNcollection BEANhelper::GetSortedByCSV(const B
 	BNcollection result;
 	BNcollection tempCollection = iBNcollection;
 
-    if (tempCollection.size() == 0) { return tempCollection; }
+	if (tempCollection.size() == 0) { return tempCollection; }
 
 	while(tempCollection.size() > 1){
 		typename BNcollection::iterator largestCSVElement = tempCollection.begin();
@@ -536,16 +537,15 @@ template <typename BNcollection> BNcollection BEANhelper::GetUnion(const BNcolle
 			// If two objects match in deltaR, check that they have virtually the same momentum. Throw fatal error
 			// if we get two matching objects with different momenta, as this probably mean that we're mixing corrected and uncorrected
 			// input collections
-			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < 0.001){
+			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < 0.00001){
 				presentInFirstCollection = true;
-				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.001) &&
-									(fabs(Object1->py - Object2->py) < 0.001) &&
-									(fabs(Object1->pz - Object2->pz) < 0.001);
-				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl;
+				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.00001) &&
+									(fabs(Object1->py - Object2->py) < 0.00001) &&
+									(fabs(Object1->pz - Object2->pz) < 0.00001);
+				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; 
 				cout << setprecision(7) << "Eta1: " << Object1->eta << "\tPhi1: " << Object1->phi << "\tpT1: " << Object1->pt << endl;
 				cout << setprecision(7) << "Eta2: " << Object2->eta << "\tPhi2: " << Object2->phi << "\tpT2: " << Object2->pt << endl;
-				throw std::logic_error("Inside GetUnion"); }
-				
+				throw std::logic_error("Inside GetUnionUnsorted"); }
 			}
 				
 		}
@@ -704,6 +704,7 @@ template <typename BNcollection1, typename BNcollection2> BNcollection1 BEANhelp
 	// Sort by descending pT
 	return GetSortedByPt(result);
 }
+
 
 // === Print basic object info === //
 template <typename BNobject> void BEANhelper::PrintInfo(const BNobject& iBNobject){
