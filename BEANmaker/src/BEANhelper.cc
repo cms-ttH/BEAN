@@ -825,12 +825,6 @@ string BEANhelper::GetSampleName(){
 	return samplename;
 }
 
-// Check that we are set up, otherwise inform and quit
-void BEANhelper::CheckSetUp(){ if(!isSetUp){ ThrowFatalError("BEANhelper not yet set up."); } }
-
-// If something goes really wrong, inform and quit
-void BEANhelper::ThrowFatalError(string const iMessage){ cerr << "[ERROR]\t" << iMessage << " Cannot continue. Terminating..." << endl; exit(1); }
-
 // Return corrected MET based on *UNCORRECTED* input jet collection
 BNmet BEANhelper::GetCorrectedMET(const BNmet& iMET, const BNjetCollection& iJets, const sysType::sysType iSysType){
 	CheckSetUp();
@@ -1027,7 +1021,8 @@ float BEANhelper::GetHT(const BNjetCollection& iJets){
 
 
 // Muon relative isolation
-float BEANhelper::GetMuonRelIso(const BNmuon& iMuon){ 
+float BEANhelper::GetMuonRelIso(const BNmuon& iMuon) const
+{
 	CheckSetUp();
 	float result = 9999;
     if (era=="2011") {
@@ -1049,7 +1044,8 @@ float BEANhelper::GetMuonRelIso(const BNmuon& iMuon){
 	return result;
 }
 
-float BEANhelper::GetMuonSF( const BNmuon& iMuon, const muonID::muonID inputID ){
+float BEANhelper::GetMuonSF( const BNmuon& iMuon, const muonID::muonID inputID ) const
+{
   CheckSetUp();
   double SF = 1.0;
 
@@ -1962,15 +1958,12 @@ BNmuonCollection BEANhelper::GetSelectedMuons(const BNmuonCollection& iMuons, co
 // Return whether or not muon passes cuts
 bool BEANhelper::IsSideElectron(const BNelectron& iElectron){ return IsGoodElectron(iElectron, electronID::electronSide); }
 
-bool BEANhelper::IsLooseElectron(const BNelectron& iElectron){ return IsGoodElectron(iElectron, electronID::electronLoose); }
-
-bool BEANhelper::IsTightElectron(const BNelectron& iElectron){ return IsGoodElectron(iElectron, electronID::electronTight); }
-
 bool BEANhelper::IsSideElectronLooseMVA(const BNelectron& iElectron, const BNjetCollection* iJets){ return IsGoodElectron(iElectron, electronID::electronSideLooseMVA, iJets); }
 
 bool BEANhelper::IsSideElectronTightMVA(const BNelectron& iElectron, const BNjetCollection* iJets){ return IsGoodElectron(iElectron, electronID::electronSideTightMVA, iJets); }
 
-float BEANhelper::GetElectronRelIso(const BNelectron& iElectron){ 
+float BEANhelper::GetElectronRelIso(const BNelectron& iElectron) const
+{
 	CheckSetUp();
 	float result = 9999;
     if (era == "2011") {
@@ -1991,7 +1984,7 @@ float BEANhelper::GetElectronRelIso(const BNelectron& iElectron){
 	return result;
 }
 
-float BEANhelper::GetDBCorrectedRelIsoDR04(const BNlepton& iLepton, const float& dBeta_factor){
+float BEANhelper::GetDBCorrectedRelIsoDR04(const BNlepton& iLepton, const float& dBeta_factor) const {
     float result = 9999;
     float neutral_iso = iLepton.neutralHadronIsoDR04 + iLepton.photonIsoDR04;
     float corrected_neutral_iso = neutral_iso - dBeta_factor * iLepton.puChargedHadronIsoDR04;
@@ -2002,7 +1995,8 @@ float BEANhelper::GetDBCorrectedRelIsoDR04(const BNlepton& iLepton, const float&
 }
     
 
-float BEANhelper::GetElectronSF(const BNelectron& iElectron, const electronID::electronID inputID){
+float BEANhelper::GetElectronSF(const BNelectron& iElectron, const electronID::electronID inputID) const
+{
   CheckSetUp();
   double SF = 1.0;
   if (isData) return SF;
@@ -2074,7 +2068,8 @@ float BEANhelper::GetElectronSF(const BNelectron& iElectron, const electronID::e
 
 
 // Electron ID function to keep things tidy
-bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electronID::electronID iElectronID){
+bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electronID::electronID iElectronID) const
+{
 	CheckSetUp();
 
 	// Electron ID stuff (DADT...)
@@ -2493,7 +2488,8 @@ BNmcparticleCollection BEANhelper::GetSelectedMCparticlesByGrandParentPDGid(cons
 	return result;
 }
 
-BNmcparticleCollection BEANhelper::GetUnrejectedMCparticlesByPDGid(const BNmcparticleCollection& iMCparticles, const vector<int> iPDGid){
+BNmcparticleCollection BEANhelper::GetUnrejectedMCparticlesByPDGid(const BNmcparticleCollection& iMCparticles, const vector<int> iPDGid) const
+{
 	BNmcparticleCollection result;
 	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
 		if( find(iPDGid.begin(), iPDGid.end(), MCparticle->id) == iPDGid.end() ){
@@ -2551,7 +2547,8 @@ BNmcparticleCollection BEANhelper::GetSelectedMCparticlesByChildStatus(const BNm
 	return result;
 }
 
-BNmcparticleCollection BEANhelper::GetSelectedMCparticlesByStatus(const BNmcparticleCollection& iMCparticles, const bool iKeepStatus1, const bool iKeepStatus2, const bool iKeepStatus3){
+BNmcparticleCollection BEANhelper::GetSelectedMCparticlesByStatus(const BNmcparticleCollection& iMCparticles, const bool iKeepStatus1, const bool iKeepStatus2, const bool iKeepStatus3) const
+{
 	BNmcparticleCollection result;
 	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
 		if( ((MCparticle->status == 1) && iKeepStatus1) ||

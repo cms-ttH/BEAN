@@ -104,7 +104,7 @@ class BEANhelper{
 		void SetUp(string, int, const analysisType::analysisType, bool, string, bool, bool, string iCollisionDS="All");
 
 		template <typename BNobject> void PrintInfo(const BNobject&);
-		template <typename BNobject> BNmcparticle GetMatchedMCparticle(const BNmcparticleCollection&, const BNobject&, const double);
+		template <typename BNobject> BNmcparticle GetMatchedMCparticle(const BNmcparticleCollection&, const BNobject&, const double) const;
 		template <typename BNobject> BNgenjet GetMatchedGenjet(const BNgenjetCollection&, const BNobject&, const double);
 		template <typename BNobject> BNmcparticle GetMatchedGentau(const BNmcparticleCollection&, const BNobject&, const double);
 		template <typename BNobject> BNmcparticle GetMatchedVisGentau(const BNmcparticleCollection&, const BNobject&, const double);
@@ -158,8 +158,8 @@ class BEANhelper{
 		bool IsLooseMuon(const BNmuon&);
 		bool IsTightMuon(const BNmuon&);
 		bool IsGoodMuon(const BNmuon&, const muonID::muonID, const BNjetCollection* = 0);
-		float GetMuonRelIso(const BNmuon&);
-		float GetMuonSF(const BNmuon&, const muonID::muonID m = muonID::muonTight );
+		float GetMuonRelIso(const BNmuon&) const;
+		float GetMuonSF(const BNmuon&, const muonID::muonID m = muonID::muonTight) const;
 		float GetDoubleMuonTriggerSF ( const BNmuon&, const BNmuon& );
 		float GetMuonEleTriggerSF ( const BNmuon&, const BNelectron & );
 		float GetMuonLepMVA( const BNmuon&, const BNjetCollection* = 0);
@@ -179,16 +179,16 @@ class BEANhelper{
 		bool IsSideElectronTightMVA(const BNelectron&, const BNjetCollection* = 0);
 		bool IsLooseElectron(const BNelectron&);
 		bool IsTightElectron(const BNelectron&);
-		float GetElectronRelIso(const BNelectron&);
-		float GetElectronSF(const BNelectron&, const electronID::electronID e = electronID::electronTight );
+		float GetElectronRelIso(const BNelectron&) const;
+		float GetElectronSF(const BNelectron&, const electronID::electronID e = electronID::electronTight ) const;
 		float GetDoubleElectronTriggerSF (const BNelectron&, const BNelectron&);
-		bool GetElectronIDresult(const BNelectron& iElectron, const electronID::electronID);
+		bool GetElectronIDresult(const BNelectron& iElectron, const electronID::electronID) const;
 		bool IsGoodElectron(const BNelectron&, const electronID::electronID, const BNjetCollection* = 0);
 		BNelectronCollection GetSelectedElectrons(const BNelectronCollection&, const electronID::electronID, const BNjetCollection* = 0);
 		float GetElectronLepMVA( const BNelectron&, const BNjetCollection* = 0);
 
 		// General lepton functions
-		float GetDBCorrectedRelIsoDR04(const BNlepton& iLepton, const float& dBeta_factor);
+		float GetDBCorrectedRelIsoDR04(const BNlepton& iLepton, const float& dBeta_factor) const;
   
 		// MCparticles
 		BNmcparticleCollection	GetSelectedMCparticlesByGrandParentPDGid(const BNmcparticleCollection&, const vector<int>);
@@ -198,12 +198,12 @@ class BEANhelper{
 
 		BNmcparticleCollection	GetUnrejectedMCparticlesByGrandParentPDGid(const BNmcparticleCollection&, const vector<int>);
 		BNmcparticleCollection	GetUnrejectedMCparticlesByParentPDGid(const BNmcparticleCollection&, const vector<int>);
-		BNmcparticleCollection	GetUnrejectedMCparticlesByPDGid(const BNmcparticleCollection&, const vector<int>);
+		BNmcparticleCollection	GetUnrejectedMCparticlesByPDGid(const BNmcparticleCollection&, const vector<int>) const;
 		BNmcparticleCollection	GetUnrejectedMCparticlesByChildPDGid(const BNmcparticleCollection&, const vector<int>);
 
 		BNmcparticleCollection	GetSelectedMCparticlesByGrandParentStatus(const BNmcparticleCollection&, const bool, const bool, const bool);
 		BNmcparticleCollection	GetSelectedMCparticlesByParentStatus(const BNmcparticleCollection&, const bool, const bool, const bool);
-		BNmcparticleCollection	GetSelectedMCparticlesByStatus(const BNmcparticleCollection&, const bool, const bool, const bool);
+		BNmcparticleCollection	GetSelectedMCparticlesByStatus(const BNmcparticleCollection&, const bool, const bool, const bool) const;
 		BNmcparticleCollection	GetSelectedMCparticlesByChildStatus(const BNmcparticleCollection&, const bool, const bool, const bool);
 
 		BNmcparticleCollection	GetParents(const BNmcparticle&, const BNmcparticleCollection&);
@@ -277,9 +277,9 @@ class BEANhelper{
   
 
 	private:
-		void ThrowFatalError(const string);
+		inline void ThrowFatalError(const std::string& m) const { cerr << "[ERROR]\t" << m << " Cannot continue. Terminating..." << endl; exit(1); };
 		double GetCSVvalue(const BNjet&, const sysType::sysType iSysType=sysType::NA);
-		void CheckSetUp();
+		inline void CheckSetUp() const { if(!isSetUp){ ThrowFatalError("BEANhelper not yet set up."); } };
 		void SetUpPUreweighing(string const);
 		void SetUpCSVreweighting();
 		void SetUpCSVreshaping();
@@ -399,7 +399,8 @@ class BEANhelper{
 
 
 // === Return matched BNmcparticle based on minimum deltaR and a deltaR threshold === //
-template <typename BNobject> BNmcparticle BEANhelper::GetMatchedMCparticle(const BNmcparticleCollection& iMCparticles, const BNobject& iObject, const double iMaxDeltaR){
+template <typename BNobject> BNmcparticle BEANhelper::GetMatchedMCparticle(const BNmcparticleCollection& iMCparticles, const BNobject& iObject, const double iMaxDeltaR) const
+{
 	BNmcparticle result;
 	double minDeltaR = 999;
 	for( BNmcparticleCollection::const_iterator MCparticle = iMCparticles.begin(); MCparticle != iMCparticles.end(); ++MCparticle ){
