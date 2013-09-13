@@ -2426,6 +2426,39 @@ BEANhelper::GetCleanJets(const BNjetCollection& iJets, const vector<TLorentzVect
     return result;
 }
 
+BNjetCollection
+BEANhelper::GetCleanJets(const BNjetCollection& jets, const BNleptonCollection& leptons, const float maxDeltaR) {
+	CheckSetUp();
+    vector<bool> isCleanJet (jets.size(), true);
+    BNjetCollection cleanJets;
+    int matchIndex;
+    float minDeltaR;
+    float dR;
+
+    for (auto& lepton: leptons) {
+        matchIndex = -1;
+        dR = 999.0;
+        minDeltaR = maxDeltaR;
+        for (unsigned i=0; i<jets.size(); i++) {
+            dR = reco::deltaR(lepton->eta, lepton->phi, jets.at(i).eta, jets.at(i).phi);
+            if (dR < minDeltaR) {
+                minDeltaR = dR;
+                matchIndex = i;
+            }
+        }
+        //only clean out closest jet
+        if (matchIndex != -1) isCleanJet.at(matchIndex) = false;
+    }
+
+    for (unsigned i=0; i<jets.size(); i++) {
+        if (isCleanJet.at(i)) { cleanJets.push_back(jets.at(i)); }
+    }
+
+    return cleanJets;
+}
+
+
+                         
 unsigned int BEANhelper::GetNumCSVbtags(const BNjetCollection& iJets, const char iCSVwp){
 	CheckSetUp();
 	unsigned int result = 0;

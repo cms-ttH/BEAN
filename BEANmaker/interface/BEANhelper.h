@@ -34,6 +34,7 @@
 #include "DataFormats/Math/interface/deltaR.h"
 
 //Headers for the data items
+#include "BEAN/Collections/interface/BNleptonCollection.h"
 #include "BEAN/Collections/interface/BNelectron.h"
 #include "BEAN/Collections/interface/BNevent.h"
 #include "BEAN/Collections/interface/BNgenjet.h"
@@ -133,6 +134,7 @@ class BEANhelper{
 		BNjetCollection GetUncorrectedJets(const BNjetCollection&, const BNjetCollection&);
 		BNjetCollection GetCorrectedJets(const BNjetCollection&, const sysType::sysType iSysType=sysType::NA);
 		BNjetCollection GetCleanJets(const BNjetCollection&, const vector<TLorentzVector>&, const float, std::vector<unsigned int>* jet_indices=0);
+		BNjetCollection GetCleanJets(const BNjetCollection&, const BNleptonCollection&, const float);    
 		unsigned int GetNumCSVbtags(const BNjetCollection&, const char);
 		unsigned int GetNumNonCSVbtags(const BNjetCollection&, const char);
 		float GetHT(const BNjetCollection&);
