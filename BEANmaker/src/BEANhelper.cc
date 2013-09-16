@@ -1958,6 +1958,10 @@ BNmuonCollection BEANhelper::GetSelectedMuons(const BNmuonCollection& iMuons, co
 // Return whether or not muon passes cuts
 bool BEANhelper::IsSideElectron(const BNelectron& iElectron){ return IsGoodElectron(iElectron, electronID::electronSide); }
 
+bool BEANhelper::IsLooseElectron(const BNelectron& iElectron){ return IsGoodElectron(iElectron, electronID::electronLoose); }
+
+bool BEANhelper::IsTightElectron(const BNelectron& iElectron){ return IsGoodElectron(iElectron, electronID::electronTight); }
+
 bool BEANhelper::IsSideElectronLooseMVA(const BNelectron& iElectron, const BNjetCollection* iJets){ return IsGoodElectron(iElectron, electronID::electronSideLooseMVA, iJets); }
 
 bool BEANhelper::IsSideElectronTightMVA(const BNelectron& iElectron, const BNjetCollection* iJets){ return IsGoodElectron(iElectron, electronID::electronSideTightMVA, iJets); }

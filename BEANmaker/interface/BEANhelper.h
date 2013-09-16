@@ -179,8 +179,8 @@ class BEANhelper{
 		bool IsSideElectron(const BNelectron&);
 		bool IsSideElectronLooseMVA(const BNelectron&, const BNjetCollection* = 0);
 		bool IsSideElectronTightMVA(const BNelectron&, const BNjetCollection* = 0);
-		inline bool IsLooseElectron(const BNelectron& e) { return IsGoodElectron(e, electronID::electronLoose); };
-		inline bool IsTightElectron(const BNelectron& e) { return IsGoodElectron(e, electronID::electronTight); };
+		bool IsLooseElectron(const BNelectron&);
+		bool IsTightElectron(const BNelectron&);
 		float GetElectronRelIso(const BNelectron&) const;
 		float GetElectronSF(const BNelectron&, const electronID::electronID e = electronID::electronTight ) const;
 		float GetDoubleElectronTriggerSF (const BNelectron&, const BNelectron&);
