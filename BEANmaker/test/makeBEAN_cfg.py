@@ -150,6 +150,7 @@ muonsUsePV             = True
 #muonJetsDR             = 0.3
 # Standard mouns
 muonCut                = 'isGlobalMuon && pt > 10. && abs(eta) < 2.5'
+muonCutLoose           = 'pt > 10. && abs(eta) < 2.5'
 #looseMuonCut           = ''
 #tightMuonCut           = ''
 # PF muons
@@ -742,7 +743,11 @@ if runStandardPAT:
   process.patMuons.embedTrack = muonEmbedTrack
 
   process.selectedPatMuons.cut = muonCut
-
+  selectedPatMuonsLoose = applyPostfix(process, 'selectedPatMuons', '').clone()
+  selectedPatMuonsLoose.src = cms.InputTag( 'patMuons' )
+  selectedPatMuonsLoose.cut = muonCutLoose                                     
+  setattr(process,'selectedPatMuonsLoose',selectedPatMuonsLoose)
+  
   #process.intermediatePatMuons.preselection = looseMuonCut
 
   #process.loosePatMuons.checkOverlaps.jets.deltaR = muonJetsDR
@@ -1296,6 +1301,7 @@ if runPF2PAT:
       getattr(process, 'pfIsolatedMuonsLoose'+postfix) +
       getattr(process, 'patMuonsLoose'+postfix) +
       getattr(process, 'selectedPatMuonsLoose'+postfix) +
+      getattr(process, 'selectedPatMuonsLoose') +
       getattr(process, 'pfIsolatedElectronsLoose'+postfix) +
       getattr(process, 'patElectronsLoose'+postfix) +
       getattr(process, 'selectedPatElectronsLoose'+postfix)
@@ -1307,6 +1313,7 @@ if runPF2PAT:
       getattr(process, 'muonMatchLoose'+postfix) +
       getattr(process, 'patMuonsLoose'+postfix) +
       getattr(process, 'selectedPatMuonsLoose'+postfix) +
+      getattr(process, 'selectedPatMuonsLoose') +
       getattr(process, 'pfIsolatedElectronsLoose'+postfix) +
       getattr(process, 'patElectronsLoose'+postfix) +
       getattr(process, 'selectedPatElectronsLoose'+postfix)
@@ -1336,6 +1343,7 @@ process.BNproducer = cms.EDProducer('BEANmaker',
                                     pfjetTag = cms.InputTag("selectedPatJetsPFlow"),
                                     genjetTag = cms.InputTag("ak5GenJets"),
                                     muonTag = cms.InputTag("selectedPatMuons"),
+				    muonLooseTag = cms.InputTag("selectedPatMuonsLoose"),
                                     pfmuonTag = cms.InputTag("selectedPatMuonsPFlow"),
                                     pfmuonLooseTag = cms.InputTag("selectedPatMuonsLoosePFlow"),
                                     cocktailmuonTag = cms.InputTag("none"),
