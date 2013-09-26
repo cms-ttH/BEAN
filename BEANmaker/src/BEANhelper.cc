@@ -641,13 +641,15 @@ void BEANhelper::SetUpLeptonSF(){
 
     // Careful! This might not be compatible with 2012_52x anymore.
 	switch(analysis){
-		case analysisType::LJ: case analysisType::Tau:
+		case analysisType::LJ:
+      case analysisType::TauLJ:
 			//h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "h_ele_pt_eta_full_id_iso_hlt_pass" ).c_str())->Clone();
 			//h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "ele_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
 			h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "TightEleIdIsoSF" ).c_str())->Clone();      
 			h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_hlt_8TeV" ).c_str())->Clone();
 			break;
 		case analysisType::DIL:
+		case analysisType::TauDIL:
 			h_ele_SF_ = (TH2D*)leptonSFfile->Get(string( "TightEleIdIsoSF" ).c_str())->Clone();
 			h_mu_SF_  = (TH2D*)leptonSFfile->Get(string( "mu_pt_eta_full_id_iso_8TeV" ).c_str())->Clone();
 			break;
@@ -1419,10 +1421,19 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
       minSideMuonPt		    = 10;
       minLooseMuonPt		= 10;
 	  switch(analysis){
-		  case analysisType::LJ:	minTightMuonPt = 30.;	break;
-		  case analysisType::Tau:	minTightMuonPt = 20.;	break;
-		  case analysisType::DIL:	minTightMuonPt = 20.;	break;
-		  default: assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau"); break;
+		  case analysisType::LJ:
+           minTightMuonPt = 30.;
+           break;
+		  case analysisType::TauLJ:
+		  case analysisType::TauDIL:
+           minTightMuonPt = 20.;
+           break;
+		  case analysisType::DIL:
+           minTightMuonPt = 20.;
+           break;
+		  default:
+           assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau");
+           break;
 	  }
       maxSideMuonAbsEta	    = 2.4;
       maxLooseMuonAbsEta	= 2.4;
@@ -1432,10 +1443,19 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
       minSideMuonPt		    = 5;
       minLooseMuonPt		= 10;
 	  switch(analysis){
-		  case analysisType::LJ:	minTightMuonPt = 30.;	break;
-		  case analysisType::Tau:	minTightMuonPt = 20.;	break;
-		  case analysisType::DIL:	minTightMuonPt = 20.;	break;
-		  default: assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau"); break;
+		  case analysisType::LJ:
+           minTightMuonPt = 30.;
+           break;
+		  case analysisType::TauLJ:
+		  case analysisType::TauDIL:
+           minTightMuonPt = 20.;
+           break;
+		  case analysisType::DIL:
+           minTightMuonPt = 20.;
+           break;
+		  default:
+           assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau");
+           break;
 	  }
       maxSideMuonAbsEta	    = 2.4;
       maxLooseMuonAbsEta	= 2.5;
@@ -2016,7 +2036,7 @@ float BEANhelper::GetElectronSF(const BNelectron& iElectron, const electronID::e
     useEta = std::min (fabs(iElectron.eta), 2.39);
     // ID*ISO and trigger are split 
     SF = h_ele_SF_->GetBinContent(h_ele_SF_->FindBin(useEta,usePT));
-    if( (analysis == analysisType::LJ) || (analysis == analysisType::Tau))
+    if( (analysis == analysisType::LJ) || (analysis == analysisType::TauLJ))
       SF = SF * h_SingleEle_trig_SF_->GetBinContent(h_SingleEle_trig_SF_->FindBin(useEta, usePT));
     break;
 
@@ -2084,10 +2104,19 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 
 	bool eid					= 0;
 	switch(analysis){
-		case analysisType::LJ:	eid = eidHyperTight1MC_dec;	break;
-		case analysisType::Tau:	eid = eidHyperTight1MC_dec;	break;
-		case analysisType::DIL:	eid = eidTight_dec;			break;
-		default: assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau"); break;
+		case analysisType::LJ:
+         eid = eidHyperTight1MC_dec;
+         break;
+		case analysisType::TauLJ:
+		case analysisType::TauDIL:
+         eid = eidHyperTight1MC_dec;
+         break;
+		case analysisType::DIL:
+         eid = eidTight_dec;
+         break;
+		default:
+         assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau");
+         break;
 	}
 
 	bool d0						= ( fabs(iElectron.correctedD0) < 0.02 );
@@ -2280,10 +2309,19 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
       minSideElectronPt	    	= 10;
       minLooseElectronPt		= 10;
 	  switch(analysis){
-		  case analysisType::LJ:	minTightElectronPt = 30; break;
-		  case analysisType::Tau:	minTightElectronPt = 20; break;
-		  case analysisType::DIL:	minTightElectronPt = 20; break;
-		  default: assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau"); break;
+		  case analysisType::LJ:
+           minTightElectronPt = 30;
+           break;
+		  case analysisType::TauLJ:
+		  case analysisType::TauDIL:
+           minTightElectronPt = 20;
+           break;
+		  case analysisType::DIL:
+           minTightElectronPt = 20;
+           break;
+		  default:
+           assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau");
+           break;
 	  }
       maxSideElectronAbsEta	    = 2.5;
       maxLooseElectronAbsEta	= 2.5;
@@ -2293,10 +2331,19 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
       minSideElectronPt		    = 7;
       minLooseElectronPt		= 10;
 	  switch(analysis){
-		  case analysisType::LJ:	minTightElectronPt = 30; break;
-		  case analysisType::Tau:	minTightElectronPt = 20; break;
-		  case analysisType::DIL:	minTightElectronPt = 20; break;
-		  default: assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau"); break;
+		  case analysisType::LJ:
+           minTightElectronPt = 30;
+           break;
+		  case analysisType::TauLJ:
+		  case analysisType::TauDIL:
+           minTightElectronPt = 20;
+           break;
+		  case analysisType::DIL:
+           minTightElectronPt = 20;
+           break;
+		  default:
+           assert( analysis == "analysisType::LJ, analysisType::DIL, analysisType::Tau");
+           break;
 	  }
       maxSideElectronAbsEta	    = 2.5;
       maxLooseElectronAbsEta	= 2.5;

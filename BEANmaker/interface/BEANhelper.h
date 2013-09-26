@@ -81,7 +81,7 @@ typedef BNtrackCollection::const_iterator		  TrackIter;
 typedef BNtriggerCollection::const_iterator		  TrigIter;
 typedef BNtrigobjCollection::const_iterator		  TrigObjIter;
 
-namespace analysisType{	enum analysisType{ LJ, DIL, Tau }; }		
+namespace analysisType{ enum analysisType{ LJ, DIL, TauLJ, TauDIL }; }
 namespace sysType{enum sysType{NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup, TESup, TESdown, CSVLFup, CSVLFdown, CSVHFup, CSVHFdown, CSVHFStats1up, CSVHFStats1down, CSVLFStats1up, CSVLFStats1down, CSVHFStats2up, CSVHFStats2down, CSVLFStats2up, CSVLFStats2down, CSVCErr1up, CSVCErr1down, CSVCErr2up, CSVCErr2down }; }
 namespace jetID{		enum jetID{			none, jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
 namespace tauID{		enum tauID{			tauNonIso, tauVLoose, tauLoose, tauMedium, tauTight }; }
