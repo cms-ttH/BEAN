@@ -2970,7 +2970,7 @@ double BEANhelper::GetCSVweight(const BNjetCollection& iJets, const sysType::sys
   for( BNjetCollection::const_iterator iJet = iJets.begin(); iJet != iJets.end(); ++iJet ){ 
 
     double csv = iJet->btagCombinedSecVertex;
-    double jetPt = iJet->pt;
+    double jetPt = std::max(iJet->pt, 29.99);
     double jetAbsEta = fabs( iJet->eta );
     int flavor = abs( iJet->flavour );
 
@@ -3067,7 +3067,7 @@ vdouble BEANhelper::GetCSVweights(const BNjetCollection& iJets, const sysType::s
   for( BNjetCollection::const_iterator iJet = iJets.begin(); iJet != iJets.end(); ++iJet ){ 
 
     double csv = iJet->btagCombinedSecVertex;
-    double jetPt = iJet->pt;
+    double jetPt = std::max(iJet->pt, 29.99);
     double jetAbsEta = fabs( iJet->eta );
     int flavor = abs( iJet->flavour );
 
