@@ -1,11 +1,14 @@
 # Boson Exploration Analysis Ntuple
 
+More information and instructions are on the [Twiki](https://twiki.cern.ch/twiki/bin/viewauth/CMS/TTbarHiggs).
+
 ## Installation
 
-See the [Twiki](https://twiki.cern.ch/twiki/bin/viewauth/CMS/TTbarHiggs) for instructions to set up your `CMSSW` area.
 To use this package, perform the following steps (using release 5.3.8, patch 1):
 
-    cd $CMSSW_BASE/src
+    cmsrel CMSSW_5_3_8_patch1
+    cd CMSSW_5_3_8_patch1/src/
+    cmsenv
 
     # Basic third-party packages
     cvs co -d PhysicsTools/NtupleUtils UserCode/Bicocca/PhysicsTools/NtupleUtils
@@ -34,11 +37,14 @@ To use this package, perform the following steps (using release 5.3.8, patch 1):
     wget -r http://nd.edu/~abrinke1/ElectronEffectiveArea.h -O ElectronEffectiveArea.h
     cd -
     cvs co -r V01-04-23 RecoTauTag/RecoTau
-    cvs co -r V01-04-10 RecoTauTag/Configuration 
-    cvs co -r V00-04-00 CondFormats/EgammaObjects  
+    cvs co -r V01-04-10 RecoTauTag/Configuration
+    cvs co -r V00-04-00 CondFormats/EgammaObjects
     cvs co -r V00-02-10 -d CMGTools/External UserCode/CMG/CMGTools/External
 
     # Our software
     git clone https://github.com/cms-ttH/BEAN.git
-    cd BEAN
+
+    # Build
     scram b -j32
+
+This might require an environment set up as described [here](http://wiki.crc.nd.edu/wiki/index.php/NDCMS_SettingUpEnvironment).
