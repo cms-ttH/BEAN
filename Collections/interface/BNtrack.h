@@ -3,12 +3,10 @@
 
 #include <vector>
 
-
-// a simple class
 struct BNtrack
 {
-  explicit BNtrack(double v,int c):
-  pt(v),
+  explicit BNtrack(double v,int c) :
+    pt(v),
     ptError(v),
     px(v),
     py(v),
@@ -31,7 +29,7 @@ struct BNtrack
     nHitsMissingMiddle(v),
     layersWithMeasurement(v),
     numberOfHits(v),
-    numberOfLostHits(v), 
+    numberOfLostHits(v),
     numberOfValidPixelHits(v),
     numberOfValidStripHits(v),
     lastHitOuterRadius(v),
@@ -51,7 +49,7 @@ struct BNtrack
     nTracksRp3(v),
     trackerVetoPtRp3(v),
     emVetoEtRp3(v),
-    hadVetoEtRp3(v),     
+    hadVetoEtRp3(v),
     hoVetoEtRp3(v),
     depTrkRp5(v),
     depEcalRp5(v),
@@ -60,11 +58,11 @@ struct BNtrack
     nTracksRp5(v),
     trackerVetoPtRp5(v),
     emVetoEtRp5(v),
-    hadVetoEtRp5(v),     
-    hoVetoEtRp5(v) { }
+    hadVetoEtRp5(v),
+    hoVetoEtRp5(v) {};
 
-BNtrack():
-  pt(-99),
+  BNtrack() :
+    pt(-99),
     ptError(-99),
     px(-99),
     py(-99),
@@ -84,10 +82,10 @@ BNtrack():
     isHighPurity(-99),
     nHitsMissingOuter(-99),
     nHitsMissingInner(-99),
-    nHitsMissingMiddle(-99), 
+    nHitsMissingMiddle(-99),
     layersWithMeasurement(-99),
     numberOfHits(-99),
-    numberOfLostHits(-99), 
+    numberOfLostHits(-99),
     numberOfValidPixelHits(-99),
     numberOfValidStripHits(-99),
     lastHitOuterRadius(-99),
@@ -107,7 +105,7 @@ BNtrack():
     nTracksRp3(-99),
     trackerVetoPtRp3(-99),
     emVetoEtRp3(-99),
-    hadVetoEtRp3(-99),     
+    hadVetoEtRp3(-99),
     hoVetoEtRp3(-99),
     depTrkRp5(-99),
     depEcalRp5(-99),
@@ -116,52 +114,52 @@ BNtrack():
     nTracksRp5(-99),
     trackerVetoPtRp5(-99),
     emVetoEtRp5(-99),
-    hadVetoEtRp5(-99),     
-    hoVetoEtRp5(-99) { }
+    hadVetoEtRp5(-99),
+    hoVetoEtRp5(-99) {};
 
-  double pt,    
-    ptError,
-    px,
-    py,
-    pz,
-    phi,
-    eta,
-    theta,
-    normChi2,
-    dZ,
-    d0,
-    d0err,
-    vx,
-    vy,
-    vz;
-  int charge,
-    numValidHits,
-    isHighPurity;
+  double pt;
+  double ptError;
+  double px;
+  double py;
+  double pz;
+  double phi;
+  double eta;
+  double theta;
+  double normChi2;
+  double dZ;
+  double d0;
+  double d0err;
+  double vx;
+  double vy;
+  double vz;
+  int charge;
+  int numValidHits;
+  int isHighPurity;
 
   int nHitsMissingOuter;
   int nHitsMissingInner;
   int nHitsMissingMiddle;
 
-  int layersWithMeasurement; 
-  int numberOfHits; 
-  int numberOfLostHits;  
+  int layersWithMeasurement;
+  int numberOfHits;
+  int numberOfLostHits;
   int numberOfValidPixelHits;
   int numberOfValidStripHits;
 
   double lastHitOuterRadius;
   double lastHitOuterEta;
-  double lastHitOuterTheta;  
-  double lastHitOuterPhi;  
-  
-  // calorimeter isolation energy 
-  double caloEMDeltaRp3;  
-  double caloHadDeltaRp3;  
-  double caloEMDeltaRp4;  
-  double caloHadDeltaRp4;  
-  double caloEMDeltaRp5;  
-  double caloHadDeltaRp5;  
+  double lastHitOuterTheta;
+  double lastHitOuterPhi;
 
-  // isolation quantities based on muon isolation   
+  // calorimeter isolation energy
+  double caloEMDeltaRp3;
+  double caloHadDeltaRp3;
+  double caloEMDeltaRp4;
+  double caloHadDeltaRp4;
+  double caloEMDeltaRp5;
+  double caloHadDeltaRp5;
+
+  // isolation quantities based on muon isolation
   double depTrkRp3;
   double depEcalRp3;
   double depHcalRp3;
@@ -169,7 +167,7 @@ BNtrack():
   double nTracksRp3;
   double trackerVetoPtRp3;
   double emVetoEtRp3;
-  double hadVetoEtRp3;     
+  double hadVetoEtRp3;
   double hoVetoEtRp3;
 
   double depTrkRp5;
@@ -179,7 +177,7 @@ BNtrack():
   double nTracksRp5;
   double trackerVetoPtRp5;
   double emVetoEtRp5;
-  double hadVetoEtRp5;     
+  double hadVetoEtRp5;
   double hoVetoEtRp5;
 
   std::vector<int> subDetIdHits;
@@ -188,11 +186,8 @@ BNtrack():
   std::vector<double> modulePerpHits;
   std::vector<double> moduleZHits;
   std::vector<double> modulePhiHits;
-
 };
 
-// this is our new product, it is simply a 
-// collection of BNtrack held in an std::vector
 typedef std::vector<BNtrack> BNtrackCollection;
 
 #endif
