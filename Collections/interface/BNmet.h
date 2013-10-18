@@ -6,7 +6,7 @@
 struct BNmet
 {
   explicit BNmet(double v) :
-    et(v), pt(v), px(v), py(v), phi(v), Upt(v), Uphi(v),
+    energy(v), et(v), pt(v), px(v), py(v), eta(v), phi(v), Upt(v), Uphi(v),
     NeutralEMFraction(v), NeutralHadEtFraction(v), ChargedEMEtFraction(v),
     ChargedHadEtFraction(v), MuonEtFraction(v), Type6EtFraction(v),
     Type7EtFraction(v), genPT(v), genPhi(v), muonCorEx(v), muonCorEy(v),
@@ -21,7 +21,7 @@ struct BNmet
     pfT1jet6phi(v), pfT1jet10pt(v), pfT1jet10phi(v) {};
 
   BNmet() :
-    et(-99), pt(-99), px(-99), py(-99), phi(-99), Upt(-99), Uphi(-99),
+    energy(-99), et(-99), pt(-99), px(-99), py(-99), eta(0), phi(-99), Upt(-99), Uphi(-99),
     NeutralEMFraction(-99), NeutralHadEtFraction(-99),
     ChargedEMEtFraction(-99), ChargedHadEtFraction(-99),
     MuonEtFraction(-99), Type6EtFraction(-99), Type7EtFraction(-99),
@@ -37,7 +37,7 @@ struct BNmet
     T2py(-99), T2phi(-99), T2sumET(-99), pfT1jet1pt(-99), pfT1jet1phi(-99),
     pfT1jet6pt(-99), pfT1jet6phi(-99), pfT1jet10pt(-99), pfT1jet10phi(-99) {};
 
-  double et, pt, px, py, phi;
+  double energy, et, pt, px, py, eta, phi;
   double Upt, Uphi;
   double NeutralEMFraction, NeutralHadEtFraction, ChargedEMEtFraction, ChargedHadEtFraction, MuonEtFraction;
   double Type6EtFraction, Type7EtFraction;
