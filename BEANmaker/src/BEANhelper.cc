@@ -2509,19 +2509,39 @@ BEANhelper::GetCleanJets(const BNjetCollection& jets, const BNleptonCollection& 
 }
 
 
-                         
-unsigned int BEANhelper::GetNumCSVbtags(const BNjetCollection& iJets, const char iCSVwp){
-	CheckSetUp();
-	unsigned int result = 0;
-	for( BNjetCollection::const_iterator Jet = iJets.begin(); Jet != iJets.end(); ++Jet ){ if(PassesCSV(*Jet, iCSVwp)){ result++; } }
-	return result;
+
+unsigned int
+BEANhelper::GetNumCSVbtags(const BNjetCollection& iJets, const char iCSVwp, std::vector<unsigned int>* jet_indices)
+{
+    CheckSetUp();
+    unsigned int result = 0;
+    unsigned int i = 0; // Current jet index -> saved as clean jet index
+    for (BNjetCollection::const_iterator Jet = iJets.begin(); Jet != iJets.end(); ++Jet, ++i){
+        if (PassesCSV(*Jet, iCSVwp)) {
+            result++;
+
+            if (jet_indices)
+                jet_indices->push_back(i);
+        }
+    }
+    return result;
 }
 
-unsigned int BEANhelper::GetNumNonCSVbtags(const BNjetCollection& iJets, const char iCSVwp){
-	CheckSetUp();
-	unsigned int result = 0;
-	for( BNjetCollection::const_iterator Jet = iJets.begin(); Jet != iJets.end(); ++Jet ){ if(!PassesCSV(*Jet, iCSVwp)){ result++; } }
-	return result;
+unsigned int
+BEANhelper::GetNumNonCSVbtags(const BNjetCollection& iJets, const char iCSVwp, std::vector<unsigned int>* jet_indices)
+{
+    CheckSetUp();
+    unsigned int result = 0;
+    unsigned int i = 0; // Current jet index -> saved as clean jet index
+    for (BNjetCollection::const_iterator Jet = iJets.begin(); Jet != iJets.end(); ++Jet, ++i) {
+        if (!PassesCSV(*Jet, iCSVwp)) {
+            result++;
+
+            if (jet_indices)
+                jet_indices->push_back(i);
+        }
+    }
+    return result;
 }
 
 
