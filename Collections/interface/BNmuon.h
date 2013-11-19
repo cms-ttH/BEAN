@@ -22,7 +22,7 @@ struct BNmuon : BNlepton {
     ecal_time(v), hcal_time(v), ecal_timeError(v), hcal_timeError(v),
     energy_ecal(v), energy_hcal(v), e3x3_ecal(v), e3x3_hcal(v),
     energyMax_ecal(v), energyMax_hcal(v), IDGMPTight(c), tkNumValidHits(c),
-    tkCharge(c), samNumValidHits(c), samCharge(c), comNumValidHits(c),
+    samNumValidHits(c), samCharge(c), comNumValidHits(c),
     comCharge(c), isPFMuon(c), isGoodMuon_1StationTight(c),
     isGlobalMuon(c), isTrackerMuon(c), isStandAloneMuon(c),
     isGlobalMuonPromptTight(c), numberOfValidMuonHits(c),
@@ -51,7 +51,7 @@ struct BNmuon : BNlepton {
     hcal_time(-99), ecal_timeError(-99), hcal_timeError(-99),
     energy_ecal(-99), energy_hcal(-99), e3x3_ecal(-99), e3x3_hcal(-99),
     energyMax_ecal(-99), energyMax_hcal(-99), IDGMPTight(-99),
-    tkNumValidHits(-99), tkCharge(-99), samNumValidHits(-99),
+    tkNumValidHits(-99), samNumValidHits(-99),
     samCharge(-99), comNumValidHits(-99), comCharge(-99), isPFMuon(-99),
     isGoodMuon_1StationTight(-99), isGlobalMuon(-99), isTrackerMuon(-99),
     isStandAloneMuon(-99), isGlobalMuonPromptTight(-99),
@@ -79,7 +79,7 @@ struct BNmuon : BNlepton {
   double energy_ecal, energy_hcal, e3x3_ecal, e3x3_hcal, energyMax_ecal, energyMax_hcal;
 
   int IDGMPTight;
-  int tkNumValidHits, tkCharge;
+  int tkNumValidHits;
   int samNumValidHits, samCharge;
   int comNumValidHits, comCharge;
   int isPFMuon, isGoodMuon_1StationTight, isGlobalMuon, isTrackerMuon, isStandAloneMuon, isGlobalMuonPromptTight;

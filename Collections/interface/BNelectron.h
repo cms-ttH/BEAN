@@ -19,7 +19,7 @@ struct BNelectron : BNlepton {
     eRight(v), eTop(v), eBottom(v), e3x3(v), swissCross(v), seedEnergy(v),
     seedTime(v), swissCrossNoI85(v), swissCrossI85(v), E2overE9NoI85(v),
     E2overE9I85(v), classification(c), numClusters(c), tkNumValidHits(c),
-    tkCharge(c), gsfCharge(c), isEB(c), isEE(c), isGap(c), isEBEEGap(c),
+    gsfCharge(c), isEB(c), isEE(c), isGap(c), isEBEEGap(c),
     isEBGap(c), isEEGap(c), isEcalDriven(c), isTrackerDriven(c),
     numberOfLostHits(c), numberOfExpectedInnerHits(c),
     numberOfValidPixelHits(c), numberOfValidPixelBarrelHits(c),
@@ -45,7 +45,7 @@ struct BNelectron : BNlepton {
     swissCross(-99), seedEnergy(-99), seedTime(-99), swissCrossNoI85(-99),
     swissCrossI85(-99), E2overE9NoI85(-99), E2overE9I85(-99),
     classification(-99), numClusters(-99), tkNumValidHits(-99),
-    tkCharge(-99), gsfCharge(-99), isEB(-99), isEE(-99), isGap(-99),
+    gsfCharge(-99), isEB(-99), isEE(-99), isGap(-99),
     isEBEEGap(-99), isEBGap(-99), isEEGap(-99), isEcalDriven(-99),
     isTrackerDriven(-99), numberOfLostHits(-99),
     numberOfExpectedInnerHits(-99), numberOfValidPixelHits(-99),
@@ -83,7 +83,7 @@ struct BNelectron : BNlepton {
   int classification;
   int genGrandMother11Id;
   int numClusters;
-  int tkNumValidHits, tkCharge, gsfCharge;
+  int tkNumValidHits, gsfCharge;
   int isEB, isEE, isGap, isEBEEGap, isEBGap, isEEGap, isEcalDriven, isTrackerDriven;
   int numberOfLostHits, numberOfExpectedInnerHits, numberOfValidPixelHits, numberOfValidPixelBarrelHits, numberOfValidPixelEndcapHits;
   int isHEEP, isHEEPnoEt;

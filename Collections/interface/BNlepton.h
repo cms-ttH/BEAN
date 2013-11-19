@@ -17,7 +17,7 @@ struct BNlepton {
     neutralHadronIsoDR03(v), photonIsoDR03(v), puChargedHadronIsoDR03(v),
     chargedHadronIsoDR04(v), neutralHadronIsoDR04(v), photonIsoDR04(v),
     puChargedHadronIsoDR04(v), rhoPrime(v), AEffDr03(v), AEffDr04(v),
-    IP(v), IPError(v), isElectron(e), isMuon(m), charge(c), genId(c),
+    IP(v), IPError(v), isElectron(e), isMuon(m), charge(c), tkCharge(c), genId(c),
     genCharge(c), genNumberOfMothers(c), genMotherId(c),
     genMotherCharge(c), genMother0Id(c), genMother1Id(c),
     genGrandMother00Id(c), genGrandMother01Id(c), genGrandMother10Id(c),
@@ -39,7 +39,7 @@ struct BNlepton {
     chargedHadronIsoDR04(-99), neutralHadronIsoDR04(-99),
     photonIsoDR04(-99), puChargedHadronIsoDR04(-99), rhoPrime(-99),
     AEffDr03(-99), AEffDr04(-99), IP(-99), IPError(-99), isElectron(e),
-    isMuon(m), charge(-99), genId(-99), genCharge(-99),
+    isMuon(m), charge(-99), tkCharge(-99), genId(-99), genCharge(-99),
     genNumberOfMothers(-99), genMotherId(-99), genMotherCharge(-99),
     genMother0Id(-99), genMother1Id(-99), genGrandMother00Id(-99),
     genGrandMother01Id(-99), genGrandMother10Id(-99),
@@ -60,7 +60,7 @@ struct BNlepton {
   double IP, IPError;
 
   int isElectron, isMuon;
-  int charge;
+  int charge, tkCharge;
   int genId, genCharge, genNumberOfMothers;
   int genMotherId, genMotherCharge, genMother0Id, genMother1Id;
   int genGrandMother00Id, genGrandMother01Id, genGrandMother10Id, genGrandMother11Id;
