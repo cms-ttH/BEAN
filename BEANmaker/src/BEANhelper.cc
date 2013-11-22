@@ -290,6 +290,7 @@ void BEANhelper::SetUp(string iEra, int iSampleNumber,  const analysisType::anal
 
 	// Awknowledge setup
 	isSetUp = true;
+    std::cout << "Here" << std::endl;
 
 }
 
@@ -536,12 +537,15 @@ void BEANhelper::SetUpCSVreshaping(){
     if (samplename == "tbar_tchannel_ll")                                      samplename = "tbar_tchannel";
     if (samplename == "tbar_tWchannel_jl" || samplename == "tbar_tWchannel_lj" ||
         samplename == "tbar_tWchannel_ll")                                     samplename = "tbar_tWchannel";
-    if (samplename == "ttbarG" || samplename == "ttbarWW" ||
-        samplename == "ttbarttbar")                                            samplename = "ttbarZ";
+    if (samplename == "ttbarG" || samplename == "ttbarGStar_ee" || samplename == "ttbarGStar_mm" ||
+        samplename == "ttbarGStar_tt" || samplename == "ttbarWW" || samplename == "tttt" ||
+        samplename == "tbZ_ll")                                                samplename = "ttbarZ";
     if (samplename == "ww_ll" || samplename == "wz_lll" ||
         samplename == "wz_lljj" || samplename == "wz_ljj" )                    samplename = "wz";
     if (samplename == "www" || samplename == "wwz" || samplename == "wzz"
         || samplename == "zzz" )                                               samplename = "wz";
+    if (samplename == "WpWpqq" || samplename == "WmWmqq" ||
+        samplename == "WWDPI" )                                                samplename = "wz";
     if (samplename == "zz_llll" || samplename == "zz_lljj" )                   samplename = "zz";
     
 	// Set charm scale factor
@@ -581,6 +585,7 @@ void BEANhelper::SetUpJetSF(){
 	jetSFfile = new TFile (filePath.c_str());
 
 	string samplename = GetSampleName();
+    
     if (samplename == "ttbar_jj" || samplename == "ttbar_lj" || samplename == "ttbar_ll" ||
         samplename == "ttbar_bb_jj" || samplename == "ttbar_bb_lj" || samplename == "ttbar_bb_ll" ||
         samplename == "ttbar_b_jj" || samplename == "ttbar_b_lj" || samplename == "ttbar_b_ll" ||
@@ -599,6 +604,16 @@ void BEANhelper::SetUpJetSF(){
     if (samplename == "tbar_tchannel_ll")                                      samplename = "tbar_tchannel";
     if (samplename == "tbar_tWchannel_jl" || samplename == "tbar_tWchannel_lj" ||
         samplename == "tbar_tWchannel_ll")                                     samplename = "tbar_tWchannel";
+    if (samplename == "ttbarG" || samplename == "ttbarGStar_ee" || samplename == "ttbarGStar_mm" ||
+        samplename == "ttbarGStar_tt" || samplename == "ttbarWW" || samplename == "tttt" ||
+        samplename == "tbZ_ll")                                                samplename = "ttbarZ";
+    if (samplename == "ww_ll" || samplename == "wz_lll" ||
+        samplename == "wz_lljj" || samplename == "wz_ljj" )                    samplename = "wz";
+    if (samplename == "www" || samplename == "wwz" || samplename == "wzz"
+        || samplename == "zzz" )                                               samplename = "wz";
+    if (samplename == "WpWpqq" || samplename == "WmWmqq" ||
+        samplename == "WWDPI" )                                                samplename = "wz";
+    if (samplename == "zz_llll" || samplename == "zz_lljj" )                   samplename = "zz";
 
     
 	h_b_eff_ = (TH2D*)jetSFfile->Get(string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str())->Clone();
@@ -780,10 +795,17 @@ string BEANhelper::GetSampleName(){
 		else if( sampleNumber==2762 ){	samplename = "zz_lljj";				}
 		else if( sampleNumber==2722 ){	samplename = "zzz";					}
 		else if( sampleNumber==2560 ){	samplename = "ttbarG";				}
+		else if( sampleNumber==2567 ){	samplename = "ttbarGStar_ee";  	   	}
+		else if( sampleNumber==2568 ){	samplename = "ttbarGStar_mm";  	   	}
+		else if( sampleNumber==2569 ){	samplename = "ttbarGStar_tt";  	   	}
 		else if( sampleNumber==2524 ){	samplename = "ttbarW";				}
 		else if( sampleNumber==2534 ){	samplename = "ttbarWW";				}
 		else if( sampleNumber==2523 ){	samplename = "ttbarZ";				}
-		else if( sampleNumber==2525 ){	samplename = "ttbarttbar";			}
+		else if( sampleNumber==2525 ){	samplename = "tttt";			    }
+		else if( sampleNumber==2000 ){	samplename = "tbZ_ll";			    }
+		else if( sampleNumber==2001 ){	samplename = "WpWpqq";			    }
+		else if( sampleNumber==2002 ){	samplename = "WmWmqq";			    }
+		else if( sampleNumber==2003 ){	samplename = "WWDPI";			    }
         else if( sampleNumber==2915 ){samplename = "zjets"; } //VH_tautau
         else if( sampleNumber==2923 ){samplename = "zjets"; } //VH_ZZ
         else if( sampleNumber==2924 ){samplename = "zjets"; } //VH_WW
