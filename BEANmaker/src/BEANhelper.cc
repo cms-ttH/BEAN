@@ -1365,7 +1365,7 @@ BNtauCollection BEANhelper::GetCorrectedTaus(const BNtauCollection& iTaus, const
 	}
 	return result;
 }
-    
+
 // Return whether or not muon passes cuts
 bool BEANhelper::IsSideMuon(const BNmuon& iMuon){ return IsGoodMuon(iMuon, muonID::muonSide); }
 
@@ -1380,22 +1380,14 @@ bool BEANhelper::IsSideMuonTightMVA(const BNmuon& iMuon, const BNjetCollection* 
 float BEANhelper::GetMuonLepMVA(const BNmuon& iMuon, const BNjetCollection* iJets){
   CheckSetUp();
 
-  BNjet iJet = BEANhelper::GetClosestJet(*iJets, iMuon, 100.0);
-  TLorentzVector muV;
-  TLorentzVector jetV;
-  muV.SetPxPyPzE(iMuon.px,iMuon.py,iMuon.pz,iMuon.energy);
-  jetV.SetPxPyPzE(iJet.px,iJet.py,iJet.pz,iJet.energy);
-
   varneuRelIso = max(0.0, iMuon.neutralHadronIsoDR04 + iMuon.photonIsoDR04 - 0.5*iMuon.puChargedHadronIsoDR04)/iMuon.pt;
   //  varneuRelIso = max(0.0, iMuon.pfIsoR04SumNeutralHadronEt + iMuon.pfIsoR04SumPhotonEt - 0.5*iMuon.pfIsoR04SumPUPt)/iMuon.pt;
   varchRelIso = iMuon.chargedHadronIsoDR04/iMuon.pt;
-  //  varchRelIso = iMuon.pfIsoR04SumChargedHadronPt/iMuon.pt;  
-  varjetDR_in = min(muV.DeltaR(jetV),0.5);
-  varjetPtRatio_in = 1.5;
-  if (muV.DeltaR(jetV) <= 0.5)  varjetPtRatio_in = min(iMuon.pt/(iJet.pt), 1.5);
-  varjetBTagCSV_in = 0.0;
-  if (muV.DeltaR(jetV) <= 0.5) varjetBTagCSV_in = max(iJet.btagCombinedSecVertex, 0.0);
-  varsip3d = fabs(iMuon.IP/iMuon.IPError);
+  //  varchRelIso = iMuon.pfIsoR04SumChargedHadronPt/iMuon.pt; 
+  varjetDR_in = iMuon.jetDeltaR;
+  varjetPtRatio_in = iMuon.jetPtRatio;
+  varjetBTagCSV_in = iMuon.jetBTagCSV;
+  varsip3d = fabs(iMuon.SIP);
   vardxy = log(fabs(iMuon.correctedD0Vertex));
   vardz = log(fabs(iMuon.correctedDZ));
 
@@ -1411,7 +1403,7 @@ float BEANhelper::GetMuonLepMVA(const BNmuon& iMuon, const BNjetCollection* iJet
 
   if (iMuon.pt > 15 && fabs(iMuon.eta) < 1.5) {
     //       std::cout << "LepMVA: " <<  mu_reader_high_b->EvaluateMVA( "BDTG method" ) << std::endl;
-    return mu_reader_high_b->EvaluateMVA( "BDTG method" );    
+    return mu_reader_high_b->EvaluateMVA( "BDTG method" );
   }
   else if (iMuon.pt > 15 && fabs(iMuon.eta) >= 1.5) {
     //       std::cout << "LepMVA: " <<  mu_reader_high_e->EvaluateMVA( "BDTG method" ) << std::endl;
@@ -1426,7 +1418,7 @@ float BEANhelper::GetMuonLepMVA(const BNmuon& iMuon, const BNjetCollection* iJet
     return mu_reader_low_e->EvaluateMVA( "BDTG method" );
   }
 }
-      
+
 
 bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, const BNjetCollection* iJets){
 	CheckSetUp();
@@ -1505,29 +1497,28 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
       case muonID::muonSide:
         passesKinematics		= ((iMuon.pt >= minSideMuonPt) && (fabs(iMuon.eta) <= maxSideMuonAbsEta));
         passesIso				= (GetDBCorrectedRelIsoDR04(iMuon, dBeta_factor) < 0.400);
-        passesSIP               = (fabs(iMuon.IP/iMuon.IPError) < 10.0 && fabs(iMuon.correctedD0Vertex) < 5.0 && fabs(iMuon.correctedDZ) < 10.0);
-        passesID				= (iMuon.isPFMuon==1 && (iMuon.isGlobalMuon==1 || iMuon.isTrackerMuon==1) && passesSIP);        
+        passesSIP               = (fabs(iMuon.SIP) < 10.0 && fabs(iMuon.correctedD0Vertex) < 5.0 && fabs(iMuon.correctedDZ) < 10.0);
+        passesID				= (iMuon.isPFMuon==1 && (iMuon.isGlobalMuon==1 || iMuon.isTrackerMuon==1) && passesSIP);
         break;
       case muonID::muonSideLooseMVA:
         passesKinematics        = ((iMuon.pt >= minSideMuonPt) && (fabs(iMuon.eta) <= maxSideMuonAbsEta));
         passesIso               = (GetDBCorrectedRelIsoDR04(iMuon, dBeta_factor) < 0.400);
-        passesSIP               = (fabs(iMuon.IP/iMuon.IPError) < 10.0 && fabs(iMuon.correctedD0Vertex) < 5.0 && fabs(iMuon.correctedDZ) < 10.0);
-        passesLooseMVA          = (GetMuonLepMVA(iMuon,iJets) > -0.3);
+        passesSIP               = (fabs(iMuon.SIP) < 10.0 && fabs(iMuon.correctedD0Vertex) < 5.0 && fabs(iMuon.correctedDZ) < 10.0);
+        passesLooseMVA          = (GetMuonLepMVA(iMuon) > -0.3);
         passesID                = (iMuon.isPFMuon==1 && (iMuon.isGlobalMuon==1 || iMuon.isTrackerMuon==1) && passesSIP && passesLooseMVA);
         break;
       case muonID::muonSideTightMVA:
         passesKinematics        = ((iMuon.pt >= minSideMuonPt) && (fabs(iMuon.eta) <= maxSideMuonAbsEta));
         passesIso               = (GetDBCorrectedRelIsoDR04(iMuon, dBeta_factor) < 0.400);
-        passesSIP               = (fabs(iMuon.IP/iMuon.IPError) < 10.0 && fabs(iMuon.correctedD0Vertex) < 5.0 && fabs(iMuon.correctedDZ) < 10.0);
-        passesTightMVA          = (GetMuonLepMVA(iMuon,iJets) > 0.7);
-        passesID                = (iMuon.isPFMuon==1 && (iMuon.isGlobalMuon==1 || iMuon.isTrackerMuon==1) && passesSIP && passesTightMVA);        
+        passesSIP               = (fabs(iMuon.SIP) < 10.0 && fabs(iMuon.correctedD0Vertex) < 5.0 && fabs(iMuon.correctedDZ) < 10.0);
+        passesTightMVA          = (GetMuonLepMVA(iMuon) > 0.7);
+        passesID                = (iMuon.isPFMuon==1 && (iMuon.isGlobalMuon==1 || iMuon.isTrackerMuon==1) && passesSIP && passesTightMVA);
         break;
-        
+
       case muonID::muonLoose:
         passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
         passesIso				= (GetMuonRelIso(iMuon) < 0.200);
         passesID				= (iMuon.isGlobalMuon==1);
-	passesSIP = true;
         break;
       case muonID::muonTight:
         passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
@@ -1535,7 +1526,6 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
         passesTrackerID	        = ((iMuon.isTrackerMuon) && (iMuon.numberOfValidTrackerHitsInnerTrack > 10) && (iMuon.pixelLayersWithMeasurement > 0)
                                    && (iMuon.numberOfMatchedStations > 1) && (fabs(iMuon.correctedD0) < 0.02) && (fabs(iMuon.correctedDZ) < 1.));
         passesID				= ((iMuon.isGlobalMuon==1) && (iMuon.isGlobalMuonPromptTight==1) && passesTrackerID);
-	passesSIP = true;
         break;
       case muonID::muonPtOnly:
       case muonID::muonPtEtaOnly:
@@ -1545,7 +1535,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
              << "Sorry... we have to crash now" << endl;
         ThrowFatalError("Asked for a loose muon selection in 2011, which is not possible.");
         break;
-        
+
       }
     }// End of 2011 era
     else if (era=="2012_52x" || era=="2012_53x") {
@@ -1553,21 +1543,21 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
       case muonID::muonSide:
         passesKinematics		= ((iMuon.pt >= minSideMuonPt) && (fabs(iMuon.eta) <= maxSideMuonAbsEta));
         passesIso				= (GetDBCorrectedRelIsoDR04(iMuon, dBeta_factor) < 0.400);
-        passesSIP               = (fabs(iMuon.IP/iMuon.IPError) < 10.0 && fabs(iMuon.correctedD0Vertex) < 5. && fabs(iMuon.correctedDZ) < 10.);
-        passesID                = (iMuon.isPFMuon==1 && (iMuon.isGlobalMuon==1 || iMuon.isTrackerMuon==1) && passesSIP);        
+        passesSIP               = (fabs(iMuon.SIP) < 10.0 && fabs(iMuon.correctedD0Vertex) < 5. && fabs(iMuon.correctedDZ) < 10.);
+        passesID                = (iMuon.isPFMuon==1 && (iMuon.isGlobalMuon==1 || iMuon.isTrackerMuon==1) && passesSIP);
         break;
       case muonID::muonSideLooseMVA:
         passesKinematics        = ((iMuon.pt >= minSideMuonPt) && (fabs(iMuon.eta) <= maxSideMuonAbsEta));
         passesIso               = (GetDBCorrectedRelIsoDR04(iMuon, dBeta_factor) < 0.400);
-        passesSIP               = (fabs(iMuon.IP/iMuon.IPError) < 10.0 && fabs(iMuon.correctedD0Vertex) < 5.0 && fabs(iMuon.correctedDZ) < 10.0);
-        passesLooseMVA          = (GetMuonLepMVA(iMuon,iJets) > -0.3);
-        passesID                = (iMuon.isPFMuon==1 && (iMuon.isGlobalMuon==1 || iMuon.isTrackerMuon==1) && passesSIP && passesLooseMVA);        
+        passesSIP               = (fabs(iMuon.SIP) < 10.0 && fabs(iMuon.correctedD0Vertex) < 5.0 && fabs(iMuon.correctedDZ) < 10.0);
+        passesLooseMVA          = (GetMuonLepMVA(iMuon) > -0.3);
+        passesID                = (iMuon.isPFMuon==1 && (iMuon.isGlobalMuon==1 || iMuon.isTrackerMuon==1) && passesSIP && passesLooseMVA);
         break;
       case muonID::muonSideTightMVA:
         passesKinematics        = ((iMuon.pt >= minSideMuonPt) && (fabs(iMuon.eta) <= maxSideMuonAbsEta));
         passesIso               = (GetDBCorrectedRelIsoDR04(iMuon, dBeta_factor) < 0.400);
-        passesSIP               = (fabs(iMuon.IP/iMuon.IPError) < 10.0 && fabs(iMuon.correctedD0Vertex) < 5.0 && fabs(iMuon.correctedDZ) < 10.0);
-        passesTightMVA          = (GetMuonLepMVA(iMuon,iJets) > 0.7);
+        passesSIP               = (fabs(iMuon.SIP) < 10.0 && fabs(iMuon.correctedD0Vertex) < 5.0 && fabs(iMuon.correctedDZ) < 10.0);
+        passesTightMVA          = (GetMuonLepMVA(iMuon) > 0.7);
         passesID                = (iMuon.isPFMuon==1 && (iMuon.isGlobalMuon==1 || iMuon.isTrackerMuon==1) && passesSIP && passesTightMVA);
         break;
       case muonID::muonLoose:
@@ -1575,58 +1565,47 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
         passesIso				= (GetMuonRelIso(iMuon) < 0.200);
         isPFMuon				= true;
         passesID				= (((iMuon.isGlobalMuon==1) || (iMuon.isTrackerMuon==1)) && isPFMuon);
-	passesSIP = true;
         break;
       case muonID::muonTight:
         passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
         passesIso				= (GetMuonRelIso(iMuon) < 0.120);
         isPFMuon				= true;
         passesTrackerID	        = ((iMuon.isGlobalMuon==1)
-                                   && (iMuon.normalizedChi2 < 10) && (fabs(iMuon.correctedD0Vertex) < 0.2) && (fabs(iMuon.dVzPVz) < 0.5) 
+                                   && (iMuon.normalizedChi2 < 10) && (fabs(iMuon.correctedD0Vertex) < 0.2) && (fabs(iMuon.dVzPVz) < 0.5)
                                    && (iMuon.numberOfLayersWithMeasurement > 5 ) && (iMuon.numberOfValidMuonHits > 0)
                                    && (iMuon.numberOfValidPixelHits > 0) && (iMuon.numberOfMatchedStations > 1));
-        
         passesID				= (((iMuon.isGlobalMuon==1) || (iMuon.isTrackerMuon==1)) && isPFMuon && passesTrackerID);
-	passesSIP = true;
         break;
       case muonID::muonPtOnly:
         passesKinematics		= ((iMuon.pt >= minTightMuonPt));
         passesIso				= true;
         isPFMuon				= true;
         passesTrackerID	        = true;
-        
         passesID				= true;
-	passesSIP = true;
         break;
       case muonID::muonPtEtaOnly:
         passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
         passesIso				= true;
         isPFMuon				= true;
         passesTrackerID	        = true;
-        
         passesID				= true;
-	passesSIP = true;
         break;
       case muonID::muonPtEtaIsoOnly:
         passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
         passesIso				= (GetMuonRelIso(iMuon) < 0.120);
         isPFMuon				= true;
         passesTrackerID	        = true;
-        
         passesID				= true;
-	passesSIP = true;
         break;
       case muonID::muonPtEtaIsoTrackerOnly:
         passesKinematics		= ((iMuon.pt >= minTightMuonPt) && (fabs(iMuon.eta) <= maxTightMuonAbsEta));
         passesIso				= (GetMuonRelIso(iMuon) < 0.120);
         isPFMuon				= true;
         passesTrackerID	        = ((iMuon.isGlobalMuon==1)
-                                   && (iMuon.normalizedChi2 < 10) && (fabs(iMuon.correctedD0Vertex) < 0.2) && (fabs(iMuon.dVzPVz) < 0.5) 
+                                   && (iMuon.normalizedChi2 < 10) && (fabs(iMuon.correctedD0Vertex) < 0.2) && (fabs(iMuon.dVzPVz) < 0.5)
                                    && (iMuon.numberOfLayersWithMeasurement > 5 ) && (iMuon.numberOfValidMuonHits > 0)
                                    && (iMuon.numberOfValidPixelHits > 0) && (iMuon.numberOfMatchedStations > 1));
-        
         passesID				= passesTrackerID;
-	passesSIP = true;
         break;
       }
 	}// End of 2012 era
@@ -1634,7 +1613,7 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
       assert (era == "either 2012_52x, 2012_53x, or 2011");
     }
 
-	return (passesKinematics && passesIso && passesID && passesSIP);
+	return (passesKinematics && passesIso && passesID);
 
 }
 
@@ -1991,7 +1970,7 @@ BNmuonCollection BEANhelper::GetSelectedMuons(const BNmuonCollection& iMuons, co
 	CheckSetUp();
 	BNmuonCollection result;
 	for( BNmuonCollection::const_iterator Muon = iMuons.begin(); Muon != iMuons.end(); ++Muon ){
-      if(IsGoodMuon((*Muon), iMuonID, iJets)){ result.push_back(*Muon); }
+      if(IsGoodMuon((*Muon), iMuonID)){ result.push_back(*Muon); }
 	}
 	return result;
 }
@@ -2004,9 +1983,9 @@ bool BEANhelper::IsLooseElectron(const BNelectron& iElectron){ return IsGoodElec
 
 bool BEANhelper::IsTightElectron(const BNelectron& iElectron){ return IsGoodElectron(iElectron, electronID::electronTight); }
 
-bool BEANhelper::IsSideElectronLooseMVA(const BNelectron& iElectron, const BNjetCollection* iJets){ return IsGoodElectron(iElectron, electronID::electronSideLooseMVA, iJets); }
+bool BEANhelper::IsSideElectronLooseMVA(const BNelectron& iElectron){ return IsGoodElectron(iElectron, electronID::electronSideLooseMVA); }
 
-bool BEANhelper::IsSideElectronTightMVA(const BNelectron& iElectron, const BNjetCollection* iJets){ return IsGoodElectron(iElectron, electronID::electronSideTightMVA, iJets); }
+bool BEANhelper::IsSideElectronTightMVA(const BNelectron& iElectron){ return IsGoodElectron(iElectron, electronID::electronSideTightMVA); }
 
 float BEANhelper::GetElectronRelIso(const BNelectron& iElectron) const
 {
@@ -2148,12 +2127,11 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 	bool nlost					= ( iElectron.numberOfLostHits<1 );
     bool no_exp_inner_trkr_hits = ( iElectron.numberOfExpectedInnerHits <= 0 );
     bool one_exp_inner_trkr_hits = ( iElectron.numberOfExpectedInnerHits <= 1 );
-    bool SIP_D0_DZ                    = ( fabs(iElectron.IP/iElectron.IPError) < 10.0 && fabs(iElectron.correctedD0Vertex) < 5.0 && fabs(iElectron.correctedDZ) < 10.0 );
-    //    bool SIP                    = ( fabs(iElectron.IP/iElectron.IPError) < 10.0 && fabs(iElectron.correctedD0Vertex) < 0.5 && fabs(iElectron.correctedDZ) < 1.0 );    
+    bool SIP_D0_DZ                    = ( fabs(iElectron.SIP) < 10.0 && fabs(iElectron.correctedD0Vertex) < 5.0 && fabs(iElectron.correctedDZ) < 10.0 );
 //     bool nonTrigMvaID           = ( ( fabs(iElectron.scEta) <= 0.8 && iElectron.mvaNonTrigV0 > 0.5 )
 //                                     || ( (fabs(iElectron.scEta) > 0.8 && fabs(iElectron.scEta) <= 1.479) && iElectron.mvaNonTrigV0 > 0.12 )
 //                                     || ( fabs(iElectron.scEta) > 1.479 && iElectron.mvaNonTrigV0 > 0.6 ) );
-//AW
+
     float mva_regions[6][5] = {{0.0, 10.0, 0.0, 0.8, 0.47},
                                {0.0, 10.0, 0.8 , 1.479, 0.004},
                                {0.0, 10.0, 1.479, 3.0, 0.295},
@@ -2252,24 +2230,16 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 	return false;
 }
 
-float BEANhelper::GetElectronLepMVA(const BNelectron& iElectron, const BNjetCollection* iJets){
+float BEANhelper::GetElectronLepMVA(const BNelectron& iElectron){
   CheckSetUp();
 
-  BNjet iJet = BEANhelper::GetClosestJet(*iJets, iElectron, 100.0);
-  TLorentzVector eleV;
-  TLorentzVector jetV;
-  eleV.SetPxPyPzE(iElectron.px,iElectron.py,iElectron.pz,iElectron.energy);
-  jetV.SetPxPyPzE(iJet.px,iJet.py,iJet.pz,iJet.energy);
-
   varneuRelIso = max(0.0, iElectron.neutralHadronIsoDR04 + iElectron.photonIsoDR04 - 0.5*iElectron.puChargedHadronIsoDR04)/iElectron.pt;
-  //  varneuRelIso = max(0.0, iElectron.neutralHadronIso + iElectron.photonIso - iElectron.AEffDr03*iElectron.rhoPrime)/iElectron.pt;  
+  //  varneuRelIso = max(0.0, iElectron.neutralHadronIso + iElectron.photonIso - iElectron.AEffDr03*iElectron.rhoPrime)/iElectron.pt;
   varchRelIso = iElectron.chargedHadronIso/iElectron.pt;
-  varjetDR_in = min(eleV.DeltaR(jetV),0.5);
-  varjetPtRatio_in = 1.5;
-  if (eleV.DeltaR(jetV) <= 0.5) varjetPtRatio_in = min(iElectron.pt/(iJet.pt),1.5);
-  varjetBTagCSV_in = 0.0;
-  if (eleV.DeltaR(jetV) <= 0.5) varjetBTagCSV_in = max(iJet.btagCombinedSecVertex,0.0);
-  varsip3d = fabs(iElectron.IP/iElectron.IPError);
+  varjetDR_in = iElectron.jetDeltaR;
+  varjetPtRatio_in = iElectron.jetPtRatio;
+  varjetBTagCSV_in = iElectron.jetBTagCSV;
+  varsip3d = fabs(iElectron.SIP);
   varmvaId = iElectron.mvaNonTrigV0;
   //  varmvaId = iElectron.mva;
   varinnerHits = iElectron.numberOfExpectedInnerHits;
@@ -2315,7 +2285,7 @@ float BEANhelper::GetElectronLepMVA(const BNelectron& iElectron, const BNjetColl
 
 
 // Return whether or not electron passes cuts
-bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::electronID iElectronID, const BNjetCollection* iJets){
+bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::electronID iElectronID){
 	CheckSetUp();
 
 	// Set default kinematic thresholds
@@ -2397,13 +2367,13 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
       case electronID::electronSideLooseMVA:
         passesKinematics    = ((iElectron.pt >= minSideElectronPt) && (fabs(iElectron.eta) <= maxSideElectronAbsEta));
         passesIso           = (GetElectronRelIso(iElectron) < 0.400);
-        passesLooseMVA      = (GetElectronLepMVA(iElectron,iJets) > -0.3);
+        passesLooseMVA      = (GetElectronLepMVA(iElectron) > -0.3);
         passesID            = (GetElectronIDresult(iElectron, iElectronID) && passesLooseMVA);
         break;
       case electronID::electronSideTightMVA:
         passesKinematics    = ((iElectron.pt >= minSideElectronPt) && (fabs(iElectron.eta) <= maxSideElectronAbsEta));
         passesIso           = (GetElectronRelIso(iElectron) < 0.400);
-        passesTightMVA      = (GetElectronLepMVA(iElectron,iJets) > 0.7);
+        passesTightMVA      = (GetElectronLepMVA(iElectron) > 0.7);
         passesID            = (GetElectronIDresult(iElectron, iElectronID) && passesTightMVA);
         break;
 
@@ -2432,13 +2402,13 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
       case electronID::electronSideLooseMVA:
         passesKinematics    = ((iElectron.pt >= minSideElectronPt) && (fabs(iElectron.eta) <= maxSideElectronAbsEta));
         passesIso           = (GetDBCorrectedRelIsoDR04(iElectron, dBeta_factor) < 0.400);
-        passesLooseMVA      = (GetElectronLepMVA(iElectron,iJets) > -0.3);
+        passesLooseMVA      = (GetElectronLepMVA(iElectron) > -0.3);
         passesID            = (GetElectronIDresult(iElectron, iElectronID) && passesLooseMVA);
         break;
       case electronID::electronSideTightMVA:
         passesKinematics    = ((iElectron.pt >= minSideElectronPt) && (fabs(iElectron.eta) <= maxSideElectronAbsEta));
         passesIso           = (GetDBCorrectedRelIsoDR04(iElectron, dBeta_factor) < 0.400);
-        passesTightMVA      = (GetElectronLepMVA(iElectron,iJets) > 0.7);
+        passesTightMVA      = (GetElectronLepMVA(iElectron) > 0.7);
         passesID            = (GetElectronIDresult(iElectron, iElectronID) && passesTightMVA);
         break;
 
@@ -2448,7 +2418,7 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
         passesIso			= (GetElectronRelIso(iElectron) < 0.200);
         passesID			= GetElectronIDresult(iElectron, iElectronID);
         break;
-        
+
       case electronID::electronTight:
       case electronID::electronTightMinusTrigPresel:
         passesKinematics	= ((iElectron.pt >= minTightElectronPt) && (fabs(iElectron.eta) <= maxTightElectronAbsEta) && (!inCrack));
@@ -2466,11 +2436,11 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
 }
 
 // Return collection with objects passing cuts
-BNelectronCollection BEANhelper::GetSelectedElectrons(const BNelectronCollection& iElectrons, const electronID::electronID iElectronID, const BNjetCollection* iJets){
+BNelectronCollection BEANhelper::GetSelectedElectrons(const BNelectronCollection& iElectrons, const electronID::electronID iElectronID){
 	CheckSetUp();
 	BNelectronCollection result;
 	for( BNelectronCollection::const_iterator Electron = iElectrons.begin(); Electron != iElectrons.end(); ++Electron ){
-      if(IsGoodElectron((*Electron), iElectronID, iJets)){ result.push_back(*Electron); }
+      if(IsGoodElectron((*Electron), iElectronID)){ result.push_back(*Electron); }
 	}
 	return result;
 }

@@ -6,6 +6,7 @@
 struct BNlepton {
   explicit BNlepton(double v, int c, int e=0, int m=0) :
     energy(v), et(v), pt(v), px(v), py(v), pz(v), phi(v), eta(v), theta(v),
+    jetDeltaR(v), jetPtRatio(v), jetBTagCSV(v),
     trackIso(v), ecalIso(v), hcalIso(v), caloIso(v), trackIsoDR03(v),
     ecalIsoDR03(v), hcalIsoDR03(v), caloIsoDR03(v), genET(v), genPT(v),
     genPhi(v), genEta(v), genMotherET(v), genMotherPT(v), genMotherPhi(v),
@@ -17,14 +18,15 @@ struct BNlepton {
     neutralHadronIsoDR03(v), photonIsoDR03(v), puChargedHadronIsoDR03(v),
     chargedHadronIsoDR04(v), neutralHadronIsoDR04(v), photonIsoDR04(v),
     puChargedHadronIsoDR04(v), rhoPrime(v), AEffDr03(v), AEffDr04(v),
-    IP(v), IPError(v), isElectron(e), isMuon(m), charge(c), tkCharge(c), genId(c),
+    IP(v), IPError(v), SIP(v), isElectron(e), isMuon(m), charge(c), tkCharge(c), genId(c),
     genCharge(c), genNumberOfMothers(c), genMotherId(c),
     genMotherCharge(c), genMother0Id(c), genMother1Id(c),
     genGrandMother00Id(c), genGrandMother01Id(c), genGrandMother10Id(c),
-    genGrandMother11Id(c) {};
+    genGrandMother11Id(c), mcMatchID(c), mcMatchAny(c) {};
 
   BNlepton(int e=0, int m=0) :
     energy(-99), et(-99), pt(-99), px(-99), py(-99), pz(-99), phi(-99),
+    jetDeltaR(-99), jetPtRatio(-99), jetBTagCSV(-99),
     eta(-99), theta(-99), trackIso(-99), ecalIso(-99), hcalIso(-99),
     caloIso(-99), trackIsoDR03(-99), ecalIsoDR03(-99), hcalIsoDR03(-99),
     caloIsoDR03(-99), genET(-99), genPT(-99), genPhi(-99), genEta(-99),
@@ -38,15 +40,16 @@ struct BNlepton {
     photonIsoDR03(-99), puChargedHadronIsoDR03(-99),
     chargedHadronIsoDR04(-99), neutralHadronIsoDR04(-99),
     photonIsoDR04(-99), puChargedHadronIsoDR04(-99), rhoPrime(-99),
-    AEffDr03(-99), AEffDr04(-99), IP(-99), IPError(-99), isElectron(e),
+    AEffDr03(-99), AEffDr04(-99), IP(-99), IPError(-99), SIP(-99), isElectron(e),
     isMuon(m), charge(-99), tkCharge(-99), genId(-99), genCharge(-99),
     genNumberOfMothers(-99), genMotherId(-99), genMotherCharge(-99),
     genMother0Id(-99), genMother1Id(-99), genGrandMother00Id(-99),
     genGrandMother01Id(-99), genGrandMother10Id(-99),
-    genGrandMother11Id(-99) {};
+    genGrandMother11Id(-99), mcMatchID(-99), mcMatchAny(-99)  {};
 
   double energy, et, pt, px, py, pz;
   double phi, eta, theta;
+  double jetDeltaR, jetPtRatio, jetBTagCSV;
   double trackIso, ecalIso, hcalIso, caloIso, trackIsoDR03, ecalIsoDR03, hcalIsoDR03, caloIsoDR03;
   double genET, genPT, genPhi, genEta, genMotherET, genMotherPT, genMotherPhi, genMotherEta;
   double vx, vy, vz;
@@ -57,13 +60,14 @@ struct BNlepton {
   double chargedHadronIsoDR04, neutralHadronIsoDR04, photonIsoDR04, puChargedHadronIsoDR04;
   double rhoPrime;
   double AEffDr03, AEffDr04;
-  double IP, IPError;
+  double IP, IPError, SIP;
 
   int isElectron, isMuon;
   int charge, tkCharge;
   int genId, genCharge, genNumberOfMothers;
   int genMotherId, genMotherCharge, genMother0Id, genMother1Id;
   int genGrandMother00Id, genGrandMother01Id, genGrandMother10Id, genGrandMother11Id;
+  int mcMatchID, mcMatchAny;
 };
 
 #endif

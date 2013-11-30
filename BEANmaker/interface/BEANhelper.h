@@ -177,17 +177,17 @@ class BEANhelper{
 
 		// Electrons
 		bool IsSideElectron(const BNelectron&);
-		bool IsSideElectronLooseMVA(const BNelectron&, const BNjetCollection* = 0);
-		bool IsSideElectronTightMVA(const BNelectron&, const BNjetCollection* = 0);
+		bool IsSideElectronLooseMVA(const BNelectron&);
+		bool IsSideElectronTightMVA(const BNelectron&);
 		bool IsLooseElectron(const BNelectron&);
 		bool IsTightElectron(const BNelectron&);
 		float GetElectronRelIso(const BNelectron&) const;
 		float GetElectronSF(const BNelectron&, const electronID::electronID e = electronID::electronTight ) const;
 		float GetDoubleElectronTriggerSF (const BNelectron&, const BNelectron&);
 		bool GetElectronIDresult(const BNelectron& iElectron, const electronID::electronID) const;
-		bool IsGoodElectron(const BNelectron&, const electronID::electronID, const BNjetCollection* = 0);
-		BNelectronCollection GetSelectedElectrons(const BNelectronCollection&, const electronID::electronID, const BNjetCollection* = 0);
-		float GetElectronLepMVA( const BNelectron&, const BNjetCollection* = 0);
+		bool IsGoodElectron(const BNelectron&, const electronID::electronID);
+		BNelectronCollection GetSelectedElectrons(const BNelectronCollection&, const electronID::electronID);
+		float GetElectronLepMVA(const BNelectron&);
 
 		// General lepton functions
 		float GetDBCorrectedRelIsoDR04(const BNlepton& iLepton, const float& dBeta_factor) const;
