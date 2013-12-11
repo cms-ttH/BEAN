@@ -25,9 +25,9 @@ struct BNlepton {
     genGrandMother11Id(c), mcMatchID(c), mcMatchAny(c) {};
 
   BNlepton(int e=0, int m=0) :
-    energy(-99), et(-99), pt(-99), px(-99), py(-99), pz(-99), phi(-99),
+    energy(-99), et(-99), pt(-99), px(-99), py(-99), pz(-99), phi(-99), eta(-99), theta(-99), 
     jetDeltaR(-99), jetPtRatio(-99), jetBTagCSV(-99),
-    eta(-99), theta(-99), trackIso(-99), ecalIso(-99), hcalIso(-99),
+    trackIso(-99), ecalIso(-99), hcalIso(-99),
     caloIso(-99), trackIsoDR03(-99), ecalIsoDR03(-99), hcalIsoDR03(-99),
     caloIsoDR03(-99), genET(-99), genPT(-99), genPhi(-99), genEta(-99),
     genMotherET(-99), genMotherPT(-99), genMotherPhi(-99),
