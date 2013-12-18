@@ -41,8 +41,30 @@ BEANhelper::BEANhelper(){
     for( int iSys=0; iSys<5; iSys++ ){
       for( int iPt=0; iPt<5; iPt++ ) c_csv_wgt_hf[iSys][iPt] = NULL;
     }
+
+    for( int iPt=0; iPt<5; iPt++ ) {
+      for( int iEta=0; iEta<3; iEta++ ) h_csv_wgt_lf_negTag[iPt][iEta] = NULL;
+    }
+    
     f_CSVwgt_HF = NULL;
     f_CSVwgt_LF = NULL;
+
+    //negTag
+    f_CSVwgt_LF_0_0 = NULL;
+    f_CSVwgt_LF_0_1 = NULL;
+    f_CSVwgt_LF_0_2 = NULL;
+    f_CSVwgt_LF_0_3 = NULL;
+    f_CSVwgt_LF_0_4 = NULL;
+    f_CSVwgt_LF_1_0 = NULL;
+    f_CSVwgt_LF_1_1 = NULL;
+    f_CSVwgt_LF_1_2 = NULL;
+    f_CSVwgt_LF_1_3 = NULL;
+    f_CSVwgt_LF_1_4 = NULL;
+    f_CSVwgt_LF_2_0 = NULL;
+    f_CSVwgt_LF_2_1 = NULL;
+    f_CSVwgt_LF_2_2 = NULL;
+    f_CSVwgt_LF_2_3 = NULL;
+    f_CSVwgt_LF_2_4 = NULL;
 
 	// CSV reshaping
 	sh_				= NULL;
@@ -112,6 +134,11 @@ BEANhelper::~BEANhelper(){
     for( int iSys=0; iSys<5; iSys++ ){
       for( int iPt=0; iPt<5; iPt++ ){ if(c_csv_wgt_hf[iSys][iPt] != NULL){ delete c_csv_wgt_hf[iSys][iPt]; c_csv_wgt_hf[iSys][iPt] = NULL;} }
     }
+    for( int iPt=0; iPt<5; iPt++ ){
+      for( int iEta=0; iEta<3; iEta++ ){
+        if(h_csv_wgt_lf_negTag[iPt][iEta] != NULL){ delete h_csv_wgt_lf_negTag[iPt][iEta]; h_csv_wgt_lf_negTag[iPt][iEta] = NULL;}
+      }
+    }
     
 	// CSV reshaping
 	if(sh_ != NULL){ delete sh_; sh_ = NULL; }
@@ -125,6 +152,24 @@ BEANhelper::~BEANhelper(){
 	if(puFile != NULL){ puFile->Close(); puFile = NULL; }
 	if(f_CSVwgt_HF != NULL){ f_CSVwgt_HF->Close(); f_CSVwgt_HF = NULL; }
 	if(f_CSVwgt_LF != NULL){ f_CSVwgt_LF->Close(); f_CSVwgt_LF = NULL; }
+
+    //negTag
+	if(f_CSVwgt_LF_0_0 != NULL){ f_CSVwgt_LF_0_0->Close(); f_CSVwgt_LF_0_0 = NULL; }
+	if(f_CSVwgt_LF_0_1 != NULL){ f_CSVwgt_LF_0_1->Close(); f_CSVwgt_LF_0_1 = NULL; }
+	if(f_CSVwgt_LF_0_2 != NULL){ f_CSVwgt_LF_0_2->Close(); f_CSVwgt_LF_0_2 = NULL; }
+	if(f_CSVwgt_LF_0_3 != NULL){ f_CSVwgt_LF_0_3->Close(); f_CSVwgt_LF_0_3 = NULL; }
+	if(f_CSVwgt_LF_0_4 != NULL){ f_CSVwgt_LF_0_4->Close(); f_CSVwgt_LF_0_4 = NULL; }
+	if(f_CSVwgt_LF_1_0 != NULL){ f_CSVwgt_LF_1_0->Close(); f_CSVwgt_LF_1_0 = NULL; }
+	if(f_CSVwgt_LF_1_1 != NULL){ f_CSVwgt_LF_1_1->Close(); f_CSVwgt_LF_1_1 = NULL; }
+	if(f_CSVwgt_LF_1_2 != NULL){ f_CSVwgt_LF_1_2->Close(); f_CSVwgt_LF_1_2 = NULL; }
+	if(f_CSVwgt_LF_1_3 != NULL){ f_CSVwgt_LF_1_3->Close(); f_CSVwgt_LF_1_3 = NULL; }
+	if(f_CSVwgt_LF_1_4 != NULL){ f_CSVwgt_LF_1_4->Close(); f_CSVwgt_LF_1_4 = NULL; }
+	if(f_CSVwgt_LF_2_0 != NULL){ f_CSVwgt_LF_2_0->Close(); f_CSVwgt_LF_2_0 = NULL; }
+	if(f_CSVwgt_LF_2_1 != NULL){ f_CSVwgt_LF_2_1->Close(); f_CSVwgt_LF_2_1 = NULL; }
+	if(f_CSVwgt_LF_2_2 != NULL){ f_CSVwgt_LF_2_2->Close(); f_CSVwgt_LF_2_2 = NULL; }
+	if(f_CSVwgt_LF_2_3 != NULL){ f_CSVwgt_LF_2_3->Close(); f_CSVwgt_LF_2_3 = NULL; }
+	if(f_CSVwgt_LF_2_4 != NULL){ f_CSVwgt_LF_2_4->Close(); f_CSVwgt_LF_2_4 = NULL; }
+    
 
     if(mu_reader_high_b != NULL){ delete mu_reader_high_b; mu_reader_high_b = NULL; }
     if(mu_reader_high_e != NULL){ delete mu_reader_high_e; mu_reader_high_e = NULL; }
@@ -166,6 +211,9 @@ void BEANhelper::SetUp(string iEra, int iSampleNumber,  const analysisType::anal
 
 	// Setup CSV reweighting
 	SetUpCSVreweighting();
+
+	// Setup CSV reweighting
+	SetUpCSVreweighting_negTag();
 
 	// Setup CSV reshaping
 	if(reshapeCSV) SetUpCSVreshaping();
@@ -510,6 +558,49 @@ void BEANhelper::SetUpCSVreweighting(){
 
 }
 
+// Set up CSV reshaping
+void BEANhelper::SetUpCSVreweighting_negTag(){
+
+  // Do not set it up if we're running on collision data
+  if(isData){ return; }
+
+  f_CSVwgt_LF_0_0 = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/negTag/CSVL_0_0to0_8_0030to0040_ABCD.root").c_str());
+  f_CSVwgt_LF_0_1 = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/negTag/CSVL_0_0to0_8_0040to0060_ABCD.root").c_str());
+  f_CSVwgt_LF_0_2 = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/negTag/CSVL_0_0to0_8_0060to0100_ABCD.root").c_str());
+  f_CSVwgt_LF_0_3 = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/negTag/CSVL_0_0to0_8_0100to0160_ABCD.root").c_str());
+  f_CSVwgt_LF_0_4 = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/negTag/CSVL_0_0to0_8_0160to1000_ABCD.root").c_str());
+  f_CSVwgt_LF_1_0 = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/negTag/CSVL_0_8to1_6_0030to0040_ABCD.root").c_str());
+  f_CSVwgt_LF_1_1 = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/negTag/CSVL_0_8to1_6_0040to0060_ABCD.root").c_str());
+  f_CSVwgt_LF_1_2 = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/negTag/CSVL_0_8to1_6_0060to0100_ABCD.root").c_str());
+  f_CSVwgt_LF_1_3 = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/negTag/CSVL_0_8to1_6_0100to0160_ABCD.root").c_str());
+  f_CSVwgt_LF_1_4 = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/negTag/CSVL_0_8to1_6_0160to1000_ABCD.root").c_str());
+  f_CSVwgt_LF_2_0 = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/negTag/CSVL_1_6to2_4_0030to0040_ABCD.root").c_str());
+  f_CSVwgt_LF_2_1 = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/negTag/CSVL_1_6to2_4_0040to0060_ABCD.root").c_str());
+  f_CSVwgt_LF_2_2 = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/negTag/CSVL_1_6to2_4_0060to0100_ABCD.root").c_str());
+  f_CSVwgt_LF_2_3 = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/negTag/CSVL_1_6to2_4_0100to0160_ABCD.root").c_str());
+  f_CSVwgt_LF_2_4 = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/negTag/CSVL_1_6to2_4_0160to1000_ABCD.root").c_str());
+
+  for( int iPt=0; iPt<5; iPt++ ){
+    for( int iEta=0; iEta<3; iEta++ ){
+      if (iEta == 0 && iPt == 0) h_csv_wgt_lf_negTag[iPt][iEta] = (TH1D*)f_CSVwgt_LF_0_0->Get("cSF");
+      if (iEta == 0 && iPt == 1) h_csv_wgt_lf_negTag[iPt][iEta] = (TH1D*)f_CSVwgt_LF_0_1->Get("cSF");
+      if (iEta == 0 && iPt == 2) h_csv_wgt_lf_negTag[iPt][iEta] = (TH1D*)f_CSVwgt_LF_0_2->Get("cSF");
+      if (iEta == 0 && iPt == 3) h_csv_wgt_lf_negTag[iPt][iEta] = (TH1D*)f_CSVwgt_LF_0_3->Get("cSF");
+      if (iEta == 0 && iPt == 4) h_csv_wgt_lf_negTag[iPt][iEta] = (TH1D*)f_CSVwgt_LF_0_4->Get("cSF");
+      if (iEta == 1 && iPt == 0) h_csv_wgt_lf_negTag[iPt][iEta] = (TH1D*)f_CSVwgt_LF_1_0->Get("cSF");
+      if (iEta == 1 && iPt == 1) h_csv_wgt_lf_negTag[iPt][iEta] = (TH1D*)f_CSVwgt_LF_1_1->Get("cSF");
+      if (iEta == 1 && iPt == 2) h_csv_wgt_lf_negTag[iPt][iEta] = (TH1D*)f_CSVwgt_LF_1_2->Get("cSF");
+      if (iEta == 1 && iPt == 3) h_csv_wgt_lf_negTag[iPt][iEta] = (TH1D*)f_CSVwgt_LF_1_3->Get("cSF");
+      if (iEta == 1 && iPt == 4) h_csv_wgt_lf_negTag[iPt][iEta] = (TH1D*)f_CSVwgt_LF_1_4->Get("cSF");
+      if (iEta == 2 && iPt == 0) h_csv_wgt_lf_negTag[iPt][iEta] = (TH1D*)f_CSVwgt_LF_2_0->Get("cSF");
+      if (iEta == 2 && iPt == 1) h_csv_wgt_lf_negTag[iPt][iEta] = (TH1D*)f_CSVwgt_LF_2_1->Get("cSF");
+      if (iEta == 2 && iPt == 2) h_csv_wgt_lf_negTag[iPt][iEta] = (TH1D*)f_CSVwgt_LF_2_2->Get("cSF");
+      if (iEta == 2 && iPt == 3) h_csv_wgt_lf_negTag[iPt][iEta] = (TH1D*)f_CSVwgt_LF_2_3->Get("cSF");
+      if (iEta == 2 && iPt == 4) h_csv_wgt_lf_negTag[iPt][iEta] = (TH1D*)f_CSVwgt_LF_2_4->Get("cSF");
+    }
+  }
+  
+}
 
 // Set up CSV reshaping
 void BEANhelper::SetUpCSVreshaping(){
@@ -3025,6 +3116,7 @@ double BEANhelper::GetCSVweight(const BNjetCollection& iJets, const sysType::sys
   double csvWgthf = 1.;
   double csvWgtC  = 1.;
   double csvWgtlf = 1.;
+  double csvWgtlf_negTag = 1.;
 
   for( BNjetCollection::const_iterator iJet = iJets.begin(); iJet != iJets.end(); ++iJet ){ 
 
@@ -3074,10 +3166,49 @@ double BEANhelper::GetCSVweight(const BNjetCollection& iJets, const sysType::sys
     }
   }
 
-  //double csvWgtTotal = csvWgthf* csvWgtlf;
   double csvWgtTotal = csvWgthf * csvWgtC * csvWgtlf;
 
   return csvWgtTotal;
+}
+
+// === Jet CSV reweighting === //
+double BEANhelper::GetCSVweight_negTag(const BNjetCollection& iJets){
+  if (isData) return 1.0;
+
+  CheckSetUp();
+  // IMPORTANT! iJets is the *SELECTED* jet collection which you use for your analysis
+
+  double csvWgtlf_negTag = 1.;
+
+  for( BNjetCollection::const_iterator iJet = iJets.begin(); iJet != iJets.end(); ++iJet ){ 
+
+    double csv_25 = (iJet->btagCombinedSecVertex)*25;
+    double jetPt = std::max(iJet->pt, 29.99);
+    double jetAbsEta = fabs( iJet->eta );
+    int flavor = abs( iJet->flavour );
+
+    int iPt = -1; int iEta = -1;
+    if (jetPt >=29.99 && jetPt<40) iPt = 0;
+    else if (jetPt >=40 && jetPt<60) iPt = 1;
+    else if (jetPt >=60 && jetPt<100) iPt = 2;
+    else if (jetPt >=100 && jetPt<160) iPt = 3;
+    else if (jetPt >=160 && jetPt<10000) iPt = 4;
+
+    if (jetAbsEta >=0 &&  jetAbsEta<0.8) iEta = 0;
+    else if ( jetAbsEta>=0.8 && jetAbsEta<1.6) iEta = 1;
+    else if ( jetAbsEta>=1.6 && jetAbsEta<2.41) iEta = 2;
+
+    if (iPt < 0 || iEta < 0) std::cout << "Error, couldn't find Pt, Eta bins for this b-flavor jet, jetPt = " << jetPt << ", jetAbsEta = " << jetAbsEta << std::endl;
+
+    if (abs(flavor) != 5 && abs(flavor) != 4){
+      int useCSVBin_negTag = (csv_25>=0.) ? h_csv_wgt_lf_negTag[iPt][iEta]->FindBin(csv_25) : 1;
+      double iCSVWgtLF_negTag = h_csv_wgt_lf_negTag[iPt][iEta]->GetBinContent(useCSVBin_negTag);
+      if( iCSVWgtLF_negTag!=0 ) csvWgtlf_negTag *= iCSVWgtLF_negTag;
+      
+    }
+  }
+
+  return csvWgtlf_negTag;
 }
 
 // === Jet CSV reweighting: return lfSF and hfSF separately === //

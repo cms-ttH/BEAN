@@ -230,6 +230,8 @@ class BEANhelper{
 		double GetCSVweight(const BNjetCollection&, const sysType::sysType iSysType=sysType::NA);
 		vdouble GetCSVweights(const BNjetCollection&, const sysType::sysType iSysType=sysType::NA);
 
+		double GetCSVweight_negTag(const BNjetCollection&);
+  
 		// Top PT reweighting
 		double TopPtWeight(double);
 		double GetTopPtweight(const BNmcparticleCollection&);
@@ -284,6 +286,7 @@ class BEANhelper{
 		inline void CheckSetUp() const { if(!isSetUp){ ThrowFatalError("BEANhelper not yet set up."); } };
 		void SetUpPUreweighing(string const);
 		void SetUpCSVreweighting();
+		void SetUpCSVreweighting_negTag();
 		void SetUpCSVreshaping();
 		void SetUpJetSF();
 		void SetUpLeptonSF();
@@ -317,7 +320,23 @@ class BEANhelper{
 		TFile* f_CSVwgt_HF;
 		TFile* f_CSVwgt_LF;
 
-
+        //negTag
+        TFile* f_CSVwgt_LF_0_0;
+        TFile* f_CSVwgt_LF_0_1;
+        TFile* f_CSVwgt_LF_0_2;
+        TFile* f_CSVwgt_LF_0_3;
+        TFile* f_CSVwgt_LF_0_4;
+        TFile* f_CSVwgt_LF_1_0;
+        TFile* f_CSVwgt_LF_1_1;
+        TFile* f_CSVwgt_LF_1_2;
+        TFile* f_CSVwgt_LF_1_3;
+        TFile* f_CSVwgt_LF_1_4;
+        TFile* f_CSVwgt_LF_2_0;
+        TFile* f_CSVwgt_LF_2_1;
+        TFile* f_CSVwgt_LF_2_2;
+        TFile* f_CSVwgt_LF_2_3;
+        TFile* f_CSVwgt_LF_2_4;
+  
 		// CSV reshaping
 		CSVreevaluator*	  sh_;
 		CSVreevaluator*	  sh_hfSFUp_;
@@ -374,6 +393,7 @@ class BEANhelper{
 		TH1D* c_csv_wgt_hf[9][5];
 		TH1D* h_csv_wgt_lf[9][3][3];
 
+		TH1D* h_csv_wgt_lf_negTag[5][3];  
 
 		// Old parameters
 		TH2D*			h_b_eff_;
