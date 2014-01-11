@@ -1105,6 +1105,10 @@ float BEANhelper::GetMuonSF( const BNmuon& iMuon, const muonID::muonID inputID )
     SF = h_looseMuonSF->GetBinContent( h_looseMuonSF->FindBin(useEta, usePT) );
     break;
     
+  case muonID::muonNoCuts:
+    SF = 1.0;
+    break;
+    
   }
 
   if (SF < 0.005) {
@@ -1535,6 +1539,11 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
              << "Sorry... we have to crash now" << endl;
         ThrowFatalError("Asked for a loose muon selection in 2011, which is not possible.");
         break;
+      case muonID::muonNoCuts:
+        passesKinematics = true;
+        passesIso = true;
+        passesID = true;
+        break;
 
       }
     }// End of 2011 era
@@ -1606,6 +1615,11 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
                                    && (iMuon.numberOfLayersWithMeasurement > 5 ) && (iMuon.numberOfValidMuonHits > 0)
                                    && (iMuon.numberOfValidPixelHits > 0) && (iMuon.numberOfMatchedStations > 1));
         passesID				= passesTrackerID;
+        break;
+      case muonID::muonNoCuts:
+        passesKinematics = true;
+        passesIso = true;
+        passesID = true;
         break;
       }
 	}// End of 2012 era
@@ -2052,6 +2066,10 @@ float BEANhelper::GetElectronSF(const BNelectron& iElectron, const electronID::e
     SF = h_looseEleSF->GetBinContent(h_looseEleSF->FindBin(useEta, usePT));    
     break;
 
+  case electronID::electronNoCuts:
+    SF = 1.0;
+    break;
+    
   }
 
 //   if ( !isLJ ) {
@@ -2390,6 +2408,11 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
         passesIso			= (GetElectronRelIso(iElectron) < 0.100);
         passesID			= GetElectronIDresult(iElectron, iElectronID);
         break;
+      case electronID::electronNoCuts:
+        passesKinematics = true;
+        passesIso = true;
+        passesID = true;
+        break;
       }
     } // End of 2011 era
     else if (era=="2012_52x" || era=="2012_53x") {
@@ -2424,6 +2447,11 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
         passesKinematics	= ((iElectron.pt >= minTightElectronPt) && (fabs(iElectron.eta) <= maxTightElectronAbsEta) && (!inCrack));
         passesIso			= (GetElectronRelIso(iElectron) < 0.100);
         passesID			= GetElectronIDresult(iElectron, iElectronID);
+        break;
+      case electronID::electronNoCuts:
+        passesKinematics = true;
+        passesIso = true;
+        passesID = true;
         break;
       }
 	} // End of 2012 era
