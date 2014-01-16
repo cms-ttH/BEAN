@@ -43,8 +43,13 @@ To use this package, perform the following steps (using release 5.3.8, patch 1):
     cvs co -r V01-04-23 RecoTauTag/RecoTau
     cvs co -r V01-04-10 RecoTauTag/Configuration
     cvs co -r V00-04-00 CondFormats/EgammaObjects
-    cvs co -r V00-02-10 -d CMGTools/External UserCode/CMG/CMGTools/External
-
+    git clone https://github.com/latinos/UserCode-CMG-CMGTools-External
+    mkdir CMGTools
+    mkdir CMGTools/External
+    cp -r UserCode-CMG-CMGTools-External/* CMGTools/External/
+    rm -rf UserCode-CMG-CMGTools-External/
+    
+    
     # Our software
     git clone https://github.com/cms-ttH/BEAN.git
 
