@@ -28,7 +28,11 @@ To use this package, perform the following steps (using release 5.3.8, patch 1):
     cvs co -r V00-00-07    RecoMET/METFilters
     cvs co -r V15-01-11    RecoParticleFlow/PFProducer
     cvs co -r V02-02-00    RecoVertex/AdaptiveVertexFinder
-    cvs co -d Muon/MuonAnalysisTools UserCode/sixie/Muon/MuonAnalysisTools
+    git clone https://github.com/latinos/UserCode-sixie-Muon-MuonAnalysisTools
+    mkdir Muon
+    mkdir Muon/MuonAnalysisTools/
+    cp -r UserCode-sixie-Muon-MuonAnalysisTools/* Muon/MuonAnalysisTools/
+    rm -rf UserCode-sixie-Muon-MuonAnalysisTools/
     cvs co -r V00-00-13 -d EGamma/EGammaAnalysisTools UserCode/EGamma/EGammaAnalysisTools
     cd EGamma/EGammaAnalysisTools/data
     cat download.url | xargs wget
