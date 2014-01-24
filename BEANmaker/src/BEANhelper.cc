@@ -1389,8 +1389,8 @@ float BEANhelper::GetMuonLepMVA(const BNmuon& iMuon, const BNjetCollection* iJet
   varchRelIso = iMuon.chargedHadronIsoDR04/iMuon.pt;
   //  varchRelIso = iMuon.pfIsoR04SumChargedHadronPt/iMuon.pt; 
   varjetDR_in = iMuon.jetDeltaR;
-  varjetPtRatio_in = iMuon.jetPtRatio;
-  varjetBTagCSV_in = iMuon.jetBTagCSV;
+  varjetPtRatio_in = min(iMuon.jetPtRatio, 1.5);
+  varjetBTagCSV_in = max(iMuon.jetBTagCSV, 0.0);
   varsip3d = fabs(iMuon.SIP);
   vardxy = log(fabs(iMuon.correctedD0Vertex));
   vardz = log(fabs(iMuon.correctedDZ));
@@ -2255,8 +2255,8 @@ float BEANhelper::GetElectronLepMVA(const BNelectron& iElectron){
   //  varneuRelIso = max(0.0, iElectron.neutralHadronIso + iElectron.photonIso - iElectron.AEffDr03*iElectron.rhoPrime)/iElectron.pt;
   varchRelIso = iElectron.chargedHadronIso/iElectron.pt;
   varjetDR_in = iElectron.jetDeltaR;
-  varjetPtRatio_in = iElectron.jetPtRatio;
-  varjetBTagCSV_in = iElectron.jetBTagCSV;
+  varjetPtRatio_in = min(iElectron.jetPtRatio, 1.5);
+  varjetBTagCSV_in = max(iElectron.jetBTagCSV, 0.0);
   varsip3d = fabs(iElectron.SIP);
   varmvaId = iElectron.mvaNonTrigV0;
   //  varmvaId = iElectron.mva;
