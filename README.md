@@ -28,11 +28,10 @@ To use this package, perform the following steps (using release 5.3.8, patch 1):
     cvs co -r V00-00-07    RecoMET/METFilters
     cvs co -r V15-01-11    RecoParticleFlow/PFProducer
     cvs co -r V02-02-00    RecoVertex/AdaptiveVertexFinder
-    git clone https://github.com/latinos/UserCode-sixie-Muon-MuonAnalysisTools
+
     mkdir Muon
-    mkdir Muon/MuonAnalysisTools/
-    cp -r UserCode-sixie-Muon-MuonAnalysisTools/* Muon/MuonAnalysisTools/
-    rm -rf UserCode-sixie-Muon-MuonAnalysisTools/
+    git clone https://github.com/latinos/UserCode-sixie-Muon-MuonAnalysisTools Muon/MuonAnalysisTools
+
     cvs co -r V00-00-13 -d EGamma/EGammaAnalysisTools UserCode/EGamma/EGammaAnalysisTools
     cd EGamma/EGammaAnalysisTools/data
     cat download.url | xargs wget
@@ -43,13 +42,10 @@ To use this package, perform the following steps (using release 5.3.8, patch 1):
     cvs co -r V01-04-23 RecoTauTag/RecoTau
     cvs co -r V01-04-10 RecoTauTag/Configuration
     cvs co -r V00-04-00 CondFormats/EgammaObjects
-    git clone https://github.com/latinos/UserCode-CMG-CMGTools-External
+
     mkdir CMGTools
-    mkdir CMGTools/External
-    cp -r UserCode-CMG-CMGTools-External/* CMGTools/External/
-    rm -rf UserCode-CMG-CMGTools-External/
-    
-    
+    git clone https://github.com/latinos/UserCode-CMG-CMGTools-External CMGTools/External
+
     # Our software
     git clone https://github.com/cms-ttH/BEAN.git
 
