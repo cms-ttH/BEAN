@@ -55,7 +55,7 @@ To use this package, perform the following steps (using release 5.3.8, patch 1):
 This might require an environment set up as described [here](http://wiki.crc.nd.edu/wiki/index.php/NDCMS_SettingUpEnvironment).
 
 As CMS has moved from CVS to git, the recipe above may not work due to problems accessing CVS. The git-only recipe below is under
-construction-- use at your own risk.
+construction (currently broken for BEAN making.)
 
 	cmsrel CMSSW_5_3_14
 	cd CMSSW_5_3_14/src
@@ -63,12 +63,9 @@ construction-- use at your own risk.
 	# from https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideMETRecipe53X
 	git cms-addpkg PhysicsTools/PatAlgos
 	git cms-merge-topic cms-analysis-tools:5_3_14-updateSelectorUtils
-
 	git cms-merge-topic -u TaiSakuma:53X-met-131120-01
 	git clone https://github.com/latinos/UserCode-sixie-Muon-MuonAnalysisTools Muon/MuonAnalysisTools/
-
 	git clone https://github.com/latinos/UserCode-CMG-CMGTools-External CMGTools/External
-
 	git clone https://github.com/h2gglobe/EGammaAnalysisTools.git EGamma/EGammaAnalysisTools
 	git cms-addpkg RecoJets/JetProducers
 	mkdir -p RecoJets/JetProducers/datawget --no-check-certificate -r https://raw2.github.com/h2gglobe/External/master/data/TMVAClassificationCategory_JetID_53X_chs_Dec2012.weights.xml -O RecoJets/JetProducers/data/TMVAClassificationCategory_JetID_53X_chs_Dec2012.weights.xml
