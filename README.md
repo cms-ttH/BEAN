@@ -68,7 +68,8 @@ construction (currently broken for BEAN making.)
 	git clone https://github.com/latinos/UserCode-CMG-CMGTools-External CMGTools/External
 	git clone https://github.com/h2gglobe/EGammaAnalysisTools.git EGamma/EGammaAnalysisTools
 	git cms-addpkg RecoJets/JetProducers
-	mkdir -p RecoJets/JetProducers/datawget --no-check-certificate -r https://raw2.github.com/h2gglobe/External/master/data/TMVAClassificationCategory_JetID_53X_chs_Dec2012.weights.xml -O RecoJets/JetProducers/data/TMVAClassificationCategory_JetID_53X_chs_Dec2012.weights.xml
+	mkdir -p RecoJets/JetProducers/data
+	wget --no-check-certificate -r https://raw2.github.com/h2gglobe/External/master/data/TMVAClassificationCategory_JetID_53X_chs_Dec2012.weights.xml -O RecoJets/JetProducers/data/TMVAClassificationCategory_JetID_53X_chs_Dec2012.weights.xml
 
 	# common ttH software
 	git clone https://github.com/cms-ttH/BEAN.git
