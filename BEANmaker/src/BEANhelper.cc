@@ -2048,6 +2048,7 @@ float BEANhelper::GetElectronSF(const BNelectron& iElectron, const electronID::e
   case electronID::electronTight:
   case electronID::electronTightMinusTrigPresel:
     usePT = std::min (iElectron.pt, 199.0);
+    usePT = std::max( usePT, 15. );    
     useEta = std::min (fabs(iElectron.eta), 2.39);
     // ID*ISO and trigger are split 
     SF = h_ele_SF_->GetBinContent(h_ele_SF_->FindBin(useEta,usePT));
