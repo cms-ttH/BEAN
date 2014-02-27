@@ -4,6 +4,8 @@ More information and instructions are on the [Twiki](https://twiki.cern.ch/twiki
 
 ## Installation
 
+Warning: Make sure to have added the appropriate public ssh key to your GitHub account before proceeding!
+
 To use this package, perform the following steps (using release 5.3.8, patch 1):
 
 	cmsrel CMSSW_5_3_8_patch1
