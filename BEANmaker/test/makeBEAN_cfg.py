@@ -3,7 +3,7 @@ import copy
 import FWCore.ParameterSet.Config as cms
 
 # === Give values to some basic parameters === #
-maxEvents   = -1
+maxEvents   = 2
 reportEvery = 1000
 
 # === Python process === #
@@ -80,6 +80,11 @@ if (jobParams[2] != "data-PR") and (jobParams[2] != "data-RR") and (jobParams[2]
 	print "ERROR: sample type set to '" + jobParams[2] + "' but it can only be 'data-PR', 'data-RR', 'data-RRr', 'MC-bg', 'MC-sigFullSim', or 'MC-sigFastSim'."; sys.exit(1);
 
 sampleNumber	= int(jobParams[3]);
+
+for i in xrange(7):
+	print "JOB PARAM:",i, jobParams[i]
+
+
 if (runOnMC and sampleNumber < 0):
 	print "ERROR: job set to run on MC but sample number set to '" + sampleNumber + "' when it must be positive."; sys.exit(1);
 
@@ -252,7 +257,7 @@ globalTagMC   = 'START53_V7G'
 
 # output file
 outputFile = 'ttH_pat2bean_53x.root'
-
+#outputFile1 = 'outputFile1.root'
 # switch for 'TrigReport'/'TimeReport' at job end
 wantSummary = True
 
@@ -314,6 +319,7 @@ process.maxEvents.input  = maxInputEvents
 process.load( "TopQuarkAnalysis.Configuration.patRefSel_outputModule_cff" )
 # output file name
 process.out.fileName = outputFile
+#process.out.fileName = outputFile1
 # event content
 from PhysicsTools.PatAlgos.patEventContent_cff import patEventContent
 process.out.outputCommands += patEventContent
@@ -1329,31 +1335,31 @@ process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 process.load('Configuration.StandardSequences.Reconstruction_cff')
 
 process.BNproducer = cms.EDProducer('BEANmaker',
-                                    calometTag = cms.InputTag("none"),
+                                    #calometTag = cms.InputTag("none"),
                                     pfmetTag = cms.InputTag("patMETsPFlow"),
-                                    pfmetTag_type1correctedRECO = cms.InputTag("pfType1CorrectedMet"),
-                                    pfmetTag_uncorrectedPF2PAT  = cms.InputTag("patPFMetPFlow"),
-                                    pfmetTag_uncorrectedRECO    = cms.InputTag("pfMETPFlow"),
-                                    tcmetTag = cms.InputTag("none"),
+                                    #pfmetTag_type1correctedRECO = cms.InputTag("pfType1CorrectedMet"),
+                                    #pfmetTag_uncorrectedPF2PAT  = cms.InputTag("patPFMetPFlow"),
+                                    #pfmetTag_uncorrectedRECO    = cms.InputTag("pfMETPFlow"),
+                                    #tcmetTag = cms.InputTag("none"),
                                     eleTag = cms.InputTag("selectedPatElectrons"),
-                                    pfeleTag = cms.InputTag("selectedPatElectronsPFlow"),
-                                    pfeleLooseTag = cms.InputTag("selectedPatElectronsLoosePFlow"),
+                                    #pfeleTag = cms.InputTag("selectedPatElectronsPFlow"),
+                                    #pfeleLooseTag = cms.InputTag("selectedPatElectronsLoosePFlow"),
                                     genParticleTag = cms.InputTag("genParticles"),
-                                    calojetTag = cms.InputTag("none"),
+                                    #calojetTag = cms.InputTag("none"),
                                     pfjetTag = cms.InputTag("selectedPatJetsPFlow"),
-                                    genjetTag = cms.InputTag("ak5GenJets"),
+                                    #genjetTag = cms.InputTag("ak5GenJets"),
                                     muonTag = cms.InputTag("selectedPatMuons"),
-				    muonLooseTag = cms.InputTag("selectedPatMuonsLoose"),
-                                    pfmuonTag = cms.InputTag("selectedPatMuonsPFlow"),
-                                    pfmuonLooseTag = cms.InputTag("selectedPatMuonsLoosePFlow"),
-                                    cocktailmuonTag = cms.InputTag("none"),
-                                    photonTag = cms.InputTag("none"),
+				    #muonLooseTag = cms.InputTag("selectedPatMuonsLoose"),
+                                    #pfmuonTag = cms.InputTag("selectedPatMuonsPFlow"),
+                                    #pfmuonLooseTag = cms.InputTag("selectedPatMuonsLoosePFlow"),
+                                    #cocktailmuonTag = cms.InputTag("none"),
+                                    #photonTag = cms.InputTag("none"),
                                     EBsuperclusterTag = cms.InputTag("correctedHybridSuperClusters"),
                                     EEsuperclusterTag = cms.InputTag("correctedMulti5x5SuperClustersWithPreshower"),
                                     reducedBarrelRecHitCollection = cms.InputTag("reducedEcalRecHitsEB"),
                                     reducedEndcapRecHitCollection = cms.InputTag("reducedEcalRecHitsEE"),
                                     trackTag = cms.InputTag("generalTracks"),
-                                    tauTag = cms.InputTag("selectedPatTaus"),
+                                    #tauTag = cms.InputTag("selectedPatTaus"),
                                     triggerResultsTag = cms.InputTag("TriggerResults::HLT"),
                                     gtSource = cms.InputTag("gtDigis"),
                                     pvTag = cms.InputTag("offlinePrimaryVertices"),
@@ -1630,14 +1636,14 @@ if runPF2PAT:
   pPF += process.BNproducer
   setattr( process, 'p' + postfix, pPF )
   process.out.SelectEvents.SelectEvents.append( 'p' + postfix )
-  process.out.outputCommands = [ 'drop *' ]
+  #process.out.outputCommands = [ 'drop *' ]
   process.out.outputCommands.extend( [ # BEAN Objects
     'keep *_BNproducer_*_*',
     'keep double_kt6PFJets*_rho_*',
-    #'keep *',
+    'keep *',
     ] )
 
 
 
 ## Dump python config if wished
-#outfile = open('dumpedConfig.py','w'); print >> outfile,process.dumpPython(); outfile.close()
+outfile = open('dumpedConfig.py','w'); print >> outfile,process.dumpPython(); outfile.close()
