@@ -15,6 +15,7 @@ class BNleptonCollection : public std::vector<BNlepton*>{
 
 		~BNleptonCollection();
 
+        BNleptonCollection& operator=(const BNleptonCollection& collection);
 		void sort();
 		void push_back(BNelectron*);
 		void push_back(BNmuon*);

@@ -7,6 +7,18 @@ BNleptonCollection::~BNleptonCollection(){
 	for(auto it = begin(); it != end(); ++it){ delete *it; }
 }
 
+BNleptonCollection& BNleptonCollection::operator=(const BNleptonCollection& collection) {
+
+  for (auto it = begin(); it != end(); ++it) { delete *it; }
+  clear();
+
+  for (auto& particle: collection) {
+    this->push_back(particle);
+  }
+
+  return *this;
+}
+
 void BNleptonCollection::sort(){
 	for(BNleptonCollection::iterator it1 = begin(); it1 != end(); ++it1){
 
