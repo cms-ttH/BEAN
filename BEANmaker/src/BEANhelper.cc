@@ -1275,7 +1275,7 @@ float BEANhelper::TestSingleEleTriggerOld ( const BNelectron & iEle) {
 // Return whether or not tau passes cuts
 bool BEANhelper::IsVLooseTau(const BNtau& iTau){ return IsGoodTau(iTau, tauID::tauVLoose); }
 bool BEANhelper::IsLooseTau(const BNtau& iTau){ return IsGoodTau(iTau, tauID::tauLoose); }
-bool BEANhelper::IsMediumTau(const BNtau& iTau){ return IsGoodTau(iTau, tauID::tauLoose); }
+bool BEANhelper::IsMediumTau(const BNtau& iTau){ return IsGoodTau(iTau, tauID::tauMedium); }
 bool BEANhelper::IsTightTau(const BNtau& iTau){ return IsGoodTau(iTau, tauID::tauTight); }
 
 bool BEANhelper::IsGoodTau(const BNtau& iTau, const tauID::tauID iTauID){
