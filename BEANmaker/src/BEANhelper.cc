@@ -2499,7 +2499,7 @@ BEANhelper::GetCleanJets(const BNjetCollection& iJets, const vector<TLorentzVect
 
 BNjetCollection
 BEANhelper::GetCleanJets(const BNjetCollection& jets, const BNleptonCollection& leptons, const float maxDeltaR) {
-	CheckSetUp();
+    CheckSetUp();
     vector<bool> isCleanJet (jets.size(), true);
     BNjetCollection cleanJets;
     int matchIndex;
@@ -2528,7 +2528,45 @@ BEANhelper::GetCleanJets(const BNjetCollection& jets, const BNleptonCollection& 
     return cleanJets;
 }
 
-
+BNjetCollection
+BEANhelper::GetCleanJets_cProj(const BNjetCollection& jets, const BNleptonCollection& leptons, const float maxDeltaR) {
+  CheckSetUp();
+  vector<bool> isCleanJet (jets.size(), true);
+  BNjetCollection cleanJets_collection;
+  BNjetCollection cleanJets;
+  int matchIndex;
+  float minDeltaR;
+  float dR;
+  
+  for (auto& lepton: leptons) {
+    matchIndex = -1;
+    dR = 999.0;
+    minDeltaR = maxDeltaR;
+    for (unsigned i=0; i<jets.size(); i++){
+      dR = reco::deltaR(lepton->eta, lepton->phi, jets.at(i).eta, jets.at(i).phi);
+      if (dR < minDeltaR) {
+	minDeltaR = dR;
+	matchIndex = i;
+      }
+    }
+    //clean closest jet from lepton and return the jet energry if subrracted energy is greater than zer0
+    if (matchIndex != -1 && (jets.at(matchIndex).energy - lepton->energy) > 0){
+      cleanJets.at(matchIndex).energy = jets.at(matchIndex).energy - lepton->energy;
+      cleanJets.at(matchIndex).px = jets.at(matchIndex).px - lepton->px;
+      cleanJets.at(matchIndex).py = jets.at(matchIndex).py - lepton->py;
+      cleanJets.at(matchIndex).pz = jets.at(matchIndex).pz - lepton->pz;
+    }
+    else {
+      isCleanJet.at(matchIndex) = false;
+    }
+  }//end loop over leptons
+  
+  for (unsigned i=0; i<jets.size(); i++) {
+    if (isCleanJet.at(i)) { cleanJets_collection.push_back(cleanJets.at(i)); }
+  }
+  
+  return cleanJets_collection;
+}
 
 unsigned int
 BEANhelper::GetNumCSVbtags(const BNjetCollection& iJets, const char iCSVwp, std::vector<unsigned int>* jet_indices)
