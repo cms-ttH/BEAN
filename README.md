@@ -30,7 +30,7 @@ To use this package, perform the following steps (using release 5.3.8, patch 1):
 	git cms-cvs-history import V00-00-07 RecoMET/METFilters
 	git cms-cvs-history import V15-01-11 RecoParticleFlow/PFProducer
 	git cms-cvs-history import V02-02-00 RecoVertex/AdaptiveVertexFinder
-	git clone https://github.com/latinos/UserCode-sixie-Muon-MuonAnalysisTools Muon/MuonAnalysisTools/
+	git clone git@github.com:latinos/UserCode-sixie-Muon-MuonAnalysisTools Muon/MuonAnalysisTools/
 	git clone https://github.com/latinos/UserCode-EGamma-EGammaAnalysisTools.git EGamma/EGammaAnalysisTools
 	pushd EGamma/EGammaAnalysisTools/
 	git checkout tags/V00-00-08
