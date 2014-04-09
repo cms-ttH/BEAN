@@ -12,7 +12,7 @@ Follow These Steps:
     # Basic third-party packages
     git cms-merge-topic muell149:merged_5_3_11
     git clone https://github.com/latinos/UserCode-CMG-CMGTools-External CMGTools/External  ..notquite correct
-    git clone https://github.com/latinos/UserCode-sixie-Muon-MuonAnalysisTools Muon/MuonAnalysisTools/
+    git clone git@github.com:latinos/UserCode-sixie-Muon-MuonAnalysisTools Muon/MuonAnalysisTools/
     git clone https://github.com/latinos/UserCode-EGamma-EGammaAnalysisTools.git EGamma/EGammaAnalysisTools
     pushd EGamma/EGammaAnalysisTools/
     git checkout tags/V00-00-08
