@@ -11,11 +11,20 @@ Follow These Steps:
 
     # Basic third-party packages
     git cms-merge-topic muell149:merged_5_3_11
-    git clone https://github.com/latinos/UserCode-CMG-CMGTools-External CMGTools/External..notquite correct
+    git clone https://github.com/latinos/UserCode-CMG-CMGTools-External CMGTools/External  ..notquite correct
+    git clone https://github.com/latinos/UserCode-EGamma-EGammaAnalysisTools.git EGamma/EGammaAnalysisTools
+    pushd EGamma/EGammaAnalysisTools/
+    git checkout tags/V00-00-08
+    wget -r http://nd.edu/~abrinke1/ElectronEffectiveArea.h -O interface/ElectronEffectiveArea.h
+    cd data
+    cat download.url | xargs wget
+    popd
+    git cms-addpkg ElectroWeakAnalysis/Utilities
     
 
+
     # Our software
-    git clone https://github.com/cms-ttH/BEAN.git
+    git clone https://github.com/cms-ttH/BEAN.git -b 
 
     # Build
     scram b -j32
