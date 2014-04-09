@@ -12,6 +12,7 @@ Follow These Steps:
     # Basic third-party packages
     git cms-merge-topic muell149:merged_5_3_11
     git clone https://github.com/latinos/UserCode-CMG-CMGTools-External CMGTools/External  ..notquite correct
+    git clone https://github.com/latinos/UserCode-sixie-Muon-MuonAnalysisTools Muon/MuonAnalysisTools/
     git clone https://github.com/latinos/UserCode-EGamma-EGammaAnalysisTools.git EGamma/EGammaAnalysisTools
     pushd EGamma/EGammaAnalysisTools/
     git checkout tags/V00-00-08
@@ -24,7 +25,7 @@ Follow These Steps:
 
 
     # Our software
-    git clone https://github.com/cms-ttH/BEAN.git -b 
+    git clone https://github.com/cms-ttH/BEAN.git -b merged_5_3_11
 
     # Build
     scram b -j32
