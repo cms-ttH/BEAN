@@ -22,7 +22,7 @@ Follow These Steps:
 
     # Our software
     
-    git clone https://github.com/cms-ttH/BEAN.git -b merged_5_3_11
+    git clone https://github.com/cms-ttH/BEAN.git -b charlieProjection
 
     # Build
     scram b -j32
