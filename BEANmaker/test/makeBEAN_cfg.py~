@@ -257,7 +257,7 @@ globalTagMC   = 'START53_V7G'
 
 # output file
 outputFile = 'ttH_pat2bean_53x.root'
-
+#outputFile1 = 'outputFile1.root'
 # switch for 'TrigReport'/'TimeReport' at job end
 wantSummary = True
 
@@ -319,6 +319,7 @@ process.maxEvents.input  = maxInputEvents
 process.load( "TopQuarkAnalysis.Configuration.patRefSel_outputModule_cff" )
 # output file name
 process.out.fileName = outputFile
+#process.out.fileName = outputFile1
 # event content
 from PhysicsTools.PatAlgos.patEventContent_cff import patEventContent
 process.out.outputCommands += patEventContent
