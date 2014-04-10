@@ -11,14 +11,14 @@ Follow These Steps:
     git cms-merge-topic --unsafe muell149:merged_5_3_11
     #the --unsafe option prevents the merge from cloning dependent packages that we actually don't use
     git cms-addpkg AnalysisDataFormats/TopObjects 
-    #CMGTools
+    git clone https://github.com/muell149/UserCode-CMG-CMGTools-External.git CMGTools/External
     git cms-addpkg CondFormats/EgammaObjects
-    #Egamma 
+    git clone https://github.com/muell149/UserCode-EGamma-EGammaAnalysisTools.git EGamma/EGammaAnalysisTools
     git cms-addpkg ElectroWeakAnalysis/Utilities
     git clone https://github.com:latinos/UserCode-sixie-Muon-MuonAnalysisTools.git Muon/MuonAnalysisTools/
     git cms-addpkg RecoBTag/SecondaryVertex
     git cms-addpkg RecoVertex/AdaptiveVertexFilter* try it
-    #TopAnalysis
+    git clone https://github.com/muell149/TopAnalysis.git
 
     # Our software
     
