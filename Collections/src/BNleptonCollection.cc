@@ -7,6 +7,26 @@ BNleptonCollection::~BNleptonCollection(){
 	for(auto it = begin(); it != end(); ++it){ delete *it; }
 }
 
+BNleptonCollection::BNleptonCollection() : std::vector<BNlepton*>() {}
+
+BNleptonCollection::BNleptonCollection(const BNleptonCollection& collection) : std::vector<BNlepton*>() {
+  for (auto& particle: collection) {
+    this->push_back(particle);
+  }
+}
+
+BNleptonCollection& BNleptonCollection::operator=(const BNleptonCollection& collection) {
+
+  for (auto it = begin(); it != end(); ++it) { delete *it; }
+  clear();
+
+  for (auto& particle: collection) {
+    this->push_back(particle);
+  }
+
+  return *this;
+}
+
 void BNleptonCollection::sort(){
 	for(BNleptonCollection::iterator it1 = begin(); it1 != end(); ++it1){
 
@@ -18,7 +38,6 @@ void BNleptonCollection::sort(){
 		BNlepton* tempObject = *it1;
 		*it1 = *largestPtIt;
 		*largestPtIt = tempObject;
-
 	}
 }
 
@@ -65,4 +84,8 @@ void BNleptonCollection::push_back(BNelectronCollection const & iElectrons){
 
 void BNleptonCollection::push_back(BNmuonCollection const & iMuons){
 	for(BNmuonCollection::const_iterator it = iMuons.begin(); it != iMuons.end(); ++it){ push_back(*it); }
+}
+
+void BNleptonCollection::push_back(BNleptonCollection const & iLeptons){
+	for(BNleptonCollection::const_iterator it = iLeptons.begin(); it != iLeptons.end(); ++it){ push_back(*it); }
 }

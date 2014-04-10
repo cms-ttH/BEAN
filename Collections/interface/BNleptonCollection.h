@@ -14,7 +14,10 @@ class BNleptonCollection : public std::vector<BNlepton*>{
 	public:
 
 		~BNleptonCollection();
+        BNleptonCollection();
+        BNleptonCollection(const BNleptonCollection& collection);
 
+        BNleptonCollection& operator=(const BNleptonCollection& collection);
 		void sort();
 		void push_back(BNelectron*);
 		void push_back(BNmuon*);
@@ -23,6 +26,7 @@ class BNleptonCollection : public std::vector<BNlepton*>{
 		void push_back(BNmuon const &);
 		void push_back(BNelectronCollection const &);
 		void push_back(BNmuonCollection const &);
+		void push_back(BNleptonCollection const &);
 
 	private:
 		bool ptComparison(BNlepton const &, BNlepton const &);

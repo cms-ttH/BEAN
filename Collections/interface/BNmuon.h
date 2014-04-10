@@ -13,7 +13,8 @@ struct BNmuon : BNlepton {
     samNormChi2(v), samPT(v), samEta(v), samPhi(v), samDZ(v), samDZerr(v),
     samD0(v), samD0bs(v), samD0err(v), comNormChi2(v), comPT(v), comEta(v),
     comPhi(v), comDZ(v), comDZerr(v), comD0(v), comD0bs(v), comD0err(v),
-    normalizedChi2(v), dVzPVz(v), dB(v), ptErr(v), innerTrackNormChi2(v),
+    normalizedChi2(v), dVzPVz(v), dB(v), ptErr(v), innerTrackPt(v),
+    innerTrackPtError(v), innerTrackNormChi2(v),
     pfIsoR03SumChargedHadronPt(v), pfIsoR03SumNeutralHadronEt(v),
     pfIsoR03SumPhotonEt(v), pfIsoR03SumPUPt(v),
     pfIsoR04SumChargedHadronPt(v), pfIsoR04SumNeutralHadronEt(v),
@@ -29,8 +30,7 @@ struct BNmuon : BNlepton {
     numberOfValidTrackerHits(c), numberOfLayersWithMeasurement(c),
     pixelLayersWithMeasurement(c), numberOfMatches(c),
     numberOfValidTrackerHitsInnerTrack(c), numberOfValidPixelHits(c),
-    numberOfMatchedStations(c), time_ndof(c), innerTrackPt(c),
-    innerTrackPtError(c) {};
+    numberOfMatchedStations(c), time_ndof(c) {};
 
   BNmuon(): BNlepton(0, 1),
     trackVetoIsoDR03(-99), ecalVetoIsoDR03(-99), hcalVetoIsoDR03(-99),
@@ -41,8 +41,8 @@ struct BNmuon : BNlepton {
     samPhi(-99), samDZ(-99), samDZerr(-99), samD0(-99), samD0bs(-99),
     samD0err(-99), comNormChi2(-99), comPT(-99), comEta(-99), comPhi(-99),
     comDZ(-99), comDZerr(-99), comD0(-99), comD0bs(-99), comD0err(-99),
-    normalizedChi2(-99), dVzPVz(-99), dB(-99), ptErr(-99),
-    innerTrackNormChi2(-99), pfIsoR03SumChargedHadronPt(-99),
+    normalizedChi2(-99), dVzPVz(-99), dB(-99), ptErr(-99), innerTrackPt(-99),
+    innerTrackPtError(-99), innerTrackNormChi2(-99), pfIsoR03SumChargedHadronPt(-99),
     pfIsoR03SumNeutralHadronEt(-99), pfIsoR03SumPhotonEt(-99),
     pfIsoR03SumPUPt(-99), pfIsoR04SumChargedHadronPt(-99),
     pfIsoR04SumNeutralHadronEt(-99), pfIsoR04SumPhotonEt(-99),
@@ -59,7 +59,7 @@ struct BNmuon : BNlepton {
     numberOfLayersWithMeasurement(-99), pixelLayersWithMeasurement(-99),
     numberOfMatches(-99), numberOfValidTrackerHitsInnerTrack(-99),
     numberOfValidPixelHits(-99), numberOfMatchedStations(-99),
-    time_ndof(-99), innerTrackPt(-99), innerTrackPtError(-99) {};
+    time_ndof(-99) {};
 
   double trackVetoIsoDR03, ecalVetoIsoDR03, hcalVetoIsoDR03, caloVetoIsoDR03;
   double trackIsoDR05, ecalIsoDR05, hcalIsoDR05, caloIsoDR05;
@@ -70,7 +70,7 @@ struct BNmuon : BNlepton {
   double isolationR03emVetoEt, isolationR03hadVetoEt;
   double normalizedChi2;
   double dVzPVz, dB;
-  double ptErr;
+  double ptErr, innerTrackPt, innerTrackPtError;
   double innerTrackNormChi2;
   double pfIsoR03SumChargedHadronPt, pfIsoR03SumNeutralHadronEt, pfIsoR03SumPhotonEt, pfIsoR03SumPUPt;
   double pfIsoR04SumChargedHadronPt, pfIsoR04SumNeutralHadronEt, pfIsoR04SumPhotonEt, pfIsoR04SumPUPt;
@@ -85,7 +85,6 @@ struct BNmuon : BNlepton {
   int isPFMuon, isGoodMuon_1StationTight, isGlobalMuon, isTrackerMuon, isStandAloneMuon, isGlobalMuonPromptTight;
   int numberOfValidMuonHits, numberOfValidTrackerHits, numberOfLayersWithMeasurement, pixelLayersWithMeasurement, numberOfMatches, numberOfValidTrackerHitsInnerTrack, numberOfValidPixelHits, numberOfMatchedStations;
   int time_ndof;
-  int innerTrackPt, innerTrackPtError;
 };
 
 typedef std::vector<BNmuon> BNmuonCollection;

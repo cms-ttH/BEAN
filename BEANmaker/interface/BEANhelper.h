@@ -93,6 +93,12 @@ namespace hdecayType{	enum hdecayType{ hbb, hcc, hww, hzz, htt, hgg, hjj, hzg };
 
 using namespace std;
 
+//To use when the object is either a reference (e.g. a BNjet, BNmuon, etc.) or a pointer (i.e. a BNlepton)
+template<typename T>
+T * ptr(T & obj) { return &obj; } //turn reference into pointer!
+template<typename T>
+T * ptr(T * obj) { return obj; } //obj is already pointer, return it!
+
 class BEANhelper{
 
 	// === Functions === //
@@ -114,8 +120,8 @@ class BEANhelper{
 		template <typename BNobject> BNtrack GetClosestTrack(const BNtrackCollection&, const BNobject&, const double);
 
 		// Union, intersection, difference
-		template <typename BNcollection> BNcollection GetSortedByPt(const BNcollection&);
-		template <typename BNcollection> BNcollection GetSortedByCSV(const BNcollection&);
+		template <typename T> T GetSortedByPt(const T&);
+		template <typename T> T GetSortedByCSV(const T&);
 		template <typename BNcollection> BNcollection GetUnion(const BNcollection&, const BNcollection&);
 		template <typename BNcollection> BNcollection GetIntersection(const BNcollection&, const BNcollection&);
 		template <typename BNcollection> BNcollection GetDifference(const BNcollection&, const BNcollection&);
@@ -483,47 +489,18 @@ template <typename BNobject> BNtrack BEANhelper::GetClosestTrack(const BNtrackCo
 	return result;
 }
 
-
 // === Returned sorted input collection, by descending pT === //
-template <typename BNcollection> BNcollection BEANhelper::GetSortedByPt(const BNcollection& iBNcollection){
-	BNcollection result;
-	BNcollection tempCollection = iBNcollection;
-
-	if (tempCollection.size() == 0) { return tempCollection; }
-
-	while(tempCollection.size() > 1){
-		typename BNcollection::iterator largestPtElement = tempCollection.begin();
-		for(typename BNcollection::iterator Object = (tempCollection.begin()+1); Object != tempCollection.end(); ++Object ){
-			if(Object->pt > largestPtElement->pt){ largestPtElement = Object; }
-		}
-
-		result.push_back(*largestPtElement);
-		tempCollection.erase(largestPtElement);
-	}
-	result.push_back(*(tempCollection.begin()));
-
-	return result;
+template <typename T> T BEANhelper::GetSortedByPt(const T& collection){
+	T result = collection;
+    std::sort(result.begin(), result.end(), [] (typename T::value_type a, typename T::value_type b) { return ptr(a)->pt > ptr(b)->pt;});
+    return result;
 }
-
+    
 // === Returned sorted input collection, by descending CSV === //
-template <typename BNcollection> BNcollection BEANhelper::GetSortedByCSV(const BNcollection& iBNcollection){
-	BNcollection result;
-	BNcollection tempCollection = iBNcollection;
-
-	if (tempCollection.size() == 0) { return tempCollection; }
-
-	while(tempCollection.size() > 1){
-		typename BNcollection::iterator largestCSVElement = tempCollection.begin();
-		for(typename BNcollection::iterator Object = (tempCollection.begin()+1); Object != tempCollection.end(); ++Object ){
-			if(Object->btagCombinedSecVertex > largestCSVElement->btagCombinedSecVertex){ largestCSVElement = Object; }
-		}
-
-		result.push_back(*largestCSVElement);
-		tempCollection.erase(largestCSVElement);
-	}
-	result.push_back(*(tempCollection.begin()));
-
-	return result;
+template <typename T> T BEANhelper::GetSortedByCSV(const T& collection){
+	T result = collection;
+    std::sort(result.begin(), result.end(), [] (typename T::value_type a, typename T::value_type b) { return a.btagCombinedSecVertex > b.btagCombinedSecVertex;});
+    return result;
 }
 
 // === Return the union of the two input collections, removing the overlap === //
@@ -541,14 +518,14 @@ template <typename BNcollection> BNcollection BEANhelper::GetUnion(const BNcolle
 			// If two objects match in deltaR, check that they have virtually the same momentum. Throw fatal error
 			// if we get two matching objects with different momenta, as this probably mean that we're mixing corrected and uncorrected
 			// input collections
-			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < 0.00001){
+			if(deltaR(ptr(*Object1)->eta, ptr(*Object1)->phi, ptr(*Object2)->eta, ptr(*Object2)->phi) < 0.00001){
 				presentInFirstCollection = true;
-				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.00001) &&
-									(fabs(Object1->py - Object2->py) < 0.00001) &&
-									(fabs(Object1->pz - Object2->pz) < 0.00001);
+				bool sameMomentum = (fabs(ptr(*Object1)->px - ptr(*Object2)->px) < 0.00001) &&
+									(fabs(ptr(*Object1)->py - ptr(*Object2)->py) < 0.00001) &&
+									(fabs(ptr(*Object1)->pz - ptr(*Object2)->pz) < 0.00001);
 				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; 
-				cout << setprecision(7) << "Eta1: " << Object1->eta << "\tPhi1: " << Object1->phi << "\tpT1: " << Object1->pt << endl;
-				cout << setprecision(7) << "Eta2: " << Object2->eta << "\tPhi2: " << Object2->phi << "\tpT2: " << Object2->pt << endl;
+				cout << setprecision(7) << "Eta1: " << ptr(*Object1)->eta << "\tPhi1: " << ptr(*Object1)->phi << "\tpT1: " << ptr(*Object1)->pt << endl;
+				cout << setprecision(7) << "Eta2: " << ptr(*Object2)->eta << "\tPhi2: " << ptr(*Object2)->phi << "\tpT2: " << ptr(*Object2)->pt << endl;
 				throw std::logic_error("Inside GetUnion"); }
 			}
 				
@@ -577,14 +554,14 @@ template <typename BNcollection> BNcollection BEANhelper::GetUnionUnsorted(const
 			// If two objects match in deltaR, check that they have virtually the same momentum. Throw fatal error
 			// if we get two matching objects with different momenta, as this probably mean that we're mixing corrected and uncorrected
 			// input collections
-			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < 0.00001){
+			if(deltaR(ptr(*Object1)->eta, ptr(*Object1)->phi, ptr(*Object2)->eta, ptr(*Object2)->phi) < 0.00001){
 				presentInFirstCollection = true;
-				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.00001) &&
-									(fabs(Object1->py - Object2->py) < 0.00001) &&
-									(fabs(Object1->pz - Object2->pz) < 0.00001);
+				bool sameMomentum = (fabs(ptr(*Object1)->px - ptr(*Object2)->px) < 0.00001) &&
+									(fabs(ptr(*Object1)->py - ptr(*Object2)->py) < 0.00001) &&
+									(fabs(ptr(*Object1)->pz - ptr(*Object2)->pz) < 0.00001);
 				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; 
-				cout << setprecision(7) << "Eta1: " << Object1->eta << "\tPhi1: " << Object1->phi << "\tpT1: " << Object1->pt << endl;
-				cout << setprecision(7) << "Eta2: " << Object2->eta << "\tPhi2: " << Object2->phi << "\tpT2: " << Object2->pt << endl;
+				cout << setprecision(7) << "Eta1: " << ptr(*Object1)->eta << "\tPhi1: " << ptr(*Object1)->phi << "\tpT1: " << ptr(*Object1)->pt << endl;
+				cout << setprecision(7) << "Eta2: " << ptr(*Object2)->eta << "\tPhi2: " << ptr(*Object2)->phi << "\tpT2: " << ptr(*Object2)->pt << endl;
 				throw std::logic_error("Inside GetUnionUnsorted"); }
 			}
 				
@@ -612,14 +589,14 @@ template <typename BNcollection> BNcollection BEANhelper::GetIntersection(const 
 			// If two objects match in deltaR, check that they have virtually the same momentum. Throw fatal error
 			// if we get two matching objects with different momenta, as this probably mean that we're mixing corrected and uncorrected
 			// input collections
-			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < 0.00001){
+			if(deltaR(ptr(*Object1)->eta, ptr(*Object1)->phi, ptr(*Object2)->eta, ptr(*Object2)->phi) < 0.00001){
 				presentInFirstCollection = true;
-				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.00001) &&
-									(fabs(Object1->py - Object2->py) < 0.00001) &&
-									(fabs(Object1->pz - Object2->pz) < 0.00001);
+				bool sameMomentum = (fabs(ptr(*Object1)->px - ptr(*Object2)->px) < 0.00001) &&
+									(fabs(ptr(*Object1)->py - ptr(*Object2)->py) < 0.00001) &&
+									(fabs(ptr(*Object1)->pz - ptr(*Object2)->pz) < 0.00001);
 				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; 
-				cout << setprecision(7) << "Eta1: " << Object1->eta << "\tPhi1: " << Object1->phi << "\tpT1: " << Object1->pt << endl;
-				cout << setprecision(7) << "Eta2: " << Object2->eta << "\tPhi2: " << Object2->phi << "\tpT2: " << Object2->pt << endl;
+				cout << setprecision(7) << "Eta1: " << ptr(*Object1)->eta << "\tPhi1: " << ptr(*Object1)->phi << "\tpT1: " << ptr(*Object1)->pt << endl;
+				cout << setprecision(7) << "Eta2: " << ptr(*Object2)->eta << "\tPhi2: " << ptr(*Object2)->phi << "\tpT2: " << ptr(*Object2)->pt << endl;
 				throw std::logic_error("Inside GetIntersection"); }
 
 				// If found a match, break loop
@@ -651,14 +628,14 @@ template <typename BNcollection> BNcollection BEANhelper::GetDifference(const BN
 			// If two objects match in deltaR, check that they have virtually the same momentum. Throw fatal error
 			// if we get two matching objects with different momenta, as this probably mean that we're mixing corrected and uncorrected
 			// input collections
-			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < 0.00001){
+			if(deltaR(ptr(*Object1)->eta, ptr(*Object1)->phi, ptr(*Object2)->eta, ptr(*Object2)->phi) < 0.00001){
 				presentInSecondCollection = true;
-				bool sameMomentum = (fabs(Object1->px - Object2->px) < 0.00001) &&
-									(fabs(Object1->py - Object2->py) < 0.00001) &&
-									(fabs(Object1->pz - Object2->pz) < 0.00001);
+				bool sameMomentum = (fabs(ptr(*Object1)->px - ptr(*Object2)->px) < 0.00001) &&
+									(fabs(ptr(*Object1)->py - ptr(*Object2)->py) < 0.00001) &&
+									(fabs(ptr(*Object1)->pz - ptr(*Object2)->pz) < 0.00001);
 				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; 
-				cout << setprecision(7) << "Eta1: " << Object1->eta << "\tPhi1: " << Object1->phi << "\tpT1: " << Object1->pt << endl;
-				cout << setprecision(7) << "Eta2: " << Object2->eta << "\tPhi2: " << Object2->phi << "\tpT2: " << Object2->pt << endl;
+				cout << setprecision(7) << "Eta1: " << ptr(*Object1)->eta << "\tPhi1: " << ptr(*Object1)->phi << "\tpT1: " << ptr(*Object1)->pt << endl;
+				cout << setprecision(7) << "Eta2: " << ptr(*Object2)->eta << "\tPhi2: " << ptr(*Object2)->phi << "\tpT2: " << ptr(*Object2)->pt << endl;
 				throw std::logic_error("Inside GetDifference"); }
 
 				break;
@@ -694,7 +671,7 @@ template <typename BNcollection1, typename BNcollection2> BNcollection1 BEANhelp
 			// If two objects match in deltaR, check that they have virtually the same momentum. Throw fatal error
 			// if we get two matching objects with different momenta, as this probably mean that we're mixing corrected and uncorrected
 			// input collections
-			if(deltaR(Object1->eta, Object1->phi, Object2->eta, Object2->phi) < iDeltaR){
+			if(deltaR(ptr(*Object1)->eta, ptr(*Object1)->phi, ptr(*Object2)->eta, ptr(*Object2)->phi) < iDeltaR){
 				presentInSecondCollection = true;
 				break;
 			}
