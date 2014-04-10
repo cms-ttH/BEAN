@@ -19,7 +19,7 @@ The '--unsafe' option prevents the merge from cloning dependent packages that we
     git cms-addpkg ElectroWeakAnalysis/Utilities
     git clone https://github.com:latinos/UserCode-sixie-Muon-MuonAnalysisTools.git Muon/MuonAnalysisTools/
     git cms-addpkg RecoBTag/SecondaryVertex
-    git cms-addpkg RecoVertex/AdaptiveVertexFilter* try it
+    git cms-addpkg RecoVertex/AdaptiveVertexFilter
     git clone https://github.com/muell149/TopAnalysis.git
 
 Our software
@@ -27,4 +27,5 @@ Our software
     git clone https://github.com/cms-ttH/BEAN.git -b charlieProjection
 
 Build
+
     scram b -j32
