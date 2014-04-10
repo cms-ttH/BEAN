@@ -15,7 +15,7 @@ Follow These Steps:
     git cms-addpkg CondFormats/EgammaObjects
     #Egamma 
     git cms-addpkg ElectroWeakAnalysis/Utilities
-    #Muon
+    git clone https://github.com:latinos/UserCode-sixie-Muon-MuonAnalysisTools.git Muon/MuonAnalysisTools/
     git cms-addpkg RecoBTag/SecondaryVertex
     git cms-addpkg RecoVertex/AdaptiveVertexFilter* try it
     #TopAnalysis
