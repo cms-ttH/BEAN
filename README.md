@@ -12,7 +12,6 @@ Follow These Steps:
     git cms-merge-topic --unsafe muell149:merged_5_3_11
     #the --unsafe option prevents the merge from cloning dependent packages that we actually don't use
     git cms-addpkg AnalysisDataFormats/TopObjects 
-    git clone git@github.com:cms-ttH/BEAN.git -b merged_5_3_11
     #CMGTools
     git cms-addpkg CondFormats/EgammaObjects
     #Egamma 
