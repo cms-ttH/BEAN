@@ -128,8 +128,6 @@
 
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
-#include "SusyAnalysis/EventSelector/interface/uncorrectionTypeMET.h"
-
 #include "DataFormats/Common/interface/View.h"
 
 #include "EGamma/EGammaAnalysisTools/interface/ElectronEffectiveArea.h"
