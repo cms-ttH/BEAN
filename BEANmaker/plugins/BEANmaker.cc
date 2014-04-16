@@ -691,7 +691,14 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
     //std::cout << "  ==> Q2ScaleUpWgt = " << Q2ScaleUpWgt << ",\t Q2ScaleDownWgt = " << Q2ScaleDownWgt << std::endl;
   }
-
+  
+  double weight = -1;
+  if(eventWeight_ < 0.0) {
+    weight = 1.0;
+  } 
+  else {
+    weight = eventWeight_;
+  }
 
   edm::Handle<GenEventInfoProduct> genEvtInfo;
   bool hasGenEvtInfo = iEvent.getByLabel( "generator", genEvtInfo );
@@ -699,6 +706,11 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   double qScale=-1, alphaQCD=-1, alphaQED=-1, pthat=-1, scalePDF=-1, x1=-1, x2=-1, xPDF1=-1, xPDF2=-1;
   int id1=-99, id2=-99;
   if( (hasGenEvtInfo) ){
+    std::vector<double> genWeights = genEvtInfo->weights();
+    for(unsigned int i=0;i<genWeights.size();i++) {
+      weight*=genWeights[i];
+    }
+
     qScale = genEvtInfo->qScale();
     alphaQCD = genEvtInfo->alphaQCD();
     alphaQED = genEvtInfo->alphaQED();
@@ -816,13 +828,6 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
   }
 
-  double weight = -1;
-  if(eventWeight_ < 0.0) {
-    weight = 1.0;
-  } 
-  else {
-    weight = eventWeight_;
-  }
 
 
   numEvents++;
