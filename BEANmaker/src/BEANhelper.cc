@@ -2475,65 +2475,63 @@ BNelectronCollection BEANhelper::GetSelectedElectrons(const BNelectronCollection
 }
 
 BNjetCollection
-BEANhelper::GetCleanJets(const BNjetCollection& iJets, const vector<TLorentzVector>& iToUnmatch, const float iDeltaR, std::vector<unsigned int>* jet_indices)
+BEANhelper::GetCleanJets(const BNjetCollection& jets, const vector<TLorentzVector>& leptons, const float maxDeltaR, std::vector<unsigned int>* jet_indices)
 {
-    CheckSetUp();
-    BNjetCollection result;
-    unsigned int i = 0; // Current jet index -> saved as clean jet index
-    for (BNjetCollection::const_iterator Jet = iJets.begin(); Jet != iJets.end(); ++Jet, ++i) {
-        bool matched = false;
-        for (unsigned int m = 0; m < iToUnmatch.size(); m++) {
-            if (deltaR(Jet->eta, Jet->phi, iToUnmatch.at(m).Eta(), iToUnmatch.at(m).Phi()) < iDeltaR) {
-                matched = true;
-                break;
-            }
-        }
+  CheckSetUp();
+  BNjetCollection cleanJets = jets;
+  vector<bool> isCleanJet (cleanJets.size(), true);
+  BNjetCollection cleanJets_collection;
+  int matchIndex;
+  float minDeltaR;
+  float dR;
+  TLorentzVector jet_v;
 
-        if (!matched) {
-            result.push_back(*Jet);
-            if (jet_indices)
-                jet_indices->push_back(i);
-        }
+  for (unsigned int m=0; m<leptons.size();m++){// auto& lepton: iToUnmatch) {
+    matchIndex = -1;
+    dR = 999.0;
+    minDeltaR = maxDeltaR;
+    for (unsigned i=0; i<cleanJets.size(); i++){
+      dR = reco::deltaR(leptons.at(m).Eta(), leptons.at(m).Phi(), cleanJets.at(i).eta, cleanJets.at(i).phi);
+      if (dR < minDeltaR) {
+        minDeltaR = dR;
+        matchIndex = i;
+      }
     }
-    return result;
+    //clean closest jet from lepton and return the jet energry if subrracted energy is greater than zer0
+    if (matchIndex != -1){
+      if (cleanJets.at(matchIndex).energy > leptons.at(m).Energy() && cleanJets.at(matchIndex).pt > leptons.at(m).Pt()) {
+	if (jets.at(matchIndex).leadCandPt >= leptons.at(m).Pt()){
+	  //set jet 4vector
+	  jet_v.SetPxPyPzE(cleanJets.at(matchIndex).px,cleanJets.at(matchIndex).py,cleanJets.at(matchIndex).pz,cleanJets.at(matchIndex).energy);
+	  //subtract 4vectors
+	  jet_v = jet_v - leptons.at(m);
+	  
+	  cleanJets.at(matchIndex).px = jet_v.Px();
+	  cleanJets.at(matchIndex).py = jet_v.Py();
+	  cleanJets.at(matchIndex).pz = jet_v.Pz();
+	  cleanJets.at(matchIndex).pt = jet_v.Pt();
+	  cleanJets.at(matchIndex).energy = jet_v.Energy();
+	  cleanJets.at(matchIndex).eta = jet_v.Eta();
+	  cleanJets.at(matchIndex).phi = jet_v.Phi();
+	}
+      }
+      else {
+        isCleanJet.at(matchIndex) = false;
+      }
+    }
+  }
+  
+  for (unsigned i=0; i<cleanJets.size(); i++) {
+    if (isCleanJet.at(i)){
+      cleanJets_collection.push_back(cleanJets.at(i));
+      if (jet_indices){jet_indices->push_back(i);}
+    }
+  }
+  return cleanJets_collection;
 }
 
 BNjetCollection
 BEANhelper::GetCleanJets(const BNjetCollection& jets, const BNleptonCollection& leptons, const float maxDeltaR) {
-    CheckSetUp();
-    vector<bool> isCleanJet (jets.size(), true);
-    BNjetCollection cleanJets;
-    int matchIndex;
-    float minDeltaR;
-    float dR;
-
-    for (auto& lepton: leptons) {
-        matchIndex = -1;
-        dR = 999.0;
-        minDeltaR = maxDeltaR;
-        for (unsigned i=0; i<jets.size(); i++) {
-            dR = reco::deltaR(lepton->eta, lepton->phi, jets.at(i).eta, jets.at(i).phi);
-            if (dR < minDeltaR) {
-                minDeltaR = dR;
-                matchIndex = i;
-            }
-        }
-        //only clean out closest jet
-        if (matchIndex != -1) isCleanJet.at(matchIndex) = false;
-    }
-
-    for (unsigned i=0; i<jets.size(); i++) {
-        if (isCleanJet.at(i)) { cleanJets.push_back(jets.at(i)); }
-    }
-
-    return cleanJets;
-}
-
-
-
-
-BNjetCollection
-BEANhelper::GetCleanJets_cProj(const BNjetCollection& jets, const BNleptonCollection& leptons, const float maxDeltaR) {
   CheckSetUp();
   BNjetCollection cleanJets = jets;
   vector<bool> isCleanJet (cleanJets.size(), true);
@@ -2543,6 +2541,7 @@ BEANhelper::GetCleanJets_cProj(const BNjetCollection& jets, const BNleptonCollec
   float dR;
   TLorentzVector jet_v;
   TLorentzVector lep_v;
+  int j=0;
 
   for (auto& lepton: leptons) {
     matchIndex = -1;
@@ -2555,35 +2554,42 @@ BEANhelper::GetCleanJets_cProj(const BNjetCollection& jets, const BNleptonCollec
         matchIndex = i;
       }
     }
-    //clsfean closest jet from lepton and return the jet energry if subrracted energy is greater than zer0
+    //clean closest jet from lepton and return the jet energry if subrracted energy is greater than zer0
     if (matchIndex != -1){
       if (cleanJets.at(matchIndex).energy > lepton->energy && cleanJets.at(matchIndex).pt > lepton->pt) {
-        //set 4 vectors
-        jet_v.SetPxPyPzE(cleanJets.at(matchIndex).px,cleanJets.at(matchIndex).py,cleanJets.at(matchIndex).pz,cleanJets.at(matchIndex).energy);
-        lep_v.SetPxPyPzE(lepton->px,lepton->py,lepton->pz,lepton->energy);
-         //subtract 4vectors
-        jet_v = jet_v - lep_v;
-	
-	cleanJets.at(matchIndex).px = jet_v.Px();
-        cleanJets.at(matchIndex).py = jet_v.Py();
-        cleanJets.at(matchIndex).pz = jet_v.Pz();
-        cleanJets.at(matchIndex).pt = jet_v.Pt();
-        cleanJets.at(matchIndex).energy = jet_v.Energy();
-        cleanJets.at(matchIndex).eta = jet_v.Eta();
-        cleanJets.at(matchIndex).phi = jet_v.Phi();
-
+	if (jets.at(matchIndex).leadCandPt >= lepton->pt){
+	  //set 4 vectors
+	  jet_v.SetPxPyPzE(cleanJets.at(matchIndex).px,cleanJets.at(matchIndex).py,cleanJets.at(matchIndex).pz,cleanJets.at(matchIndex).energy);
+	  lep_v.SetPxPyPzE(lepton->px,lepton->py,lepton->pz,lepton->energy);
+	  //subtract 4vectors
+	  jet_v = jet_v - lep_v;
+	  
+	  cleanJets.at(matchIndex).px = jet_v.Px();
+	  cleanJets.at(matchIndex).py = jet_v.Py();
+	  cleanJets.at(matchIndex).pz = jet_v.Pz();
+	  cleanJets.at(matchIndex).pt = jet_v.Pt();
+	  cleanJets.at(matchIndex).energy = jet_v.Energy();
+	  cleanJets.at(matchIndex).eta = jet_v.Eta();
+	  cleanJets.at(matchIndex).phi = jet_v.Phi();
+	}
+	else{
+	  cout<<"subtraction not performed!"<<j<<endl;
+	  j+=1;
+	}
       }
       else {
         isCleanJet.at(matchIndex) = false;
       }
     }
   }
-
+  
   for (unsigned i=0; i<cleanJets.size(); i++) {
-    if (isCleanJet.at(i)) { cleanJets_collection.push_back(cleanJets.at(i)); }
+    if (isCleanJet.at(i)){cleanJets_collection.push_back(cleanJets.at(i));}
   }
   return cleanJets_collection;
 }
+
+
 
 unsigned int
 BEANhelper::GetNumCSVbtags(const BNjetCollection& iJets, const char iCSVwp, std::vector<unsigned int>* jet_indices)
