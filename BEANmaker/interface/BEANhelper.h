@@ -84,7 +84,7 @@ typedef BNtrigobjCollection::const_iterator		  TrigObjIter;
 namespace analysisType{ enum analysisType{ LJ, DIL, TauLJ, TauDIL }; }
 namespace sysType{enum sysType{NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup, TESup, TESdown, CSVLFup, CSVLFdown, CSVHFup, CSVHFdown, CSVHFStats1up, CSVHFStats1down, CSVLFStats1up, CSVLFStats1down, CSVHFStats2up, CSVHFStats2down, CSVLFStats2up, CSVLFStats2down, CSVCErr1up, CSVCErr1down, CSVCErr2up, CSVCErr2down }; }
 namespace jetID{		enum jetID{			none, jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
-namespace tauID{		enum tauID{			tauNonIso, tauVLoose, tauLoose, tauMedium, tauTight }; }
+namespace tauID { enum tauID{ tauNonIso, tauLoose, tauMedium, tauTight }; }
 namespace muonID{		enum muonID{		muonSide, muonSideLooseMVA, muonSideTightMVA, muonLoose, muonTight, muonPtOnly, muonPtEtaOnly, muonPtEtaIsoOnly, muonPtEtaIsoTrackerOnly, muonNoCuts }; }
 namespace electronID{	enum electronID{	electronSide, electronSideLooseMVA, electronSideTightMVA, electronLoose, electronTight, electronTightMinusTrigPresel, electronLooseMinusTrigPresel, electronNoCuts }; }
 namespace hdecayType{	enum hdecayType{ hbb, hcc, hww, hzz, htt, hgg, hjj, hzg }; }
@@ -146,10 +146,10 @@ class BEANhelper{
 		float GetHT(const BNjetCollection&);
 
 		// Taus
-		bool IsVLooseTau(const BNtau&);
-		bool IsLooseTau(const BNtau&);
-		bool IsMediumTau(const BNtau&);
-		bool IsTightTau(const BNtau&);
+        inline bool IsNonIsoTau(const BNtau& iTau) { return IsGoodTau(iTau, tauID::tauLoose); };
+        inline bool IsLooseTau(const BNtau& iTau) { return IsGoodTau(iTau, tauID::tauLoose); };
+        inline bool IsMediumTau(const BNtau& iTau) { return IsGoodTau(iTau, tauID::tauMedium); };
+        inline bool IsTightTau(const BNtau& iTau) { return IsGoodTau(iTau, tauID::tauTight); };
 		bool IsGoodTau(const BNtau&, const tauID::tauID);
 		float GetTauSF(const BNtau&);
 		BNtauCollection GetSelectedTaus(const BNtauCollection&, const tauID::tauID);
