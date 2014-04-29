@@ -190,6 +190,7 @@ private:
   //edm::InputTag pfmetTag_type1correctedRECO_;
   edm::InputTag muonTag_;
   edm::InputTag tauTag_;
+  edm::InputTag photonTag_;
   edm::InputTag EBsuperclusterTag_;
   edm::InputTag EEsuperclusterTag_;
   edm::InputTag trackTag_;
@@ -258,6 +259,7 @@ typedef std::vector<BNbxlumi>       BNbxlumiCollection;
 typedef std::vector<BNtrigobj>      BNtrigobjCollection;
 typedef std::vector<BNprimaryvertex> BNprimaryvertexCollection;
 typedef std::vector<BNtau>          BNtauCollection;
+typedef std::vector<BNphoton>       BNphotonCollection;
 
 //
 // static data member definitions
@@ -317,6 +319,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   triggerSummaryTag_ = iConfig.getParameter<edm::InputTag>("triggerSummaryTag");
   dcsTag_ = iConfig.getParameter<edm::InputTag>("dcsTag");
   tauTag_ = iConfig.getParameter<edm::InputTag>("tauTag");
+  photonTag_ = iConfig.getParameter<edm::InputTag>("photonTag");
 
   reducedBarrelRecHitCollection_ = iConfig.getParameter<edm::InputTag>("reducedBarrelRecHitCollection");
   reducedEndcapRecHitCollection_ = iConfig.getParameter<edm::InputTag>("reducedEndcapRecHitCollection");
@@ -357,6 +360,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   produces<BNtrigobjCollection>(kL1MuonParticles).setBranchAlias("l1muonobjs");
   produces<BNprimaryvertexCollection>(pvTag_.label()).setBranchAlias("pvs");
   produces<BNtauCollection>(tauTag_.label()).setBranchAlias("taus");
+  produces<BNphotonCollection>(photonTag_.label()).setBranchAlias("photons");
 
   m_l1GtPfAlgoCacheID = 0ULL;
 
@@ -405,6 +409,9 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<edm::View<pat::Tau> > tauHandle;
   iEvent.getByLabel(tauTag_,tauHandle);
 
+  edm::Handle<edm::View<pat::Photon> > photonHandle;
+  iEvent.getByLabel(photonTag_,photonHandle);
+
   edm::Handle<reco::TrackCollection > trackHandle;
   iEvent.getByLabel(trackTag_,trackHandle);
 
@@ -443,6 +450,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   //bool producePFMET_type1correctedRECO = ( (pfmetTag_type1correctedRECO_.label() == "none") ) ? false : true;
   bool produceMuon = ( (muonTag_.label() == "none") ) ? false : true;
   bool produceTau = ( (tauTag_.label() == "none") ) ? false : true;
+  bool producePhoton = ( (photonTag_.label() == "none") ) ? false : true;
   bool produceSCsEB = ( (EBsuperclusterTag_.label() == "none") ) ? false : true;
   bool produceSCsEE = ( (EEsuperclusterTag_.label() == "none") ) ? false : true;
   bool produceTrack = ( (trackTag_.label() == "none") ) ? false : true;
@@ -1978,7 +1986,147 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
   }
 
-								   
+  /////////////////////////////////////////////
+  ///////
+  ///////   Fill the photon collection
+  ///////
+  /////////////////////////////////////////////
+
+  std::auto_ptr<BNphotonCollection> bnphotons(new BNphotonCollection);
+  if( producePhoton ){
+    edm::View<pat::Photon> photons = *photonHandle;
+
+    for( edm::View<pat::Photon>::const_iterator photon = photons.begin(); photon!=photons.end(); ++photon ){
+
+      if( !(photon->et()>minPhotonEt_) ) continue;
+
+      BNphoton MyPhoton;
+      
+      // general kinematic variables
+      MyPhoton.energy = photon->energy();
+      MyPhoton.et = photon->et();
+      MyPhoton.pt = photon->pt();
+      MyPhoton.px = photon->px();
+      MyPhoton.py = photon->py();
+      MyPhoton.pz = photon->pz();
+      MyPhoton.phi = photon->phi();
+      MyPhoton.eta = photon->eta();
+      MyPhoton.theta = photon->theta();
+
+      MyPhoton.trackIso = photon->trackIso();
+      MyPhoton.ecalIso = photon->ecalIso();
+      MyPhoton.hcalIso = photon->hcalIso();
+      MyPhoton.caloIso = photon->caloIso();
+
+      MyPhoton.trackIsoHollowConeDR03 = photon->trkSumPtHollowConeDR03();
+      MyPhoton.trackIsoSolidConeDR03 = photon->trkSumPtSolidConeDR03();
+      MyPhoton.ecalIsoDR03 = photon->ecalRecHitSumEtConeDR03();
+      MyPhoton.hcalIsoDR03 = photon->hcalTowerSumEtConeDR03();
+      MyPhoton.caloIsoDR03 = photon->ecalRecHitSumEtConeDR03() + photon->hcalTowerSumEtConeDR03();
+
+      MyPhoton.trackIsoHollowConeDR04 = photon->trkSumPtHollowConeDR04();
+      MyPhoton.trackIsoSolidConeDR04 = photon->trkSumPtSolidConeDR04();
+      MyPhoton.ecalIsoDR04 = photon->ecalRecHitSumEtConeDR04();
+      MyPhoton.hcalIsoDR04 = photon->hcalTowerSumEtConeDR04();
+      MyPhoton.caloIsoDR04 = photon->ecalRecHitSumEtConeDR04() + photon->hcalTowerSumEtConeDR04();
+
+      MyPhoton.hadOverEm = photon->hadronicOverEm();
+      MyPhoton.sigmaEtaEta = photon->sigmaEtaEta();
+      MyPhoton.sigmaIetaIeta = photon->sigmaIetaIeta();
+      MyPhoton.r9 = photon->r9();
+
+      MyPhoton.IDLooseEM = -1;
+      MyPhoton.IDLoose = -1;
+      MyPhoton.IDTight = -1;
+
+      MyPhoton.hasPixelSeed = ( photon->hasPixelSeed() ) ? 1 : 0;
+      
+      // Get photon supercluster information
+      if( (photon->superCluster().isAvailable()) ){
+	double eMax    = lazyTools.eMax(    *(photon->superCluster()) );
+	double eLeft   = lazyTools.eLeft(   *(photon->superCluster()) );
+	double eRight  = lazyTools.eRight(  *(photon->superCluster()) );
+	double eTop    = lazyTools.eTop(    *(photon->superCluster()) );
+	double eBottom = lazyTools.eBottom( *(photon->superCluster()) );
+	double e3x3    = lazyTools.e3x3(    *(photon->superCluster()) );
+	double swissCross = -99;
+
+	if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
+
+	MyPhoton.eMax = eMax;
+	MyPhoton.eLeft = eLeft;
+	MyPhoton.eRight = eRight;
+	MyPhoton.eTop = eTop;
+	MyPhoton.eBottom = eBottom;
+	MyPhoton.e3x3 = e3x3;
+	MyPhoton.swissCross = swissCross;
+
+	MyPhoton.scEnergy = photon->superCluster()->energy();
+	MyPhoton.scRawEnergy = photon->superCluster()->rawEnergy();
+	MyPhoton.scEta = photon->superCluster()->position().eta();
+	MyPhoton.scPhi = photon->superCluster()->position().phi();
+	MyPhoton.scZ = photon->superCluster()->position().Z();
+
+	double seedE = -999, seedTime = -999;
+	int seedRecoFlag = -999;
+       
+	if( (photon->isEB()) ){
+	  DetId idEB = EcalClusterTools::getMaximum( photon->superCluster()->hitsAndFractions(), &(*barrelRecHits) ).first;
+	  EcalRecHitCollection::const_iterator thisHitEB = barrelRecHits->find(idEB);
+
+	  seedE = thisHitEB->energy();
+	  seedTime = thisHitEB->time();
+	  seedRecoFlag = thisHitEB->recoFlag();
+	}
+	
+	else if( (photon->isEE()) ){
+	  DetId idEE = EcalClusterTools::getMaximum( photon->superCluster()->hitsAndFractions(), &(*endcapRecHits) ).first;
+	  EcalRecHitCollection::const_iterator thisHitEE = endcapRecHits->find(idEE);
+
+	  seedE = thisHitEE->energy();
+	  seedTime = thisHitEE->time();
+	  seedRecoFlag = thisHitEE->recoFlag();
+	}
+
+	MyPhoton.seedEnergy   = seedE;
+	MyPhoton.seedTime     = seedTime;
+	MyPhoton.seedRecoFlag = seedRecoFlag;
+
+	// MyPhoton.swissCrossNoI85 = swissCrossNoI85;
+	// MyPhoton.swissCrossI85   = swissCrossI85;
+	// MyPhoton.E2overE9NoI85 = e2overe9NoI85;
+	// MyPhoton.E2overE9I85 = e2overe9I85;
+      }
+
+      MyPhoton.isEB = photon->isEB();
+      MyPhoton.isEE = photon->isEE();
+      MyPhoton.isEBEEGap = photon->isEBEEGap();
+      MyPhoton.isEBGap = photon->isEBGap();
+      MyPhoton.isEEGap = photon->isEEGap();
+      MyPhoton.isGap = ( (photon->isEBEEGap()) || (photon->isEBGap()) || (photon->isEEGap()) );
+
+      if( (photon->genPhoton()) ){
+	MyPhoton.genId = photon->genPhoton()->pdgId();
+	MyPhoton.genET = photon->genPhoton()->et();
+	MyPhoton.genPT = photon->genPhoton()->pt();
+	MyPhoton.genPhi = photon->genPhoton()->phi();
+	MyPhoton.genEta = photon->genPhoton()->eta();
+	MyPhoton.genCharge = photon->genPhoton()->charge();
+	MyPhoton.genMotherId = photon->genPhoton()->mother()->pdgId();
+	MyPhoton.genMotherET = photon->genPhoton()->mother()->et();
+	MyPhoton.genMotherPT = photon->genPhoton()->mother()->pt();
+	MyPhoton.genMotherPhi = photon->genPhoton()->mother()->phi();
+	MyPhoton.genMotherEta = photon->genPhoton()->mother()->eta();
+	MyPhoton.genMotherCharge = photon->genPhoton()->mother()->charge();
+      }
+
+      bnphotons->push_back(MyPhoton);
+    }
+  }
+
+
+
+							   
   /////////////////////////////////////////////
   ///////
   ///////   Fill the track collection
@@ -3344,6 +3492,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   //if( producePFMET_type1correctedRECO ) iEvent.put(bnpfmet_type1correctedRECO,std::string(pfmetTag_type1correctedRECO_.label() + "BN"));
   if( produceMuon ) iEvent.put(bnmuons,muonTag_.label());
   if( produceTau ) iEvent.put(bntaus,tauTag_.label());
+  if( producePhoton ) iEvent.put(bnphotons,photonTag_.label());
   if( produceSCsEB || produceSCsEE ) iEvent.put(bnsuperclusters,kSC);
   if( produceTrack ) iEvent.put(bntracks,trackTag_.label());
   iEvent.put(bntrigger,kHLT);
