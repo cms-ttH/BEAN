@@ -186,6 +186,7 @@ private:
 
   edm::InputTag eleTag_;
   edm::InputTag pfjetTag_;
+  edm::InputTag genjetTag_;
   edm::InputTag pfmetTag_;
   //edm::InputTag pfmetTag_type1correctedRECO_;
   edm::InputTag muonTag_;
@@ -248,6 +249,7 @@ private:
 //
 typedef std::vector<BNelectron>     BNelectronCollection;
 typedef std::vector<BNjet>          BNjetCollection;
+typedef std::vector<BNgenjet>       BNgenjetCollection;
 typedef std::vector<BNevent>        BNeventCollection;
 typedef std::vector<BNmcparticle>   BNmcparticleCollection;
 typedef std::vector<BNmet>          BNmetCollection;
@@ -306,6 +308,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   // Define InputTags 
   eleTag_ = iConfig.getParameter<edm::InputTag>("eleTag");
   pfjetTag_ = iConfig.getParameter<edm::InputTag>("pfjetTag");
+  genjetTag_ = iConfig.getParameter<edm::InputTag>("genjetTag");
   pfmetTag_ = iConfig.getParameter<edm::InputTag>("pfmetTag");
   //pfmetTag_type1correctedRECO_ = iConfig.getParameter<edm::InputTag>("pfmetTag_type1correctedRECO");
   muonTag_ = iConfig.getParameter<edm::InputTag>("muonTag");
@@ -337,6 +340,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   produces<BNeventCollection>().setBranchAlias("event");
   produces<BNelectronCollection>(eleTag_.label()).setBranchAlias("electrons");
   produces<BNjetCollection>(pfjetTag_.label()).setBranchAlias("pfjets");
+  produces<BNgenjetCollection>(genjetTag_.label()).setBranchAlias("genjets");
   produces<BNmetCollection>(pfmetTag_.label()).setBranchAlias("pfmet");
   //produces<BNmetCollection>(std::string(pfmetTag_type1correctedRECO_.label() + "BN")).setBranchAlias("pfmet_type1correctedRECO");
   produces<BNmuonCollection>(muonTag_.label()).setBranchAlias("muons");
@@ -397,6 +401,9 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<edm::View<pat::Jet> > pfjetHandle;
   iEvent.getByLabel(pfjetTag_,pfjetHandle);
 
+  edm::Handle<reco::GenJetCollection > genjetHandle;
+  iEvent.getByLabel(genjetTag_,genjetHandle);
+
   edm::Handle<edm::View<pat::MET> > pfmetHandle;
   iEvent.getByLabel(pfmetTag_,pfmetHandle);
 
@@ -446,6 +453,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   bool produceElectron = ( (eleTag_.label() == "none") ) ? false : true;
   bool producePFJet = ( (pfjetTag_.label() == "none") ) ? false : true;
+  bool produceGenJet = ( (genjetTag_.label() == "none") ) ? false : true;
   bool producePFMET = ( (pfmetTag_.label() == "none") ) ? false : true;
   //bool producePFMET_type1correctedRECO = ( (pfmetTag_type1correctedRECO_.label() == "none") ) ? false : true;
   bool produceMuon = ( (muonTag_.label() == "none") ) ? false : true;
@@ -455,7 +463,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   bool produceSCsEE = ( (EEsuperclusterTag_.label() == "none") ) ? false : true;
   bool produceTrack = ( (trackTag_.label() == "none") ) ? false : true;
   bool produceGenParticle = ( (genParticleTag_.label() == "none") ) ? false : true;
-  bool produceGenJet = false;
+
   bool producePFMET_type1correctedRECO = false;
   bool producePFMET_uncorrectedPF2PAT = false;
   bool producePFMET_uncorrectedRECO = false;
@@ -2782,9 +2790,41 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
   }
 
+  /////////////////////////////////////////////
+  ///////
+  ///////   Fill the mcparticles collection
+  ///////
+  /////////////////////////////////////////////
+  
+  std::auto_ptr<BNgenjetCollection> bngenjets(new BNgenjetCollection);
+  if( sample_>=0 && produceGenJet ){
+    reco::GenJetCollection genjets = *genjetHandle;
+    
+    for(reco::GenJetCollection::const_iterator genjet = genjets.begin(); genjet!=genjets.end(); ++genjet ){
+      
+      if( !(genjet->pt()>10. && fabs(genjet->eta())<3.5) ) continue;
 
-
-
+      BNgenjet MyGenjet;
+      
+      MyGenjet.pt = genjet->pt();
+      MyGenjet.px = genjet->px();
+      MyGenjet.py = genjet->py();
+      MyGenjet.pz = genjet->pz();
+      MyGenjet.phi = genjet->phi();
+      MyGenjet.eta = genjet->eta();
+      MyGenjet.et = genjet->et();
+      MyGenjet.energy = genjet->energy();
+      MyGenjet.mass = genjet->mass();
+      MyGenjet.emEnergy = genjet->emEnergy();
+      MyGenjet.hadEnergy = genjet->hadEnergy();
+      MyGenjet.invisibleEnergy = genjet->invisibleEnergy();
+      MyGenjet.auxiliaryEnergy = genjet->auxiliaryEnergy();
+      MyGenjet.charge = genjet->charge();
+      
+      bngenjets->push_back(MyGenjet);
+    }
+  }
+  
   /////////////////////////////////////////////
   ///////
   ///////   Fill the event collection
@@ -3488,6 +3528,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.put(bnevent);
   if( produceElectron ) iEvent.put(bnelectrons,eleTag_.label());
   if( producePFJet ) iEvent.put(bnpfjets,pfjetTag_.label());
+  if( produceGenJet ) iEvent.put(bngenjets,genjetTag_.label());
   if( producePFMET ) iEvent.put(bnpfmet,pfmetTag_.label());
   //if( producePFMET_type1correctedRECO ) iEvent.put(bnpfmet_type1correctedRECO,std::string(pfmetTag_type1correctedRECO_.label() + "BN"));
   if( produceMuon ) iEvent.put(bnmuons,muonTag_.label());
