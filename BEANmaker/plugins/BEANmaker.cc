@@ -188,7 +188,9 @@ private:
   edm::InputTag pfjetTag_;
   edm::InputTag genjetTag_;
   edm::InputTag pfmetTag_;
-  //edm::InputTag pfmetTag_type1correctedRECO_;
+  edm::InputTag pfmetTag_type1correctedRECO_;
+  edm::InputTag pfmetTag_uncorrectedPF2PAT_;
+  edm::InputTag pfmetTag_uncorrectedRECO_;
   edm::InputTag muonTag_;
   edm::InputTag tauTag_;
   edm::InputTag photonTag_;
@@ -310,7 +312,9 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   pfjetTag_ = iConfig.getParameter<edm::InputTag>("pfjetTag");
   genjetTag_ = iConfig.getParameter<edm::InputTag>("genjetTag");
   pfmetTag_ = iConfig.getParameter<edm::InputTag>("pfmetTag");
-  //pfmetTag_type1correctedRECO_ = iConfig.getParameter<edm::InputTag>("pfmetTag_type1correctedRECO");
+  pfmetTag_type1correctedRECO_ = iConfig.getParameter<edm::InputTag>("pfmetTag_type1correctedRECO");
+  pfmetTag_uncorrectedPF2PAT_  = iConfig.getParameter<edm::InputTag>("pfmetTag_uncorrectedPF2PAT");
+  pfmetTag_uncorrectedRECO_    = iConfig.getParameter<edm::InputTag>("pfmetTag_uncorrectedRECO");
   muonTag_ = iConfig.getParameter<edm::InputTag>("muonTag");
   EBsuperclusterTag_ = iConfig.getParameter<edm::InputTag>("EBsuperclusterTag");
   EEsuperclusterTag_ = iConfig.getParameter<edm::InputTag>("EEsuperclusterTag");
@@ -342,7 +346,9 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   produces<BNjetCollection>(pfjetTag_.label()).setBranchAlias("pfjets");
   produces<BNgenjetCollection>(genjetTag_.label()).setBranchAlias("genjets");
   produces<BNmetCollection>(pfmetTag_.label()).setBranchAlias("pfmet");
-  //produces<BNmetCollection>(std::string(pfmetTag_type1correctedRECO_.label() + "BN")).setBranchAlias("pfmet_type1correctedRECO");
+  produces<BNmetCollection>(std::string(pfmetTag_type1correctedRECO_.label() + "BN")).setBranchAlias("pfmet_type1correctedRECO");
+  produces<BNmetCollection>(std::string(pfmetTag_uncorrectedPF2PAT_.label() + "BN")).setBranchAlias("pfmet_uncorrectedPF2PAT");
+  produces<BNmetCollection>(std::string(pfmetTag_uncorrectedRECO_.label() + "BN")).setBranchAlias("pfmet_uncorrectedRECO");
   produces<BNmuonCollection>(muonTag_.label()).setBranchAlias("muons");
   produces<BNsuperclusterCollection>(kSC).setBranchAlias("superclusters");
   produces<BNtrackCollection>(trackTag_.label()).setBranchAlias("tracks");
@@ -407,8 +413,14 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<edm::View<pat::MET> > pfmetHandle;
   iEvent.getByLabel(pfmetTag_,pfmetHandle);
 
-  //edm::Handle<vector<reco::PFMET> > pfmetHandle_type1correctedRECO;
-  //iEvent.getByLabel(pfmetTag_type1correctedRECO_,pfmetHandle_type1correctedRECO);
+  edm::Handle<vector<reco::PFMET> > pfmetHandle_type1correctedRECO;
+  iEvent.getByLabel(pfmetTag_type1correctedRECO_,pfmetHandle_type1correctedRECO);
+
+  edm::Handle<edm::View<pat::MET> > pfmetHandle_uncorrectedPF2PAT;
+  iEvent.getByLabel(pfmetTag_uncorrectedPF2PAT_,pfmetHandle_uncorrectedPF2PAT);
+
+  edm::Handle<vector<reco::PFMET> > pfmetHandle_uncorrectedRECO;
+  iEvent.getByLabel(pfmetTag_uncorrectedRECO_,pfmetHandle_uncorrectedRECO);
 
   edm::Handle<edm::View<pat::Muon> > muonHandle;
   iEvent.getByLabel(muonTag_,muonHandle);
@@ -455,7 +467,9 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   bool producePFJet = ( (pfjetTag_.label() == "none") ) ? false : true;
   bool produceGenJet = ( (genjetTag_.label() == "none") ) ? false : true;
   bool producePFMET = ( (pfmetTag_.label() == "none") ) ? false : true;
-  //bool producePFMET_type1correctedRECO = ( (pfmetTag_type1correctedRECO_.label() == "none") ) ? false : true;
+  bool producePFMET_type1correctedRECO = ( (pfmetTag_type1correctedRECO_.label() == "none") ) ? false : true;
+  bool producePFMET_uncorrectedPF2PAT  = ( (pfmetTag_uncorrectedPF2PAT_.label() == "none") ) ? false : true;
+  bool producePFMET_uncorrectedRECO    = ( (pfmetTag_uncorrectedRECO_.label() == "none") ) ? false : true;
   bool produceMuon = ( (muonTag_.label() == "none") ) ? false : true;
   bool produceTau = ( (tauTag_.label() == "none") ) ? false : true;
   bool producePhoton = ( (photonTag_.label() == "none") ) ? false : true;
@@ -463,11 +477,6 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   bool produceSCsEE = ( (EEsuperclusterTag_.label() == "none") ) ? false : true;
   bool produceTrack = ( (trackTag_.label() == "none") ) ? false : true;
   bool produceGenParticle = ( (genParticleTag_.label() == "none") ) ? false : true;
-
-  bool producePFMET_type1correctedRECO = false;
-  bool producePFMET_uncorrectedPF2PAT = false;
-  bool producePFMET_uncorrectedRECO = false;
-
 
   // // remove all cluster tools for now
   EcalClusterLazyTools lazyTools( iEvent, iSetup, reducedBarrelRecHitCollection_, reducedEndcapRecHitCollection_ );
@@ -815,6 +824,25 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyElectron.eidHyperTight3MC = ele->electronID("eidHyperTight3MC");
 	MyElectron.eidHyperTight4MC = ele->electronID("eidHyperTight4MC");
       */
+
+      MyElectron.particleIso = ele->particleIso();
+      MyElectron.chargedHadronIso = ele->chargedHadronIso();
+      MyElectron.neutralHadronIso = ele->neutralHadronIso();
+      MyElectron.photonIso = ele->photonIso();
+      MyElectron.puChargedHadronIso = ele->puChargedHadronIso();
+      
+      MyElectron.chargedHadronIsoDR03 = ele->userIso(0);
+      MyElectron.neutralHadronIsoDR03 = ele->userIso(1);
+      MyElectron.photonIsoDR03 = ele->userIso(2);
+      MyElectron.puChargedHadronIsoDR03 = ele->userIso(3);
+
+      MyElectron.chargedHadronIsoDR04 = ele->userIso(4);
+      MyElectron.neutralHadronIsoDR04 = ele->userIso(5);
+      MyElectron.photonIsoDR04 = ele->userIso(6);
+      MyElectron.puChargedHadronIsoDR04 = ele->userIso(7);
+
+      MyElectron.rhoPrime = std::max(rho_event, 0.0);
+
       MyElectron.trackIso = ele->trackIso();
       MyElectron.ecalIso = ele->ecalIso();
       MyElectron.hcalIso = ele->hcalIso();
@@ -855,6 +883,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       MyElectron.IPError = ele->edB(pat::Electron::PV3D);
 
       double caloenergy = -1;
+      double eleEta = ele->eta();
+
 
       if( (ele->superCluster().isAvailable()) ){
 	double eMax    = lazyTools.eMax(    *(ele->superCluster()) );
@@ -864,7 +894,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	double eBottom = lazyTools.eBottom( *(ele->superCluster()) );
 	double e3x3    = lazyTools.e3x3(    *(ele->superCluster()) );
 	double swissCross = -99;
-
+	
 	if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
 
 	MyElectron.eMax = eMax;
@@ -882,6 +912,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyElectron.scEta = ele->superCluster()->position().eta();
 	MyElectron.scPhi = ele->superCluster()->position().phi();
 	MyElectron.scZ = ele->superCluster()->position().Z();
+	
+	eleEta = ele->superCluster()->position().eta();
 
 	double seedE = -999, seedTime = -999;
 	int seedRecoFlag = -999;
@@ -1165,18 +1197,28 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 			  cutSigIeta && cutE2x5 && cutEMhad1 && cutHad2 && cutTrackIso );
       bool isHEEP = ( isHEEPnoEt && cutET );
 
+      if( sample_<0 ){
+	MyElectron.AEffDr03 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso03, eleEta, ElectronEffectiveArea::kEleEAData2012);
+	MyElectron.AEffDr04 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso04, eleEta, ElectronEffectiveArea::kEleEAData2012);  
+      }
+      else {
+	MyElectron.AEffDr03 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso03, eleEta, ElectronEffectiveArea::kEleEAFall11MC);
+	MyElectron.AEffDr04 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso04, eleEta, ElectronEffectiveArea::kEleEAFall11MC); 
+      }
+      
+      
 
       MyElectron.isHEEP = ( isHEEP ) ? 1 : 0;
       MyElectron.isHEEPnoEt = ( isHEEPnoEt ) ? 1 : 0;
-
+      
       MyElectron.isGsfCtfScPixChargeConsistent = ele->isGsfCtfScPixChargeConsistent();
-       
+      
       bnelectrons->push_back(MyElectron);
-
+      
     }
   }
-
-
+  
+  
   
   edm::ESHandle<JetCorrectorParametersCollection> JetCorParColl_Calo;
   iSetup.get<JetCorrectionsRecord>().get("AK5Calo",JetCorParColl_Calo); 
@@ -1558,6 +1600,42 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       MyMuon.vy = muon->vy();
       MyMuon.vz = muon->vz();
 
+      MyMuon.particleIso = muon->particleIso();
+      MyMuon.chargedHadronIso = muon->chargedHadronIso();
+      MyMuon.neutralHadronIso = muon->neutralHadronIso();
+      MyMuon.photonIso = muon->photonIso();
+      MyMuon.puChargedHadronIso = muon->puChargedHadronIso();
+      
+      MyMuon.chargedHadronIsoDR03 = muon->userIso(0);
+      MyMuon.neutralHadronIsoDR03 = muon->userIso(1);
+      MyMuon.photonIsoDR03 = muon->userIso(2);
+      MyMuon.puChargedHadronIsoDR03 = muon->userIso(3);
+
+      MyMuon.chargedHadronIsoDR04 = muon->userIso(4);
+      MyMuon.neutralHadronIsoDR04 = muon->userIso(5);
+      MyMuon.photonIsoDR04 = muon->userIso(6);
+      MyMuon.puChargedHadronIsoDR04 = muon->userIso(7);
+      
+      MyMuon.rhoPrime = std::max(rho_event, 0.0);
+      if( sample_<0 ){
+	MyMuon.AEffDr03 = MuonEffectiveArea::GetMuonEffectiveArea(MuonEffectiveArea::kMuGammaAndNeutralHadronIso03, muon->eta(), MuonEffectiveArea::kMuEAData2012);
+	MyMuon.AEffDr04 = MuonEffectiveArea::GetMuonEffectiveArea(MuonEffectiveArea::kMuGammaAndNeutralHadronIso04, muon->eta(), MuonEffectiveArea::kMuEAData2012);
+      }
+      else {
+	MyMuon.AEffDr03 = MuonEffectiveArea::GetMuonEffectiveArea(MuonEffectiveArea::kMuGammaAndNeutralHadronIso03, muon->eta(), MuonEffectiveArea::kMuEAFall11MC);
+	MyMuon.AEffDr04 = MuonEffectiveArea::GetMuonEffectiveArea(MuonEffectiveArea::kMuGammaAndNeutralHadronIso04, muon->eta(), MuonEffectiveArea::kMuEAFall11MC);
+      }
+      
+      MyMuon.pfIsoR03SumChargedHadronPt = muon->pfIsolationR03().sumChargedHadronPt;
+      MyMuon.pfIsoR03SumNeutralHadronEt = muon->pfIsolationR03().sumNeutralHadronEt;
+      MyMuon.pfIsoR03SumPhotonEt = muon->pfIsolationR03().sumPhotonEt;
+      MyMuon.pfIsoR03SumPUPt = muon->pfIsolationR03().sumPUPt;
+      
+      MyMuon.pfIsoR04SumChargedHadronPt = muon->pfIsolationR04().sumChargedHadronPt;
+      MyMuon.pfIsoR04SumNeutralHadronEt = muon->pfIsolationR04().sumNeutralHadronEt;
+      MyMuon.pfIsoR04SumPhotonEt = muon->pfIsolationR04().sumPhotonEt;
+      MyMuon.pfIsoR04SumPUPt = muon->pfIsolationR04().sumPUPt;
+
       MyMuon.trackIso = muon->trackIso();
       MyMuon.ecalIso = muon->ecalIso();
       MyMuon.hcalIso = muon->hcalIso();
@@ -1611,6 +1689,11 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       MyMuon.IDGMPTight = ( muon->isGood("GlobalMuonPromptTight") ) ? 1 : 0;
 
+      MyMuon.isMuon = ( muon->isMuon() ) ? 1 : 0;
+      MyMuon.isGoodMuon_1StationTight = ( muon->isGood("TMOneStationTight") )  ? 1 : 0;
+
+
+
       MyMuon.isGlobalMuon = ( muon->isGlobalMuon() ) ? 1 : 0;
       MyMuon.isTrackerMuon = ( muon->isTrackerMuon() ) ? 1 : 0;
       MyMuon.isStandAloneMuon = ( muon->isStandAloneMuon() ) ? 1 : 0;
@@ -1636,10 +1719,12 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       if( (muon->innerTrack().isAvailable()) ){
     MyMuon.innerTrackPt = muon->innerTrack()->pt();
     MyMuon.innerTrackPtError = muon->innerTrack()->ptError();          
-	MyMuon.numberOfValidTrackerHitsInnerTrack = muon->innerTrack()->numberOfValidHits();
-	MyMuon.pixelLayersWithMeasurement = muon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
-	MyMuon.numberOfValidPixelHits = muon->innerTrack()->hitPattern().numberOfValidPixelHits();
+    MyMuon.innerTrackNormChi2 = muon->innerTrack()->normalizedChi2();
 
+    MyMuon.numberOfValidTrackerHitsInnerTrack = muon->innerTrack()->numberOfValidHits();
+    MyMuon.pixelLayersWithMeasurement = muon->innerTrack()->hitPattern().pixelLayersWithMeasurement();
+    MyMuon.numberOfValidPixelHits = muon->innerTrack()->hitPattern().numberOfValidPixelHits();
+    
 	MyMuon.correctedD0 = muon->innerTrack()->dxy(beamSpotPosition);
 	MyMuon.correctedD0Vertex = muon->innerTrack()->dxy(vertexPosition);
 	MyMuon.correctedDZ = muon->innerTrack()->dz(vertexPosition);
@@ -2980,42 +3065,122 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   }
 
 
-//   std::auto_ptr<BNmetCollection> bnpfmet_type1correctedRECO(new BNmetCollection);
-//   BNmet MyPfmet_type1correctedRECO;
+  std::auto_ptr<BNmetCollection> bnpfmet_type1correctedRECO(new BNmetCollection);
+  BNmet MyPfmet_type1correctedRECO;
 
-//   if( producePFMET_type1correctedRECO ){
-//     MyPfmet_type1correctedRECO.pt = pfmetHandle_type1correctedRECO->front().pt();
-//     MyPfmet_type1correctedRECO.px = pfmetHandle_type1correctedRECO->front().px();
-//     MyPfmet_type1correctedRECO.py = pfmetHandle_type1correctedRECO->front().py();
-//     MyPfmet_type1correctedRECO.phi = pfmetHandle_type1correctedRECO->front().phi();
-//     MyPfmet_type1correctedRECO.sumET = pfmetHandle_type1correctedRECO->front().sumEt();
+  if( producePFMET_type1correctedRECO ){
+    MyPfmet_type1correctedRECO.pt = pfmetHandle_type1correctedRECO->front().pt();
+    MyPfmet_type1correctedRECO.px = pfmetHandle_type1correctedRECO->front().px();
+    MyPfmet_type1correctedRECO.py = pfmetHandle_type1correctedRECO->front().py();
+    MyPfmet_type1correctedRECO.phi = pfmetHandle_type1correctedRECO->front().phi();
+    MyPfmet_type1correctedRECO.sumET = pfmetHandle_type1correctedRECO->front().sumEt();
 
-//     //pfmet specific quantities
-//     MyPfmet_type1correctedRECO.NeutralEMFraction = pfmetHandle_type1correctedRECO->front().photonEtFraction();
-//     MyPfmet_type1correctedRECO.NeutralHadEtFraction = pfmetHandle_type1correctedRECO->front().neutralHadronEtFraction();
-//     MyPfmet_type1correctedRECO.ChargedEMEtFraction = pfmetHandle_type1correctedRECO->front().electronEtFraction();
-//     MyPfmet_type1correctedRECO.ChargedHadEtFraction = pfmetHandle_type1correctedRECO->front().chargedHadronEtFraction();
-//     MyPfmet_type1correctedRECO.MuonEtFraction = pfmetHandle_type1correctedRECO->front().muonEtFraction();
-//     MyPfmet_type1correctedRECO.Type6EtFraction = pfmetHandle_type1correctedRECO->front().HFHadronEtFraction();
-//     MyPfmet_type1correctedRECO.Type7EtFraction = pfmetHandle_type1correctedRECO->front().HFEMEtFraction();
+    //pfmet specific quantities
+    MyPfmet_type1correctedRECO.NeutralEMFraction = pfmetHandle_type1correctedRECO->front().photonEtFraction();
+    MyPfmet_type1correctedRECO.NeutralHadEtFraction = pfmetHandle_type1correctedRECO->front().neutralHadronEtFraction();
+    MyPfmet_type1correctedRECO.ChargedEMEtFraction = pfmetHandle_type1correctedRECO->front().electronEtFraction();
+    MyPfmet_type1correctedRECO.ChargedHadEtFraction = pfmetHandle_type1correctedRECO->front().chargedHadronEtFraction();
+    MyPfmet_type1correctedRECO.MuonEtFraction = pfmetHandle_type1correctedRECO->front().muonEtFraction();
+    MyPfmet_type1correctedRECO.Type6EtFraction = pfmetHandle_type1correctedRECO->front().HFHadronEtFraction();
+    MyPfmet_type1correctedRECO.Type7EtFraction = pfmetHandle_type1correctedRECO->front().HFEMEtFraction();
 
-//     double sigmaX2_pf = (pfmetHandle_type1correctedRECO->front()).getSignificanceMatrix()(0,0);
-//     double sigmaY2_pf = (pfmetHandle_type1correctedRECO->front()).getSignificanceMatrix()(1,1);
-//     double sigmaXY_pf = (pfmetHandle_type1correctedRECO->front()).getSignificanceMatrix()(0,1);
-//     double sigmaYX_pf = (pfmetHandle_type1correctedRECO->front()).getSignificanceMatrix()(1,0);
+    double sigmaX2_pf = (pfmetHandle_type1correctedRECO->front()).getSignificanceMatrix()(0,0);
+    double sigmaY2_pf = (pfmetHandle_type1correctedRECO->front()).getSignificanceMatrix()(1,1);
+    double sigmaXY_pf = (pfmetHandle_type1correctedRECO->front()).getSignificanceMatrix()(0,1);
+    double sigmaYX_pf = (pfmetHandle_type1correctedRECO->front()).getSignificanceMatrix()(1,0);
 
-//     double significance_pf = 99;
-//     if(sigmaX2_pf<1.e10 && sigmaY2_pf<1.e10) significance_pf = (pfmetHandle_type1correctedRECO->front()).significance();
+    double significance_pf = 99;
+    if(sigmaX2_pf<1.e10 && sigmaY2_pf<1.e10) significance_pf = (pfmetHandle_type1correctedRECO->front()).significance();
 
-//     MyPfmet_type1correctedRECO.significance = significance_pf;
-//     MyPfmet_type1correctedRECO.sigmaX2 = sigmaX2_pf;
-//     MyPfmet_type1correctedRECO.sigmaY2 = sigmaY2_pf;
-//     MyPfmet_type1correctedRECO.sigmaXY = sigmaXY_pf;
-//     MyPfmet_type1correctedRECO.sigmaYX = sigmaYX_pf;
+    MyPfmet_type1correctedRECO.significance = significance_pf;
+    MyPfmet_type1correctedRECO.sigmaX2 = sigmaX2_pf;
+    MyPfmet_type1correctedRECO.sigmaY2 = sigmaY2_pf;
+    MyPfmet_type1correctedRECO.sigmaXY = sigmaXY_pf;
+    MyPfmet_type1correctedRECO.sigmaYX = sigmaYX_pf;
 
-//    bnpfmet_type1correctedRECO->push_back(MyPfmet_type1correctedRECO);
-//  }
+   bnpfmet_type1correctedRECO->push_back(MyPfmet_type1correctedRECO);
+ }
 
+  std::auto_ptr<BNmetCollection> bnpfmet_uncorrectedPF2PAT(new BNmetCollection);
+  BNmet MyPfmet_uncorrectedPF2PAT;
+
+  if( producePFMET_uncorrectedPF2PAT ){
+    MyPfmet_uncorrectedPF2PAT.pt = pfmetHandle_uncorrectedPF2PAT->front().pt();
+    MyPfmet_uncorrectedPF2PAT.px = pfmetHandle_uncorrectedPF2PAT->front().px();
+    MyPfmet_uncorrectedPF2PAT.py = pfmetHandle_uncorrectedPF2PAT->front().py();
+    MyPfmet_uncorrectedPF2PAT.phi = pfmetHandle_uncorrectedPF2PAT->front().phi();
+    MyPfmet_uncorrectedPF2PAT.sumET = pfmetHandle_uncorrectedPF2PAT->front().sumEt();
+    MyPfmet_uncorrectedPF2PAT.corSumET = pfmetHandle_uncorrectedPF2PAT->front().corSumEt();
+    MyPfmet_uncorrectedPF2PAT.Upt = pfmetHandle_uncorrectedPF2PAT->front().uncorrectedPt();
+    MyPfmet_uncorrectedPF2PAT.Uphi = pfmetHandle_uncorrectedPF2PAT->front().uncorrectedPhi();
+    if (pfmetHandle_uncorrectedPF2PAT->front().isPFMET()) { //Appears to always return false
+      MyPfmet_uncorrectedPF2PAT.NeutralEMFraction = pfmetHandle_uncorrectedPF2PAT->front().NeutralEMFraction();
+      MyPfmet_uncorrectedPF2PAT.NeutralHadEtFraction = pfmetHandle_uncorrectedPF2PAT->front().NeutralHadEtFraction();
+      MyPfmet_uncorrectedPF2PAT.ChargedEMEtFraction = pfmetHandle_uncorrectedPF2PAT->front().ChargedEMEtFraction();
+      MyPfmet_uncorrectedPF2PAT.ChargedHadEtFraction = pfmetHandle_uncorrectedPF2PAT->front().ChargedHadEtFraction();
+      MyPfmet_uncorrectedPF2PAT.MuonEtFraction = pfmetHandle_uncorrectedPF2PAT->front().MuonEtFraction();
+      MyPfmet_uncorrectedPF2PAT.Type6EtFraction = pfmetHandle_uncorrectedPF2PAT->front().Type6EtFraction();
+      MyPfmet_uncorrectedPF2PAT.Type7EtFraction = pfmetHandle_uncorrectedPF2PAT->front().Type7EtFraction();
+    }
+    double sigmaX2_pf = (pfmetHandle_uncorrectedPF2PAT->front()).getSignificanceMatrix()(0,0);
+    double sigmaY2_pf = (pfmetHandle_uncorrectedPF2PAT->front()).getSignificanceMatrix()(1,1);
+    double sigmaXY_pf = (pfmetHandle_uncorrectedPF2PAT->front()).getSignificanceMatrix()(0,1);
+    double sigmaYX_pf = (pfmetHandle_uncorrectedPF2PAT->front()).getSignificanceMatrix()(1,0);
+
+    double significance_pf = 99;
+    if(sigmaX2_pf<1.e10 && sigmaY2_pf<1.e10) significance_pf = (pfmetHandle_uncorrectedPF2PAT->front()).significance();
+
+    MyPfmet_uncorrectedPF2PAT.significance = significance_pf;
+    MyPfmet_uncorrectedPF2PAT.sigmaX2 = sigmaX2_pf;
+    MyPfmet_uncorrectedPF2PAT.sigmaY2 = sigmaY2_pf;
+    MyPfmet_uncorrectedPF2PAT.sigmaXY = sigmaXY_pf;
+    MyPfmet_uncorrectedPF2PAT.sigmaYX = sigmaYX_pf;
+
+    if( (pfmetHandle_uncorrectedPF2PAT->front().genMET()) ){
+      MyPfmet_uncorrectedPF2PAT.genPT = pfmetHandle_uncorrectedPF2PAT->front().genMET()->pt();
+      MyPfmet_uncorrectedPF2PAT.genPhi = pfmetHandle_uncorrectedPF2PAT->front().genMET()->phi();
+    }
+
+    bnpfmet_uncorrectedPF2PAT->push_back(MyPfmet_uncorrectedPF2PAT);
+  }
+
+
+
+  std::auto_ptr<BNmetCollection> bnpfmet_uncorrectedRECO(new BNmetCollection);
+  BNmet MyPfmet_uncorrectedRECO;
+
+  if( producePFMET_uncorrectedRECO ){
+    MyPfmet_uncorrectedRECO.pt = pfmetHandle_uncorrectedRECO->front().pt();
+    MyPfmet_uncorrectedRECO.px = pfmetHandle_uncorrectedRECO->front().px();
+    MyPfmet_uncorrectedRECO.py = pfmetHandle_uncorrectedRECO->front().py();
+    MyPfmet_uncorrectedRECO.phi = pfmetHandle_uncorrectedRECO->front().phi();
+    MyPfmet_uncorrectedRECO.sumET = pfmetHandle_uncorrectedRECO->front().sumEt();
+
+    //pfmet specific quantities
+    MyPfmet_uncorrectedRECO.NeutralEMFraction = pfmetHandle_uncorrectedRECO->front().photonEtFraction();
+    MyPfmet_uncorrectedRECO.NeutralHadEtFraction = pfmetHandle_uncorrectedRECO->front().neutralHadronEtFraction();
+    MyPfmet_uncorrectedRECO.ChargedEMEtFraction = pfmetHandle_uncorrectedRECO->front().electronEtFraction();
+    MyPfmet_uncorrectedRECO.ChargedHadEtFraction = pfmetHandle_uncorrectedRECO->front().chargedHadronEtFraction();
+    MyPfmet_uncorrectedRECO.MuonEtFraction = pfmetHandle_uncorrectedRECO->front().muonEtFraction();
+    MyPfmet_uncorrectedRECO.Type6EtFraction = pfmetHandle_uncorrectedRECO->front().HFHadronEtFraction();
+    MyPfmet_uncorrectedRECO.Type7EtFraction = pfmetHandle_uncorrectedRECO->front().HFEMEtFraction();
+
+    double sigmaX2_pf = (pfmetHandle_uncorrectedRECO->front()).getSignificanceMatrix()(0,0);
+    double sigmaY2_pf = (pfmetHandle_uncorrectedRECO->front()).getSignificanceMatrix()(1,1);
+    double sigmaXY_pf = (pfmetHandle_uncorrectedRECO->front()).getSignificanceMatrix()(0,1);
+    double sigmaYX_pf = (pfmetHandle_uncorrectedRECO->front()).getSignificanceMatrix()(1,0);
+
+    double significance_pf = 99;
+    if(sigmaX2_pf<1.e10 && sigmaY2_pf<1.e10) significance_pf = (pfmetHandle_uncorrectedRECO->front()).significance();
+
+    MyPfmet_uncorrectedRECO.significance = significance_pf;
+    MyPfmet_uncorrectedRECO.sigmaX2 = sigmaX2_pf;
+    MyPfmet_uncorrectedRECO.sigmaY2 = sigmaY2_pf;
+    MyPfmet_uncorrectedRECO.sigmaXY = sigmaXY_pf;
+    MyPfmet_uncorrectedRECO.sigmaYX = sigmaYX_pf;
+
+    bnpfmet_uncorrectedRECO->push_back(MyPfmet_uncorrectedRECO);
+  }
 
 
   
@@ -3530,7 +3695,9 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   if( producePFJet ) iEvent.put(bnpfjets,pfjetTag_.label());
   if( produceGenJet ) iEvent.put(bngenjets,genjetTag_.label());
   if( producePFMET ) iEvent.put(bnpfmet,pfmetTag_.label());
-  //if( producePFMET_type1correctedRECO ) iEvent.put(bnpfmet_type1correctedRECO,std::string(pfmetTag_type1correctedRECO_.label() + "BN"));
+  if( producePFMET_type1correctedRECO ) iEvent.put(bnpfmet_type1correctedRECO,std::string(pfmetTag_type1correctedRECO_.label() + "BN"));
+  if( producePFMET_uncorrectedPF2PAT )  iEvent.put(bnpfmet_uncorrectedPF2PAT,std::string(pfmetTag_uncorrectedPF2PAT_.label() + "BN"));
+  if( producePFMET_uncorrectedRECO )    iEvent.put(bnpfmet_uncorrectedRECO,std::string(pfmetTag_uncorrectedRECO_.label() + "BN"));
   if( produceMuon ) iEvent.put(bnmuons,muonTag_.label());
   if( produceTau ) iEvent.put(bntaus,tauTag_.label());
   if( producePhoton ) iEvent.put(bnphotons,photonTag_.label());
