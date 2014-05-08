@@ -527,51 +527,6 @@ process.filterDiLeptonMassQCDveto.muons     = 'filterOppositeCharge'
 process.filterDiLeptonMassQCDveto.electrons = 'filterOppositeCharge'
 process.filterDiLeptonMassQCDveto.Cut       = (0.,12.)
 
-
-
-####################################################################
-## Write Ntuple
-
-from TopAnalysis.TopAnalyzer.NTupleWriter_cfi import writeNTuple
-writeNTuple.sampleName = op_samplename
-writeNTuple.channelName = op_mode
-writeNTuple.systematicsName = op_systematicsName
-writeNTuple.isMC = op_runOnMC
-writeNTuple.isTtBarSample = signal
-writeNTuple.isHiggsSample = higgsSignal
-writeNTuple.isZSample = zGenInfo
-writeNTuple.includePDFWeights = op_includePDFWeights
-writeNTuple.pdfWeights = "pdfWeights:cteq66"
-writeNTuple.includeZdecay = zproducer
-writeNTuple.saveHadronMothers = False
-
-process.writeNTuple = writeNTuple.clone(
-    muons = isolatedMuonCollection,
-    elecs = isolatedElecCollection,
-    jets = jetCollection,
-    met = metCollection,
-    genMET = "genMetTrue",
-    genJets = genJetCollection,
-
-    BHadJetIndex = cms.InputTag(genLevelBJetProducerInput, "BHadJetIndex"),
-    AntiBHadJetIndex = cms.InputTag(genLevelBJetProducerInput, "AntiBHadJetIndex"),
-    BHadrons = cms.InputTag(genLevelBJetProducerInput, "BHadrons"),
-    AntiBHadrons = cms.InputTag(genLevelBJetProducerInput, "AntiBHadrons"),
-    BHadronFromTopB = cms.InputTag(genLevelBJetProducerInput, "BHadronFromTopB"),
-    AntiBHadronFromTopB = cms.InputTag(genLevelBJetProducerInput, "AntiBHadronFromTopB"),
-    BHadronVsJet = cms.InputTag(genLevelBJetProducerInput, "BHadronVsJet"),
-    AntiBHadronVsJet = cms.InputTag(genLevelBJetProducerInput, "AntiBHadronVsJet"),
-    genBHadPlusMothers = cms.InputTag(genHFHadronMatcherInput,"genBHadPlusMothers"),
-    genBHadPlusMothersIndices = cms.InputTag(genHFHadronMatcherInput,"genBHadPlusMothersIndices"),
-    genBHadIndex = cms.InputTag(genHFHadronMatcherInput,"genBHadIndex"),
-    genBHadFlavour = cms.InputTag(genHFHadronMatcherInput,"genBHadFlavour"),
-    genBHadJetIndex = cms.InputTag(genHFHadronMatcherInput,"genBHadJetIndex"),
-)
-process.writeNTuple.jetsForMET    = cms.InputTag("scaledJetEnergy:selectedPatJets")
-process.writeNTuple.jetsForMETuncorr    = cms.InputTag("selectedPatJets")
-
-
-
 ####################################################################
 ## Include PDF weights for systematic signal samples
 
