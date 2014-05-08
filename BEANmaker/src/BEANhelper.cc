@@ -931,23 +931,6 @@ BNjetCollection BEANhelper::GetCorrectedJets(const BNjetCollection& iJets, const
 	return result;
 }
 
-BNjetCollection BEANhelper::GetUncorrectedJets(const BNjetCollection& iCorrectedJets, const BNjetCollection& iOriginalJets){
-	CheckSetUp();
-
-	if(iOriginalJets.size() < iCorrectedJets.size()){ cerr << "ERROR in BEANhelper::GetUncorrectedJets: size of 'iCorrectedJets' is greater than 'iOriginalJets'. Terminating..." << endl; exit(1); }
-	BNjetCollection result;
-
-	for( BNjetCollection::const_iterator cJet = iCorrectedJets.begin(); cJet != iCorrectedJets.end(); ++cJet ){
-		bool found = false;
-		for( BNjetCollection::const_iterator oJet = iOriginalJets.begin(); oJet != iOriginalJets.end(); ++oJet ){
-			if(deltaR(cJet->eta, cJet->phi, oJet->eta, oJet->phi) < 0.001){ result.push_back(*oJet); found = true; break; }
-		}
-		if(!found){ cerr << "ERROR in BEANhelper::GetUncorrectedJets: could not match one of the jets. Check input jet collections. Terminating..." << endl; exit(1); }
-	}
-
-	return result;
-}
-
 // Return the btag weight for the input jet (product of efficiency and scale factor)
 float BEANhelper::GetBtagWeight(const BNjet& iJet, const sysType::sysType iSysType){
 	CheckSetUp();
@@ -2475,63 +2458,7 @@ BNelectronCollection BEANhelper::GetSelectedElectrons(const BNelectronCollection
 }
 
 BNjetCollection
-BEANhelper::GetCleanJets(const BNjetCollection& jets, const vector<TLorentzVector>& leptons, const float maxDeltaR, std::vector<unsigned int>* jet_indices)
-{
-  CheckSetUp();
-  BNjetCollection cleanJets = jets;
-  vector<bool> isCleanJet (cleanJets.size(), true);
-  BNjetCollection cleanJets_collection;
-  int matchIndex;
-  float minDeltaR;
-  float dR;
-  TLorentzVector jet_v;
-
-  for (unsigned int m=0; m<leptons.size();m++){// auto& lepton: iToUnmatch) {
-    matchIndex = -1;
-    dR = 999.0;
-    minDeltaR = maxDeltaR;
-    for (unsigned i=0; i<cleanJets.size(); i++){
-      dR = reco::deltaR(leptons.at(m).Eta(), leptons.at(m).Phi(), cleanJets.at(i).eta, cleanJets.at(i).phi);
-      if (dR < minDeltaR) {
-        minDeltaR = dR;
-        matchIndex = i;
-      }
-    }
-    //clean closest jet from lepton and return the jet energry if subrracted energy is greater than zer0
-    if (matchIndex != -1){
-      if (cleanJets.at(matchIndex).energy > leptons.at(m).Energy() && cleanJets.at(matchIndex).pt > leptons.at(m).Pt()) {
-	if (jets.at(matchIndex).leadCandPt >= leptons.at(m).Pt()){
-	  //set jet 4vector
-	  jet_v.SetPxPyPzE(cleanJets.at(matchIndex).px,cleanJets.at(matchIndex).py,cleanJets.at(matchIndex).pz,cleanJets.at(matchIndex).energy);
-	  //subtract 4vectors
-	  jet_v = jet_v - leptons.at(m);
-	  
-	  cleanJets.at(matchIndex).px = jet_v.Px();
-	  cleanJets.at(matchIndex).py = jet_v.Py();
-	  cleanJets.at(matchIndex).pz = jet_v.Pz();
-	  cleanJets.at(matchIndex).pt = jet_v.Pt();
-	  cleanJets.at(matchIndex).energy = jet_v.Energy();
-	  cleanJets.at(matchIndex).eta = jet_v.Eta();
-	  cleanJets.at(matchIndex).phi = jet_v.Phi();
-	}
-      }
-      else {
-        isCleanJet.at(matchIndex) = false;
-      }
-    }
-  }
-  
-  for (unsigned i=0; i<cleanJets.size(); i++) {
-    if (isCleanJet.at(i)){
-      cleanJets_collection.push_back(cleanJets.at(i));
-      if (jet_indices){jet_indices->push_back(i);}
-    }
-  }
-  return cleanJets_collection;
-}
-
-BNjetCollection
-BEANhelper::GetCleanJets(const BNjetCollection& jets, const BNleptonCollection& leptons, const float maxDeltaR) {
+BEANhelper::GetCleanJets(const BNjetCollection& jets, const BNleptonCollection& leptons, const float maxDeltaR, std::vector<unsigned int>* jet_indices) {
   CheckSetUp();
   BNjetCollection cleanJets = jets;
   vector<bool> isCleanJet (cleanJets.size(), true);
@@ -2572,10 +2499,11 @@ BEANhelper::GetCleanJets(const BNjetCollection& jets, const BNleptonCollection& 
 	  cleanJets.at(matchIndex).eta = jet_v.Eta();
 	  cleanJets.at(matchIndex).phi = jet_v.Phi();
 	}
-	else{
-	  cout<<"subtraction not performed!"<<j<<endl;
-	  j+=1;
-	}
+	//else{
+	// cout<<"subtraction not performed!"<<j<<endl;
+	// cout<<jets.at(matchIndex).leadCandPt*1.1<<"    "<<lepton->pt<<endl;
+	// j+=1;
+	//}
       }
       else {
         isCleanJet.at(matchIndex) = false;
@@ -2584,7 +2512,13 @@ BEANhelper::GetCleanJets(const BNjetCollection& jets, const BNleptonCollection& 
   }
   
   for (unsigned i=0; i<cleanJets.size(); i++) {
-    if (isCleanJet.at(i)){cleanJets_collection.push_back(cleanJets.at(i));}
+    if (isCleanJet.at(i)){
+      cleanJets_collection.push_back(cleanJets.at(i));
+      
+      if (jet_indices){
+	jet_indices->push_back(i);
+      }
+    }
   }
   return cleanJets_collection;
 }

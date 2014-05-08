@@ -137,10 +137,8 @@ class BEANhelper{
 		BNmet GetCorrectedMET(const BNmet&, const BNjetCollection&, const sysType::sysType iSysType=sysType::NA);
 		BNjet GetCorrectedJet(const BNjet&, const sysType::sysType iSysType=sysType::NA);
 		BNjetCollection GetSelectedJets(const BNjetCollection&, const float, const float, const jetID::jetID, const char);
-		BNjetCollection GetUncorrectedJets(const BNjetCollection&, const BNjetCollection&);
 		BNjetCollection GetCorrectedJets(const BNjetCollection&, const sysType::sysType iSysType=sysType::NA);
-		BNjetCollection GetCleanJets(const BNjetCollection&, const vector<TLorentzVector>&, const float, std::vector<unsigned int>* jet_indices=0);
-		BNjetCollection GetCleanJets(const BNjetCollection&, const BNleptonCollection&, const float);
+		BNjetCollection GetCleanJets(const BNjetCollection&, const BNleptonCollection&, const float, std::vector<unsigned int>* jet_indices=0);
 		unsigned int GetNumCSVbtags(const BNjetCollection&, const char, std::vector<unsigned int>* jet_indices=0);
 		unsigned int GetNumNonCSVbtags(const BNjetCollection&, const char, std::vector<unsigned int>* jet_indices=0);
 		float GetHT(const BNjetCollection&);
