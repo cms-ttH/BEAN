@@ -31,7 +31,6 @@ op_outputFile = 'ttbarZ.root'#
 op_systematicsName = 'Nominal'#
 op_json = ''#
 op_skipEvents = 0#
-op_includePDFWeights = False#
 op_maxEvents = 30#
 ####################################################################
 ## Set up samplename
@@ -468,16 +467,6 @@ process.hardJets = selectedPatJets.clone(src = 'goodIdJets', cut = 'pt > 5 & abs
 process.load("TopAnalysis.HiggsUtils.producers.JetPropertiesProducer_cfi")
 process.jetProperties.src = jetCollection
 
-process.buildJets = cms.Sequence(
-            process.scaledJetEnergy *
-	    #process.selectedPatElectronsAfterScaling *
-            process.goodIdJets * 
-            process.hardJets *
-            process.jetProperties
-            )
-
-
-
 ####################################################################
 ## Filter on events containing dilepton system of opposite charge and above m(ll) > 12 GeV
 
@@ -526,31 +515,6 @@ process.filterDiLeptonMassQCDveto           = filterLeptonPair.clone()
 process.filterDiLeptonMassQCDveto.muons     = 'filterOppositeCharge'
 process.filterDiLeptonMassQCDveto.electrons = 'filterOppositeCharge'
 process.filterDiLeptonMassQCDveto.Cut       = (0.,12.)
-
-####################################################################
-## Include PDF weights for systematic signal samples
-
-if op_includePDFWeights:
-    if not signal:
-        print "PDF variations only supported for the signal"
-        exit(5615)
-    process.pdfWeights = cms.EDProducer("PdfWeightProducer",
-                # Fix POWHEG if buggy (this PDF set will also appear on output,
-                # so only two more PDF sets can be added in PdfSetNames if not "")
-                #FixPOWHEG = cms.untracked.string("cteq66.LHgrid"),
-                GenTag = cms.untracked.InputTag("genParticles"),
-                PdfInfoTag = cms.untracked.InputTag("generator"),
-                PdfSetNames = cms.untracked.vstring(
-                        "cteq66.LHgrid"
-                        #, "MRST2006nnlo.LHgrid"
-                        #, "NNPDF10_100.LHgrid"
-                        #"cteq6mE.LHgrid"
-                        # ,"cteq6m.LHpdf"
-                        #"cteq6m.LHpdf"
-                ))
-else:
-    process.pdfWeights = cms.Sequence()
-
 
 
 ####################################################################
@@ -685,65 +649,6 @@ else:
 
 
 ####################################################################
-## Remove all the tau stuff
-
-# from PhysicsTools.PatAlgos.tools.coreTools import removeSpecificPATObjects
-# removeSpecificPATObjects( process
-#                         , names = ['Taus', 'Photons']
-#                         , outputModules = []
-#                         , postfix = pfpostfix
-#                         )
-# # Remove the full pftau sequence as it is not needed for us
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'pfTauPFJets08Region'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'pfTauPileUpVertices'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'pfTauTagInfoProducer'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'pfJetsPiZeros'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'pfJetsLegacyTaNCPiZeros'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'pfJetsLegacyHPSPiZeros'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'pfTausBase'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsSelectionDiscriminator'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauProducerSansRefs'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauProducer'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'pfTausBaseDiscriminationByDecayModeFinding'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'pfTausBaseDiscriminationByLooseCombinedIsolationDBSumPtCorr'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'pfTaus'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'pfNoTau'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByDecayModeFinding'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByVLooseChargedIsolation'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByLooseChargedIsolation'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByMediumChargedIsolation'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByTightChargedIsolation'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByVLooseIsolation'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByLooseIsolation'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByMediumIsolation'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByTightIsolation'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByVLooseIsolationDBSumPtCorr'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByLooseIsolationDBSumPtCorr'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByMediumIsolationDBSumPtCorr'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByTightIsolationDBSumPtCorr'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByRawCombinedIsolationDBSumPtCorr'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByRawChargedIsolationDBSumPtCorr'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByRawGammaIsolationDBSumPtCorr'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByVLooseCombinedIsolationDBSumPtCorr'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByLooseCombinedIsolationDBSumPtCorr'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByMediumCombinedIsolationDBSumPtCorr'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByTightCombinedIsolationDBSumPtCorr'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByLooseElectronRejection'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByMediumElectronRejection'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByTightElectronRejection'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByMVAElectronRejection'+pfpostfix))
-#getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByLooseMuonRejection'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByMediumMuonRejection'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'hpsPFTauDiscriminationByTightMuonRejection'+pfpostfix))
-
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'tauIsoDepositPFCandidates'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'tauIsoDepositPFChargedHadrons'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'tauIsoDepositPFNeutralHadrons'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'tauIsoDepositPFGammas'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'patTaus'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'selectedPatTaus'+pfpostfix))
-# getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'countPatTaus'+pfpostfix))
-
 ## removal of unnecessary modules
 getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'patPFParticles'+pfpostfix))
 getattr(process,'patPF2PATSequence'+pfpostfix).remove(getattr(process,'patCandidateSummary'+pfpostfix))
@@ -813,12 +718,7 @@ process.BNproducer = cms.EDProducer('BEANmaker',
                                     maxAbsZ = cms.untracked.double(24)
                                     )
 
-
-
-
 process.q2weights = cms.EDProducer('Q2Weights')
-
-
 
 ####################################################################
 ## Paths, one with preselection, one without for signal samples
@@ -828,17 +728,7 @@ process.metseq = cms.Sequence(
     process.pfType1CorrectedMet
     )
 
-process.p = cms.Path(
-    #process.goodOfflinePrimaryVertices *
-    #getattr(process,'patPF2PATSequence'+pfpostfix) *
-    #process.buildJets                     *
-    #process.filterOppositeCharge          *
-    #process.filterChannel                 *
-    #     process.filterDiLeptonMassQCDveto     *
-    #     process.makeTtFullLepEvent            *
-    #process.ntupleInRecoSeq               
-
- )
+process.p = cms.Path()
 
 if signal or higgsSignal or zGenInfo:
     process.pNtuple = cms.Path(
@@ -855,73 +745,6 @@ process.out.outputCommands.extend( [
     'drop *',
     'keep *_BNproducer_*_*'
     ])
-
-
-####################################################################
-## Prepend PF2PAT
-
-from TopAnalysis.TopAnalyzer.CountEventAnalyzer_cfi import countEvents
-process.EventsBeforeSelection = countEvents.clone()
-process.EventsBeforeSelection.includePDFWeights = op_includePDFWeights
-process.EventsBeforeSelection.pdfWeights = "pdfWeights:cteq66"
-    
-
-# pathnames = process.paths_().keys()
-# print 'prepending trigger sequence to paths:', pathnames
-# for pathname in pathnames:
-#     getattr(process, pathname).insert(0, cms.Sequence(
-#         process.pdfWeights *
-#         process.EventsBeforeSelection * 
-#         process.topsequence *
-#         process.higgssequence *
-#         process.zGenSequence *
-#         process.filterTrigger
-#         ))
-# if signal or higgsSignal or zGenInfo:
-#     process.pNtuple.remove(process.filterTrigger)
-
-process.scaledJetEnergy.inputElectrons       = "selectedPatElectrons"
-process.scaledJetEnergy.inputJets            = "selectedPatJets"
-process.scaledJetEnergy.inputMETs            = "patMETs"
-process.scaledJetEnergy.JECUncSrcFile        = cms.FileInPath("TopAnalysis/TopUtils/data/Summer13_V4_DATA_UncertaintySources_AK5PFchs.txt")
-process.scaledJetEnergy.scaleType = "abs"   #abs = 1, jes:up, jes:down
-
-if op_runOnMC:
-    process.scaledJetEnergy.resolutionEtaRanges  = cms.vdouble(0, 0.5, 0.5, 1.1, 1.1, 1.7, 1.7, 2.3, 2.3, 5.4)
-    process.scaledJetEnergy.resolutionFactors    = cms.vdouble(1.052, 1.057, 1.096, 1.134, 1.288) # JER standard
-
-    #please change this on the top where the defaults for the VarParsing are given
-    if op_systematicsName == "JES_UP":
-        process.scaledJetEnergy.scaleType = "jes:up"
-    if op_systematicsName == "JES_DOWN":
-        process.scaledJetEnergy.scaleType = "jes:down"
-    if op_systematicsName == "JER_UP":
-        process.scaledJetEnergy.resolutionFactors = cms.vdouble(1.115, 1.114, 1.161, 1.228, 1.488)
-    if op_systematicsName == "JER_DOWN":
-        process.scaledJetEnergy.resolutionFactors = cms.vdouble(0.990, 1.001, 1.032, 1.042, 1.089)
-else:
-    process.scaledJetEnergy.resolutionEtaRanges  = cms.vdouble(0, -1)
-    process.scaledJetEnergy.resolutionFactors    = cms.vdouble(1.0) # JER standard
-#     for pathname in pathnames:
-#         getattr(process, pathname).replace(process.goodOfflinePrimaryVertices,
-#                                            process.HBHENoiseFilter * 
-#                                            process.scrapingFilter * 
-#                                            process.ecalLaserCorrFilter * 
-#                                            process.goodOfflinePrimaryVertices)
-        
-
-
-# process.load("Configuration.EventContent.EventContent_cff")
-# process.out = cms.OutputModule("PoolOutputModule",
-#     fileName = cms.untracked.string('ttbarZ.root'),
-#     SelectEvents = cms.untracked.PSet(
-#     SelectEvents = cms.vstring('p','pNtuple','pNtuple')),
-#     dropMetaData = cms.untracked.string('ALL'),
-#     outputCommands = cms.untracked.vstring('drop *',
-#                                'keep *_BNproducer_*_*',
-#                                'keep double_kt6PFJets*_rho_*',
-#                                'keep *')
-#                                )
 
 ####################################################################
 ## Particle tree drawer
