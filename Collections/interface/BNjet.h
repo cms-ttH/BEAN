@@ -12,12 +12,10 @@ struct BNjet
     mass(v), area(v), fHPD(v), approximatefHPD(v), genPartonET(v),
     genPartonPT(v), genPartonEta(v), genPartonPhi(v), genJetET(v),
     genJetPT(v), genJetEta(v), genJetPhi(v), btagTChighPur(v),
-    btagTChighEff(v), btagJetProb(v), btagJetBProb(v), btagSoftEle(v),
-    btagSoftMuon(v), btagSoftMuonNoIP(v), btagSecVertex(v),
+    btagTChighEff(v), btagJetProb(v), btagJetBProb(v),
     btagSecVertexHighEff(v), btagSecVertexHighPur(v),
-    btagCombinedSecVertex(v), btagCombinedSecVertexMVA(v),
-    btagSoftMuonByPt(v), btagSoftMuonByIP3(v), btagSoftElectronByPt(v),
-    btagSoftElectronByIP3(v), n90Hits(v), hitsInN90(v),
+    btagCombinedSecVertex(v),btagCombinedSecVertexV1(v),
+    btagCombinedSecVertexSLV1(v), n90Hits(v), hitsInN90(v),
     chargedHadronEnergyFraction(v), neutralHadronEnergyFraction(v),
     chargedEmEnergyFraction(v), neutralEmEnergyFraction(v), fLong(v),
     fShort(v), etaetaMoment(v), phiphiMoment(v), JESunc(v), JECuncUp(v),
@@ -48,12 +46,10 @@ struct BNjet
     approximatefHPD(-99), genPartonET(-99), genPartonPT(-99),
     genPartonEta(-99), genPartonPhi(-99), genJetET(-99), genJetPT(-99),
     genJetEta(-99), genJetPhi(-99), btagTChighPur(-99), btagTChighEff(-99),
-    btagJetProb(-99), btagJetBProb(-99), btagSoftEle(-99),
-    btagSoftMuon(-99), btagSoftMuonNoIP(-99), btagSecVertex(-99),
+    btagJetProb(-99), btagJetBProb(-99),
     btagSecVertexHighEff(-99), btagSecVertexHighPur(-99),
-    btagCombinedSecVertex(-99), btagCombinedSecVertexMVA(-99),
-    btagSoftMuonByPt(-99), btagSoftMuonByIP3(-99),
-    btagSoftElectronByPt(-99), btagSoftElectronByIP3(-99), n90Hits(-99),
+    btagCombinedSecVertex(-99),btagCombinedSecVertexV1(-99),
+    btagCombinedSecVertexSLV1(-99), n90Hits(-99),
     hitsInN90(-99), chargedHadronEnergyFraction(-99),
     neutralHadronEnergyFraction(-99), chargedEmEnergyFraction(-99),
     neutralEmEnergyFraction(-99), fLong(-99), fShort(-99),
@@ -87,8 +83,8 @@ struct BNjet
   double mass, area;
   double fHPD, approximatefHPD;
   double genPartonET, genPartonPT, genPartonEta, genPartonPhi, genJetET, genJetPT, genJetEta, genJetPhi;
-  double btagTChighPur, btagTChighEff, btagJetProb, btagJetBProb, btagSoftEle, btagSoftMuon, btagSoftMuonNoIP, btagSecVertex, btagSecVertexHighEff;
-  double btagSecVertexHighPur, btagCombinedSecVertex, btagCombinedSecVertexMVA, btagSoftMuonByPt, btagSoftMuonByIP3, btagSoftElectronByPt, btagSoftElectronByIP3;
+  double btagTChighPur, btagTChighEff, btagJetProb, btagJetBProb, btagSecVertexHighEff;
+  double btagSecVertexHighPur, btagCombinedSecVertex, btagCombinedSecVertexV1, btagCombinedSecVertexSLV1;
   double n90Hits, hitsInN90;
   double chargedHadronEnergyFraction, neutralHadronEnergyFraction, chargedEmEnergyFraction, neutralEmEnergyFraction;
   double fLong, fShort;

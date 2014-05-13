@@ -1449,18 +1449,11 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       MyPfjet.btagTChighEff = pfjet->bDiscriminator("trackCountingHighEffBJetTags");
       MyPfjet.btagJetProb = pfjet->bDiscriminator("jetProbabilityBJetTags");
       MyPfjet.btagJetBProb = pfjet->bDiscriminator("jetBProbabilityBJetTags");
-      MyPfjet.btagSoftEle = pfjet->bDiscriminator("softElectronBJetTags");
-      MyPfjet.btagSoftMuon = pfjet->bDiscriminator("softMuonBJetTags");
-      MyPfjet.btagSoftMuonNoIP = pfjet->bDiscriminator("softMuonNoIPBJetTags");
-      MyPfjet.btagSecVertex = pfjet->bDiscriminator("simpleSecondaryVertexBJetTags");
       MyPfjet.btagSecVertexHighEff = pfjet->bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
       MyPfjet.btagSecVertexHighPur = pfjet->bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
       MyPfjet.btagCombinedSecVertex = pfjet->bDiscriminator("combinedSecondaryVertexBJetTags");
-      MyPfjet.btagCombinedSecVertexMVA = pfjet->bDiscriminator("combinedSecondaryVertexMVABJetTags");
-      MyPfjet.btagSoftMuonByPt = pfjet->bDiscriminator("softMuonByPtBJetTags");
-      MyPfjet.btagSoftMuonByIP3 = pfjet->bDiscriminator("softMuonByIP3dBJetTags");
-      MyPfjet.btagSoftElectronByPt = pfjet->bDiscriminator("softElectronByPtBJetTags");
-      MyPfjet.btagSoftElectronByIP3 = pfjet->bDiscriminator("softElectronByIP3dBJetTags");
+      MyPfjet.btagCombinedSecVertexV1 = pfjet->bDiscriminator("combinedSecondaryVertexV1BJetTags");
+      MyPfjet.btagCombinedSecVertexSLV1 = pfjet->bDiscriminator("combinedSecondaryVertexSoftPFLeptonV1BJetTags");
 
       MyPfjet.JESunc = unc;
       MyPfjet.JECuncUp = JECuncUp;
