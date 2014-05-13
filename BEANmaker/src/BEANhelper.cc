@@ -3145,6 +3145,7 @@ vdouble BEANhelper::GetCSVweights(const BNjetCollection& iJets, const sysType::s
     result.clear();
     result.push_back(1.0);
     result.push_back(1.0);
+    result.push_back(1.0);
     return result;
   }
 
@@ -3164,6 +3165,15 @@ vdouble BEANhelper::GetCSVweights(const BNjetCollection& iJets, const sysType::s
   default : iSysHF = 0; break;
   }
 
+  int iSysC = 0;
+  switch(iSysType){
+  case sysType::CSVCErr1up:   iSysC=1; break;
+  case sysType::CSVCErr1down: iSysC=2; break;
+  case sysType::CSVCErr2up:   iSysC=3; break;
+  case sysType::CSVCErr2down: iSysC=4; break;
+  default : iSysC = 0; break;
+  }
+
   int iSysLF = 0;
   switch(iSysType){
   case sysType::JESup:	         iSysLF=1; break;
@@ -3178,12 +3188,13 @@ vdouble BEANhelper::GetCSVweights(const BNjetCollection& iJets, const sysType::s
   }
 
   double csvWgthf = 1.;
+  double csvWgtC  = 1.;
   double csvWgtlf = 1.;
 
   for( BNjetCollection::const_iterator iJet = iJets.begin(); iJet != iJets.end(); ++iJet ){ 
 
     double csv = iJet->btagCombinedSecVertex;
-    double jetPt = std::max(iJet->pt, 29.99);
+    double jetPt = iJet->pt;
     double jetAbsEta = fabs( iJet->eta );
     int flavor = abs( iJet->flavour );
 
@@ -3200,13 +3211,21 @@ vdouble BEANhelper::GetCSVweights(const BNjetCollection& iJets, const sysType::s
 
     if (iPt < 0 || iEta < 0) std::cout << "Error, couldn't find Pt, Eta bins for this b-flavor jet, jetPt = " << jetPt << ", jetAbsEta = " << jetAbsEta << std::endl;
 
-    if (abs(flavor) == 5 || abs(flavor) == 4){
+    if (abs(flavor) == 5 ){
       int useCSVBin = (csv>=0.) ? h_csv_wgt_hf[iSysHF][iPt]->FindBin(csv) : 1;
       double iCSVWgtHF = h_csv_wgt_hf[iSysHF][iPt]->GetBinContent(useCSVBin);
       if( iCSVWgtHF!=0 ) csvWgthf *= iCSVWgtHF;
 
       // if( iSysHF==0 ) printf(" iJet,\t flavor=%d,\t pt=%.1f,\t eta=%.2f,\t csv=%.3f,\t wgt=%.2f \n",
       // 			     flavor, jetPt, iJet->eta, csv, iCSVWgtHF );
+    }
+    else if( abs(flavor) == 4 ){
+      // do nothing
+      int useCSVBin = (csv>=0.) ? c_csv_wgt_hf[iSysC][iPt]->FindBin(csv) : 1;
+      double iCSVWgtC = c_csv_wgt_hf[iSysC][iPt]->GetBinContent(useCSVBin);
+      if( iCSVWgtC!=0 ) csvWgtC *= iCSVWgtC;
+      // if( iSysC==0 ) printf(" iJet,\t flavor=%d,\t pt=%.1f,\t eta=%.2f,\t csv=%.3f,\t wgt=%.2f \n",
+      // 			     flavor, jetPt, iJet->eta, csv, iCSVWgtC );
     }
     else {
       if (iPt >=2) iPt=2;       /// [30-40], [40-60] and [60-10000] only 3 Pt bins for lf
@@ -3222,6 +3241,7 @@ vdouble BEANhelper::GetCSVweights(const BNjetCollection& iJets, const sysType::s
   result.clear();
   result.push_back(csvWgthf);
   result.push_back(csvWgtlf);
+  result.push_back(csvWgtC);
   
   return result;
 }
