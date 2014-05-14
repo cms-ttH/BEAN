@@ -864,7 +864,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       MyElectron.mva = ele->mva();
       MyElectron.mvaTrigV0 = ele->electronID("mvaTrigV0");
-      //MyElectron.mvaNonTrigV0 = ele->electronID("mvaNonTrigV0");
+      MyElectron.mvaNonTrigV0 = ele->electronID("mvaNonTrigV0");
       MyElectron.numberOfLostHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
       MyElectron.numberOfExpectedInnerHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfHits();
       MyElectron.numberOfValidPixelHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelHits();
