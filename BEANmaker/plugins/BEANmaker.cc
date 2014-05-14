@@ -45,6 +45,10 @@
 #include "BEAN/Collections/interface/BNevent.h"
 #include "BEAN/Collections/interface/BNjet.h"
 #include "BEAN/Collections/interface/BNgenjet.h"
+#include "BEAN/Collections/interface/BNsubfilterjet.h"
+#include "BEAN/Collections/interface/BNgensubfilterjet.h"
+#include "BEAN/Collections/interface/BNtoptagjet.h"
+#include "BEAN/Collections/interface/BNgentoptagjet.h"
 #include "BEAN/Collections/interface/BNmcparticle.h"
 #include "BEAN/Collections/interface/BNmet.h"
 #include "BEAN/Collections/interface/BNmuon.h"
@@ -172,6 +176,23 @@ private:
   int count_hits( const std::vector<CaloTowerPtr> & towers );
   bool isActive(int word, int bit);
   bool tauIsInTheCracks(float);
+  //converts a pat::jet into a BNjet; some variables are only filled for pfjets however
+  BNjet convertJet(const pat::Jet & pfjet, double PVx, double PVy, double PVz,JetCorrectionUncertainty *jecUnc_PF);
+  template<typename recojettype>
+  const pat::Jet & deltarJetMatching(const edm::View<pat::Jet> & patjets, const multimap<double, int> & patjetindex_by_eta, const recojettype & rjet);
+  
+  template<typename recojettype>
+  void fillBNsubfilterjet(std::auto_ptr<BNsubfilterjetCollection> & BNsfjets, const edm::View<pat::Jet> & patfatjets, 
+			  const edm::View<pat::Jet> & patsubjets, const edm::View<pat::Jet> & patfilterjets, const std::vector<recojettype> & fatjets,
+			  const std::vector<double> & subjettiness1, const std::vector<double> & subjettiness2, const std::vector<double> & subjettiness3, const std::vector<double> & subjettiness4,
+			  const double PVx, const double PVy, const double PVz, JetCorrectionUncertainty *jecUnc_PF, const double ptMin);
+  
+  template<typename recojettype>
+  void fillBNtoptagjet(std::auto_ptr<BNtoptagjetCollection> & BNttjets, const edm::View<pat::Jet> & patfatjets, 
+		       const edm::View<pat::Jet> & patsubjets, const std::vector<recojettype> & fatjets, const std::vector<bool> & toptags, 
+		       const std::vector<double> & subjettiness1, const std::vector<double> & subjettiness2, const std::vector<double> & subjettiness3, const std::vector<double> & subjettiness4,
+		       const double PVx, const double PVy, const double PVz, JetCorrectionUncertainty *jecUnc_PF, const double ptMin);
+  
   // Active boards DAQ record bit number:
   // 0 FDL 
   // 1 PSB_0 9 Techn.Triggers for FDL
@@ -187,6 +208,25 @@ private:
   edm::InputTag eleTag_;
   edm::InputTag pfjetTag_;
   edm::InputTag genjetTag_;
+
+  // tags from subjet filterjet algorithm, toptagging, and n-subjetiness
+  edm::InputTag pfsfrecofatjetsTag_;
+  edm::InputTag pfsfpatfatjetsTag_;
+  edm::InputTag pfsfpatsubjetsTag_;
+  edm::InputTag pfsfpatfilterjetsTag_;
+  edm::InputTag pfsfsubjettiness1Tag_;
+  edm::InputTag pfsfsubjettiness2Tag_;
+  edm::InputTag pfsfsubjettiness3Tag_;
+  edm::InputTag pfsfsubjettiness4Tag_;
+  edm::InputTag pfttrecofatjetsTag_;
+  edm::InputTag pfttpatfatjetsTag_;
+  edm::InputTag pfttpatsubjetsTag_;
+  edm::InputTag pftttoptagsTag_;
+  edm::InputTag pfttsubjettiness1Tag_;
+  edm::InputTag pfttsubjettiness2Tag_;
+  edm::InputTag pfttsubjettiness3Tag_;
+  edm::InputTag pfttsubjettiness4Tag_;
+
   edm::InputTag pfmetTag_;
   edm::InputTag pfmetTag_type1correctedRECO_;
   edm::InputTag pfmetTag_uncorrectedPF2PAT_;
@@ -252,6 +292,11 @@ private:
 typedef std::vector<BNelectron>     BNelectronCollection;
 typedef std::vector<BNjet>          BNjetCollection;
 typedef std::vector<BNgenjet>       BNgenjetCollection;
+typedef std::vector<BNsubfilterjet> BNsubfilterjetCollection;
+typedef std::vector<BNgensubfilterjet> BNgensubfilterjetCollection;
+typedef std::vector<BNtoptagjet>    BNtoptagjetCollection;
+typedef std::vector<BNgentoptagjet> BNgentoptagjetCollection;
+typedef std::vector<BNevent>        BNeventCollection;
 typedef std::vector<BNevent>        BNeventCollection;
 typedef std::vector<BNmcparticle>   BNmcparticleCollection;
 typedef std::vector<BNmet>          BNmetCollection;
@@ -311,6 +356,24 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   eleTag_ = iConfig.getParameter<edm::InputTag>("eleTag");
   pfjetTag_ = iConfig.getParameter<edm::InputTag>("pfjetTag");
   genjetTag_ = iConfig.getParameter<edm::InputTag>("genjetTag");
+
+  pfsfrecofatjetsTag_=iConfig.getParameter<edm::InputTag>("pfsfrecofatjetsTag");
+  pfsfpatfatjetsTag_=iConfig.getParameter<edm::InputTag>("pfsfpatfatjetsTag");
+  pfsfpatsubjetsTag_=iConfig.getParameter<edm::InputTag>("pfsfpatsubjetsTag");
+  pfsfpatfilterjetsTag_=iConfig.getParameter<edm::InputTag>("pfsfpatfilterjetsTag");
+  pfsfsubjettiness1Tag_=iConfig.getParameter<edm::InputTag>("pfsfsubjettiness1Tag");
+  pfsfsubjettiness2Tag_=iConfig.getParameter<edm::InputTag>("pfsfsubjettiness2Tag");
+  pfsfsubjettiness3Tag_=iConfig.getParameter<edm::InputTag>("pfsfsubjettiness3Tag");
+  pfsfsubjettiness4Tag_=iConfig.getParameter<edm::InputTag>("pfsfsubjettiness4Tag");
+  pfttrecofatjetsTag_=iConfig.getParameter<edm::InputTag>("pfttrecofatjetsTag");
+  pfttpatfatjetsTag_=iConfig.getParameter<edm::InputTag>("pfttpatfatjetsTag");
+  pfttpatsubjetsTag_=iConfig.getParameter<edm::InputTag>("pfttpatsubjetsTag");
+  pftttoptagsTag_=iConfig.getParameter<edm::InputTag>("pftttoptagsTag");
+  pfttsubjettiness1Tag_=iConfig.getParameter<edm::InputTag>("pfttsubjettiness1Tag");
+  pfttsubjettiness2Tag_=iConfig.getParameter<edm::InputTag>("pfttsubjettiness2Tag");
+  pfttsubjettiness3Tag_=iConfig.getParameter<edm::InputTag>("pfttsubjettiness3Tag");
+  pfttsubjettiness4Tag_=iConfig.getParameter<edm::InputTag>("pfttsubjettiness4Tag");
+
   pfmetTag_ = iConfig.getParameter<edm::InputTag>("pfmetTag");
   pfmetTag_type1correctedRECO_ = iConfig.getParameter<edm::InputTag>("pfmetTag_type1correctedRECO");
   pfmetTag_uncorrectedPF2PAT_  = iConfig.getParameter<edm::InputTag>("pfmetTag_uncorrectedPF2PAT");
@@ -345,6 +408,10 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   produces<BNelectronCollection>(eleTag_.label()).setBranchAlias("electrons");
   produces<BNjetCollection>(pfjetTag_.label()).setBranchAlias("pfjets");
   produces<BNgenjetCollection>(genjetTag_.label()).setBranchAlias("genjets");
+  produces<BNsubfilterjetCollection>(pfsfpatfatjetsTag_.label()).setBranchAlias("pfsubfilterjets");
+  //produces<BNgensubfilterjetCollection>(pfsfpatgenfatjetsTag_.label()).setBranchAlias("gensubfilterjets");
+  produces<BNtoptagjetCollection>(pfttpatfatjetsTag_.label()).setBranchAlias("pftoptagjets");
+  //produces<BNgentoptagjetCollection>(pfttpatgenfatjetsTag_.label()).setBranchAlias("gentoptagjets");
   produces<BNmetCollection>(pfmetTag_.label()).setBranchAlias("pfmet");
   produces<BNmetCollection>(std::string(pfmetTag_type1correctedRECO_.label() + "BN")).setBranchAlias("pfmet_type1correctedRECO");
   produces<BNmetCollection>(std::string(pfmetTag_uncorrectedPF2PAT_.label() + "BN")).setBranchAlias("pfmet_uncorrectedPF2PAT");
@@ -410,6 +477,49 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<reco::GenJetCollection > genjetHandle;
   iEvent.getByLabel(genjetTag_,genjetHandle);
 
+  edm::Handle< vector<reco::BasicJet> > pfsfrecofatjetsHandle;
+  iEvent.getByLabel(pfsfrecofatjetsTag_, pfsfrecofatjetsHandle);
+
+  edm::Handle<edm::View<pat::Jet> > pfsfpatfatjetsHandle;
+  iEvent.getByLabel(pfsfpatfatjetsTag_, pfsfpatfatjetsHandle);
+	
+  edm::Handle<edm::View<pat::Jet> > pfsfpatsubjetsHandle;
+  iEvent.getByLabel(pfsfpatsubjetsTag_, pfsfpatsubjetsHandle);
+	
+  edm::Handle<edm::View<pat::Jet> > pfsfpatfilterjetsHandle;
+  iEvent.getByLabel(pfsfpatfilterjetsTag_, pfsfpatfilterjetsHandle);
+	
+  edm::Handle<std::vector<double> > pfsfsubjettiness1Handle;
+  iEvent.getByLabel(pfsfsubjettiness1Tag_, pfsfsubjettiness1Handle);
+  edm::Handle<std::vector<double> > pfsfsubjettiness2Handle;
+  iEvent.getByLabel(pfsfsubjettiness2Tag_, pfsfsubjettiness2Handle);
+  edm::Handle<std::vector<double> > pfsfsubjettiness3Handle;
+  iEvent.getByLabel(pfsfsubjettiness3Tag_, pfsfsubjettiness3Handle);
+  edm::Handle<std::vector<double> > pfsfsubjettiness4Handle;
+  iEvent.getByLabel(pfsfsubjettiness4Tag_, pfsfsubjettiness4Handle);
+  
+  edm::Handle< vector<reco::BasicJet> > pfttrecofatjetsHandle;
+  iEvent.getByLabel(pfttrecofatjetsTag_, pfttrecofatjetsHandle);
+  
+  edm::Handle<edm::View<pat::Jet> > pfttpatfatjetsHandle;
+  iEvent.getByLabel(pfttpatfatjetsTag_, pfttpatfatjetsHandle);
+  
+  edm::Handle<edm::View<pat::Jet> > pfttpatsubjetsHandle;
+  iEvent.getByLabel(pfttpatsubjetsTag_, pfttpatsubjetsHandle);
+  
+  edm::Handle<std::vector<bool> > pftttoptagsHandle;
+  iEvent.getByLabel(pftttoptagsTag_, pftttoptagsHandle);
+  
+  edm::Handle<std::vector<double> > pfttsubjettiness1Handle;
+  iEvent.getByLabel(pfttsubjettiness1Tag_, pfttsubjettiness1Handle);
+  edm::Handle<std::vector<double> > pfttsubjettiness2Handle;
+  iEvent.getByLabel(pfttsubjettiness2Tag_, pfttsubjettiness2Handle);
+  edm::Handle<std::vector<double> > pfttsubjettiness3Handle;
+  iEvent.getByLabel(pfttsubjettiness3Tag_, pfttsubjettiness3Handle);
+  edm::Handle<std::vector<double> > pfttsubjettiness4Handle;
+  iEvent.getByLabel(pfttsubjettiness4Tag_, pfttsubjettiness4Handle);
+	
+
   edm::Handle<edm::View<pat::MET> > pfmetHandle;
   iEvent.getByLabel(pfmetTag_,pfmetHandle);
 
@@ -466,6 +576,10 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   bool produceElectron = ( (eleTag_.label() == "none") ) ? false : true;
   bool producePFJet = ( (pfjetTag_.label() == "none") ) ? false : true;
   bool produceGenJet = ( (genjetTag_.label() == "none") ) ? false : true;
+  bool producePFSubFilterJet = ( (pfsfpatfatjetsTag_.label() == "none") ) ? false : true;
+  //bool produceGenSubFilterJet = ( (gensfpatfatjetsTag_.label() == "none") ) ? false : true;
+  bool producePFTopTagJet = ( (pfttpatfatjetsTag_.label() == "none") ) ? false : true;
+  //bool produceGenTopTagJet = ( (genttpatfatjetsTag_.label() == "none") ) ? false : true;
   bool producePFMET = ( (pfmetTag_.label() == "none") ) ? false : true;
   bool producePFMET_type1correctedRECO = ( (pfmetTag_type1correctedRECO_.label() == "none") ) ? false : true;
   bool producePFMET_uncorrectedPF2PAT  = ( (pfmetTag_uncorrectedPF2PAT_.label() == "none") ) ? false : true;
@@ -1241,7 +1355,6 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   std::auto_ptr<BNjetCollection> bnpfjets(new BNjetCollection);
   if( producePFJet ){
     edm::View<pat::Jet> pfjets = *pfjetHandle;
-    std::vector<PFCandidatePtr> PFJetPart;
 
     //full
 //     Handle<ValueMap<float> > puJetIdMVA_full;
@@ -1277,290 +1390,76 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       if( !(pfjet->pt()>minJetPt_) ) continue;
 
-      BNjet MyPfjet;
+      BNjet MyPfjet = convertJet(*pfjet,PVx,PVy,PVz,jecUnc_PF);
 
       unsigned int idx = pfjet-pfjets.begin();
 
-      // float mva_full  = (*puJetIdMVA_full)[pfjets.refAt(idx)];
-//       int idflag_full = (*puJetIdFlag_full)[pfjets.refAt(idx)];
-
-//       float mva_simple  = (*puJetIdMVA_simple)[pfjets.refAt(idx)];
-//       int idflag_simple = (*puJetIdFlag_simple)[pfjets.refAt(idx)];
-
-//       float mva_cutbased  = (*puJetIdMVA_cutbased)[pfjets.refAt(idx)];
-//       int idflag_cutbased = (*puJetIdFlag_cutbased)[pfjets.refAt(idx)];
-
-      //   puIdentifier = (*vmap)[pfjets.refAt(idx)];
-
-//       bool passTight_full=false, passMedium_full=false, passLoose_full=false;
-//       if( ( ( idflag_full & (1 << 0) ) != 0 ) ) passTight_full  = true;
-//       if( ( ( idflag_full & (1 << 1) ) != 0 ) ) passMedium_full = true;
-//       if( ( ( idflag_full & (1 << 2) ) != 0 ) ) passLoose_full = true;
-
-//       bool passTight_simple=false, passMedium_simple=false, passLoose_simple=false;
-//       if( ( ( idflag_simple & (1 << 0) ) != 0 ) ) passTight_simple  = true;
-//       if( ( ( idflag_simple & (1 << 1) ) != 0 ) ) passMedium_simple = true;
-//       if( ( ( idflag_simple & (1 << 2) ) != 0 ) ) passLoose_simple = true;
-
-//       bool passTight_cutbased=false, passMedium_cutbased=false, passLoose_cutbased=false;
-//       if( ( ( idflag_cutbased & (1 << 0) ) != 0 ) ) passTight_cutbased  = true;
-//       if( ( ( idflag_cutbased & (1 << 1) ) != 0 ) ) passMedium_cutbased = true;
-//       if( ( ( idflag_cutbased & (1 << 2) ) != 0 ) ) passLoose_cutbased = true;
-
-      // printf("  ===> jet %d,\t pt = %4.1f,\t eta = %4.2f \n", idx, pfjet->pt(), pfjet->eta() );
-      // printf("\t\t\t mva_full = %4.3f,\t idflag_full = %d,\t passTight_full = %d,\t passMedium_full = %d,\t passLoose_full = %d \n",
-      // 	      mva_full, idflag_full, (passTight_full)?1:0, (passMedium_full)?1:0, (passLoose_full)?1:0 );
-      // printf("\t\t\t mva_simp = %4.3f,\t idflag_simp = %d,\t passTight_simp = %d,\t passMedium_simp = %d,\t passLoose_simp = %d \n",
-      // 	      mva_simple, idflag_simple, (passTight_simple)?1:0, (passMedium_simple)?1:0, (passLoose_simple)?1:0 );
-      // printf("\t\t\t mva_cutb = %4.3f,\t idflag_cutb = %d,\t passTight_cutb = %d,\t passMedium_cutb = %d,\t passLoose_cutb = %d \n",
-      // 	      mva_cutbased, idflag_cutbased, (passTight_cutbased)?1:0, (passMedium_cutbased)?1:0, (passLoose_cutbased)?1:0 );
-
-//       MyPfjet.puJetMVA_full     = mva_full;
-//       MyPfjet.puJetMVA_simple   = mva_simple;
-//       MyPfjet.puJetMVA_cutbased = mva_cutbased;
-
-//       MyPfjet.puJetId_full     = idflag_full;
-//       MyPfjet.puJetId_simple   = idflag_simple;
-//       MyPfjet.puJetId_cutbased = idflag_cutbased;
-
-//       MyPfjet.puJetId_tight_full     = (passTight_full)?1:0;
-//       MyPfjet.puJetId_tight_simple   = (passTight_simple)?1:0;
-//       MyPfjet.puJetId_tight_cutbased = (passTight_cutbased)?1:0;
-
-//       MyPfjet.puJetId_medium_full     = (passMedium_full)?1:0;
-//       MyPfjet.puJetId_medium_simple   = (passMedium_simple)?1:0;
-//       MyPfjet.puJetId_medium_cutbased = (passMedium_cutbased)?1:0;
-
-//       MyPfjet.puJetId_loose_full     = (passLoose_full)?1:0;
-//       MyPfjet.puJetId_loose_simple   = (passLoose_simple)?1:0;
-//       MyPfjet.puJetId_loose_cutbased = (passLoose_cutbased)?1:0;
-
-
-
-      double rawpt = pfjet->correctedJet(0).pt();
-
-      PFJetPart = pfjet->getPFConstituents();
-
-      double maxCandPt=0;
-      double leadCandVx=-99,leadCandVy=-99,leadCandVz=-99;
-      for(UInt_t j=0;j<PFJetPart.size();j++){
-	double pTcand = PFJetPart[j]->pt();
-	if( pTcand>maxCandPt ){
-	  maxCandPt = pTcand;
-	  leadCandVx = PFJetPart[j]->vx();
-	  leadCandVy = PFJetPart[j]->vy();
-	  leadCandVz = PFJetPart[j]->vz();
-	}
-      }
-
-      double leadCandDistFromPV = sqrt( (leadCandVx-PVx)*(leadCandVx-PVx) + (leadCandVy-PVy)*(leadCandVy-PVy) + (leadCandVz-PVz)*(leadCandVz-PVz) );
-
-      MyPfjet.leadCandPt = maxCandPt;
-
-      MyPfjet.leadCandVx = leadCandVx;
-      MyPfjet.leadCandVy = leadCandVy;
-      MyPfjet.leadCandVz = leadCandVz;
-      MyPfjet.leadCandDistFromPV = leadCandDistFromPV;
-
-      double sumMomentum = 0;
-      double sumMomentumQ = 0;
-      for(std::vector<reco::PFCandidatePtr>::const_iterator i_candidate = PFJetPart.begin(); i_candidate != PFJetPart.end(); ++i_candidate){
-          const int charge = (*i_candidate)->charge();
-          if(charge == 0) continue;
-
-          const double constituentPx = (*i_candidate)->px();
-          const double constituentPy = (*i_candidate)->py();
-          const double constituentPz = (*i_candidate)->pz();
-          const double product = constituentPx*pfjet->px() + constituentPy*pfjet->py() + constituentPz*pfjet->pz();
-
-          sumMomentum += product;
-          sumMomentumQ += static_cast<double>(charge)*product;
-      }
-      const double jetChargeRelativePtWeighted(sumMomentum>0 ? sumMomentumQ/sumMomentum : 0);
-      MyPfjet.jetChargeRelativePtWeighted = jetChargeRelativePtWeighted;
-       
       if (QGLikelihoodDiscriminantHandle.isValid()) {
-          double QGLD = (*QGLikelihoodDiscriminantHandle)[pfjets.refAt(idx)];
-          MyPfjet.QGLD = QGLD;
+	double QGLD = (*QGLikelihoodDiscriminantHandle)[pfjets.refAt(idx)];
+	MyPfjet.QGLD = QGLD;
       }
-
+      
       if (QGMLPHandle.isValid()) {
-          double QGMLP = (*QGMLPHandle)[pfjets.refAt(idx)];
-          MyPfjet.QGMLP = QGMLP;
+	double QGMLP = (*QGMLPHandle)[pfjets.refAt(idx)];
+	MyPfjet.QGMLP = QGMLP;
       }
-
-     //  MyPfjet.dZ = puIdentifier.dZ();
-//       MyPfjet.dR2Mean = puIdentifier.dR2Mean();
-//       MyPfjet.dRMean = puIdentifier.dRMean();
-//       MyPfjet.frac01 = puIdentifier.frac01();
-//       MyPfjet.frac02 = puIdentifier.frac02();
-//       MyPfjet.frac03 = puIdentifier.frac03();
-//       MyPfjet.frac04 = puIdentifier.frac04();
-//       MyPfjet.frac05 = puIdentifier.frac05();
-//       MyPfjet.frac06 = puIdentifier.frac06();
-//       MyPfjet.frac07 = puIdentifier.frac07(); //Always 0
-//       MyPfjet.beta = puIdentifier.beta();
-//       MyPfjet.betaStar = puIdentifier.betaStar();
-//       MyPfjet.betaClassic = puIdentifier.betaClassic();
-//       MyPfjet.betaStarClassic = puIdentifier.betaStarClassic();
-//       MyPfjet.ptD = puIdentifier.ptD();
-//       MyPfjet.nvtx = puIdentifier.nvtx();
-//       MyPfjet.d0 = puIdentifier.d0(); //Not declared in class StoredPileupJetIdentifier (PileupJetIdentifier.h) 
-
-      MyPfjet.Upt = rawpt;
-
-      double unc = 1., JECuncUp = 1., JECuncDown = 1.; // JEC uncertainties only defined for jets with |eta| < 5.5 and pt > 9 GeV (2011 data)
-      if( pfjet->pt()>9. && fabs(pfjet->eta())<5.0 ){
-	jecUnc_PF->setJetEta(pfjet->eta());
-	jecUnc_PF->setJetPt(pfjet->pt());// the uncertainty is a function of the corrected pt
-	JECuncUp = jecUnc_PF->getUncertainty(true); //up variation
-	unc = JECuncUp;
-	jecUnc_PF->setJetEta(pfjet->eta());
-	jecUnc_PF->setJetPt(pfjet->pt());// the uncertainty is a function of the corrected pt
-	JECuncDown = jecUnc_PF->getUncertainty(false); //up variation
-      }
-
-      // general kinematic variables
-      MyPfjet.energy = pfjet->energy();
-      MyPfjet.et = pfjet->et();
-      MyPfjet.pt = pfjet->pt();
-      MyPfjet.px = pfjet->px();
-      MyPfjet.py = pfjet->py();
-      MyPfjet.pz = pfjet->pz();
-      MyPfjet.phi = pfjet->phi();
-      MyPfjet.eta = pfjet->eta();
-      MyPfjet.theta = pfjet->theta();
-
-      //MyPfjet.EMfrac = pfjet->emEnergyFraction();
-      //MyPfjet.Hadfrac = pfjet->energyFractionHadronic();
-      MyPfjet.charge = pfjet->jetCharge();
-      MyPfjet.mass = pfjet->mass();
-      MyPfjet.area = pfjet->jetArea();
-      MyPfjet.fHPD = pfjet->jetID().fHPD;
-      MyPfjet.flavour = pfjet->partonFlavour();
-      MyPfjet.Nconst = pfjet->nConstituents();
-      MyPfjet.n90Hits = pfjet->jetID().n90Hits;
-      MyPfjet.approximatefHPD = pfjet->jetID().approximatefHPD;
-      MyPfjet.hitsInN90 = pfjet->jetID().hitsInN90;
-
-
-      // btag variables
-      MyPfjet.btagTChighPur = pfjet->bDiscriminator("trackCountingHighPurBJetTags");
-      MyPfjet.btagTChighEff = pfjet->bDiscriminator("trackCountingHighEffBJetTags");
-      MyPfjet.btagJetProb = pfjet->bDiscriminator("jetProbabilityBJetTags");
-      MyPfjet.btagJetBProb = pfjet->bDiscriminator("jetBProbabilityBJetTags");
-      MyPfjet.btagSecVertexHighEff = pfjet->bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
-      MyPfjet.btagSecVertexHighPur = pfjet->bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
-      MyPfjet.btagCombinedSecVertex = pfjet->bDiscriminator("combinedSecondaryVertexBJetTags");
-      MyPfjet.btagCombinedSecVertexV1 = pfjet->bDiscriminator("combinedSecondaryVertexV1BJetTags");
-      MyPfjet.btagCombinedSecVertexSLV1 = pfjet->bDiscriminator("combinedSecondaryVertexSoftPFLeptonV1BJetTags");
-
-      MyPfjet.JESunc = unc;
-      MyPfjet.JECuncUp = JECuncUp;
-      MyPfjet.JECuncDown = JECuncDown;
-
-      if( (pfjet->genJet()) ){ // if there is a matched genjet, fill variables
-	MyPfjet.genJetET = pfjet->genJet()->et();
-	MyPfjet.genJetPT = pfjet->genJet()->pt();
-	MyPfjet.genJetEta = pfjet->genJet()->eta();
-	MyPfjet.genJetPhi = pfjet->genJet()->phi();
-      }
-      if( (pfjet->genParton()) ){ // if there is a matched parton, fill variables
-	MyPfjet.genPartonET = pfjet->genParton()->et();
-	MyPfjet.genPartonPT = pfjet->genParton()->pt();
-	MyPfjet.genPartonEta = pfjet->genParton()->eta();
-	MyPfjet.genPartonPhi = pfjet->genParton()->phi();
-	MyPfjet.genPartonId = pfjet->genParton()->pdgId();
-
-	int numberOfMothers = pfjet->genParton()->numberOfMothers();
-	if( numberOfMothers==1 ){
-	  MyPfjet.genPartonMotherId  = pfjet->genParton()->mother()->pdgId();
-	  MyPfjet.genPartonMother0Id = pfjet->genParton()->mother()->pdgId();
-	  int numberOfGrandMothers = pfjet->genParton()->mother()->numberOfMothers();
-	  if( numberOfGrandMothers==1 ) MyPfjet.genPartonGrandMotherId = pfjet->genParton()->mother()->mother()->pdgId();
-	  else if( numberOfGrandMothers>=2 ){
-	    MyPfjet.genPartonGrandMother00Id = pfjet->genParton()->mother()->mother(0)->pdgId();
-	    MyPfjet.genPartonGrandMother01Id = pfjet->genParton()->mother()->mother(1)->pdgId();
-	  }
-
-	  int pdgId = pfjet->genParton()->pdgId();
-	  int motherId = pfjet->genParton()->mother()->pdgId();
-
-	  int last_motherID = -99;
-	  int last_grandMotherID = -99;
-	  if( pdgId==motherId ){
-	    const reco::Candidate* new_mother = pfjet->genParton()->mother();
-
-	    bool keepGoing = true;
-	    while( keepGoing ){
-	      int new_motherID = new_mother->pdgId();
-	      last_motherID = new_motherID;
-	      if( new_mother->numberOfMothers()>0 ){
-		new_mother = new_mother->mother();
-		last_grandMotherID = new_mother->pdgId();
-		if( new_motherID!=pdgId ) keepGoing = false;
-	      }
-	      else keepGoing = false;
-	    }
-	  }
-
-	  if( last_motherID!=-99 ){
-	    MyPfjet.genPartonMother0Id = last_motherID;
-	    if( last_grandMotherID!=-99 ) MyPfjet.genPartonGrandMotherId = last_grandMotherID;
-	  }
-	}
-	else if( numberOfMothers>=2 ){
-	  MyPfjet.genPartonMother0Id = pfjet->genParton()->mother(0)->pdgId();
-	  MyPfjet.genPartonMother1Id = pfjet->genParton()->mother(1)->pdgId();
-
-	  if( pfjet->genParton()->mother(0)->numberOfMothers()==1 ) MyPfjet.genPartonGrandMother00Id = pfjet->genParton()->mother(0)->mother()->pdgId();
-	  else if( pfjet->genParton()->mother(0)->numberOfMothers()>=2 ){
-	    MyPfjet.genPartonGrandMother00Id = pfjet->genParton()->mother(0)->mother(0)->pdgId();
-	    MyPfjet.genPartonGrandMother01Id = pfjet->genParton()->mother(0)->mother(1)->pdgId();
-	  }
-
-	  if( pfjet->genParton()->mother(1)->numberOfMothers()==1 ) MyPfjet.genPartonGrandMother00Id = pfjet->genParton()->mother(1)->mother()->pdgId();
-	  else if( pfjet->genParton()->mother(1)->numberOfMothers()>=2 ){
-	    MyPfjet.genPartonGrandMother10Id = pfjet->genParton()->mother(1)->mother(0)->pdgId();
-	    MyPfjet.genPartonGrandMother11Id = pfjet->genParton()->mother(1)->mother(1)->pdgId();
-	  }
-	}
-
-      }
-
-      // DataFormats/JetReco/interface/PFJet.h
-      // http://indico.cern.ch/getFile.py/access?contribId=8&resId=0&materialId=slides&confId=92249
-      MyPfjet.chargedHadronEnergyFraction = pfjet->chargedHadronEnergyFraction();
-      MyPfjet.neutralHadronEnergyFraction = pfjet->neutralHadronEnergyFraction();
-      MyPfjet.chargedEmEnergyFraction = pfjet->chargedEmEnergyFraction();
-      MyPfjet.neutralEmEnergyFraction = pfjet->neutralEmEnergyFraction();
-      MyPfjet.chargedMultiplicity = pfjet->chargedMultiplicity();
-      MyPfjet.neutralMultiplicity = pfjet->neutralMultiplicity();
-      MyPfjet.nconstituents = pfjet->numberOfDaughters();
-
-
-      bool loose = (
-		    pfjet->neutralHadronEnergyFraction() < 0.99 &&
-		    pfjet->chargedEmEnergyFraction() < 0.99 &&
-		    pfjet->neutralEmEnergyFraction() < 0.99 &&
-		    pfjet->numberOfDaughters() > 1
-		    );
-
-      if( fabs(pfjet->eta())<2.4 ){
-	loose = ( loose &&
-		  pfjet->chargedHadronEnergyFraction() > 0.0 &&
-		  pfjet->chargedMultiplicity() > 0
-		  );
-      }
-
-      MyPfjet.jetIDLoose = (loose) ? 1 : 0;
 
       bnpfjets->push_back(MyPfjet);
     }
   }
 
+  /////////////////////////////////////////////
+  ///////
+  ///////   Fill the pfsubfilterjet collection
+  ///////
+  /////////////////////////////////////////////
 
-
+  std::auto_ptr<BNsubfilterjetCollection> bnsubfilterjets(new BNsubfilterjetCollection);
+  
+  if( producePFSubFilterJet ){
+    edm::View<pat::Jet> pfsfpatfatjets 		= *pfsfpatfatjetsHandle;
+    edm::View<pat::Jet> pfsfpatsubjets 		= *pfsfpatsubjetsHandle;
+    edm::View<pat::Jet> pfsfpatfilterjets 	= *pfsfpatfilterjetsHandle;
+    
+    std::vector<reco::BasicJet> pfsfrecofatjets = *pfsfrecofatjetsHandle;
+    
+    std::vector<double> pfsfsubjettiness1 = *pfsfsubjettiness1Handle;
+    std::vector<double> pfsfsubjettiness2 = *pfsfsubjettiness2Handle;
+    std::vector<double> pfsfsubjettiness3 = *pfsfsubjettiness3Handle;
+    std::vector<double> pfsfsubjettiness4 = *pfsfsubjettiness4Handle;	
+    
+    fillBNsubfilterjet(bnsubfilterjets, pfsfpatfatjets, pfsfpatsubjets, pfsfpatfilterjets, pfsfrecofatjets,
+		       pfsfsubjettiness1, pfsfsubjettiness2, pfsfsubjettiness3, pfsfsubjettiness4,
+		       PVx, PVy, PVz, jecUnc_PF, minJetPt_);
+  }
+  
+  /////////////////////////////////////////////
+  ///////
+  ///////   Fill the pftoptagjet collection
+  ///////
+  /////////////////////////////////////////////
+  
+  
+  std::auto_ptr<BNtoptagjetCollection> bntoptagjets(new BNtoptagjetCollection);
+  
+  if( producePFTopTagJet ){
+    edm::View<pat::Jet> pfttpatfatjets 		= *pfttpatfatjetsHandle;
+    edm::View<pat::Jet> pfttpatsubjets 		= *pfttpatsubjetsHandle;
+    
+    std::vector<reco::BasicJet> pfttrecofatjets = *pfttrecofatjetsHandle;
+    
+    std::vector<bool> pftttoptags = *pftttoptagsHandle;
+    
+    std::vector<double> pfttsubjettiness1 = *pfttsubjettiness1Handle;
+    std::vector<double> pfttsubjettiness2 = *pfttsubjettiness2Handle;
+    std::vector<double> pfttsubjettiness3 = *pfttsubjettiness3Handle;
+    std::vector<double> pfttsubjettiness4 = *pfttsubjettiness4Handle;	
+    
+    fillBNtoptagjet(bntoptagjets, pfttpatfatjets, pfttpatsubjets, pfttrecofatjets,
+		    pftttoptags, pfttsubjettiness1, pfttsubjettiness2, pfttsubjettiness3, pfttsubjettiness4,
+		    PVx, PVy, PVz, jecUnc_PF, minJetPt_);
+  }
+  
 
   /////////////////////////////////////////////
   ///////
@@ -3804,6 +3703,379 @@ bool BEANmaker::tauIsInTheCracks(float etaValue){
 	  (fabs(etaValue)>0.770 && fabs(etaValue)<0.806) ||
 	  (fabs(etaValue)>1.127 && fabs(etaValue)<1.163) ||
 	  (fabs(etaValue)>1.460 && fabs(etaValue)<1.558));
+}
+
+
+// convert pat jets to BNjets
+BNjet BEANmaker::convertJet(const pat::Jet & jet, double PVx, double PVy, double PVz,JetCorrectionUncertainty *jecUnc_PF){
+  BNjet MyJet;
+      // float mva_full  = (*puJetIdMVA_full)[jets.refAt(idx)];
+//       int idflag_full = (*puJetIdFlag_full)[jets.refAt(idx)];
+
+//       float mva_simple  = (*puJetIdMVA_simple)[jets.refAt(idx)];
+//       int idflag_simple = (*puJetIdFlag_simple)[jets.refAt(idx)];
+
+//       float mva_cutbased  = (*puJetIdMVA_cutbased)[jets.refAt(idx)];
+//       int idflag_cutbased = (*puJetIdFlag_cutbased)[jets.refAt(idx)];
+
+      //   puIdentifier = (*vmap)[jets.refAt(idx)];
+
+//       bool passTight_full=false, passMedium_full=false, passLoose_full=false;
+//       if( ( ( idflag_full & (1 << 0) ) != 0 ) ) passTight_full  = true;
+//       if( ( ( idflag_full & (1 << 1) ) != 0 ) ) passMedium_full = true;
+//       if( ( ( idflag_full & (1 << 2) ) != 0 ) ) passLoose_full = true;
+
+//       bool passTight_simple=false, passMedium_simple=false, passLoose_simple=false;
+//       if( ( ( idflag_simple & (1 << 0) ) != 0 ) ) passTight_simple  = true;
+//       if( ( ( idflag_simple & (1 << 1) ) != 0 ) ) passMedium_simple = true;
+//       if( ( ( idflag_simple & (1 << 2) ) != 0 ) ) passLoose_simple = true;
+
+//       bool passTight_cutbased=false, passMedium_cutbased=false, passLoose_cutbased=false;
+//       if( ( ( idflag_cutbased & (1 << 0) ) != 0 ) ) passTight_cutbased  = true;
+//       if( ( ( idflag_cutbased & (1 << 1) ) != 0 ) ) passMedium_cutbased = true;
+//       if( ( ( idflag_cutbased & (1 << 2) ) != 0 ) ) passLoose_cutbased = true;
+
+      // printf("  ===> jet %d,\t pt = %4.1f,\t eta = %4.2f \n", idx, jet.pt(), jet.eta() );
+      // printf("\t\t\t mva_full = %4.3f,\t idflag_full = %d,\t passTight_full = %d,\t passMedium_full = %d,\t passLoose_full = %d \n",
+      // 	      mva_full, idflag_full, (passTight_full)?1:0, (passMedium_full)?1:0, (passLoose_full)?1:0 );
+      // printf("\t\t\t mva_simp = %4.3f,\t idflag_simp = %d,\t passTight_simp = %d,\t passMedium_simp = %d,\t passLoose_simp = %d \n",
+      // 	      mva_simple, idflag_simple, (passTight_simple)?1:0, (passMedium_simple)?1:0, (passLoose_simple)?1:0 );
+      // printf("\t\t\t mva_cutb = %4.3f,\t idflag_cutb = %d,\t passTight_cutb = %d,\t passMedium_cutb = %d,\t passLoose_cutb = %d \n",
+      // 	      mva_cutbased, idflag_cutbased, (passTight_cutbased)?1:0, (passMedium_cutbased)?1:0, (passLoose_cutbased)?1:0 );
+
+//       MyJet.puJetMVA_full     = mva_full;
+//       MyJet.puJetMVA_simple   = mva_simple;
+//       MyJet.puJetMVA_cutbased = mva_cutbased;
+
+//       MyJet.puJetId_full     = idflag_full;
+//       MyJet.puJetId_simple   = idflag_simple;
+//       MyJet.puJetId_cutbased = idflag_cutbased;
+
+//       MyJet.puJetId_tight_full     = (passTight_full)?1:0;
+//       MyJet.puJetId_tight_simple   = (passTight_simple)?1:0;
+//       MyJet.puJetId_tight_cutbased = (passTight_cutbased)?1:0;
+
+//       MyJet.puJetId_medium_full     = (passMedium_full)?1:0;
+//       MyJet.puJetId_medium_simple   = (passMedium_simple)?1:0;
+//       MyJet.puJetId_medium_cutbased = (passMedium_cutbased)?1:0;
+
+//       MyJet.puJetId_loose_full     = (passLoose_full)?1:0;
+//       MyJet.puJetId_loose_simple   = (passLoose_simple)?1:0;
+//       MyJet.puJetId_loose_cutbased = (passLoose_cutbased)?1:0;
+
+  double rawpt = 0;
+  if(jet.jecSetAvailable(0))
+    rawpt = jet.correctedJet(0).pt();
+  else
+    rawpt = jet.pt();
+
+  std::vector<reco::PFCandidatePtr> PFJetPart;
+  if(jet.isPFJet()){
+    PFJetPart = jet.getPFConstituents();
+  }
+
+  double maxCandPt=0;
+  double leadCandVx=-99,leadCandVy=-99,leadCandVz=-99;
+  for(UInt_t j=0;j<PFJetPart.size();j++){
+    double pTcand = PFJetPart[j]->pt();
+    if( pTcand>maxCandPt ){
+      maxCandPt = pTcand;
+      leadCandVx = PFJetPart[j]->vx();
+      leadCandVy = PFJetPart[j]->vy();
+      leadCandVz = PFJetPart[j]->vz();
+    }
+  }
+  double leadCandDistFromPV = sqrt( (leadCandVx-PVx)*(leadCandVx-PVx) + (leadCandVy-PVy)*(leadCandVy-PVy) + (leadCandVz-PVz)*(leadCandVz-PVz) );
+  
+  MyJet.leadCandPt = maxCandPt;
+  
+  MyJet.leadCandVx = leadCandVx;
+  MyJet.leadCandVy = leadCandVy;
+  MyJet.leadCandVz = leadCandVz;
+  MyJet.leadCandDistFromPV = leadCandDistFromPV;
+  
+  double sumMomentum = 0;
+  double sumMomentumQ = 0;
+  for(std::vector<reco::PFCandidatePtr>::const_iterator i_candidate = PFJetPart.begin(); i_candidate != PFJetPart.end(); ++i_candidate){
+    const int charge = (*i_candidate)->charge();
+    if(charge == 0) continue;
+    
+    const double constituentPx = (*i_candidate)->px();
+    const double constituentPy = (*i_candidate)->py();
+    const double constituentPz = (*i_candidate)->pz();
+    const double product = constituentPx*jet.px() + constituentPy*jet.py() + constituentPz*jet.pz();
+    
+    sumMomentum += product;
+    sumMomentumQ += static_cast<double>(charge)*product;
+  }
+  const double jetChargeRelativePtWeighted(sumMomentum>0 ? sumMomentumQ/sumMomentum : 0);
+  MyJet.jetChargeRelativePtWeighted = jetChargeRelativePtWeighted;
+ 
+  //  MyJet.dZ = puIdentifier.dZ();
+  //       MyJet.dR2Mean = puIdentifier.dR2Mean();
+  //       MyJet.dRMean = puIdentifier.dRMean();
+  //       MyJet.frac01 = puIdentifier.frac01();
+  //       MyJet.frac02 = puIdentifier.frac02();
+  //       MyJet.frac03 = puIdentifier.frac03();
+  //       MyJet.frac04 = puIdentifier.frac04();
+  //       MyJet.frac05 = puIdentifier.frac05();
+  //       MyJet.frac06 = puIdentifier.frac06();
+  //       MyJet.frac07 = puIdentifier.frac07(); //Always 0
+  //       MyJet.beta = puIdentifier.beta();
+  //       MyJet.betaStar = puIdentifier.betaStar();
+  //       MyJet.betaClassic = puIdentifier.betaClassic();
+  //       MyJet.betaStarClassic = puIdentifier.betaStarClassic();
+  //       MyJet.ptD = puIdentifier.ptD();
+  //       MyJet.nvtx = puIdentifier.nvtx();
+  //       MyJet.d0 = puIdentifier.d0(); //Not declared in class StoredPileupJetIdentifier (PileupJetIdentifier.h) 
+  
+  MyJet.Upt = rawpt;
+  double unc = 1., JECuncUp = 1., JECuncDown = 1.; // JEC uncertainties only defined for jets with |eta| < 5.5 and pt > 9 GeV (2011 data)
+  if( jet.pt()>9. && fabs(jet.eta())<5.0 ){
+    jecUnc_PF->setJetEta(jet.eta());
+    jecUnc_PF->setJetPt(jet.pt());// the uncertainty is a function of the corrected pt
+    JECuncUp = jecUnc_PF->getUncertainty(true); //up variation
+    unc = JECuncUp;
+    jecUnc_PF->setJetEta(jet.eta());
+    jecUnc_PF->setJetPt(jet.pt());// the uncertainty is a function of the corrected pt
+    JECuncDown = jecUnc_PF->getUncertainty(false); //up variation
+  }
+  // general kinematic variables
+  MyJet.energy = jet.energy();
+  MyJet.et = jet.et();
+  MyJet.pt = jet.pt();
+  MyJet.px = jet.px();
+  MyJet.py = jet.py();
+  MyJet.pz = jet.pz();
+  MyJet.phi = jet.phi();
+  MyJet.eta = jet.eta();
+  MyJet.theta = jet.theta();
+  
+  //MyJet.EMfrac = jet.emEnergyFraction();
+  //MyJet.Hadfrac = jet.energyFractionHadronic();
+  MyJet.charge = jet.jetCharge();
+  MyJet.mass = jet.mass();
+  MyJet.area = jet.jetArea();
+  MyJet.fHPD = jet.jetID().fHPD;
+  MyJet.flavour = jet.partonFlavour();
+  MyJet.Nconst = jet.nConstituents();
+  MyJet.n90Hits = jet.jetID().n90Hits;
+  MyJet.approximatefHPD = jet.jetID().approximatefHPD;
+  MyJet.hitsInN90 = jet.jetID().hitsInN90;
+  
+  // btag variables
+  MyJet.btagTChighPur = jet.bDiscriminator("trackCountingHighPurBJetTags");
+  MyJet.btagTChighEff = jet.bDiscriminator("trackCountingHighEffBJetTags");
+  MyJet.btagJetProb = jet.bDiscriminator("jetProbabilityBJetTags");
+  MyJet.btagJetBProb = jet.bDiscriminator("jetBProbabilityBJetTags");
+  MyJet.btagSecVertexHighEff = jet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
+  MyJet.btagSecVertexHighPur = jet.bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
+  MyJet.btagCombinedSecVertex = jet.bDiscriminator("combinedSecondaryVertexBJetTags");
+  
+  MyJet.JESunc = unc;
+  MyJet.JECuncUp = JECuncUp;
+  MyJet.JECuncDown = JECuncDown;
+  
+  if( (jet.genJet()) ){ // if there is a matched genjet, fill variables
+    MyJet.genJetET = jet.genJet()->et();
+    MyJet.genJetPT = jet.genJet()->pt();
+    MyJet.genJetEta = jet.genJet()->eta();
+    MyJet.genJetPhi = jet.genJet()->phi();
+  }
+  if( (jet.genParton()) ){ // if there is a matched parton, fill variables
+    MyJet.genPartonET = jet.genParton()->et();
+    MyJet.genPartonPT = jet.genParton()->pt();
+    MyJet.genPartonEta = jet.genParton()->eta();
+    MyJet.genPartonPhi = jet.genParton()->phi();
+    MyJet.genPartonId = jet.genParton()->pdgId();
+    
+    int numberOfMothers = jet.genParton()->numberOfMothers();
+    if( numberOfMothers==1 ){
+      MyJet.genPartonMotherId  = jet.genParton()->mother()->pdgId();
+      MyJet.genPartonMother0Id = jet.genParton()->mother()->pdgId();
+      int numberOfGrandMothers = jet.genParton()->mother()->numberOfMothers();
+      if( numberOfGrandMothers==1 ) MyJet.genPartonGrandMotherId = jet.genParton()->mother()->mother()->pdgId();
+      else if( numberOfGrandMothers>=2 ){
+	MyJet.genPartonGrandMother00Id = jet.genParton()->mother()->mother(0)->pdgId();
+	MyJet.genPartonGrandMother01Id = jet.genParton()->mother()->mother(1)->pdgId();
+      }
+      
+      int pdgId = jet.genParton()->pdgId();
+      int motherId = jet.genParton()->mother()->pdgId();
+      
+      int last_motherID = -99;
+      int last_grandMotherID = -99;
+      if( pdgId==motherId ){
+	const reco::Candidate* new_mother = jet.genParton()->mother();
+	
+	bool keepGoing = true;
+	while( keepGoing ){
+	  int new_motherID = new_mother->pdgId();
+	  last_motherID = new_motherID;
+	  if( new_mother->numberOfMothers()>0 ){
+	    new_mother = new_mother->mother();
+	    last_grandMotherID = new_mother->pdgId();
+	    if( new_motherID!=pdgId ) keepGoing = false;
+	  }
+	  else keepGoing = false;
+	    }
+      }
+      
+      if( last_motherID!=-99 ){
+	MyJet.genPartonMother0Id = last_motherID;
+	if( last_grandMotherID!=-99 ) MyJet.genPartonGrandMotherId = last_grandMotherID;
+      }
+    }
+    else if( numberOfMothers>=2 ){
+      MyJet.genPartonMother0Id = jet.genParton()->mother(0)->pdgId();
+      MyJet.genPartonMother1Id = jet.genParton()->mother(1)->pdgId();
+      
+      if( jet.genParton()->mother(0)->numberOfMothers()==1 ) MyJet.genPartonGrandMother00Id = jet.genParton()->mother(0)->mother()->pdgId();
+      else if( jet.genParton()->mother(0)->numberOfMothers()>=2 ){
+	MyJet.genPartonGrandMother00Id = jet.genParton()->mother(0)->mother(0)->pdgId();
+	MyJet.genPartonGrandMother01Id = jet.genParton()->mother(0)->mother(1)->pdgId();
+      }
+      
+      if( jet.genParton()->mother(1)->numberOfMothers()==1 ) MyJet.genPartonGrandMother00Id = jet.genParton()->mother(1)->mother()->pdgId();
+      else if( jet.genParton()->mother(1)->numberOfMothers()>=2 ){
+	MyJet.genPartonGrandMother10Id = jet.genParton()->mother(1)->mother(0)->pdgId();
+	MyJet.genPartonGrandMother11Id = jet.genParton()->mother(1)->mother(1)->pdgId();
+      }
+    }
+
+  }
+  // DataFormats/JetReco/interface/Jet.h
+  // http://indico.cern.ch/getFile.py/access?contribId=8&resId=0&materialId=slides&confId=92249
+  if(jet.isPFJet()){
+    MyJet.chargedHadronEnergyFraction = jet.chargedHadronEnergyFraction();
+    MyJet.neutralHadronEnergyFraction = jet.neutralHadronEnergyFraction(); 
+    
+    MyJet.chargedEmEnergyFraction = jet.chargedEmEnergyFraction();
+    MyJet.neutralEmEnergyFraction = jet.neutralEmEnergyFraction();
+  
+    MyJet.chargedMultiplicity = jet.chargedMultiplicity();
+    MyJet.neutralMultiplicity = jet.neutralMultiplicity();
+  }
+  MyJet.nconstituents = jet.numberOfDaughters();
+  
+  
+  bool loose = (jet.isPFJet() &&	     
+		jet.neutralHadronEnergyFraction() < 0.99 &&
+		jet.chargedEmEnergyFraction() < 0.99 &&
+		jet.neutralEmEnergyFraction() < 0.99 &&
+		jet.numberOfDaughters() > 1
+		);
+  
+  if( fabs(jet.eta())<2.4 ){
+    loose = (loose &&	     
+	     jet.chargedHadronEnergyFraction() > 0.0 &&
+	     jet.chargedMultiplicity() > 0
+	     );
+  }
+  
+  MyJet.jetIDLoose = (loose) ? 1 : 0;
+  return MyJet;
+}
+
+template<typename recojettype>
+const pat::Jet & BEANmaker::deltarJetMatching(const edm::View<pat::Jet> & patjets, const multimap<double, int> & patjetindex_by_eta, const recojettype & rjet){
+	multimap<double, int>::const_iterator lower = patjetindex_by_eta.lower_bound(rjet.eta() - 0.01);
+	multimap<double, int>::const_iterator upper = patjetindex_by_eta.upper_bound(rjet.eta() + 0.01);
+
+	double delta_r = 9999.0;
+	int best_match = -1;
+
+	for(multimap<double, int>::const_iterator it=lower; it!=upper; ++it){
+		if(best_match == -1 || deltaR(patjets[it->second], rjet) < delta_r){
+			best_match = it->second;
+			delta_r = deltaR(patjets[best_match], rjet);
+		}
+	}
+
+	if(best_match >= 0) return patjets[best_match];
+	throw string("deltarJetMatching: could not find matching jet.");
+}
+
+template<typename recojettype>
+void BEANmaker::fillBNsubfilterjet(std::auto_ptr<BNsubfilterjetCollection> & BNsfjets, const edm::View<pat::Jet> & patfatjets, 
+				   const edm::View<pat::Jet> & patsubjets, const edm::View<pat::Jet> & patfilterjets, const std::vector<recojettype> & fatjets,
+				   const std::vector<double> & subjettiness1, const std::vector<double> & subjettiness2, 
+				   const std::vector<double> & subjettiness3, const std::vector<double> & subjettiness4, 
+				   const double PVx, const double PVy, const double PVz, JetCorrectionUncertainty *jecUnc_PF, const double ptMin){
+	 
+  std::multimap<double, int> patfatjetindex_by_eta;
+  std::multimap<double, int> patsubjetindex_by_eta;
+  std::multimap<double, int> patfilterjetindex_by_eta;
+  
+  for(size_t i=0; i<patfatjets.size(); ++i)			patfatjetindex_by_eta.insert(pair<double, int>(patfatjets[i].eta(), i));
+  for(size_t i=0; i<patsubjets.size(); ++i) 		patsubjetindex_by_eta.insert(pair<double, int>(patsubjets[i].eta(), i));
+  for(size_t i=0; i<patfilterjets.size(); ++i) 	patfilterjetindex_by_eta.insert(pair<double, int>(patfilterjets[i].eta(), i));
+  
+  for(typename vector<recojettype>::const_iterator it=fatjets.begin();it!=fatjets.end();++it){
+    //if(it->pt() < ptMin || fabs(it->eta()) > etaMax) continue;
+    if(it->pt() < ptMin) continue;
+    
+    const pat::Jet & patfatjet = deltarJetMatching(patfatjets, patfatjetindex_by_eta, *it);
+    BNsfjets->push_back(BNsubfilterjet());
+    BNsfjets->back().fatjet = convertJet(patfatjet,PVx,PVy,PVz,jecUnc_PF);
+    BNsfjets->back().subjettiness1 = subjettiness1[it-fatjets.begin()];
+    BNsfjets->back().subjettiness2 = subjettiness2[it-fatjets.begin()];
+    BNsfjets->back().subjettiness3 = subjettiness3[it-fatjets.begin()];
+    BNsfjets->back().subjettiness4 = subjettiness4[it-fatjets.begin()];
+    
+    std::vector<const reco::Candidate*> recosubjets = it->getJetConstituentsQuick();
+    
+    for(size_t i=0;i<recosubjets.size(); ++i){
+      if(i<2){
+	const pat::Jet & patsubjet = deltarJetMatching(patsubjets, patsubjetindex_by_eta, *(recosubjets.at(i)));
+	BNsfjets->back().subjets.push_back(convertJet(patsubjet,PVx,PVy,PVz,jecUnc_PF));
+      }
+      else{
+	const pat::Jet & patfilterjet = deltarJetMatching(patfilterjets, patfilterjetindex_by_eta, *(recosubjets.at(i)));
+	BNsfjets->back().filterjets.push_back(convertJet(patfilterjet,PVx,PVy,PVz,jecUnc_PF));
+      }
+    }
+  }
+}
+
+template<typename recojettype>
+void BEANmaker::fillBNtoptagjet(std::auto_ptr<BNtoptagjetCollection> & BNttjets, const edm::View<pat::Jet> & patfatjets, 
+				const edm::View<pat::Jet> & patsubjets, const std::vector<recojettype> & fatjets, const std::vector<bool> & toptags, 
+				const std::vector<double> & subjettiness1, const std::vector<double> & subjettiness2, 
+				const std::vector<double> & subjettiness3, const std::vector<double> & subjettiness4,
+				const double PVx, const double PVy, const double PVz, JetCorrectionUncertainty *jecUnc_PF, const double ptMin){
+  
+  std::multimap<double, int> patfatjetindex_by_eta;
+  std::multimap<double, int> patsubjetindex_by_eta;
+  
+  for(size_t i=0; i<patfatjets.size(); ++i) patfatjetindex_by_eta.insert(pair<double, int>(patfatjets[i].eta(), i));
+  for(size_t i=0; i<patsubjets.size(); ++i) patsubjetindex_by_eta.insert(pair<double, int>(patsubjets[i].eta(), i));
+  
+  for(typename vector<recojettype>::const_iterator it=fatjets.begin();it!=fatjets.end();++it){
+    //if(it->pt() < ptMin || fabs(it->eta()) > etaMax) continue;
+    if(it->pt() < ptMin) continue;
+    
+    const pat::Jet & patfatjet = deltarJetMatching(patfatjets, patfatjetindex_by_eta, *it);
+    BNttjets->push_back(BNtoptagjet());
+    BNttjets->back().fatjet 				= convertJet(patfatjet,PVx,PVy,PVz,jecUnc_PF);
+    BNttjets->back().toptag 				= toptags[it-fatjets.begin()];
+    BNttjets->back().subjettiness1 	= subjettiness1[it-fatjets.begin()];
+    BNttjets->back().subjettiness2 	= subjettiness2[it-fatjets.begin()];
+    BNttjets->back().subjettiness3 	= subjettiness3[it-fatjets.begin()];
+    BNttjets->back().subjettiness4 	= subjettiness4[it-fatjets.begin()];
+    
+    std::vector<const reco::Candidate*> recosubjets = it->getJetConstituentsQuick();
+    
+    for(size_t i=0;i<recosubjets.size(); ++i){
+      const pat::Jet & patsubjet = deltarJetMatching(patsubjets, patsubjetindex_by_eta, *(recosubjets.at(i)));
+      
+      if(i==0) BNttjets->back().topjet	= convertJet(patsubjet,PVx,PVy,PVz,jecUnc_PF);
+      if(i==1) BNttjets->back().nonW 		= convertJet(patsubjet,PVx,PVy,PVz,jecUnc_PF);
+      if(i==2) BNttjets->back().W 			= convertJet(patsubjet,PVx,PVy,PVz,jecUnc_PF);
+      if(i==3) BNttjets->back().W1 			= convertJet(patsubjet,PVx,PVy,PVz,jecUnc_PF);
+      if(i==4) BNttjets->back().W2 			= convertJet(patsubjet,PVx,PVy,PVz,jecUnc_PF);
+    }
+  }
 }
 
 
