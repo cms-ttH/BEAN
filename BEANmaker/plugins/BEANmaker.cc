@@ -3586,6 +3586,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   if( produceElectron ) iEvent.put(bnelectrons,eleTag_.label());
   if( producePFJet ) iEvent.put(bnpfjets,pfjetTag_.label());
   if( produceGenJet ) iEvent.put(bngenjets,genjetTag_.label());
+  if( producePFSubFilterJet ) iEvent.put(bnsubfilterjets,pfsfpatfatjetsTag_.label());
+  if( producePFTopTagJet ) iEvent.put(bntoptagjets,pfttpatfatjetsTag_.label());
   if( producePFMET ) iEvent.put(bnpfmet,pfmetTag_.label());
   if( producePFMET_type1correctedRECO ) iEvent.put(bnpfmet_type1correctedRECO,std::string(pfmetTag_type1correctedRECO_.label() + "BN"));
   if( producePFMET_uncorrectedPF2PAT )  iEvent.put(bnpfmet_uncorrectedPF2PAT,std::string(pfmetTag_uncorrectedPF2PAT_.label() + "BN"));
@@ -4044,7 +4046,7 @@ void BEANmaker::fillBNtoptagjet(std::auto_ptr<BNtoptagjetCollection> & BNttjets,
 				const std::vector<double> & subjettiness1, const std::vector<double> & subjettiness2, 
 				const std::vector<double> & subjettiness3, const std::vector<double> & subjettiness4,
 				const double PVx, const double PVy, const double PVz, JetCorrectionUncertainty *jecUnc_PF, const double ptMin){
-  
+
   std::multimap<double, int> patfatjetindex_by_eta;
   std::multimap<double, int> patsubjetindex_by_eta;
   
