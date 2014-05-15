@@ -18,7 +18,6 @@ The '--unsafe' option prevents the merge from cloning dependent packages that we
     git cms-addpkg CondFormats/EgammaObjects
     git clone https://github.com/muell149/UserCode-EGamma-EGammaAnalysisTools.git EGamma/EGammaAnalysisTools
     git clone git@github.com:latinos/UserCode-sixie-Muon-MuonAnalysisTools Muon/MuonAnalysisTools/
-    git cms-addpkg RecoBTag/SecondaryVertex
     git cms-addpkg RecoVertex/AdaptiveVertexFinder
     git clone https://github.com/muell149/TopAnalysis.git
 
