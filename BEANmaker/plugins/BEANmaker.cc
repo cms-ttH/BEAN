@@ -1192,7 +1192,78 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	cutHad2 = ( ele->dr03HcalDepth2TowerSumEt()<0.5 );
 	cutTrackIso = ( ele->dr03TkSumPt()<15. );
       }
+      
+      ///////////       new ele vars     //////////////////////////
+      
+      bool validKF= false; 
+      reco::TrackRef myTrackRef = ele->closestCtfTrackRef();
+      validKF = (myTrackRef.isAvailable());
+      validKF = (myTrackRef.isNonnull());  
+      // Pure tracking variables
+      MyElectron.fMVAVar_fbrem           =  ele->fbrem();
+      MyElectron.fMVAVar_kfchi2          =  (validKF) ? myTrackRef->normalizedChi2() : 0 ;
+      MyElectron.fMVAVar_kfhits          =  (validKF) ? myTrackRef->hitPattern().trackerLayersWithMeasurement() : -1. ; 
+      //  MyElectron.fMVAVar_kfhitsall          =  (validKF) ? myTrackRef->numberOfValidHits() : -1. ;   //  save also this in your ntuple as possible alternative
+      MyElectron.fMVAVar_gsfchi2         =  ele->gsfTrack()->normalizedChi2();  
+      // Geometrical matchings
+      MyElectron.fMVAVar_deta            =  ele->deltaEtaSuperClusterTrackAtVtx();
+      MyElectron.fMVAVar_dphi            =  ele->deltaPhiSuperClusterTrackAtVtx();
+      MyElectron.fMVAVar_detacalo        =  ele->deltaEtaSeedClusterTrackAtCalo();
+      // MyElectron.fMVAVar_dphicalo        =  ele->deltaPhiSeedClusterTrackAtCalo();   //  save also this in your ntuple 
+      // Pure ECAL -> shower shapes
+      MyElectron.fMVAVar_see             =  ele->sigmaIetaIeta();    //EleSigmaIEtaIEta
+      std::vector<float> vCov = lazyTools.localCovariances(*(ele->superCluster()->seed())) ;
+      if (!isnan(vCov[2])) MyElectron.fMVAVar_spp = sqrt (vCov[2]);   //EleSigmaIPhiIPhi
+      else MyElectron.fMVAVar_spp = 0.;    
+      // MyElectron.fMVAVar_sigmaIEtaIPhi = vCov[1];  //  save also this in your ntuple 
+      MyElectron.fMVAVar_etawidth        =  ele->superCluster()->etaWidth();
+      MyElectron.fMVAVar_phiwidth        =  ele->superCluster()->phiWidth();
+      MyElectron.fMVAVar_e1x5e5x5        =  (ele->e5x5()) !=0. ? 1.-(ele->e1x5()/ele->e5x5()) : -1. ;
+      MyElectron.fMVAVar_R9              =  lazyTools.e3x3(*(ele->superCluster()->seed())) / ele->superCluster()->rawEnergy();
+      //MyElectron.fMVAVar_nbrems          =  fabs(ele->numberOfBrems());    //  save also this in your ntuple 
+      // Energy matching
+      MyElectron.fMVAVar_HoE             =  ele->hadronicOverEm();
+      MyElectron.fMVAVar_EoP             =  ele->eSuperClusterOverP();
+      // MyElectron.fMVAVar_IoEmIoP         =  (1.0/(ele->superCluster()->energy())) - (1.0 / ele->p());  // in the future to be changed with ele->momentumAtVtx().R()
+      // MyElectron.fMVAVar_IoEmIoP         =  (1.0/ele->ecalEnergy()) - (1.0 / ele->p());  // in the future to be changed with ele->gsfTrack().p()   // 24/04/2012 changed to correctly access the corrected supercluster energy from CMSSW_52X
+      MyElectron.fMVAVar_IoEmIoP         =  (1.0/ele->ecalEnergy()) - (1.0 / ele->p());  // in the future to be changed with ele->momentumAtVtx().R()   // 05/06/2012 changed to correctly access the electron track momentum (mode)
+      MyElectron.fMVAVar_eleEoPout       =  ele->eEleClusterOverPout();
+      MyElectron.fMVAVar_PreShowerOverRaw=  ele->superCluster()->preshowerEnergy() / ele->superCluster()->rawEnergy();
+      // MyElectron.fMVAVar_EoPout          =  ele->eSeedClusterOverPout();     //  save also this in your ntuple 
 
+      // Spectators
+      MyElectron.fMVAVar_eta             =  ele->superCluster()->eta();         
+      
+      // for triggering electrons get the impact parameteres
+//       if(fMVAType == kTrig) {
+// 	//d0
+// 	if (ele->gsfTrack().isNonnull()) {
+// 	  MyElectron.fMVAVar_d0 = (-1.0)*ele->gsfTrack()->dxy(vertex.position()); 
+// 	} else if (ele->closestCtfTrackRef().isNonnull()) {
+// 	  MyElectron.fMVAVar_d0 = (-1.0)*ele->closestCtfTrackRef()->dxy(vertex.position()); 
+// 	} else {
+// 	  MyElectron.fMVAVar_d0 = -9999.0;
+// 	}
+      
+// 	//default values for IP3D
+// 	MyElectron.fMVAVar_ip3d = -999.0; 
+// 	// MyElectron.fMVAVar_ip3dSig = 0.0;
+// 	if (ele->gsfTrack().isNonnull()) {
+// 	  const double gsfsign   = ( (-ele->gsfTrack()->dxy(vertex.position()))   >=0 ) ? 1. : -1.;
+	  
+// 	  const reco::TransientTrack &tt = transientTrackBuilder.build(ele->gsfTrack()); 
+// 	  const std::pair<bool,Measurement1D> &ip3dpv =  IPTools::absoluteImpactParameter3D(tt,vertex);
+// 	  if (ip3dpv.first) {
+// 	    double ip3d = gsfsign*ip3dpv.second.value();
+// 	  //double ip3derr = ip3dpv.second.error();  
+// 	    MyElectron.fMVAVar_ip3d = ip3d; 
+// 	    // MyElectron.fMVAVar_ip3dSig = ip3d/ip3derr;
+// 	  }
+// 	}
+//       }
+    
+      /////// end new ele code ////////////
+      
       bool isHEEPnoEt = ( isECAL && cutEta && cutDelEta && cutDelPhi && cutHoverE &&  
 			  cutSigIeta && cutE2x5 && cutEMhad1 && cutHad2 && cutTrackIso );
       bool isHEEP = ( isHEEPnoEt && cutET );

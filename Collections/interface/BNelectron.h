@@ -28,7 +28,12 @@ struct BNelectron : BNlepton {
     eidRobustTight(c), eidLoose(c), eidTight(c), eidVeryLooseMC(c),
     eidLooseMC(c), eidMediumMC(c), eidTightMC(c), eidSuperTightMC(c),
     eidHyperTight1MC(c), eidHyperTight2MC(c), eidHyperTight3MC(c),
-    eidHyperTight4MC(c), passConvVeto(c), isGsfCtfScPixChargeConsistent(c) {}
+    eidHyperTight4MC(c), passConvVeto(c), isGsfCtfScPixChargeConsistent(c),
+    fMVAVar_fbrem(c), fMVAVar_kfchi2(c), fMVAVar_kfhits(c), fMVAVar_gsfchi2(c),
+    fMVAVar_deta(c), fMVAVar_dphi(c), fMVAVar_detacalo(c), fMVAVar_see(c),
+    fMVAVar_spp(c), fMVAVar_etawidth(c), fMVAVar_phiwidth(c), fMVAVar_e1x5e5x5(c),
+    fMVAVar_R9(c),fMVAVar_HoE(c), fMVAVar_EoP(c), fMVAVar_IoEmIoP(c),
+    fMVAVar_eleEoPout(c),fMVAVar_PreShowerOverRaw(c), fMVAVar_eta(c) {}
 
   BNelectron() : BNlepton(1, 0),
     gsfEt(-99), pIn(-99), pOut(-99), EscOverPin(-99), EseedOverPout(-99),
@@ -55,8 +60,12 @@ struct BNelectron : BNlepton {
     eidLoose(-99), eidTight(-99), eidVeryLooseMC(-99), eidLooseMC(-99),
     eidMediumMC(-99), eidTightMC(-99), eidSuperTightMC(-99),
     eidHyperTight1MC(-99), eidHyperTight2MC(-99), eidHyperTight3MC(-99),
-    eidHyperTight4MC(-99), passConvVeto(-99),
-    isGsfCtfScPixChargeConsistent(-99) {}
+    eidHyperTight4MC(-99), passConvVeto(-99),isGsfCtfScPixChargeConsistent(-99),
+    fMVAVar_fbrem(-99), fMVAVar_kfchi2(-99), fMVAVar_kfhits(-99), fMVAVar_gsfchi2(-99),
+    fMVAVar_deta(-99), fMVAVar_dphi(-99), fMVAVar_detacalo(-99), fMVAVar_see(-99),
+    fMVAVar_spp(-99), fMVAVar_etawidth(-99), fMVAVar_phiwidth(-99), fMVAVar_e1x5e5x5(-99),
+    fMVAVar_R9(-99),fMVAVar_HoE(-99), fMVAVar_EoP(-99), fMVAVar_IoEmIoP(-99),
+    fMVAVar_eleEoPout(-99),fMVAVar_PreShowerOverRaw(-99), fMVAVar_eta(-99) {}
 
   double gsfEt;
   double pIn, pOut;
@@ -79,6 +88,15 @@ struct BNelectron : BNlepton {
   double seedEnergy, seedTime;
   double swissCrossNoI85, swissCrossI85;
   double E2overE9NoI85, E2overE9I85;
+  
+  //new mva vars 
+  double fMVAVar_fbrem, fMVAVar_kfchi2, fMVAVar_kfhits;
+  double fMVAVar_gsfchi2, fMVAVar_deta, fMVAVar_dphi;
+  double fMVAVar_detacalo; // fMVAVar_dphicalo
+  double fMVAVar_see, fMVAVar_spp, fMVAVar_etawidth, fMVAVar_phiwidth;
+  double fMVAVar_e1x5e5x5, fMVAVar_R9;//fMVAVar_nbrems,
+  double fMVAVar_HoE, fMVAVar_EoP, fMVAVar_IoEmIoP, fMVAVar_eleEoPout;
+  double fMVAVar_PreShowerOverRaw, fMVAVar_eta;// fMVAVar_EoPout,
 
   int classification;
   int genGrandMother11Id;
