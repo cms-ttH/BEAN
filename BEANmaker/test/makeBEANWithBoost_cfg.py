@@ -452,8 +452,15 @@ if topfilter:
 
 ####################################################################
 ## Build Jet Collections
+
+jet_gen_seq = cms.Sequence(process.genParticlesForJets)
+
 if runSJFJ:
     process.load("RecoJets.JetProducers.SubjetsFilterjets_cfi")
+    process.load("RecoJets.Configuration.GenJetParticles_cff")
+    from RecoJets.JetProducers.ca4GenJets_cfi import ca4GenJets
+    process.ca12GenJets = ca4GenJets.clone( rParam = cms.double(1.2) )
+    jet_gen_seq = jet_gen_seq * process.ca12GenJets * process.filtjet_gen_seq
     process.CA12JetsCA3FilterjetsPF.src = getattr(process,'pfJets'+pfpostfix).src
     getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'pfJets'+pfpostfix),getattr(process,'pfJets'+pfpostfix)*process.filtjet_pf_seq)
 
@@ -466,8 +473,8 @@ if runSJFJ:
         doBTagging = True,
         doType1MET = False,
         jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
-        doJetID = False,  
-#        genJetCollection = cms.InputTag('ca12GenJets')
+        doJetID = False,
+        genJetCollection = cms.InputTag('ca12GenJets')
     )
 
     addJetCollection(
@@ -480,7 +487,7 @@ if runSJFJ:
         doType1MET = False,
         jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
         doJetID = False,
-#        genJetCollection = cms.InputTag('CA12JetsCA3FilterjetsGen','subjets')
+        genJetCollection = cms.InputTag('CA12JetsCA3FilterjetsGen','subjets')
     )
   
     # Filterjets (JetsWithFilterjets)
@@ -495,7 +502,7 @@ if runSJFJ:
         doType1MET = False,
         jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
         doJetID = False,
-#        genJetCollection = cms.InputTag('CA12JetsCA3FilterjetsGen','filterjets')
+        genJetCollection = cms.InputTag('CA12JetsCA3FilterjetsGen','filterjets')
     )
     getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'patJets'+pfpostfix),
                                                             getattr(process,'patJets'+pfpostfix)
@@ -530,34 +537,38 @@ if runSJFJ:
 
 if runTTJ:
     process.load("RecoJets.JetProducers.HEPTopJetParameters_cfi")
+    process.load("RecoJets.Configuration.GenJetParticles_cff")
+    from RecoJets.JetProducers.ca4GenJets_cfi import ca4GenJets
+    process.ca15GenJets = ca4GenJets.clone( rParam = cms.double(1.5) )
+    jet_gen_seq = jet_gen_seq * process.ca15GenJets * process.heptopjet_gen_seq
     process.HEPTopJetsPF.src = getattr(process,'pfJets'+pfpostfix).src
     getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'pfJets'+pfpostfix),getattr(process,'pfJets'+pfpostfix)*process.heptopjet_pf_seq)
 
     addJetCollection(
-	process, 
-	cms.InputTag('HEPTopJetsPF', 'fatjet'),
-	algoLabel = 'HEPTopFat',
-	typeLabel = 'PF',
-	doJTA=True,
-	doBTagging=True,
-	doType1MET=False,
-	jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
-#	genJetCollection = cms.InputTag('ca15GenJets'),
-	doJetID = False
+		process, 
+		cms.InputTag('HEPTopJetsPF', 'fatjet'),
+		algoLabel = 'HEPTopFat',
+		typeLabel = 'PF',
+		doJTA=True,
+		doBTagging=True,
+		doType1MET=False,
+		jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
+		genJetCollection = cms.InputTag('ca15GenJets'),
+		doJetID = False
     )
 
     # Subjets
     addJetCollection(
-	process, 
-	cms.InputTag('HEPTopJetsPF', 'subjets'),
-	algoLabel = 'HEPTopSub',
-	typeLabel = 'PF',
-	doJTA=True,
-	doBTagging=True,
-	doType1MET=False,
-	jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
-#	genJetCollection = cms.InputTag('HEPTopJetsGen', 'subjets'),
-	doJetID = False
+		process, 
+		cms.InputTag('HEPTopJetsPF', 'subjets'),
+		algoLabel = 'HEPTopSub',
+		typeLabel = 'PF',
+		doJTA=True,
+		doBTagging=True,
+		doType1MET=False,
+		jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
+		genJetCollection = cms.InputTag('HEPTopJetsGen', 'subjets'),
+		doJetID = False
     )
 	
     getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'patJets'+pfpostfix),
@@ -880,6 +891,7 @@ if signal or higgsSignal or zGenInfo:
     process.pNtuple = cms.Path(
         process.goodOfflinePrimaryVertices *
         process.q2weights *
+        jet_gen_seq *
         getattr(process,'patPF2PATSequence'+pfpostfix) *
         process.metseq *
         process.recoTauClassicHPSSequence *
