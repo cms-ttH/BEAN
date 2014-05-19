@@ -196,25 +196,13 @@ else:
 
 ####################################################################
 ## PF2PAT sequence
-
-# process.load("Configuration.EventContent.EventContent_cff")
-# process.out = cms.OutputModule("PoolOutputModule",
-#     #fileName = cms.untracked.string(".root"),
-#     process.FEVTEventContent,
-#     #dataset = cms.untracked.PSet(dataTier = cms.untracked.string('RECO')),
-#     fileName = cms.untracked.string("ttbarz.root"),
-# )
-
 process.load( "TopQuarkAnalysis.Configuration.patRefSel_outputModule_cff" )
 process.out.fileName = cms.untracked.string("merged_bean.root")
 from PhysicsTools.PatAlgos.patEventContent_cff import patEventContent
 process.out.outputCommands +=patEventContent
 process.out.SelectEvents.SelectEvents = []
 
-
-
 process.load("PhysicsTools.PatAlgos.patSequences_cff")
-
 
 #pfpostfix = "PFlow"
 pfpostfix = ""
@@ -243,8 +231,10 @@ applyPostfix( process, 'pfNoTau'     , pfpostfix ).enable = False
 
 # MVA ID
 process.load('EGamma.EGammaAnalysisTools.electronIdMVAProducer_cfi')
-process.eidMVASequence = cms.Sequence(process.mvaTrigV0)
+process.eidMVASequence = cms.Sequence(process.mvaTrigV0
+                                      +process.mvaNonTrigV0)
 getattr(process,'patElectrons'+pfpostfix).electronIDSources.mvaTrigV0 = cms.InputTag("mvaTrigV0")
+getattr(process,'patElectrons'+pfpostfix).electronIDSources.mvaNonTrigV0 = cms.InputTag("mvaNonTrigV0")
 getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'patElectrons'+pfpostfix),
                                                 process.eidMVASequence *
                                                 getattr(process,'patElectrons'+pfpostfix)
@@ -317,9 +307,6 @@ process.selectedPatMuons.cut = ''#'isGlobalMuon && pt > 20 && abs(eta) < 2.5'
 ## Set up selections for PF2PAT & PAT objects: Jets
 
 #process.selectedPatJets.cut = 'abs(eta)<5.4'
-
-
-
 
 ## taus
 tauCut                 = 'pt > 5. && abs(eta) < 2.5 && tauID("decayModeFinding")'
@@ -598,6 +585,40 @@ process.hardJets = selectedPatJets.clone(src = 'goodIdJets', cut = 'pt > 5 & abs
 # Additional properties for jets like jet charges
 process.load("TopAnalysis.HiggsUtils.producers.JetPropertiesProducer_cfi")
 process.jetProperties.src = jetCollection
+
+#process.load("RecoBTag.SoftLepton.softElectronCandProducer_cfi")
+
+#add super taggers
+switchJetCollection(process,
+                    cms.InputTag('pfJets'+pfpostfix),
+                   # 'Super','Tagger',
+                    doJTA              = True,
+                    doBTagging         = True,
+                    btagInfo           = cms.vstring('impactParameterTagInfos','secondaryVertexTagInfos','softPFMuonsTagInfos','softPFElectronsTagInfos'),
+                    btagdiscriminators = cms.vstring('jetBProbabilityBJetTags','jetProbabilityBJetTags','trackCountingHighPurBJetTags','trackCountingHighEffBJetTags','simpleSecondaryVertexHighEffBJetTags','simpleSecondaryVertexHighPurBJetTags','combinedSecondaryVertexBJetTags','combinedSecondaryVertexV1BJetTags','combinedSecondaryVertexSoftPFLeptonV1BJetTags'),
+                    jetCorrLabel       = ('AK5PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute'])),
+                    doType1MET         = False,
+                    #doL1Cleaning       = True,
+                    #doL1Counters       = False, 
+                    genJetCollection   = cms.InputTag('ak5GenJets'),
+                    doJetID            = True,
+                    postfix            = pfpostfix
+                    )
+
+
+
+process.load('CondCore.DBCommon.CondDBSetup_cfi')
+process.BTauMVAJetTagComputerRecord = cms.ESSource('PoolDBESSource',
+                                                   process.CondDBSetup,
+                                                   timetype = cms.string('runnumber'),
+                                                   toGet = cms.VPSet(cms.PSet(
+    record = cms.string('BTauGenericMVAJetTagComputerRcd'),
+    tag = cms.string('MVAComputerContainer_Retrained53X_JetTags_v2')
+    )),
+                                                   connect = cms.string('frontier://FrontierProd/CMS_COND_PAT_000'),
+                                                   BlobStreamerName = cms.untracked.string('TBufferBlobStreamingService'))
+
+process.es_prefer_BTauMVAJetTagComputerRecord = cms.ESPrefer('PoolDBESSource','BTauMVAJetTagComputerRecord')
 
 ####################################################################
 ## Filter on events containing dilepton system of opposite charge and above m(ll) > 12 GeV
@@ -887,6 +908,7 @@ if signal or higgsSignal or zGenInfo:
         getattr(process,'patPF2PATSequence'+pfpostfix) *
         process.metseq *
         process.recoTauClassicHPSSequence *
+        process.softElectronCands *
         process.BNproducer
         )
 
