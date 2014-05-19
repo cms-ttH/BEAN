@@ -19,17 +19,15 @@ process = cms.Process('BEANs')#"topDileptonNtuple")
 
 #SimpleMemoryCheck = cms.Service("SimpleMemoryCheck",ignoreTotal = cms.untracked.int32(1) )
 
-runSJFJ = True
-runTTJ = True
 
 op_runOnMC = True#
 op_runOnAOD = True#
 op_globalTag = ''#
 op_mode = ''#
-op_samplename = 'ttbarsignal'#
-#op_inputScript = 'TopAnalysis.Configuration.Summer12.WJetsToLNu_TuneZ2Star_8TeV_madgraph_tarball_Summer12_DR53X_PU_S10_START53_V7A_v2_cff'
+op_samplename = 'ttbarz'#
+#op_inputScript = 'TopAnalysis.Configuration.Summer12.TTH_Inclusive_M_130_8TeV_pythia6_Summer12_DR53X_PU_S10_START53_V7A_v1_cff'#
 op_inputScript = ''
-op_outputFile = 'ttbar.root'#
+op_outputFile = 'ttbarZ.root'#
 op_systematicsName = 'Nominal'#
 op_json = ''#
 op_skipEvents = 0#
@@ -48,36 +46,35 @@ if op_samplename == 'data':
 
 ####################################################################
 ## Define input
-
-if op_inputScript != '':
-    process.load(op_inputScript)
-    #inputFiles = cms.untracked.vstring('file:ttH_MC.root')
-    #process.source = cms.Source("PoolSource", fileNames = inputFiles, secondaryFileNames = cms.untracked.vstring())
-else:
-    process.source = cms.Source("PoolSource",
-                                fileNames = cms.untracked.vstring('file:///storage/9/williamson/TestSamples/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola.root')
-                                #fileNames = cms.untracked.vstring('root://xrootd.unl.edu//store/mc/Summer12_DR53X/TTJets_MSDecays_central_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S10_START53_V19-v1/20001/708FBBFF-1045-E311-A954-848F69FD29FA.root'),
-                                #                    skipEvents = cms.untracked.uint32(1871)
-                                )
     
-print "max events: ", op_maxEvents
-process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(op_maxEvents)
-)
-
+if op_inputScript != '':
+    #process.load(op_inputScript)
+    inputFiles = cms.untracked.vstring('file:/afs/crc.nd.edu/user/c/cmuelle2/merge_v1/CMSSW_5_3_11/src/TopAnalysis/Configuration/analysis/common/ttH_MC.root')
+    process.source = cms.Source("PoolSource", fileNames = inputFiles, secondaryFileNames = cms.untracked.vstring())
+else:
+    inputFiles = cms.untracked.vstring('file:///storage/9/williamson/TestSamples/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola.root')
+    process.source = cms.Source("PoolSource", fileNames = inputFiles, secondaryFileNames = cms.untracked.vstring())
+#    print 'need an input script'
+#    exit(8889)
+    
+    print "max events: ", op_maxEvents
+    process.maxEvents = cms.untracked.PSet(
+        input = cms.untracked.int32(op_maxEvents)
+        )
+    
 if op_skipEvents > 0:
     process.source.skipEvents = cms.untracked.uint32(op_skipEvents)
-
-# Limit to json file (if passed as parameter)
+        
+        # Limit to json file (if passed as parameter)
 if op_json != '':
     import FWCore.PythonUtilities.LumiList as LumiList
     import FWCore.ParameterSet.Types as CfgTypes
     myLumis = LumiList.LumiList(filename = op_json).getCMSSWString().split(',')
     process.source.lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange())
     process.source.lumisToProcess.extend(myLumis)
-
-
-
+    
+            
+            
 ####################################################################
 ## Create output path
 
@@ -455,143 +452,138 @@ if topfilter:
 
 jet_gen_seq = cms.Sequence(process.genParticlesForJets)
 
-if runSJFJ:
-    process.load("RecoJets.JetProducers.SubjetsFilterjets_cfi")
-    process.load("RecoJets.Configuration.GenJetParticles_cff")
-    from RecoJets.JetProducers.ca4GenJets_cfi import ca4GenJets
-    process.ca12GenJets = ca4GenJets.clone( rParam = cms.double(1.2) )
-    jet_gen_seq = jet_gen_seq * process.ca12GenJets * process.filtjet_gen_seq
-    process.CA12JetsCA3FilterjetsPF.src = getattr(process,'pfJets'+pfpostfix).src
-    getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'pfJets'+pfpostfix),getattr(process,'pfJets'+pfpostfix)*process.filtjet_pf_seq)
+process.load("RecoJets.JetProducers.SubjetsFilterjets_cfi")
+process.load("RecoJets.Configuration.GenJetParticles_cff")
+from RecoJets.JetProducers.ca4GenJets_cfi import ca4GenJets
+process.ca12GenJets = ca4GenJets.clone( rParam = cms.double(1.2) )
+jet_gen_seq = jet_gen_seq * process.ca12GenJets * process.filtjet_gen_seq
+process.CA12JetsCA3FilterjetsPF.src = getattr(process,'pfJets'+pfpostfix).src
+getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'pfJets'+pfpostfix),getattr(process,'pfJets'+pfpostfix)*process.filtjet_pf_seq)
 
-    addJetCollection(
-        process,
-        cms.InputTag('CA12JetsCA3FilterjetsPF','fatjet'),
-        algoLabel = 'CA12Fat',
-        typeLabel = 'PF',
-        doJTA  = True,
-        doBTagging = True,
-        doType1MET = False,
-        jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
-        doJetID = False,
-        genJetCollection = cms.InputTag('ca12GenJets')
+addJetCollection(
+    process,
+    cms.InputTag('CA12JetsCA3FilterjetsPF','fatjet'),
+    algoLabel = 'CA12Fat',
+    typeLabel = 'PF',
+    doJTA  = True,
+    doBTagging = True,
+    doType1MET = False,
+    jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
+    doJetID = False,
+    genJetCollection = cms.InputTag('ca12GenJets')
     )
 
-    addJetCollection(
-        process,
-        cms.InputTag('CA12JetsCA3FilterjetsPF','subjets'),
-        algoLabel = 'CA3Sub',
-        typeLabel = 'PF',
-        doJTA  = True,
-        doBTagging = True,
-        doType1MET = False,
-        jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
-        doJetID = False,
-        genJetCollection = cms.InputTag('CA12JetsCA3FilterjetsGen','subjets')
+addJetCollection(
+    process,
+    cms.InputTag('CA12JetsCA3FilterjetsPF','subjets'),
+    algoLabel = 'CA3Sub',
+    typeLabel = 'PF',
+    doJTA  = True,
+    doBTagging = True,
+    doType1MET = False,
+    jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
+    doJetID = False,
+    genJetCollection = cms.InputTag('CA12JetsCA3FilterjetsGen','subjets')
     )
   
-    # Filterjets (JetsWithFilterjets)
-    #for filterjet_alg in (('CA')):
-    addJetCollection(
-        process,
-        cms.InputTag('CA12JetsCA3FilterjetsPF','filterjets'),
-        algoLabel = 'CA12FatCA3Filter',
-        typeLabel = 'PF',
-        doJTA  = True,
-        doBTagging = True,
-        doType1MET = False,
-        jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
-        doJetID = False,
-        genJetCollection = cms.InputTag('CA12JetsCA3FilterjetsGen','filterjets')
+addJetCollection(
+    process,
+    cms.InputTag('CA12JetsCA3FilterjetsPF','filterjets'),
+    algoLabel = 'CA12FatCA3Filter',
+    typeLabel = 'PF',
+    doJTA  = True,
+    doBTagging = True,
+    doType1MET = False,
+    jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
+    doJetID = False,
+    genJetCollection = cms.InputTag('CA12JetsCA3FilterjetsGen','filterjets')
     )
-    getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'patJets'+pfpostfix),
-                                                            getattr(process,'patJets'+pfpostfix)
-                                                            *process.jetTracksAssociatorAtVertexCA12FatCA3FilterPF
-                                                            *process.jetTracksAssociatorAtVertexCA3SubPF
-                                                            *process.jetTracksAssociatorAtVertexCA12FatPF
-                                                            *process.btaggingCA12FatCA3FilterPF
-                                                            *process.btaggingCA3SubPF
-                                                            *process.btaggingCA12FatPF
-                                                            *process.patJetChargeCA12FatCA3FilterPF
-                                                            *process.patJetChargeCA3SubPF
-                                                            *process.patJetChargeCA12FatPF
-                                                            *process.patJetGenJetMatchCA12FatCA3FilterPF
-                                                            *process.patJetGenJetMatchCA3SubPF
-                                                            *process.patJetGenJetMatchCA12FatPF
-                                                            *process.patJetPartonMatchCA12FatCA3FilterPF
-                                                            *process.patJetPartonMatchCA3SubPF
-                                                            *process.patJetPartonMatchCA12FatPF
-                                                            *process.patJetPartonAssociationCA12FatCA3FilterPF
-                                                            *process.patJetPartonAssociationCA3SubPF
-                                                            *process.patJetPartonAssociationCA12FatPF
-                                                            *process.patJetFlavourAssociationCA12FatCA3FilterPF
-                                                            *process.patJetFlavourAssociationCA3SubPF
-                                                            *process.patJetFlavourAssociationCA12FatPF
-                                                            *process.patJetsCA12FatCA3FilterPF
-                                                            *process.patJetsCA3SubPF
-                                                            *process.patJetsCA12FatPF
-                                                            *process.selectedPatJetsCA12FatCA3FilterPF
-                                                            *process.selectedPatJetsCA3SubPF
-                                                            *process.selectedPatJetsCA12FatPF
-	)
+getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'patJets'+pfpostfix),
+                                                        getattr(process,'patJets'+pfpostfix)
+                                                        *process.jetTracksAssociatorAtVertexCA12FatCA3FilterPF
+                                                        *process.jetTracksAssociatorAtVertexCA3SubPF
+                                                        *process.jetTracksAssociatorAtVertexCA12FatPF
+                                                        *process.btaggingCA12FatCA3FilterPF
+                                                        *process.btaggingCA3SubPF
+                                                        *process.btaggingCA12FatPF
+                                                        *process.patJetChargeCA12FatCA3FilterPF
+                                                        *process.patJetChargeCA3SubPF
+                                                        *process.patJetChargeCA12FatPF
+                                                        *process.patJetGenJetMatchCA12FatCA3FilterPF
+                                                        *process.patJetGenJetMatchCA3SubPF
+                                                        *process.patJetGenJetMatchCA12FatPF
+                                                        *process.patJetPartonMatchCA12FatCA3FilterPF
+                                                        *process.patJetPartonMatchCA3SubPF
+                                                        *process.patJetPartonMatchCA12FatPF
+                                                        *process.patJetPartonAssociationCA12FatCA3FilterPF
+                                                        *process.patJetPartonAssociationCA3SubPF
+                                                        *process.patJetPartonAssociationCA12FatPF
+                                                        *process.patJetFlavourAssociationCA12FatCA3FilterPF
+                                                        *process.patJetFlavourAssociationCA3SubPF
+                                                        *process.patJetFlavourAssociationCA12FatPF
+                                                        *process.patJetsCA12FatCA3FilterPF
+                                                        *process.patJetsCA3SubPF
+                                                        *process.patJetsCA12FatPF
+                                                        *process.selectedPatJetsCA12FatCA3FilterPF
+                                                        *process.selectedPatJetsCA3SubPF
+                                                        *process.selectedPatJetsCA12FatPF
+                                                        )
 
-if runTTJ:
-    process.load("RecoJets.JetProducers.HEPTopJetParameters_cfi")
-    process.load("RecoJets.Configuration.GenJetParticles_cff")
-    from RecoJets.JetProducers.ca4GenJets_cfi import ca4GenJets
-    process.ca15GenJets = ca4GenJets.clone( rParam = cms.double(1.5) )
-    jet_gen_seq = jet_gen_seq * process.ca15GenJets * process.heptopjet_gen_seq
-    process.HEPTopJetsPF.src = getattr(process,'pfJets'+pfpostfix).src
-    getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'pfJets'+pfpostfix),getattr(process,'pfJets'+pfpostfix)*process.heptopjet_pf_seq)
+process.load("RecoJets.JetProducers.HEPTopJetParameters_cfi")
+process.load("RecoJets.Configuration.GenJetParticles_cff")
+from RecoJets.JetProducers.ca4GenJets_cfi import ca4GenJets
+process.ca15GenJets = ca4GenJets.clone( rParam = cms.double(1.5) )
+jet_gen_seq = jet_gen_seq * process.ca15GenJets * process.heptopjet_gen_seq
+process.HEPTopJetsPF.src = getattr(process,'pfJets'+pfpostfix).src
+getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'pfJets'+pfpostfix),getattr(process,'pfJets'+pfpostfix)*process.heptopjet_pf_seq)
 
-    addJetCollection(
-		process, 
-		cms.InputTag('HEPTopJetsPF', 'fatjet'),
-		algoLabel = 'HEPTopFat',
-		typeLabel = 'PF',
-		doJTA=True,
-		doBTagging=True,
-		doType1MET=False,
-		jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
-		genJetCollection = cms.InputTag('ca15GenJets'),
-		doJetID = False
+addJetCollection(
+    process, 
+    cms.InputTag('HEPTopJetsPF', 'fatjet'),
+    algoLabel = 'HEPTopFat',
+    typeLabel = 'PF',
+    doJTA=True,
+    doBTagging=True,
+    doType1MET=False,
+    jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
+    genJetCollection = cms.InputTag('ca15GenJets'),
+    doJetID = False
     )
 
-    # Subjets
-    addJetCollection(
-		process, 
-		cms.InputTag('HEPTopJetsPF', 'subjets'),
-		algoLabel = 'HEPTopSub',
-		typeLabel = 'PF',
-		doJTA=True,
-		doBTagging=True,
-		doType1MET=False,
-		jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
-		genJetCollection = cms.InputTag('HEPTopJetsGen', 'subjets'),
-		doJetID = False
+addJetCollection(
+    process, 
+    cms.InputTag('HEPTopJetsPF', 'subjets'),
+    algoLabel = 'HEPTopSub',
+    typeLabel = 'PF',
+    doJTA=True,
+    doBTagging=True,
+    doType1MET=False,
+    jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
+    genJetCollection = cms.InputTag('HEPTopJetsGen', 'subjets'),
+    doJetID = False
     )
-	
-    getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'patJets'+pfpostfix),
-							    getattr(process,'patJets'+pfpostfix)
-							    *process.jetTracksAssociatorAtVertexHEPTopSubPF
-							    *process.jetTracksAssociatorAtVertexHEPTopFatPF
-							    *process.btaggingHEPTopSubPF
-							    *process.btaggingHEPTopFatPF
-							    *process.patJetChargeHEPTopSubPF
-							    *process.patJetChargeHEPTopFatPF
-							    *process.patJetGenJetMatchHEPTopSubPF
-							    *process.patJetGenJetMatchHEPTopFatPF
-							    *process.patJetPartonMatchHEPTopSubPF
-							    *process.patJetPartonMatchHEPTopFatPF
-							    *process.patJetPartonAssociationHEPTopSubPF
-							    *process.patJetPartonAssociationHEPTopFatPF
-							    *process.patJetFlavourAssociationHEPTopSubPF
-							    *process.patJetFlavourAssociationHEPTopFatPF
-							    *process.patJetsHEPTopSubPF
-							    *process.patJetsHEPTopFatPF
-							    *process.selectedPatJetsHEPTopSubPF
-							    *process.selectedPatJetsHEPTopFatPF
-    )
+
+getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'patJets'+pfpostfix),
+                                                        getattr(process,'patJets'+pfpostfix)
+                                                        *process.jetTracksAssociatorAtVertexHEPTopSubPF
+                                                        *process.jetTracksAssociatorAtVertexHEPTopFatPF
+                                                        *process.btaggingHEPTopSubPF
+                                                        *process.btaggingHEPTopFatPF
+                                                        *process.patJetChargeHEPTopSubPF
+                                                        *process.patJetChargeHEPTopFatPF
+                                                        *process.patJetGenJetMatchHEPTopSubPF
+                                                        *process.patJetGenJetMatchHEPTopFatPF
+                                                        *process.patJetPartonMatchHEPTopSubPF
+                                                        *process.patJetPartonMatchHEPTopFatPF
+                                                        *process.patJetPartonAssociationHEPTopSubPF
+                                                        *process.patJetPartonAssociationHEPTopFatPF
+                                                        *process.patJetFlavourAssociationHEPTopSubPF
+                                                        *process.patJetFlavourAssociationHEPTopFatPF
+                                                        *process.patJetsHEPTopSubPF
+                                                        *process.patJetsHEPTopFatPF
+                                                        *process.selectedPatJetsHEPTopSubPF
+                                                        *process.selectedPatJetsHEPTopFatPF
+                                                        )
 
 process.load("TopAnalysis.TopUtils.JetEnergyScale_cfi")
 
