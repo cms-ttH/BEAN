@@ -10,26 +10,21 @@ import os
 REPORTEVERY = 100
 WANTSUMMARY = True
 
-
-
 ####################################################################
 ## Define the process
-
 process = cms.Process('BEANs')#"topDileptonNtuple")
-
 #SimpleMemoryCheck = cms.Service("SimpleMemoryCheck",ignoreTotal = cms.untracked.int32(1) )
 
-
-op_runOnMC = True#
+op_runOnMC = False#
 op_runOnAOD = True#
-op_globalTag = ''#
+op_globalTag = 'FT_53_V6C_AN4::All'#
 op_mode = ''#
 op_samplename = 'ttbarz'#
 op_inputScript = 'TopAnalysis.Configuration.Summer12.TTH_Inclusive_M_130_8TeV_pythia6_Summer12_DR53X_PU_S10_START53_V7A_v1_cff'#
 #op_inputScript = 'TopAnalysis.Configuration.Summer12.WJetsToLNu_TuneZ2Star_8TeV_madgraph_tarball_Summer12_DR53X_PU_S10_START53_V7A_v2_cff'
 op_outputFile = 'ttbarZ.root'#
 op_systematicsName = 'Nominal'#
-op_json = ''#
+op_json = ''#../json/Cert_190782-190949_8TeV_06Aug2012ReReco_Collisions12_JSON.txt'#
 op_skipEvents = 0#
 op_maxEvents = 30#
 ####################################################################
@@ -49,7 +44,8 @@ if op_samplename == 'data':
 
 if op_inputScript != '':
     #process.load(op_inputScript)
-    inputFiles = cms.untracked.vstring('file:/afs/crc.nd.edu/user/c/cmuelle2/merge_v1/CMSSW_5_3_11/src/TopAnalysis/Configuration/analysis/common/ttH_MC.root')
+    #inputFiles = cms.untracked.vstring('file:/afs/crc.nd.edu/user/c/cmuelle2/merge_v1/CMSSW_5_3_11/src/TopAnalysis/Configuration/analysis/common/ttH_MC.root')
+    inputFiles = cms.untracked.vstring('file:/afs/crc.nd.edu/user/c/cmuelle2/merge_v1/CMSSW_5_3_11/src/TopAnalysis/Configuration/analysis/common/SingleMu_DATA_v1.root')
     process.source = cms.Source("PoolSource", fileNames = inputFiles, secondaryFileNames = cms.untracked.vstring())
 else:
     print 'need an input script'
@@ -191,8 +187,13 @@ if op_runOnMC:
     jetCorr = ('AK5PFchs', ['L1FastJet','L2Relative','L3Absolute'])
 else:
     jetCorr = ('AK5PFchs', ['L1FastJet','L2Relative','L3Absolute', 'L2L3Residual'])
-
-
+    
+## gen jet collections
+if op_runOnMC:
+    genjetTag_ = 'ak5GenJets'
+else:
+    genjetTag_ = 'none'
+    
 
 ####################################################################
 ## PF2PAT sequence
@@ -461,7 +462,7 @@ switchJetCollection(process,
                     doBTagging         = True,
                     btagInfo           = cms.vstring('impactParameterTagInfos','secondaryVertexTagInfos','softPFMuonsTagInfos','softPFElectronsTagInfos'),
                     btagdiscriminators = cms.vstring('jetBProbabilityBJetTags','jetProbabilityBJetTags','trackCountingHighPurBJetTags','trackCountingHighEffBJetTags','simpleSecondaryVertexHighEffBJetTags','simpleSecondaryVertexHighPurBJetTags','combinedSecondaryVertexBJetTags','combinedSecondaryVertexV1BJetTags','combinedSecondaryVertexSoftPFLeptonV1BJetTags'),
-                    jetCorrLabel       = ('AK5PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute'])),
+                    jetCorrLabel       = jetCorr,#('AK5PFchs', #cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute'])),
                     doType1MET         = False,
                     #doL1Cleaning       = True,
                     #doL1Counters       = False, 
@@ -707,7 +708,7 @@ process.BNproducer = cms.EDProducer('BEANmaker',
                                     eleTag = cms.InputTag("selectedPatElectrons"),
                                     genParticleTag = cms.InputTag("genParticles"),
                                     pfjetTag = cms.InputTag("selectedPatJets"),
-                                    genjetTag = cms.InputTag("ak5GenJets"),
+                                    genjetTag = cms.InputTag(genjetTag_),
                                     muonTag = cms.InputTag("selectedPatMuons"),
                                     photonTag = cms.InputTag("none"),
                                     EBsuperclusterTag = cms.InputTag("correctedHybridSuperClusters"),
@@ -759,7 +760,7 @@ if signal or higgsSignal or zGenInfo:
         process.BNproducer
         )
 
-#process.out.outputCommands = ['drop *']
+
 process.out.outputCommands.extend( [
     'drop *',
     'keep *_BNproducer_*_*'
