@@ -3944,6 +3944,8 @@ BNjet BEANmaker::convertJet(const pat::Jet & jet, double PVx, double PVy, double
   MyJet.btagSecVertexHighEff = jet.bDiscriminator("simpleSecondaryVertexHighEffBJetTags");
   MyJet.btagSecVertexHighPur = jet.bDiscriminator("simpleSecondaryVertexHighPurBJetTags");
   MyJet.btagCombinedSecVertex = jet.bDiscriminator("combinedSecondaryVertexBJetTags");
+  MyJet.btagCombinedSecVertexV1 = jet.bDiscriminator("combinedSecondaryVertexV1BJetTags");
+  MyJet.btagCombinedSecVertexSLV1 = jet.bDiscriminator("combinedSecondaryVertexSoftPFLeptonV1BJetTags");
   
   MyJet.JESunc = unc;
   MyJet.JECuncUp = JECuncUp;
