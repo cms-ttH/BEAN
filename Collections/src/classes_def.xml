@@ -24,6 +24,16 @@
   <class pattern="edm::Wrapper<BNjet>"/>
   <class name="edm::Wrapper<std::vector<BNjet> >" />
 
+  <class name="BNsubfilterjet" />
+  <class name="std::vector<BNsubfilterjet>" />
+  <class pattern="edm::Wrapper<BNsubfilterjet>"/>
+  <class name="edm::Wrapper<std::vector<BNsubfilterjet> >" />
+
+  <class name="BNtoptagjet" />
+  <class name="std::vector<BNtoptagjet>" />
+  <class pattern="edm::Wrapper<BNtoptagjet>"/>
+  <class name="edm::Wrapper<std::vector<BNtoptagjet> >" />
+
   <class name="BNevent" />
   <class name="std::vector<BNevent>" />
   <class pattern="edm::Wrapper<BNevent>"/>
@@ -88,6 +98,16 @@
   <class name="std::vector<BNgenjet>" />
   <class pattern="edm::Wrapper<BNgenjet>"/>
   <class name="edm::Wrapper<std::vector<BNgenjet> >" />
+
+  <class name="BNgensubfilterjet" />
+  <class name="std::vector<BNgensubfilterjet>" />
+  <class pattern="edm::Wrapper<BNgensubfilterjet>"/>
+  <class name="edm::Wrapper<std::vector<BNgensubfilterjet> >" />
+
+  <class name="BNgentoptagjet" />
+  <class name="std::vector<BNgentoptagjet>" />
+  <class pattern="edm::Wrapper<BNgentoptagjet>"/>
+  <class name="edm::Wrapper<std::vector<BNgentoptagjet> >" />
 
   <!--
     These classes are commented out because they are used more rarely. If you need them, move them

@@ -7,6 +7,8 @@
 #include "BEAN/Collections/interface/BNtau.h"
 #include "BEAN/Collections/interface/BNevent.h"
 #include "BEAN/Collections/interface/BNjet.h"
+#include "BEAN/Collections/interface/BNsubfilterjet.h"
+#include "BEAN/Collections/interface/BNtoptagjet.h"
 #include "BEAN/Collections/interface/BNmcparticle.h"
 #include "BEAN/Collections/interface/BNmet.h"
 #include "BEAN/Collections/interface/BNmuon.h"
@@ -19,6 +21,8 @@
 #include "BEAN/Collections/interface/BNtrigobj.h"
 #include "BEAN/Collections/interface/BNprimaryvertex.h"
 #include "BEAN/Collections/interface/BNgenjet.h"
+#include "BEAN/Collections/interface/BNgensubfilterjet.h"
+#include "BEAN/Collections/interface/BNgentoptagjet.h"
 #include <vector>
 
 namespace {
@@ -48,6 +52,16 @@ namespace {
      edm::Wrapper<BNjet> jetdummy1;
      std::vector<BNjet> jetdummy2;
      edm::Wrapper<std::vector<BNjet> > jetdummy3;
+
+     BNsubfilterjet subfilterjetdummy0;
+     edm::Wrapper<BNsubfilterjet> subfilterjetdummy1;
+     std::vector<BNsubfilterjet> subfilterjetdummy2;
+     edm::Wrapper<std::vector<BNsubfilterjet> > subfilterjetdummy3;
+     
+     BNtoptagjet toptagjetdummy0;
+     edm::Wrapper<BNtoptagjet> toptagjetdummy1;
+     std::vector<BNtoptagjet> toptagjetdummy2;
+     edm::Wrapper<std::vector<BNtoptagjet> > toptagjetdummy3;
 
      BNevent eventdummy0;
      edm::Wrapper<BNevent> eventdummy1;
@@ -113,6 +127,17 @@ namespace {
      edm::Wrapper<BNgenjet> genjetdummy1;
      std::vector<BNgenjet> genjetdummy2;
      edm::Wrapper<std::vector<BNgenjet> > genjetdummy3;
+
+     BNgensubfilterjet gensubfilterjetdummy0;
+     edm::Wrapper<BNgensubfilterjet> gensubfilterjetdummy1;
+     std::vector<BNgensubfilterjet> gensubfilterjetdummy2;
+     edm::Wrapper<std::vector<BNgensubfilterjet> > gensubfilterjetdummy3;
+     
+     BNgentoptagjet gentoptagjetdummy0;
+     edm::Wrapper<BNgentoptagjet> gentoptagjetdummy1;
+     std::vector<BNgentoptagjet> gentoptagjetdummy2;
+     edm::Wrapper<std::vector<BNgentoptagjet> > gentoptagjetdummy3;
+
 
 /*
     These classes are commented out because they are used more rarely. If you need them, move them
