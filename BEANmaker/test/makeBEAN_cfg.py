@@ -456,44 +456,44 @@ else:
     genSubJetsCollection = None
     genFilterJetsCollection = None
 
-    addJetCollection(
-        process,
-        cms.InputTag('CA12JetsCA3FilterjetsPF','fatjet'),
-        algoLabel = 'CA12Fat',
-        typeLabel = 'PF',
-        doJTA  = True,
-        doBTagging = True,
-        doType1MET = False,
-        jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
-        doJetID = False,
-        genJetCollection = genFatJetsCollection
-    )
+addJetCollection(
+    process,
+    cms.InputTag('CA12JetsCA3FilterjetsPF','fatjet'),
+    algoLabel = 'CA12Fat',
+    typeLabel = 'PF',
+    doJTA  = True,
+    doBTagging = True,
+    doType1MET = False,
+    jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
+    doJetID = False,
+    genJetCollection = genFatJetsCollection
+)
 
-    addJetCollection(
-        process,
-        cms.InputTag('CA12JetsCA3FilterjetsPF','subjets'),
-        algoLabel = 'CA3Sub',
-        typeLabel = 'PF',
-        doJTA  = True,
-        doBTagging = True,
-        doType1MET = False,
-        jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
-        doJetID = False,
-        genJetCollection = genSubJetsCollection
-    )
-  
-    addJetCollection(
-        process,
-        cms.InputTag('CA12JetsCA3FilterjetsPF','filterjets'),
-        algoLabel = 'CA12FatCA3Filter',
-        typeLabel = 'PF',
-        doJTA  = True,
-        doBTagging = True,
-        doType1MET = False,
-        jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
-        doJetID = False,
-        genJetCollection = genFilterJetsCollection
-    )
+addJetCollection(
+    process,
+    cms.InputTag('CA12JetsCA3FilterjetsPF','subjets'),
+    algoLabel = 'CA3Sub',
+    typeLabel = 'PF',
+    doJTA  = True,
+    doBTagging = True,
+    doType1MET = False,
+    jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
+    doJetID = False,
+    genJetCollection = genSubJetsCollection
+)
+
+addJetCollection(
+    process,
+    cms.InputTag('CA12JetsCA3FilterjetsPF','filterjets'),
+    algoLabel = 'CA12FatCA3Filter',
+    typeLabel = 'PF',
+    doJTA  = True,
+    doBTagging = True,
+    doType1MET = False,
+    jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
+    doJetID = False,
+    genJetCollection = genFilterJetsCollection
+)
 
 if op_runOnMC:
     getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'patJets'+pfpostfix),
@@ -572,7 +572,7 @@ addJetCollection(
     jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
     genJetCollection = genFatJetsCollection,
     doJetID = False
-    )
+)
 
     # Subjets
 addJetCollection(
@@ -586,7 +586,7 @@ addJetCollection(
     jetCorrLabel = None,#('kt6', ['L2Relative','L3Absolute']),
     genJetCollection = genSubJetsCollection,
     doJetID = False
-    )
+)
 
 if op_runOnMC:	
     getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'patJets'+pfpostfix),
