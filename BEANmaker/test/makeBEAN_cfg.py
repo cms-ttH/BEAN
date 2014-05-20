@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
 import sys
 import os
-
+import copy
 
 ####################################################################
 ## Global job options
@@ -15,45 +15,26 @@ WANTSUMMARY = False
 process = cms.Process('BEANs')#"topDileptonNtuple")
 #SimpleMemoryCheck = cms.Service("SimpleMemoryCheck",ignoreTotal = cms.untracked.int32(1) )
 
-op_runOnMC = False#
-op_runOnAOD = True#
-op_globalTag = 'FT_53_V6C_AN4::All'#
-op_mode = ''#
-op_samplename = 'ttbarz'#
 op_inputScript = 'TopAnalysis.Configuration.Summer12.TTH_Inclusive_M_130_8TeV_pythia6_Summer12_DR53X_PU_S10_START53_V7A_v1_cff'#
-op_outputFile = 'ttbarZ.root'#
-op_systematicsName = 'Nominal'#
 op_json = ''#../json/Cert_190782-190949_8TeV_06Aug2012ReReco_Collisions12_JSON.txt'#
 op_skipEvents = 0#
 op_maxEvents = 30#
-####################################################################
-## Set up samplename
-
-if op_samplename == '':
-    print 'cannot run without specifying a samplename'
-    exit(8888)
-
-if op_samplename == 'data':
-    op_runOnMC = False
-
-
-
 ####################################################################
 ## Define input
     
 if op_inputScript != '':
     #process.load(op_inputScript)
-    #inputFiles = cms.untracked.vstring('file:/afs/crc.nd.edu/user/c/cmuelle2/merge_v1/CMSSW_5_3_11/src/TopAnalysis/Configuration/analysis/common/ttH_MC.root')
-    inputFiles = cms.untracked.vstring('file:/afs/crc.nd.edu/user/c/cmuelle2/merge_v1/CMSSW_5_3_11/src/TopAnalysis/Configuration/analysis/common/SingleMu_DATA_v1.root')
+    inputFiles = cms.untracked.vstring('file:/afs/crc.nd.edu/user/c/cmuelle2/merge_v1/CMSSW_5_3_11/src/TopAnalysis/Configuration/analysis/common/ttH_MC.root')
+    #inputFiles = cms.untracked.vstring('file:/afs/crc.nd.edu/user/c/cmuelle2/merge_v1/CMSSW_5_3_11/src/TopAnalysis/Configuration/analysis/common/SingleMu_DATA_v1.root')
     process.source = cms.Source("PoolSource", fileNames = inputFiles, secondaryFileNames = cms.untracked.vstring())
 else:
     print 'need an input script'
     exit(8889)
     
-    print "max events: ", op_maxEvents
-    process.maxEvents = cms.untracked.PSet(
-        input = cms.untracked.int32(op_maxEvents)
-        )
+print "max events: ", op_maxEvents
+process.maxEvents = cms.untracked.PSet(
+    input = cms.untracked.int32(op_maxEvents)
+    )
     
 if op_skipEvents > 0:
     process.source.skipEvents = cms.untracked.uint32(op_skipEvents)
@@ -65,21 +46,81 @@ if op_json != '':
     myLumis = LumiList.LumiList(filename = op_json).getCMSSWString().split(',')
     process.source.lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange())
     process.source.lumisToProcess.extend(myLumis)
-    
-            
-            
+
+
 ####################################################################
-## Create output path
+# === Parse external arguments === #
+import FWCore.ParameterSet.VarParsing as VarParsing
+options = VarParsing.VarParsing("analysis")
+# 'jobParams' parameter form:
+#
+# <era>_<subera>_<type>_<sample number>
+#
+# <era>                 = 2011, 2012
+# <subera> [N/A for MC] = A, B, C...
+# <type>                = MC-sigFullSim, MC-sigFastSim, MC-bg, data-PR, data-RR, data-RRr
+# <sample number>       = See https://twiki.cern.ch/twiki/bin/view/CMS/TTbarHiggsTauTau#Process_info
+#
+# Examples:
+# 2011_X_MC-sig_2500
+# 2011_B_data-PR_-11
+# 2012_X_MC-bg_2400
+# 2012_B_data-PR_muon
+options.register ('jobParams',
+                  #'multicrab',
+                  #'2012_A_data-PR_-11',# -12012A collisions
+                  #'2012_B_data-PR_-11',# -112012B collisions
+                  #'2012_X_MC-sigFastSim_120',# 120signal_M-120
+                  #'2012_X_MC-bg_2500',# 2500  TTbar
+                  #'2012_X_MC-bg_2524',# 2524  TTbar + W
+                  #'2012_X_MC-bg_2523',# 2523  TTbar + Z
+                  #'2012_X_MC-bg_2400',# 2400  W+jets
+                  #'2012_X_MC-bg_2800',# 2800  Z+jets (50<M)
+                  #'2012_X_MC-bg_2850',# 2850  Z+jets (10<M<50)
+                  #'2012_X_MC-bg_2700',# 2700  WW
+                  #'2012_X_MC-bg_2701',# 2701  WZ
+                  #'2012_X_MC-bg_2702',# 2702  ZZ
+                  #'2012_X_MC-bg_2504',# 2504  sT+W
+                  #'2012_X_MC-bg_2505',# 2505  sTbar+W
+                  #'2012_X_MC-bg_2600',# 2600  sT-sCh
+                  #'2012_X_MC-bg_2501',# 2501  sTbar-sCh
+                  #'2012_X_MC-bg_2602',# 2602  sT-tCh
+                  #'2012_X_MC-bg_2503',# 2503  sTbar-tCh
+                  #'2012_X_MC-bg_9115',# 9115  TTH_115_Fast
+                  #'2012_X_MC-bg_9120',# 9120  TTH_120_Fast
+                  '2012_X_MC-bg_9125',# 9125  TTH_125_Fast
+                  VarParsing.VarParsing.multiplicity.singleton,
+                  VarParsing.VarParsing.varType.string )
+options.parseArguments()
 
-if op_outputFile == '':
-    fn = op_mode + '_test.root'
-else:
-    fn = op_outputFile
+# === Parse Job Params === #
+import shlex;
+my_splitter = shlex.shlex(options.jobParams, posix=True);
+my_splitter.whitespace = '_';
+my_splitter.whitespace_split = True;
+jobParams= list(my_splitter);
 
-#process.TFileService = cms.Service("TFileService",
-##    fileName = cms.string(fn)
-#)
+# === Job params error checking === #
+if len(jobParams) != 4:
+    print "ERROR: jobParams set to '" + options.jobParams + "' must have exactly 4 arguments (check config file for details). Terminating."; sys.exit(1);
 
+if (jobParams[0] != "2011") and (jobParams[0] != "2012"):
+    print "ERROR: era set to '" + jobParams[0] + "' but it must be '2011' or '2012'"; sys.exit(1);
+
+runOnMC= ((jobParams[2]).find('MC') != -1);
+runOnFastSim= ((jobParams[2]).find('MC-sigFastSim') != -1);
+if (not runOnMC) and ((jobParams[1] != 'A') and (jobParams[1] != 'B') and (jobParams[1] != 'C') and (jobParams[1] != 'D')):
+    print "ERROR: job set to run on collision data from sub-era '" + jobParams[1] + "' but it must be 'A', 'B', 'C', or 'D'."; sys.exit(1);
+    
+if (jobParams[2] != "data-PR") and (jobParams[2] != "data-RR") and (jobParams[2] != "data-RRr")and (jobParams[2] != "MC-bg") and (jobParams[2] != "MC-sigFullSim") and (jobParams[2] != "MC-sigFastSim"):
+    print "ERROR: sample type set to '" + jobParams[2] + "' but it can only be 'data-PR', 'data-RR', 'data-RRr', 'MC-bg', 'MC-sigFullSim', or 'MC-sigFastSim'."; sys.exit(1);
+    
+sampleNumber= int(jobParams[3]);
+if (runOnMC and sampleNumber < 0):
+    print "ERROR: job set to run on MC but sample number set to '" + sampleNumber + "' when it must be positive."; sys.exit(1);
+    
+if (not runOnMC and sampleNumber >= 0):
+    print "ERROR: job set to run on collision data but sample number set to '" + sampleNumber + "' when it must be negative."; sys.exit(1);
 
 
 ####################################################################
@@ -93,24 +134,22 @@ process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool(WANTSUMMARY)
 )
 
-
-
 ####################################################################
 ## Geometry and Detector Conditions
 
 process.load("Configuration.Geometry.GeometryIdeal_cff")
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 
-if op_globalTag != '':
-    print "Setting global tag to the command-line value"
-    process.GlobalTag.globaltag = cms.string( op_globalTag )
+if runOnMC:
+    globalTag = 'START53_V7G::All'
 else:
-    print "Determine global tag automatically"
-    if op_runOnMC:
-        process.GlobalTag.globaltag = cms.string('START53_V7G::All')#('START53_V26::All')
-    else:
-	process.GlobalTag.globaltag = cms.string('FT_53_V21_AN6::All')
-
+    globalTag = 'FT_53_V6C_AN4::All'
+    if jobParams[2] == "data-PR":
+        globalTag = 'GR_P_V42_AN4::All'
+    elif jobParams[1]=='C' and jobParams[2] == "data-RR":
+        globalTag = 'FT53_V10A_AN4::All'
+        
+process.GlobalTag.globaltag = cms.string( globalTag )
 print "Using global tag: ", process.GlobalTag.globaltag
 
 process.load("Configuration.StandardSequences.MagneticField_cff")
@@ -166,14 +205,14 @@ from TopAnalysis.TopFilter.sequences.diLeptonTriggers_cff import *
 process.load("TopAnalysis.TopFilter.filters.TriggerFilter_cfi")
 process.filterTrigger.TriggerResults = cms.InputTag('TriggerResults','','HLT')
 process.filterTrigger.printTriggers = False
-if op_mode == 'mumu':
-    process.filterTrigger.hltPaths  = mumuTriggers
-elif op_mode == 'emu':
-    process.filterTrigger.hltPaths  = emuTriggers
-elif op_mode == 'ee':
-    process.filterTrigger.hltPaths  = eeTriggers
-else:
-    process.filterTrigger.hltPaths = eeTriggers + emuTriggers + mumuTriggers
+# if op_mode == 'mumu':
+#     process.filterTrigger.hltPaths  = mumuTriggers
+# elif op_mode == 'emu':
+#     process.filterTrigger.hltPaths  = emuTriggers
+# elif op_mode == 'ee':
+#     process.filterTrigger.hltPaths  = eeTriggers
+#else:
+process.filterTrigger.hltPaths = eeTriggers + emuTriggers + mumuTriggers
     
 #print "Printing triggers: ", process.filterTrigger.printTriggers
 
@@ -182,13 +221,13 @@ else:
 ####################################################################
 ## Jet corrections
 
-if op_runOnMC:
+if runOnMC:
     jetCorr = ('AK5PFchs', ['L1FastJet','L2Relative','L3Absolute'])
 else:
     jetCorr = ('AK5PFchs', ['L1FastJet','L2Relative','L3Absolute', 'L2L3Residual'])
     
 ## gen jet collections
-if op_runOnMC:
+if runOnMC:
     genjetTag_ = 'ak5GenJets'
 else:
     genjetTag_ = 'none'
@@ -208,7 +247,7 @@ pfpostfix = ""
 
 from PhysicsTools.PatAlgos.tools.pfTools import *
 
-usePF2PAT(process, runPF2PAT=True, jetAlgo='AK5', runOnMC=op_runOnMC, postfix=pfpostfix, jetCorrections=jetCorr, pvCollection=cms.InputTag('goodOfflinePrimaryVertices'), typeIMetCorrections=True) 
+usePF2PAT(process, runPF2PAT=True, jetAlgo='AK5', runOnMC=runOnMC, postfix=pfpostfix, jetCorrections=jetCorr, pvCollection=cms.InputTag('goodOfflinePrimaryVertices'), typeIMetCorrections=True) 
 
 from PhysicsTools.PatAlgos.selectionLayer1.electronSelector_cfi import *
 from PhysicsTools.PatAlgos.selectionLayer1.muonSelector_cfi import *
@@ -335,49 +374,49 @@ higgsSignal = False
 alsoViaTau = False
 ttbarV = False
 
-if op_samplename == 'ttbarsignal':
-    topfilter = True
-    signal = True
-    viaTau = False
-elif op_samplename == 'ttbarsignalviatau':
-    topfilter = True
-    signal = True
-    viaTau = True
-elif op_samplename == 'ttbarsignalplustau':
-    topfilter = True
-    signal = True
-    viaTau = False
-    alsoViaTau = True
-elif op_samplename == 'ttbarbg':
-    topfilter = True
-elif op_samplename == 'dy1050' or op_samplename == 'dy50inf':
-    zproducer = True
-    zGenInfo = True
-elif op_samplename == 'ttbarhiggstobbbar' or op_samplename == 'ttbarhiggsinclusive':
-    topfilter = True
-    signal = True
-    viaTau = False
-    alsoViaTau = True
-    higgsSignal = True
-elif op_samplename == 'gghiggstozzto4l' or op_samplename == 'vbfhiggstozzto4l':
-    zGenInfo = True
-    higgsSignal = True
-elif op_samplename == 'ttbarw' or op_samplename == 'ttbarz':
-    topfilter = True
-    signal = True
-    viaTau = False
-    alsoViaTau = True
-    ttbarV = True
-elif op_samplename in ['data', 'singletop', 'singleantitop','ww',
-        'wz','zz','wjets',
-        'qcdmu15','qcdem2030','qcdem3080','qcdem80170',
-        'qcdbcem2030','qcdbcem3080','qcdbcem80170',
-        'zzz','wwz','www','ttww','ttg','wwg']:
-    #no special treatment needed, put here to avoid typos
-    pass
-else:
-    print "Error: Unknown samplename!"
-    exit(8)
+# if op_samplename == 'ttbarsignal':
+#     topfilter = True
+#     signal = True
+#     viaTau = False
+# elif op_samplename == 'ttbarsignalviatau':
+#     topfilter = True
+#     signal = True
+#     viaTau = True
+# elif op_samplename == 'ttbarsignalplustau':
+#     topfilter = True
+#     signal = True
+#     viaTau = False
+#     alsoViaTau = True
+# elif op_samplename == 'ttbarbg':
+#     topfilter = True
+# elif op_samplename == 'dy1050' or op_samplename == 'dy50inf':
+#     zproducer = True
+#     zGenInfo = True
+# elif op_samplename == 'ttbarhiggstobbbar' or op_samplename == 'ttbarhiggsinclusive':
+#     topfilter = True
+#     signal = True
+#     viaTau = False
+#     alsoViaTau = True
+#     higgsSignal = True
+# elif op_samplename == 'gghiggstozzto4l' or op_samplename == 'vbfhiggstozzto4l':
+#     zGenInfo = True
+#     higgsSignal = True
+#elif op_samplename == 'ttbarw' or op_samplename == 'ttbarz':
+topfilter = True
+signal = True
+viaTau = False
+alsoViaTau = True
+ttbarV = True
+# elif op_samplename in ['data', 'singletop', 'singleantitop','ww',
+#         'wz','zz','wjets',
+#         'qcdmu15','qcdem2030','qcdem3080','qcdem80170',
+#         'qcdbcem2030','qcdbcem3080','qcdbcem80170',
+#         'zzz','wwz','www','ttww','ttg','wwg']:
+#     #no special treatment needed, put here to avoid typos
+#     pass
+# else:
+#     print "Error: Unknown samplename!"
+#     exit(8)
 
 
 
@@ -436,7 +475,7 @@ if topfilter:
 ####################################################################
 ## Build Jet Collections
 
-if op_runOnMC:
+if runOnMC:
 	jet_gen_seq = cms.Sequence(process.genParticlesForJets)
 else:
 	jet_gen_seq = cms.Sequence()
@@ -445,7 +484,7 @@ process.load("RecoJets.JetProducers.SubjetsFilterjets_cfi")
 process.CA12JetsCA3FilterjetsPF.src = getattr(process,'pfJets'+pfpostfix).src
 getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'pfJets'+pfpostfix),getattr(process,'pfJets'+pfpostfix)*process.filtjet_pf_seq)
 
-if op_runOnMC:
+if runOnMC:
     process.load("RecoJets.Configuration.GenJetParticles_cff")
     from RecoJets.JetProducers.ca4GenJets_cfi import ca4GenJets
     process.ca12GenJets = ca4GenJets.clone( rParam = cms.double(1.2) )
@@ -497,7 +536,7 @@ addJetCollection(
     genJetCollection = genFilterJetsCollection
 )
 
-if op_runOnMC:
+if runOnMC:
     getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'patJets'+pfpostfix),
                                                             getattr(process,'patJets'+pfpostfix)
                                                             *process.jetTracksAssociatorAtVertexCA12FatCA3FilterPF
@@ -552,7 +591,7 @@ process.load("RecoJets.JetProducers.HEPTopJetParameters_cfi")
 process.HEPTopJetsPF.src = getattr(process,'pfJets'+pfpostfix).src
 getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'pfJets'+pfpostfix),getattr(process,'pfJets'+pfpostfix)*process.heptopjet_pf_seq)
 	
-if op_runOnMC:
+if runOnMC:
     process.load("RecoJets.Configuration.GenJetParticles_cff")
     from RecoJets.JetProducers.ca4GenJets_cfi import ca4GenJets
     process.ca15GenJets = ca4GenJets.clone( rParam = cms.double(1.5) )
@@ -590,7 +629,7 @@ addJetCollection(
     doJetID = False
 )
 
-if op_runOnMC:	
+if runOnMC:	
     getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'patJets'+pfpostfix),
                                                             getattr(process,'patJets'+pfpostfix)
                                                             *process.jetTracksAssociatorAtVertexHEPTopSubPF
@@ -698,24 +737,24 @@ process.filterChannel.electronSource    = 'filterOppositeCharge'
 process.filterChannel.muonSource        = 'filterOppositeCharge'
 process.filterChannel.minNumber         = 2
 process.filterChannel.countTaus         = False
-if op_mode == 'ee':
-    process.filterChannel.countElectrons    = True
-    process.filterChannel.countMuons        = False
-elif op_mode == 'mumu':
-    process.filterChannel.countElectrons    = False
-    process.filterChannel.countMuons        = True
-elif op_mode == 'emu':
-    process.filterChannel.minNumber         = 1
-    process.filterChannel1 = process.filterChannel.clone()
-    process.filterChannel2 = process.filterChannel1.clone()
-    process.filterChannel1.countElectrons    = True
-    process.filterChannel1.countMuons        = False
-    process.filterChannel2.countElectrons    = False
-    process.filterChannel2.countMuons        = True
-    process.filterChannel = cms.Sequence(process.filterChannel1 * process.filterChannel2)
-else:
-    process.filterChannel.countElectrons    = True
-    process.filterChannel.countMuons        = True
+# if op_mode == 'ee':
+#     process.filterChannel.countElectrons    = True
+#     process.filterChannel.countMuons        = False
+# elif op_mode == 'mumu':
+#     process.filterChannel.countElectrons    = False
+#     process.filterChannel.countMuons        = True
+# elif op_mode == 'emu':
+#     process.filterChannel.minNumber         = 1
+#     process.filterChannel1 = process.filterChannel.clone()
+#     process.filterChannel2 = process.filterChannel1.clone()
+#     process.filterChannel1.countElectrons    = True
+#     process.filterChannel1.countMuons        = False
+#     process.filterChannel2.countElectrons    = False
+#     process.filterChannel2.countMuons        = True
+#     process.filterChannel = cms.Sequence(process.filterChannel1 * process.filterChannel2)
+# else:
+process.filterChannel.countElectrons    = True
+process.filterChannel.countMuons        = True
 
 
 ##### WARNING: This tool uses the lepton pair from the DiLeptonFilter_cfi, based on highest pt-sum of the leptons.
@@ -743,7 +782,7 @@ setForAllTtFullLepHypotheses(process,"electrons",finalLeptons)
 #setForAllTtFullLepHypotheses(process,"jets"     ,'jetsForKinReco')
 setForAllTtFullLepHypotheses(process,"jets"     ,jetCollection)
 setForAllTtFullLepHypotheses(process,"mets"     ,metCollection)
-if op_runOnMC:
+if runOnMC:
     setForAllTtFullLepHypotheses(process,"jetCorrectionLevel","L3Absolute")
     print "L3Absolute"
 else:
@@ -938,7 +977,7 @@ process.BNproducer = cms.EDProducer('BEANmaker',
                                     fillTrackIsoInfo = cms.bool(False),
                                     CaloExtractorPSet  = cms.PSet(MIsoCaloExtractorByAssociatorTowersBlock),
                                     TrackExtractorPSet = cms.PSet(MIsoTrackExtractorBlock),
-                                    sample = cms.int32(120),
+                                    sample = cms.int32(sampleNumber),
                                     maxAbsZ = cms.untracked.double(24)
                                     )
 
