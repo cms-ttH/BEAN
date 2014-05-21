@@ -18,7 +18,7 @@ process = cms.Process('BEANs')#"topDileptonNtuple")
 op_inputScript = 'TopAnalysis.Configuration.Summer12.TTH_Inclusive_M_130_8TeV_pythia6_Summer12_DR53X_PU_S10_START53_V7A_v1_cff'#
 op_json = ''#../json/Cert_190782-190949_8TeV_06Aug2012ReReco_Collisions12_JSON.txt'#
 op_skipEvents = 0#
-op_maxEvents = 30#
+op_maxEvents = 10#
 ####################################################################
 ## Define input
     
@@ -915,15 +915,6 @@ massSearchReplaceAnyInputTag(getattr(process,'patPF2PATSequence'+pfpostfix),'pfN
 
 process.load("CMGTools.External.pujetidsequence_cff")
 
-# OK, out of laziness, I'm only going to configure the pu jet ID for our PF2PAT jets
-#process.puJetIdChs.vertexes = 'goodOfflinePrimaryVertices'
-#process.puJetIdChs.jets = 'selectedPatJets'
-
-#process.puJetMvaChs.vertexes = 'goodOfflinePrimaryVertices'
-#process.puJetMvaChs.jets = 'selectedPatJets'
-
-
-
 from RecoMuon.MuonIsolationProducers.caloExtractorByAssociatorBlocks_cff import *
 from RecoMuon.MuonIsolationProducers.trackExtractorBlocks_cff import *
 process.load('Configuration.StandardSequences.MagneticField_38T_cff')
@@ -1002,7 +993,6 @@ if signal or higgsSignal or zGenInfo:
         getattr(process,'patPF2PATSequence'+pfpostfix) *
         process.metseq *
         process.recoTauClassicHPSSequence *
-        process.softElectronCands *
         process.BNproducer
         )
 
@@ -1013,29 +1003,10 @@ process.out.outputCommands.extend( [
     ])
 
 ####################################################################
-## Particle tree drawer
-
-# see https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideCandidateModules#ParticleTreeDrawer_Utility
-#process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
-#process.printTree = cms.EDAnalyzer("ParticleTreeDrawer",
-#                                   src = cms.InputTag("genParticles"),                                                                 
-#             #                      printP4 = cms.untracked.bool(False),
-#             #                      printPtEtaPhi = cms.untracked.bool(False),
-#             #                      printVertex = cms.untracked.bool(False),
-#             #                      printStatus = cms.untracked.bool(False),
-#             #                      printIndex = cms.untracked.bool(False),
-#             #                      status = cms.untracked.vint32( 3 )
-#                                   )
-#process.p = cms.Path(process.printTree)
-#process.pNtuple = cms.Path()
-
-
-
-####################################################################
 ## Signal catcher for more information on errors
 
 process.load("TopAnalysis.TopUtils.SignalCatcher_cfi")
 
 #Dump python config if wished
-#outfile = open('dumpedConfig.py','w'); print >> outfile,process.dumpPython(); outfile.close()
+outfile = open('dumpedConfig.py','w'); print >> outfile,process.dumpPython(); outfile.close()
 
