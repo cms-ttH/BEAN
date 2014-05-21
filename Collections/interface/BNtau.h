@@ -1,9 +1,17 @@
 #ifndef ProductArea_BNtau_h
 #define ProductArea_BNtau_h
 
+#include "DataFormats/Math/interface/Point3D.h"
+
 #include <vector>
 
+namespace pat {
+  class Tau;
+}
+
 struct BNtau {
+  explicit BNtau(const pat::Tau&, math::XYZPoint&);
+
   explicit BNtau(double v, int c) :
     px(v), py(v), pz(v), energy(v), et(v), pt(v), eta(v), phi(v),
     emFraction(v), leadingTrackValid(c), leadingTrackPt(v),
@@ -12,17 +20,25 @@ struct BNtau {
     leadingTrackVx(v), leadingTrackVy(v), leadingTrackVz(v),
     leadingTrackValidHits(v), leadingTrackNormChiSqrd(v), numProngs(c),
     numSignalGammas(c), numSignalNeutrals(c), numSignalPiZeros(c),
-    decayMode(c), charge(c), inTheCracks(c), HPSagainstMuonMedium(c),
+    decayMode(c), charge(c), inTheCracks(c),
+    HPSagainstMuonLoose(c),
+    HPSagainstMuonMedium(c),
+    HPSagainstMuonTight(c),
+    HPSagainstMuonLoose2(c),
+    HPSagainstMuonMedium2(c),
+    HPSagainstMuonTight2(c),
+    HPSagainstMuonLoose3(c),
+    HPSagainstMuonMedium3(c),
+    HPSagainstMuonTight3(c),
     HPSagainstElectronTightMVA3(c), HPSagainstElectronTightMVA2(c),
-    HPSbyLooseIsolationMVA2(c), HPSagainstMuonTight(c),
+    HPSbyLooseIsolationMVA2(c),
     HPSagainstElectronMedium(c), HPSbyTightIsolationMVA(c),
-    HPSagainstMuonLoose2(c), HPSbyLooseCombinedIsolationDeltaBetaCorr(c),
+    HPSbyLooseCombinedIsolationDeltaBetaCorr(c),
     HPSagainstElectronLooseMVA3(c), HPSagainstElectronLooseMVA2(c),
     HPSagainstElectronTight(c),
     HPSbyVLooseCombinedIsolationDeltaBetaCorr(c),
     HPSagainstElectronVTightMVA3(c), HPSagainstElectronMediumMVA3(c),
     HPSagainstElectronMediumMVA2(c), HPSagainstElectronMVA(c),
-    HPSagainstMuonLoose(c), HPSagainstMuonTight2(c),
     HPSbyMediumCombinedIsolationDeltaBetaCorr(c),
     HPSagainstElectronVLooseMVA2(c), HPSagainstElectronLoose(c),
     HPSbyMediumIsolationMVA(c),
@@ -32,7 +48,7 @@ struct BNtau {
     HPSagainstElectronMVA3category(c),
     HPSbyTightCombinedIsolationDeltaBetaCorr(c),
     HPSbyLooseCombinedIsolationDeltaBetaCorr3Hits(c),
-    HPSagainstMuonMedium2(c), HPSbyLooseIsolationMVA(c),
+    HPSbyLooseIsolationMVA(c),
     HPSbyTightCombinedIsolationDeltaBetaCorr3Hits(c),
     HPSdecayModeFinding(c), HPSbyIsolationMVAraw(v),
     HPSbyCombinedIsolationDeltaBetaCorrRaw3Hits(v),
@@ -48,17 +64,25 @@ struct BNtau {
     leadingTrackValidHits(-99), leadingTrackNormChiSqrd(-99),
     numProngs(-99), numSignalGammas(-99), numSignalNeutrals(-99),
     numSignalPiZeros(-99), decayMode(-99), charge(-99), inTheCracks(-99),
-    HPSagainstMuonMedium(-99), HPSagainstElectronTightMVA3(-99),
+    HPSagainstMuonLoose(-99),
+    HPSagainstMuonMedium(-99),
+    HPSagainstMuonTight(-99),
+    HPSagainstMuonLoose2(-99),
+    HPSagainstMuonMedium2(-99),
+    HPSagainstMuonTight2(-99),
+    HPSagainstMuonLoose3(-99),
+    HPSagainstMuonMedium3(-99),
+    HPSagainstMuonTight3(-99),
+    HPSagainstElectronTightMVA3(-99),
     HPSagainstElectronTightMVA2(-99), HPSbyLooseIsolationMVA2(-99),
-    HPSagainstMuonTight(-99), HPSagainstElectronMedium(-99),
-    HPSbyTightIsolationMVA(-99), HPSagainstMuonLoose2(-99),
+    HPSagainstElectronMedium(-99),
+    HPSbyTightIsolationMVA(-99),
     HPSbyLooseCombinedIsolationDeltaBetaCorr(-99),
     HPSagainstElectronLooseMVA3(-99), HPSagainstElectronLooseMVA2(-99),
     HPSagainstElectronTight(-99),
     HPSbyVLooseCombinedIsolationDeltaBetaCorr(-99),
     HPSagainstElectronVTightMVA3(-99), HPSagainstElectronMediumMVA3(-99),
     HPSagainstElectronMediumMVA2(-99), HPSagainstElectronMVA(-99),
-    HPSagainstMuonLoose(-99), HPSagainstMuonTight2(-99),
     HPSbyMediumCombinedIsolationDeltaBetaCorr(-99),
     HPSagainstElectronVLooseMVA2(-99), HPSagainstElectronLoose(-99),
     HPSbyMediumIsolationMVA(-99),
@@ -68,7 +92,7 @@ struct BNtau {
     HPSagainstElectronMVA3category(-99),
     HPSbyTightCombinedIsolationDeltaBetaCorr(-99),
     HPSbyLooseCombinedIsolationDeltaBetaCorr3Hits(-99),
-    HPSagainstMuonMedium2(-99), HPSbyLooseIsolationMVA(-99),
+    HPSbyLooseIsolationMVA(-99),
     HPSbyTightCombinedIsolationDeltaBetaCorr3Hits(-99),
     HPSdecayModeFinding(-99), HPSbyIsolationMVAraw(-99),
     HPSbyCombinedIsolationDeltaBetaCorrRaw3Hits(-99),
@@ -83,13 +107,21 @@ struct BNtau {
   int numProngs, numSignalGammas, numSignalNeutrals, numSignalPiZeros;
   int decayMode, charge;
   int inTheCracks;
+
+  int HPSagainstMuonLoose;
   int HPSagainstMuonMedium;
+  int HPSagainstMuonTight;
+  int HPSagainstMuonLoose2;
+  int HPSagainstMuonMedium2;
+  int HPSagainstMuonTight2;
+  int HPSagainstMuonLoose3;
+  int HPSagainstMuonMedium3;
+  int HPSagainstMuonTight3;
+
   int HPSagainstElectronTightMVA3, HPSagainstElectronTightMVA2;
   int HPSbyLooseIsolationMVA2;
-  int HPSagainstMuonTight;
   int HPSagainstElectronMedium;
   int HPSbyTightIsolationMVA;
-  int HPSagainstMuonLoose2;
   int HPSbyLooseCombinedIsolationDeltaBetaCorr;
   int HPSagainstElectronLooseMVA3;
   int HPSagainstElectronLooseMVA2;
@@ -99,8 +131,6 @@ struct BNtau {
   int HPSagainstElectronMediumMVA3;
   int HPSagainstElectronMediumMVA2;
   int HPSagainstElectronMVA;
-  int HPSagainstMuonLoose;
-  int HPSagainstMuonTight2;
   int HPSbyMediumCombinedIsolationDeltaBetaCorr;
   int HPSagainstElectronVLooseMVA2;
   int HPSagainstElectronLoose;
@@ -113,7 +143,6 @@ struct BNtau {
   int HPSagainstElectronMVA3category;
   int HPSbyTightCombinedIsolationDeltaBetaCorr;
   int HPSbyLooseCombinedIsolationDeltaBetaCorr3Hits;
-  int HPSagainstMuonMedium2;
   int HPSbyLooseIsolationMVA;
   int HPSbyTightCombinedIsolationDeltaBetaCorr3Hits;
   int HPSdecayModeFinding;

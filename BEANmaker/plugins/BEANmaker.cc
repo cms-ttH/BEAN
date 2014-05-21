@@ -175,7 +175,6 @@ private:
   // ----------member data ---------------------------
   int count_hits( const std::vector<CaloTowerPtr> & towers );
   bool isActive(int word, int bit);
-  bool tauIsInTheCracks(float);
   //converts a pat::jet into a BNjet; some variables are only filled for pfjets however
   BNjet convertJet(const pat::Jet & pfjet, double PVx, double PVy, double PVz,JetCorrectionUncertainty *jecUnc_PF);
   template<typename recojettype>
@@ -1937,108 +1936,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   if( produceTau ){
     edm::View<pat::Tau> taus = *tauHandle;
     for( edm::View<pat::Tau>::const_iterator tau = taus.begin(); tau!=taus.end(); ++tau ){
-        
-      BNtau MyTau;
-
-      MyTau.px= tau->px();
-      MyTau.py= tau->py();
-      MyTau.pz= tau->pz();
-      MyTau.pt= tau->pt();
-      MyTau.energy= tau->energy();
-      MyTau.et= tau->et();
-      MyTau.eta= tau->eta();
-      MyTau.phi= tau->phi();
-      MyTau.numProngs= tau->signalPFChargedHadrCands().size();
-      MyTau.numSignalGammas= tau->signalPFGammaCands().size();
-      MyTau.numSignalNeutrals= tau->signalPFNeutrHadrCands().size();
-      MyTau.numSignalPiZeros= tau->signalPiZeroCandidates().size();
-      MyTau.decayMode= tau->decayMode();
-      MyTau.emFraction= tau->emFraction();
-      MyTau.inTheCracks= tauIsInTheCracks(tau->eta());
-      MyTau.HPSagainstElectronDeadECAL = tau->tauID("againstElectronDeadECAL");
-      MyTau.HPSagainstElectronLoose = tau->tauID("againstElectronLoose");
-      MyTau.HPSagainstElectronLooseMVA2 = tau->tauID("againstElectronLooseMVA2");
-      MyTau.HPSagainstElectronLooseMVA3 = tau->tauID("againstElectronLooseMVA3");
-      MyTau.HPSagainstElectronMVA = tau->tauID("againstElectronMVA");
-      MyTau.HPSagainstElectronMVA2category = tau->tauID("againstElectronMVA2category");
-      MyTau.HPSagainstElectronMVA2raw = tau->tauID("againstElectronMVA2raw");
-      MyTau.HPSagainstElectronMVA3category = tau->tauID("againstElectronMVA3category");
-      MyTau.HPSagainstElectronMVA3raw = tau->tauID("againstElectronMVA3raw");
-      MyTau.HPSagainstElectronMedium = tau->tauID("againstElectronMedium");
-      MyTau.HPSagainstElectronMediumMVA2 = tau->tauID("againstElectronMediumMVA2");
-      MyTau.HPSagainstElectronMediumMVA3 = tau->tauID("againstElectronMediumMVA3");
-      MyTau.HPSagainstElectronTight = tau->tauID("againstElectronTight");
-      MyTau.HPSagainstElectronTightMVA2 = tau->tauID("againstElectronTightMVA2");
-      MyTau.HPSagainstElectronTightMVA3 = tau->tauID("againstElectronTightMVA3");
-      MyTau.HPSagainstElectronVLooseMVA2 = tau->tauID("againstElectronVLooseMVA2");
-      MyTau.HPSagainstElectronVTightMVA3 = tau->tauID("againstElectronVTightMVA3");
-      MyTau.HPSagainstMuonLoose = tau->tauID("againstMuonLoose");
-      MyTau.HPSagainstMuonLoose2 = tau->tauID("againstMuonLoose2");
-      MyTau.HPSagainstMuonMedium = tau->tauID("againstMuonMedium");
-      MyTau.HPSagainstMuonMedium2 = tau->tauID("againstMuonMedium2");
-      MyTau.HPSagainstMuonTight = tau->tauID("againstMuonTight");
-      MyTau.HPSagainstMuonTight2 = tau->tauID("againstMuonTight2");
-      MyTau.HPSbyCombinedIsolationDeltaBetaCorrRaw = tau->tauID("byCombinedIsolationDeltaBetaCorrRaw");
-      MyTau.HPSbyCombinedIsolationDeltaBetaCorrRaw3Hits = tau->tauID("byCombinedIsolationDeltaBetaCorrRaw3Hits");
-      MyTau.HPSbyIsolationMVA2raw = tau->tauID("byIsolationMVA2raw");
-      MyTau.HPSbyLooseCombinedIsolationDeltaBetaCorr = tau->tauID("byLooseCombinedIsolationDeltaBetaCorr");
-      MyTau.HPSbyLooseCombinedIsolationDeltaBetaCorr3Hits = tau->tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits");
-      MyTau.HPSbyLooseIsolationMVA = tau->tauID("byLooseIsolationMVA");
-      MyTau.HPSbyLooseIsolationMVA2 = tau->tauID("byLooseIsolationMVA2");
-      MyTau.HPSbyMediumCombinedIsolationDeltaBetaCorr = tau->tauID("byMediumCombinedIsolationDeltaBetaCorr");
-      MyTau.HPSbyMediumCombinedIsolationDeltaBetaCorr3Hits = tau->tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits");
-      MyTau.HPSbyMediumIsolationMVA = tau->tauID("byMediumIsolationMVA");
-      MyTau.HPSbyMediumIsolationMVA2 = tau->tauID("byMediumIsolationMVA2");
-      MyTau.HPSbyTightCombinedIsolationDeltaBetaCorr = tau->tauID("byTightCombinedIsolationDeltaBetaCorr");
-      MyTau.HPSbyTightCombinedIsolationDeltaBetaCorr3Hits = tau->tauID("byTightCombinedIsolationDeltaBetaCorr3Hits");
-      MyTau.HPSbyTightIsolationMVA = tau->tauID("byTightIsolationMVA");
-      MyTau.HPSbyTightIsolationMVA2 = tau->tauID("byTightIsolationMVA2");
-      MyTau.HPSbyVLooseCombinedIsolationDeltaBetaCorr = tau->tauID("byVLooseCombinedIsolationDeltaBetaCorr");
-      MyTau.HPSdecayModeFinding = tau->tauID("decayModeFinding");
-      MyTau.HPSbyIsolationMVAraw = tau->tauID("byIsolationMVAraw");
-
-      if(tau->leadPFChargedHadrCand().isNonnull()){
-	MyTau.leadingTrackPt= tau->leadPFChargedHadrCand()->pt();
-	MyTau.charge= tau->leadPFChargedHadrCand()->charge();
-
-	if(tau->leadPFChargedHadrCand()->trackRef().isNonnull()){
-	  MyTau.leadingTrackValid= 1;
-	  MyTau.leadingTrackIpVtdxy= tau->leadPFChargedHadrCand()->trackRef()->dxy(vertexPosition);
-	  MyTau.leadingTrackIpVtdz= tau->leadPFChargedHadrCand()->trackRef()->dz(vertexPosition);
-	  MyTau.leadingTrackIpVtdxyError= tau->leadPFChargedHadrCand()->trackRef()->dxyError();
-	  MyTau.leadingTrackIpVtdzError= tau->leadPFChargedHadrCand()->trackRef()->dzError();
-	  MyTau.leadingTrackVx= tau->leadPFChargedHadrCand()->trackRef()->vx();
-	  MyTau.leadingTrackVy= tau->leadPFChargedHadrCand()->trackRef()->vy();
-	  MyTau.leadingTrackVz= tau->leadPFChargedHadrCand()->trackRef()->vz();
-	  MyTau.leadingTrackValidHits= tau->leadPFChargedHadrCand()->trackRef()->numberOfValidHits();
-	  MyTau.leadingTrackNormChiSqrd= tau->leadPFChargedHadrCand()->trackRef()->normalizedChi2();
-	}else{
-	  MyTau.leadingTrackValid= 0;
-	  MyTau.leadingTrackIpVtdxy= -99;
-	  MyTau.leadingTrackIpVtdz= -99;
-	  MyTau.leadingTrackIpVtdxyError= -99;
-	  MyTau.leadingTrackIpVtdzError= -99;
-	  MyTau.leadingTrackVx= -99;
-	  MyTau.leadingTrackVy= -99;
-	  MyTau.leadingTrackVz= -99;
-	  MyTau.leadingTrackValidHits= -99;
-	  MyTau.leadingTrackNormChiSqrd= -99;
-	}
-      }else{
-	MyTau.leadingTrackValid= 0;
-	MyTau.leadingTrackPt= -99;
-	MyTau.charge= -99;
-	MyTau.leadingTrackIpVtdxy= -99;
-	MyTau.leadingTrackIpVtdz= -99;
-	MyTau.leadingTrackIpVtdxyError= -99;
-	MyTau.leadingTrackIpVtdzError= -99;
-	MyTau.leadingTrackVx= -99;
-	MyTau.leadingTrackVy= -99;
-	MyTau.leadingTrackVz= -99;
-	MyTau.leadingTrackValidHits= -99;
-	MyTau.leadingTrackNormChiSqrd= -99;
-      }
-      bntaus->push_back(MyTau);
+      bntaus->push_back(BNtau(*tau, vertexPosition));
     }
   }
 
@@ -3767,15 +3665,6 @@ int BEANmaker::count_hits( const std::vector<CaloTowerPtr> & towers )
     nHit += cellIDs.size();
   }
   return nHit;
-}
-
-// === Tau Crack veto === //
-bool BEANmaker::tauIsInTheCracks(float etaValue){
-  return (fabs(etaValue) < 0.018 ||  
-	  (fabs(etaValue)>0.423 && fabs(etaValue)<0.461) ||
-	  (fabs(etaValue)>0.770 && fabs(etaValue)<0.806) ||
-	  (fabs(etaValue)>1.127 && fabs(etaValue)<1.163) ||
-	  (fabs(etaValue)>1.460 && fabs(etaValue)<1.558));
 }
 
 
