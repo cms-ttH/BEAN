@@ -29,52 +29,85 @@ BNtau::BNtau(const pat::Tau& tau, math::XYZPoint& pv) {
   decayMode= tau.decayMode();
   emFraction= tau.emFraction();
   inTheCracks= in_cracks(tau.eta());
+
   HPSagainstElectronDeadECAL = tau.tauID("againstElectronDeadECAL");
+
   HPSagainstElectronLoose = tau.tauID("againstElectronLoose");
-  HPSagainstElectronLooseMVA2 = tau.tauID("againstElectronLooseMVA2");
-  HPSagainstElectronLooseMVA3 = tau.tauID("againstElectronLooseMVA3");
-  HPSagainstElectronMVA = tau.tauID("againstElectronMVA");
-  HPSagainstElectronMVA2category = tau.tauID("againstElectronMVA2category");
-  HPSagainstElectronMVA2raw = tau.tauID("againstElectronMVA2raw");
-  HPSagainstElectronMVA3category = tau.tauID("againstElectronMVA3category");
-  HPSagainstElectronMVA3raw = tau.tauID("againstElectronMVA3raw");
   HPSagainstElectronMedium = tau.tauID("againstElectronMedium");
-  HPSagainstElectronMediumMVA2 = tau.tauID("againstElectronMediumMVA2");
-  HPSagainstElectronMediumMVA3 = tau.tauID("againstElectronMediumMVA3");
   HPSagainstElectronTight = tau.tauID("againstElectronTight");
-  HPSagainstElectronTightMVA2 = tau.tauID("againstElectronTightMVA2");
-  HPSagainstElectronTightMVA3 = tau.tauID("againstElectronTightMVA3");
-  HPSagainstElectronVLooseMVA2 = tau.tauID("againstElectronVLooseMVA2");
-  HPSagainstElectronVTightMVA3 = tau.tauID("againstElectronVTightMVA3");
+
+  HPSagainstElectronVLooseMVA5 = tau.tauID("againstElectronVLooseMVA5");
+  HPSagainstElectronLooseMVA5 = tau.tauID("againstElectronLooseMVA5");
+  HPSagainstElectronMediumMVA5 = tau.tauID("againstElectronMediumMVA5");
+  HPSagainstElectronTightMVA5 = tau.tauID("againstElectronTightMVA5");
+  HPSagainstElectronVTightMVA5 = tau.tauID("againstElectronVTightMVA5");
+  HPSagainstElectronMVA5category = tau.tauID("againstElectronMVA5category");
+  HPSagainstElectronMVA5raw = tau.tauID("againstElectronMVA5raw");
 
   HPSagainstMuonLoose = tau.tauID("againstMuonLoose");
   HPSagainstMuonMedium = tau.tauID("againstMuonMedium");
   HPSagainstMuonTight = tau.tauID("againstMuonTight");
+
   HPSagainstMuonLoose2 = tau.tauID("againstMuonLoose2");
   HPSagainstMuonMedium2 = tau.tauID("againstMuonMedium2");
   HPSagainstMuonTight2 = tau.tauID("againstMuonTight2");
+
   HPSagainstMuonLoose3 = tau.tauID("againstMuonLoose3");
-  HPSagainstMuonMedium3 = tau.tauID("againstMuonMedium3");
+  // HPSagainstMuonMedium3 = tau.tauID("againstMuonMedium3");
+  HPSagainstMuonMedium3 = -99;
   HPSagainstMuonTight3 = tau.tauID("againstMuonTight3");
 
-  HPSbyCombinedIsolationDeltaBetaCorrRaw = tau.tauID("byCombinedIsolationDeltaBetaCorrRaw");
-  HPSbyCombinedIsolationDeltaBetaCorrRaw3Hits = tau.tauID("byCombinedIsolationDeltaBetaCorrRaw3Hits");
-  HPSbyIsolationMVA2raw = tau.tauID("byIsolationMVA2raw");
+  HPSagainstMuonLooseMVA = tau.tauID("againstMuonLooseMVA");
+  HPSagainstMuonMediumMVA = tau.tauID("againstMuonMediumMVA");
+  HPSagainstMuonTightMVA = tau.tauID("againstMuonTightMVA");
+  HPSagainstMuonMVAraw = tau.tauID("againstMuonMVAraw");
+
+  HPSbyVLooseIsolationMVA3newDMwLT = tau.tauID("byVLooseIsolationMVA3newDMwLT");
+  HPSbyLooseIsolationMVA3newDMwLT = tau.tauID("byLooseIsolationMVA3newDMwLT");
+  HPSbyMediumIsolationMVA3newDMwLT = tau.tauID("byMediumIsolationMVA3newDMwLT");
+  HPSbyTightIsolationMVA3newDMwLT = tau.tauID("byTightIsolationMVA3newDMwLT");
+  HPSbyVTightIsolationMVA3newDMwLT = tau.tauID("byVTightIsolationMVA3newDMwLT");
+  HPSbyVVTightIsolationMVA3newDMwLT = tau.tauID("byVVTightIsolationMVA3newDMwLT");
+  HPSbyIsolationMVA3newDMwLTraw = tau.tauID("byIsolationMVA3newDMwLTraw");
+
+  HPSbyVLooseIsolationMVA3newDMwoLT = tau.tauID("byVLooseIsolationMVA3newDMwoLT");
+  HPSbyLooseIsolationMVA3newDMwoLT = tau.tauID("byLooseIsolationMVA3newDMwoLT");
+  HPSbyMediumIsolationMVA3newDMwoLT = tau.tauID("byMediumIsolationMVA3newDMwoLT");
+  HPSbyTightIsolationMVA3newDMwoLT = tau.tauID("byTightIsolationMVA3newDMwoLT");
+  HPSbyVTightIsolationMVA3newDMwoLT = tau.tauID("byVTightIsolationMVA3newDMwoLT");
+  HPSbyVVTightIsolationMVA3newDMwoLT = tau.tauID("byVVTightIsolationMVA3newDMwoLT");
+  HPSbyIsolationMVA3newDMwoLTraw = tau.tauID("byIsolationMVA3newDMwoLTraw");
+
+  HPSbyVLooseIsolationMVA3oldDMwLT = tau.tauID("byVLooseIsolationMVA3oldDMwLT");
+  HPSbyLooseIsolationMVA3oldDMwLT = tau.tauID("byLooseIsolationMVA3oldDMwLT");
+  HPSbyMediumIsolationMVA3oldDMwLT = tau.tauID("byMediumIsolationMVA3oldDMwLT");
+  HPSbyTightIsolationMVA3oldDMwLT = tau.tauID("byTightIsolationMVA3oldDMwLT");
+  HPSbyVTightIsolationMVA3oldDMwLT = tau.tauID("byVTightIsolationMVA3oldDMwLT");
+  HPSbyVVTightIsolationMVA3oldDMwLT = tau.tauID("byVVTightIsolationMVA3oldDMwLT");
+  HPSbyIsolationMVA3oldDMwLTraw = tau.tauID("byIsolationMVA3oldDMwLTraw");
+
+  HPSbyVLooseIsolationMVA3oldDMwoLT = tau.tauID("byVLooseIsolationMVA3oldDMwoLT");
+  HPSbyLooseIsolationMVA3oldDMwoLT = tau.tauID("byLooseIsolationMVA3oldDMwoLT");
+  HPSbyMediumIsolationMVA3oldDMwoLT = tau.tauID("byMediumIsolationMVA3oldDMwoLT");
+  HPSbyTightIsolationMVA3oldDMwoLT = tau.tauID("byTightIsolationMVA3oldDMwoLT");
+  HPSbyVTightIsolationMVA3oldDMwoLT = tau.tauID("byVTightIsolationMVA3oldDMwoLT");
+  HPSbyVVTightIsolationMVA3oldDMwoLT = tau.tauID("byVVTightIsolationMVA3oldDMwoLT");
+  HPSbyIsolationMVA3oldDMwoLTraw = tau.tauID("byIsolationMVA3oldDMwoLTraw");
+
   HPSbyLooseCombinedIsolationDeltaBetaCorr = tau.tauID("byLooseCombinedIsolationDeltaBetaCorr");
-  HPSbyLooseCombinedIsolationDeltaBetaCorr3Hits = tau.tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits");
-  HPSbyLooseIsolationMVA = tau.tauID("byLooseIsolationMVA");
-  HPSbyLooseIsolationMVA2 = tau.tauID("byLooseIsolationMVA2");
   HPSbyMediumCombinedIsolationDeltaBetaCorr = tau.tauID("byMediumCombinedIsolationDeltaBetaCorr");
-  HPSbyMediumCombinedIsolationDeltaBetaCorr3Hits = tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits");
-  HPSbyMediumIsolationMVA = tau.tauID("byMediumIsolationMVA");
-  HPSbyMediumIsolationMVA2 = tau.tauID("byMediumIsolationMVA2");
   HPSbyTightCombinedIsolationDeltaBetaCorr = tau.tauID("byTightCombinedIsolationDeltaBetaCorr");
-  HPSbyTightCombinedIsolationDeltaBetaCorr3Hits = tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits");
-  HPSbyTightIsolationMVA = tau.tauID("byTightIsolationMVA");
-  HPSbyTightIsolationMVA2 = tau.tauID("byTightIsolationMVA2");
   HPSbyVLooseCombinedIsolationDeltaBetaCorr = tau.tauID("byVLooseCombinedIsolationDeltaBetaCorr");
+  HPSbyCombinedIsolationDeltaBetaCorrRaw = tau.tauID("byCombinedIsolationDeltaBetaCorrRaw");
+
+  HPSbyLooseCombinedIsolationDeltaBetaCorr3Hits = tau.tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits");
+  HPSbyMediumCombinedIsolationDeltaBetaCorr3Hits = tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits");
+  HPSbyTightCombinedIsolationDeltaBetaCorr3Hits = tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits");
+  HPSbyCombinedIsolationDeltaBetaCorrRaw3Hits = tau.tauID("byCombinedIsolationDeltaBetaCorrRaw3Hits");
+
   HPSdecayModeFinding = tau.tauID("decayModeFinding");
-  HPSbyIsolationMVAraw = tau.tauID("byIsolationMVAraw");
+  HPSdecayModeFindingNewDMs = tau.tauID("decayModeFindingNewDMs");
+  HPSdecayModeFindingOldDMs = tau.tauID("decayModeFindingOldDMs");
 
   if(tau.leadPFChargedHadrCand().isNonnull()){
     leadingTrackPt= tau.leadPFChargedHadrCand()->pt();
