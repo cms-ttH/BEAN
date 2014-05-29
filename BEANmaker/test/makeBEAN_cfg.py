@@ -26,7 +26,15 @@ if op_inputScript != '':
     #process.load(op_inputScript)
     inputFiles = cms.untracked.vstring('file:/afs/crc.nd.edu/user/c/cmuelle2/merge_v1/CMSSW_5_3_11/src/TopAnalysis/Configuration/analysis/common/ttH_MC.root')
     #inputFiles = cms.untracked.vstring('file:/afs/crc.nd.edu/user/c/cmuelle2/merge_v1/CMSSW_5_3_11/src/TopAnalysis/Configuration/analysis/common/SingleMu_DATA_v1.root')
-    process.source = cms.Source("PoolSource", fileNames = inputFiles, secondaryFileNames = cms.untracked.vstring())
+    process.source = cms.Source("PoolSource",
+            fileNames = inputFiles,
+            secondaryFileNames = cms.untracked.vstring(),
+            # the following is needed for new taus:
+            dropDescendantsOfDroppedBranches = cms.untracked.bool(False),
+            inputCommands = cms.untracked.vstring(
+                'keep *',
+                'drop recoPFTaus_*_*_*'
+            ))
 else:
     print 'need an input script'
     exit(8889)
@@ -696,7 +704,8 @@ if signal or higgsSignal or zGenInfo:
         jet_gen_seq *
         getattr(process,'patPF2PATSequence'+pfpostfix) *
         process.metseq *
-        process.recoTauClassicHPSSequence *
+        process.pfTausBase *
+        process.PFTau *
         process.BNproducer
         )
 
