@@ -5,11 +5,11 @@ More information and instructions are on the [Twiki](https://twiki.cern.ch/twiki
 ## Installation
 Follow These Steps:
 
-    cmsrel CMSSW_5_3_11
-    cd CMSSW_5_3_11/src/
+    cmsrel CMSSW_5_3_15_patch1
+    cd CMSSW_5_3_15_patch1/src/
     cmsenv
     scram setup lhapdffull
-    git cms-merge-topic --unsafe muell149:merged_5_3_11
+    git cms-merge-topic --unsafe git cms-merge-topic --unsafe matz-e:clean_merged_5_3_15_p1_w_tau2014
 
 The '--unsafe' option prevents the merge from cloning dependent packages that we actually don't use
 
@@ -23,8 +23,8 @@ The '--unsafe' option prevents the merge from cloning dependent packages that we
 
 Our software
     
-    git clone https://github.com/cms-ttH/BEAN.git -b charlieProjection
+    git clone https://github.com/cms-ttH/BEAN.git -b chPrj_5_3_15p1
 
 Build
 
-    scram b -j 32
+    scram b -j 64
