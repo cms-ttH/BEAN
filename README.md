@@ -9,7 +9,7 @@ Follow These Steps:
     cd CMSSW_5_3_15_patch1/src/
     cmsenv
     scram setup lhapdffull
-    git cms-merge-topic --unsafe git cms-merge-topic --unsafe matz-e:clean_merged_5_3_15_p1_w_tau2014
+    git cms-merge-topic --unsafe git cms-merge-topic --unsafe matz-e:clean_merged_5_3_15p1_w_tau2014
 
 The '--unsafe' option prevents the merge from cloning dependent packages that we actually don't use
 
