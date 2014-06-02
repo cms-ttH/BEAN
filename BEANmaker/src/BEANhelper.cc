@@ -1253,53 +1253,43 @@ float BEANhelper::TestSingleEleTriggerOld ( const BNelectron & iEle) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
-    
 
-// Return whether or not tau passes cuts
-bool BEANhelper::IsVLooseTau(const BNtau& iTau){ return IsGoodTau(iTau, tauID::tauVLoose); }
-bool BEANhelper::IsLooseTau(const BNtau& iTau){ return IsGoodTau(iTau, tauID::tauLoose); }
-bool BEANhelper::IsMediumTau(const BNtau& iTau){ return IsGoodTau(iTau, tauID::tauMedium); }
-bool BEANhelper::IsTightTau(const BNtau& iTau){ return IsGoodTau(iTau, tauID::tauTight); }
 
-bool BEANhelper::IsGoodTau(const BNtau& iTau, const tauID::tauID iTauID){
-	CheckSetUp();
+bool BEANhelper::IsGoodTau(const BNtau& tau, const tauID::tauID tauID){
+    CheckSetUp();
 
-	// Be skeptical about this muon making it through
-	bool passesKinematics	= false;
-	bool passesIso			= false;
-	bool passesID			= false;
+    bool passesKinematics = false;
+    bool passesIso = false;
+    bool passesID = false;
 
-	// Check if this muon is good enough
-	switch(iTauID){
-		case tauID::tauNonIso:
-			passesKinematics		= (iTau.pt >= 20) && (fabs(iTau.eta) <= 2.1);
-			passesID				= (iTau.leadingTrackPt >= 5) && (iTau.HPSdecayModeFinding > 0) && (iTau.HPSagainstElectronLoose > 0) && (iTau.HPSagainstMuonLoose > 0);
-			passesIso				= true;
-			break;
-		case tauID::tauVLoose:
-			passesKinematics		= (iTau.pt >= 20) && (fabs(iTau.eta) <= 2.1);
-			passesID				= (iTau.leadingTrackPt >= 5) && (iTau.HPSdecayModeFinding > 0) && (iTau.HPSagainstElectronLoose > 0) && (iTau.HPSagainstMuonLoose > 0);
-			passesIso				= (iTau.HPSbyVLooseCombinedIsolationDeltaBetaCorr > 0);
-			break;
-		case tauID::tauLoose:
-			passesKinematics		= (iTau.pt >= 20) && (fabs(iTau.eta) <= 2.1);
-			passesID				= (iTau.leadingTrackPt >= 5) && (iTau.HPSdecayModeFinding > 0) && (iTau.HPSagainstElectronLoose > 0) && (iTau.HPSagainstMuonLoose > 0);
-			passesIso				= (iTau.HPSbyLooseCombinedIsolationDeltaBetaCorr > 0);
-			break;
-		case tauID::tauMedium:
-			passesKinematics		= (iTau.pt >= 20) && (fabs(iTau.eta) <= 2.1);
-			passesID				= (iTau.leadingTrackPt >= 5) && (iTau.HPSdecayModeFinding > 0) && (iTau.HPSagainstElectronTight > 0) && (iTau.HPSagainstMuonTight > 0);
-			passesIso				= (iTau.HPSbyMediumCombinedIsolationDeltaBetaCorr > 0);
-			break;
-		case tauID::tauTight:
-			passesKinematics		= (iTau.pt >= 20) && (fabs(iTau.eta) <= 2.1);
-			passesID				= (iTau.leadingTrackPt >= 5) && (iTau.HPSdecayModeFinding > 0) && (iTau.HPSagainstElectronTight > 0) && (iTau.HPSagainstMuonTight > 0);
-			passesIso				= (iTau.HPSbyTightCombinedIsolationDeltaBetaCorr > 0);
-			break;
-	}
+    switch(tauID){
+        case tauID::tauNonIso:
+            passesKinematics = (tau.pt >= 20) && (fabs(tau.eta) <= 2.1);
+            passesID = (tau.leadingTrackPt >= 5) && (tau.leadingTrackValid) && \
+                       (tau.HPSdecayModeFinding > 0) && (tau.HPSagainstElectronLooseMVA3 > 0) && (tau.HPSagainstMuonLoose2 > 0);
+            passesIso = true;
+            break;
+        case tauID::tauLoose:
+            passesKinematics = (tau.pt >= 20) && (fabs(tau.eta) <= 2.1);
+            passesID = (tau.leadingTrackPt >= 5) && (tau.leadingTrackValid) && \
+                       (tau.HPSdecayModeFinding > 0) && (tau.HPSagainstElectronLooseMVA3 > 0) && (tau.HPSagainstMuonLoose2 > 0);
+            passesIso = (tau.HPSbyLooseCombinedIsolationDeltaBetaCorr3Hits > 0);
+            break;
+        case tauID::tauMedium:
+            passesKinematics = (tau.pt >= 20) && (fabs(tau.eta) <= 2.1);
+            passesID = (tau.leadingTrackPt >= 5) && (tau.leadingTrackValid) && \
+                       (tau.HPSdecayModeFinding > 0) && (tau.HPSagainstElectronTightMVA3 > 0) && (tau.HPSagainstMuonTight2 > 0);
+            passesIso = (tau.HPSbyMediumCombinedIsolationDeltaBetaCorr3Hits > 0);
+            break;
+        case tauID::tauTight:
+            passesKinematics = (tau.pt >= 20) && (fabs(tau.eta) <= 2.1);
+            passesID = (tau.leadingTrackPt >= 5) && (tau.leadingTrackValid) && \
+                       (tau.HPSdecayModeFinding > 0) && (tau.HPSagainstElectronTightMVA3 > 0) && (tau.HPSagainstMuonTight2 > 0);
+            passesIso = (tau.HPSbyTightCombinedIsolationDeltaBetaCorr3Hits > 0);
+            break;
+    }
 
-	return (passesKinematics && passesID && passesIso);
-
+    return (passesKinematics && passesID && passesIso);
 }
 
 // Return collection with objects passing cuts
@@ -2111,10 +2101,10 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
          eid = eidHyperTight1MC_dec;
          break;
 		case analysisType::TauLJ:
-		case analysisType::TauDIL:
          eid = eidHyperTight1MC_dec;
          break;
 		case analysisType::DIL:
+		case analysisType::TauDIL:
          eid = eidTight_dec;
          break;
 		default:
@@ -2523,7 +2513,45 @@ BEANhelper::GetCleanJets(const BNjetCollection& jets, const BNleptonCollection& 
   return cleanJets_collection;
 }
 
-
+BNjetCollection
+BEANhelper::GetCleanJets_cProj(const BNjetCollection& jets, const BNleptonCollection& leptons, const float maxDeltaR) {
+  CheckSetUp();
+  vector<bool> isCleanJet (jets.size(), true);
+  BNjetCollection cleanJets_collection;
+  BNjetCollection cleanJets;
+  int matchIndex;
+  float minDeltaR;
+  float dR;
+  
+  for (auto& lepton: leptons) {
+    matchIndex = -1;
+    dR = 999.0;
+    minDeltaR = maxDeltaR;
+    for (unsigned i=0; i<jets.size(); i++){
+      dR = reco::deltaR(lepton->eta, lepton->phi, jets.at(i).eta, jets.at(i).phi);
+      if (dR < minDeltaR) {
+	minDeltaR = dR;
+	matchIndex = i;
+      }
+    }
+    //clean closest jet from lepton and return the jet energry if subrracted energy is greater than zer0
+    if (matchIndex != -1 && (jets.at(matchIndex).energy - lepton->energy) > 0){
+      cleanJets.at(matchIndex).energy = jets.at(matchIndex).energy - lepton->energy;
+      cleanJets.at(matchIndex).px = jets.at(matchIndex).px - lepton->px;
+      cleanJets.at(matchIndex).py = jets.at(matchIndex).py - lepton->py;
+      cleanJets.at(matchIndex).pz = jets.at(matchIndex).pz - lepton->pz;
+    }
+    else {
+      isCleanJet.at(matchIndex) = false;
+    }
+  }//end loop over leptons
+  
+  for (unsigned i=0; i<jets.size(); i++) {
+    if (isCleanJet.at(i)) { cleanJets_collection.push_back(cleanJets.at(i)); }
+  }
+  
+  return cleanJets_collection;
+}
 
 unsigned int
 BEANhelper::GetNumCSVbtags(const BNjetCollection& iJets, const char iCSVwp, std::vector<unsigned int>* jet_indices)
@@ -2944,8 +2972,8 @@ BEANhelper::IsTauLeptonLeptonEvent(const BNtauCollection& iTaus, const BNjetColl
 	BNtauCollection muonlessTaus	= GetDifference(correctedTaus, looseMuons, 0.25);
 	BNtauCollection leptonlessTaus	= GetDifference(muonlessTaus, looseElectrons, 0.25);
 	BNtauCollection nonIsoTaus		= GetSelectedTaus(leptonlessTaus, tauID::tauNonIso);
-	BNtauCollection vlooseTaus		= GetSelectedTaus(nonIsoTaus, tauID::tauVLoose);
-	if(nonIsoTaus.size() + vlooseTaus.size() < 1){ return false; }
+	BNtauCollection looseTaus		= GetSelectedTaus(nonIsoTaus, tauID::tauLoose);
+	if(nonIsoTaus.size() + looseTaus.size() < 1){ return false; }
 
 	return true;
 }
@@ -2977,9 +3005,9 @@ BEANhelper::IsTauTauLeptonEvent(const BNtauCollection& iTaus, const BNjetCollect
 	BNtauCollection muonlessTaus	= GetDifference(correctedTaus, looseMuons, 0.25);
 	BNtauCollection leptonlessTaus	= GetDifference(muonlessTaus, looseElectrons, 0.25);
 	BNtauCollection nonIsoTaus		= GetSelectedTaus(leptonlessTaus, tauID::tauNonIso);
-	BNtauCollection vlooseTaus		= GetSelectedTaus(nonIsoTaus, tauID::tauVLoose);
-	if(nonIsoTaus.size() < 2){ return false; }
-	if(vlooseTaus.size() < 1){ return false; }
+	BNtauCollection looseTaus		= GetSelectedTaus(nonIsoTaus, tauID::tauLoose);
+	if (nonIsoTaus.size() < 2 || looseTaus.size() < 1)
+        return false;
 
 	return true;
 }
@@ -3140,7 +3168,6 @@ vdouble BEANhelper::GetCSVweights(const BNjetCollection& iJets, const sysType::s
   default : iSysC = 0; break;
   }
 
-
   int iSysLF = 0;
   switch(iSysType){
   case sysType::JESup:	         iSysLF=1; break;
@@ -3186,7 +3213,6 @@ vdouble BEANhelper::GetCSVweights(const BNjetCollection& iJets, const sysType::s
       // if( iSysHF==0 ) printf(" iJet,\t flavor=%d,\t pt=%.1f,\t eta=%.2f,\t csv=%.3f,\t wgt=%.2f \n",
       // 			     flavor, jetPt, iJet->eta, csv, iCSVWgtHF );
     }
-    
     else if( abs(flavor) == 4 ){
       // do nothing
       int useCSVBin = (csv>=0.) ? c_csv_wgt_hf[iSysC][iPt]->FindBin(csv) : 1;
@@ -3210,6 +3236,7 @@ vdouble BEANhelper::GetCSVweights(const BNjetCollection& iJets, const sysType::s
   result.push_back(csvWgthf);
   result.push_back(csvWgtC);
   result.push_back(csvWgtlf);
+  result.push_back(csvWgtC);
   
   return result;
 }
