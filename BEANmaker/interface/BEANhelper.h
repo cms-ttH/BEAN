@@ -147,7 +147,7 @@ class BEANhelper{
 		float GetHT(const BNjetCollection&);
 
 		// Taus
-        inline bool IsNonIsoTau(const BNtau& iTau) { return IsGoodTau(iTau, tauID::tauLoose); };
+        inline bool IsNonIsoTau(const BNtau& iTau) { return IsGoodTau(iTau, tauID::tauNonIso); };
         inline bool IsLooseTau(const BNtau& iTau) { return IsGoodTau(iTau, tauID::tauLoose); };
         inline bool IsMediumTau(const BNtau& iTau) { return IsGoodTau(iTau, tauID::tauMedium); };
         inline bool IsTightTau(const BNtau& iTau) { return IsGoodTau(iTau, tauID::tauTight); };
