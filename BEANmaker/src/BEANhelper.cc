@@ -1266,25 +1266,25 @@ bool BEANhelper::IsGoodTau(const BNtau& tau, const tauID::tauID tauID){
         case tauID::tauNonIso:
             passesKinematics = (tau.pt >= 20) && (fabs(tau.eta) <= 2.1);
             passesID = (tau.leadingTrackPt >= 5) && (tau.leadingTrackValid) && \
-                       (tau.HPSdecayModeFinding > 0) && (tau.HPSagainstElectronLooseMVA3 > 0) && (tau.HPSagainstMuonLoose2 > 0);
+                       (tau.HPSdecayModeFinding > 0) && (tau.HPSagainstElectronLooseMVA5 > 0) && (tau.HPSagainstMuonLoose2 > 0);
             passesIso = true;
             break;
         case tauID::tauLoose:
             passesKinematics = (tau.pt >= 20) && (fabs(tau.eta) <= 2.1);
             passesID = (tau.leadingTrackPt >= 5) && (tau.leadingTrackValid) && \
-                       (tau.HPSdecayModeFinding > 0) && (tau.HPSagainstElectronLooseMVA3 > 0) && (tau.HPSagainstMuonLoose2 > 0);
+                       (tau.HPSdecayModeFinding > 0) && (tau.HPSagainstElectronLooseMVA5 > 0) && (tau.HPSagainstMuonLoose2 > 0);
             passesIso = (tau.HPSbyLooseCombinedIsolationDeltaBetaCorr3Hits > 0);
             break;
         case tauID::tauMedium:
             passesKinematics = (tau.pt >= 20) && (fabs(tau.eta) <= 2.1);
             passesID = (tau.leadingTrackPt >= 5) && (tau.leadingTrackValid) && \
-                       (tau.HPSdecayModeFinding > 0) && (tau.HPSagainstElectronTightMVA3 > 0) && (tau.HPSagainstMuonTight2 > 0);
+                       (tau.HPSdecayModeFinding > 0) && (tau.HPSagainstElectronTightMVA5 > 0) && (tau.HPSagainstMuonTight2 > 0);
             passesIso = (tau.HPSbyMediumCombinedIsolationDeltaBetaCorr3Hits > 0);
             break;
         case tauID::tauTight:
             passesKinematics = (tau.pt >= 20) && (fabs(tau.eta) <= 2.1);
             passesID = (tau.leadingTrackPt >= 5) && (tau.leadingTrackValid) && \
-                       (tau.HPSdecayModeFinding > 0) && (tau.HPSagainstElectronTightMVA3 > 0) && (tau.HPSagainstMuonTight2 > 0);
+                       (tau.HPSdecayModeFinding > 0) && (tau.HPSagainstElectronTightMVA5 > 0) && (tau.HPSagainstMuonTight2 > 0);
             passesIso = (tau.HPSbyTightCombinedIsolationDeltaBetaCorr3Hits > 0);
             break;
     }
