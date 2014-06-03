@@ -2489,7 +2489,7 @@ BEANhelper::GetCleanJets(const BNjetCollection& iJets, const vector<TLorentzVect
 }
 
 BNjetCollection
-BEANhelper::GetCleanJets(const BNjetCollection& jets, const BNleptonCollection& leptons, const float maxDeltaR) {
+BEANhelper::GetCleanJets(const BNjetCollection& jets, const BNleptonCollection& leptons, const float maxDeltaR, std::vector<unsigned int>* jet_indices) {
 	CheckSetUp();
     vector<bool> isCleanJet (jets.size(), true);
     BNjetCollection cleanJets;
@@ -2513,7 +2513,11 @@ BEANhelper::GetCleanJets(const BNjetCollection& jets, const BNleptonCollection& 
     }
 
     for (unsigned i=0; i<jets.size(); i++) {
-        if (isCleanJet.at(i)) { cleanJets.push_back(jets.at(i)); }
+        if (isCleanJet.at(i)) {
+            cleanJets.push_back(jets.at(i));
+            if (jet_indices)
+               jet_indices->push_back(i);
+        }
     }
 
     return cleanJets;
