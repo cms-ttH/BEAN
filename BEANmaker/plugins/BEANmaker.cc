@@ -5002,15 +5002,18 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	int mother0id = Mother0->pdgId();
 	int mother1id = ( Mother1!=0 ) ? Mother1->pdgId() : -99;
 
+        // FIXME why are we doing this?  to skip the same-particle leg in
+        // radiation branches?
 	bool staytrapped = true;
 	while( (mother0id==pdgId || mother1id==pdgId) && staytrapped ){
 	  if( mother0id==pdgId && (Mother0!=0) ){
 	    if( Mother0->numberOfMothers()>=1 ){
-	      Mother0 = Mother0->mother(0);
+              auto tmp = Mother0;
+	      Mother0 = tmp->mother(0);
 	      mother0id = Mother0->pdgId();
 	      mother1id = -99;
 	      if( Mother0->numberOfMothers()>=2 ){
-		Mother1 = Mother0->mother(1);
+		Mother1 = tmp->mother(1);
 		mother1id = Mother1->pdgId();
 	      }
 	    }
@@ -5018,11 +5021,12 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  }
 	  else if( mother1id==pdgId && (Mother1!=0) ){
 	    if( Mother1->numberOfMothers()>=1 ){
-	      Mother1 = Mother1->mother(0);
+              auto tmp = Mother1;
+	      Mother1 = tmp->mother(0);
 	      mother1id = Mother1->pdgId();
 	      mother0id = -99;
 	      if( Mother1->numberOfMothers()>=2 ){
-		Mother0 = Mother1->mother(1);
+		Mother0 = tmp->mother(1);
 		mother0id = Mother0->pdgId();
 	      }
 	    }
@@ -5053,11 +5057,12 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	    while( (gmother0id==mother0id || gmother1id==mother0id) && staytrapped ){
 	      if( gmother0id==mother0id && (GrandMother0!=0) ){
 		if( GrandMother0->numberOfMothers()>=1 ){
-		  GrandMother0 = GrandMother0->mother(0);
+                  auto tmp = GrandMother0;
+		  GrandMother0 = tmp->mother(0);
 		  gmother0id = GrandMother0->pdgId();
 		  gmother1id = -99;
 		  if( GrandMother0->numberOfMothers()>=2 ){
-		    GrandMother1 = GrandMother0->mother(1);
+		    GrandMother1 = tmp->mother(1);
 		    gmother1id = GrandMother1->pdgId();
 		  }
 		}
@@ -5065,11 +5070,12 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	      }
 	      else if( gmother1id==mother0id && (GrandMother1!=0) ){
 		if( GrandMother1->numberOfMothers()>=1 ){
-		  GrandMother1 = GrandMother1->mother(0);
+                  auto tmp = GrandMother1;
+		  GrandMother1 = tmp->mother(0);
 		  gmother1id = GrandMother1->pdgId();
 		  gmother0id = -99;
 		  if( GrandMother1->numberOfMothers()>=2 ){
-		    GrandMother0 = GrandMother1->mother(1);
+		    GrandMother0 = tmp->mother(1);
 		    gmother0id = GrandMother0->pdgId();
 		  }
 		}
@@ -5120,11 +5126,12 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	    while( (gmother0id==mother1id || gmother1id==mother1id) && staytrapped ){
 	      if( gmother0id==mother1id && (GrandMother0!=0) ){
 		if( GrandMother0->numberOfMothers()>=1 ){
-		  GrandMother0 = GrandMother0->mother(0);
+                  auto tmp = GrandMother0;
+		  GrandMother0 = tmp->mother(0);
 		  gmother0id = GrandMother0->pdgId();
 		  gmother1id = -99;
 		  if( GrandMother0->numberOfMothers()>=2 ){
-		    GrandMother1 = GrandMother0->mother(1);
+		    GrandMother1 = tmp->mother(1);
 		    gmother1id = GrandMother1->pdgId();
 		  }
 		}
@@ -5132,11 +5139,12 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	      }
 	      else if( gmother1id==mother1id && (GrandMother1!=0) ){
 		if( GrandMother1->numberOfMothers()>=1 ){
-		  GrandMother1 = GrandMother1->mother(0);
+                  auto tmp = GrandMother1;
+		  GrandMother1 = tmp->mother(0);
 		  gmother1id = GrandMother1->pdgId();
 		  gmother0id = -99;
 		  if( GrandMother1->numberOfMothers()>=2 ){
-		    GrandMother0 = GrandMother1->mother(1);
+		    GrandMother0 = tmp->mother(1);
 		    gmother0id = GrandMother0->pdgId();
 		  }
 		}
