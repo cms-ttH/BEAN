@@ -235,8 +235,8 @@ private:
   edm::InputTag muonTag_;
   edm::InputTag tauTag_;
   edm::InputTag photonTag_;
-  edm::InputTag EBsuperclusterTag_;
-  edm::InputTag EEsuperclusterTag_;
+  //edm::InputTag EBsuperclusterTag_;
+  //edm::InputTag EEsuperclusterTag_;
   edm::InputTag trackTag_;
   edm::InputTag genParticleTag_;
   edm::InputTag triggerSummaryTag_;
@@ -380,8 +380,8 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
 //   pfmetTag_uncorrectedPF2PAT_  = iConfig.getParameter<edm::InputTag>("pfmetTag_uncorrectedPF2PAT");
 //   pfmetTag_uncorrectedRECO_    = iConfig.getParameter<edm::InputTag>("pfmetTag_uncorrectedRECO");
   muonTag_ = iConfig.getParameter<edm::InputTag>("muonTag");
-  EBsuperclusterTag_ = iConfig.getParameter<edm::InputTag>("EBsuperclusterTag");
-  EEsuperclusterTag_ = iConfig.getParameter<edm::InputTag>("EEsuperclusterTag");
+  //  EBsuperclusterTag_ = iConfig.getParameter<edm::InputTag>("EBsuperclusterTag");
+  //  EEsuperclusterTag_ = iConfig.getParameter<edm::InputTag>("EEsuperclusterTag");
   trackTag_ = iConfig.getParameter<edm::InputTag>("trackTag");
   genParticleTag_ = iConfig.getParameter<edm::InputTag>("genParticleTag");
   triggerResultsTag_ = iConfig.getParameter<edm::InputTag>("triggerResultsTag");
@@ -545,11 +545,11 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<reco::TrackCollection > trackHandle;
   iEvent.getByLabel(trackTag_,trackHandle);
 
-  edm::Handle<reco::SuperClusterCollection > EBsuperclusterHandle;
-  iEvent.getByLabel(EBsuperclusterTag_,EBsuperclusterHandle);
+//   edm::Handle<reco::SuperClusterCollection > EBsuperclusterHandle;
+//   iEvent.getByLabel(EBsuperclusterTag_,EBsuperclusterHandle);
 
-  edm::Handle<reco::SuperClusterCollection > EEsuperclusterHandle;
-  iEvent.getByLabel(EEsuperclusterTag_,EEsuperclusterHandle);
+//   edm::Handle<reco::SuperClusterCollection > EEsuperclusterHandle;
+//   iEvent.getByLabel(EEsuperclusterTag_,EEsuperclusterHandle);
 
   edm::Handle<reco::GenParticleCollection > genParticles;
   iEvent.getByLabel(genParticleTag_,genParticles);
@@ -588,8 +588,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   bool produceMuon = ( (muonTag_.label() == "none") ) ? false : true;
   bool produceTau = ( (tauTag_.label() == "none") ) ? false : true;
   bool producePhoton = ( (photonTag_.label() == "none") ) ? false : true;
-  bool produceSCsEB = ( (EBsuperclusterTag_.label() == "none") ) ? false : true;
-  bool produceSCsEE = ( (EEsuperclusterTag_.label() == "none") ) ? false : true;
+  //  bool produceSCsEB = ( (EBsuperclusterTag_.label() == "none") ) ? false : true;
+  //  bool produceSCsEE = ( (EEsuperclusterTag_.label() == "none") ) ? false : true;
   bool produceTrack = ( (trackTag_.label() == "none") ) ? false : true;
   bool produceGenParticle = ( (genParticleTag_.label() == "none") ) ? false : true;
 
@@ -2498,61 +2498,61 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   ///////
   /////////////////////////////////////////////
 
-  std::auto_ptr<BNsuperclusterCollection> bnsuperclusters(new BNsuperclusterCollection);
-  if( produceSCsEB ){
-    reco::SuperClusterCollection EBsuperclusters = *EBsuperclusterHandle;
+//   std::auto_ptr<BNsuperclusterCollection> bnsuperclusters(new BNsuperclusterCollection);
+//   if( produceSCsEB ){
+//     reco::SuperClusterCollection EBsuperclusters = *EBsuperclusterHandle;
 
-    for(reco::SuperClusterCollection::const_iterator supercluster = EBsuperclusters.begin(); supercluster!=EBsuperclusters.end(); ++supercluster ){
+//     for(reco::SuperClusterCollection::const_iterator supercluster = EBsuperclusters.begin(); supercluster!=EBsuperclusters.end(); ++supercluster ){
 
-      double sctheta = 2.0*atan(exp(-supercluster->eta()));
-      double scet = supercluster->energy()*sin(sctheta);
+//       double sctheta = 2.0*atan(exp(-supercluster->eta()));
+//       double scet = supercluster->energy()*sin(sctheta);
 
-      if( !(scet>minSCEt_) ) continue;
+//       if( !(scet>minSCEt_) ) continue;
 
-      BNsupercluster MySC;
+//       BNsupercluster MySC;
 
-      MySC.energy = supercluster->energy();
-      MySC.phi = supercluster->phi();
-      MySC.eta = supercluster->eta();
+//       MySC.energy = supercluster->energy();
+//       MySC.phi = supercluster->phi();
+//       MySC.eta = supercluster->eta();
 
-      MySC.theta = sctheta;
+//       MySC.theta = sctheta;
 
-      MySC.et = supercluster->energy()*sin(sctheta);
-      MySC.ex = supercluster->energy()*sin(sctheta)*cos(supercluster->phi());
-      MySC.ey = supercluster->energy()*sin(sctheta)*sin(supercluster->phi());
-      MySC.ez = supercluster->energy()*cos(sctheta);
-
-
-      bnsuperclusters->push_back(MySC);
-    }
-  }
-  if( produceSCsEE ){
-    reco::SuperClusterCollection EEsuperclusters = *EEsuperclusterHandle;
-
-    for(reco::SuperClusterCollection::const_iterator supercluster = EEsuperclusters.begin(); supercluster!=EEsuperclusters.end(); ++supercluster ){
-
-      double sctheta = 2.0*atan(exp(-supercluster->eta()));
-      double scet = supercluster->energy()*sin(sctheta);
-
-      if( !(scet>minSCEt_) ) continue;
-
-      BNsupercluster MySC;
-
-      MySC.energy = supercluster->energy();
-      MySC.phi = supercluster->phi();
-      MySC.eta = supercluster->eta();
-
-      MySC.theta = sctheta;
-
-      MySC.et = supercluster->energy()*sin(sctheta);
-      MySC.ex = supercluster->energy()*sin(sctheta)*cos(supercluster->phi());
-      MySC.ey = supercluster->energy()*sin(sctheta)*sin(supercluster->phi());
-      MySC.ez = supercluster->energy()*cos(sctheta);
+//       MySC.et = supercluster->energy()*sin(sctheta);
+//       MySC.ex = supercluster->energy()*sin(sctheta)*cos(supercluster->phi());
+//       MySC.ey = supercluster->energy()*sin(sctheta)*sin(supercluster->phi());
+//       MySC.ez = supercluster->energy()*cos(sctheta);
 
 
-      bnsuperclusters->push_back(MySC);
-    }
-  }
+//       bnsuperclusters->push_back(MySC);
+//     }
+//   }
+//   if( produceSCsEE ){
+//     reco::SuperClusterCollection EEsuperclusters = *EEsuperclusterHandle;
+
+//     for(reco::SuperClusterCollection::const_iterator supercluster = EEsuperclusters.begin(); supercluster!=EEsuperclusters.end(); ++supercluster ){
+
+//       double sctheta = 2.0*atan(exp(-supercluster->eta()));
+//       double scet = supercluster->energy()*sin(sctheta);
+
+//       if( !(scet>minSCEt_) ) continue;
+
+//       BNsupercluster MySC;
+
+//       MySC.energy = supercluster->energy();
+//       MySC.phi = supercluster->phi();
+//       MySC.eta = supercluster->eta();
+
+//       MySC.theta = sctheta;
+
+//       MySC.et = supercluster->energy()*sin(sctheta);
+//       MySC.ex = supercluster->energy()*sin(sctheta)*cos(supercluster->phi());
+//       MySC.ey = supercluster->energy()*sin(sctheta)*sin(supercluster->phi());
+//       MySC.ez = supercluster->energy()*cos(sctheta);
+
+
+//       bnsuperclusters->push_back(MySC);
+//     }
+//   }
 
 
 
@@ -3765,7 +3765,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   if( produceMuon ) iEvent.put(bnmuons,muonTag_.label());
   if( produceTau ) iEvent.put(bntaus,tauTag_.label());
   if( producePhoton ) iEvent.put(bnphotons,photonTag_.label());
-  if( produceSCsEB || produceSCsEE ) iEvent.put(bnsuperclusters,kSC);
+  //if( produceSCsEB || produceSCsEE ) iEvent.put(bnsuperclusters,kSC);
   if( produceTrack ) iEvent.put(bntracks,trackTag_.label());
   iEvent.put(bntrigger,kHLT);
   if( produceGenParticle ) iEvent.put(bnmcparticles,kMCpar);
