@@ -661,8 +661,10 @@ process.BNproducer = cms.EDProducer('BEANmaker',
                                     photonTag = cms.InputTag("none"),
                                     #EBsuperclusterTag = cms.InputTag("correctedHybridSuperClusters"),
                                     #EEsuperclusterTag = cms.InputTag("correctedMulti5x5SuperClustersWithPreshower"),
-                                    reducedBarrelRecHitCollection = cms.InputTag("reducedEcalRecHitsEB"),
-                                    reducedEndcapRecHitCollection = cms.InputTag("reducedEcalRecHitsEE"),
+
+                                    #reducedBarrelRecHitCollection = cms.InputTag("reducedEcalRecHitsEB"),
+                                    #reducedEndcapRecHitCollection = cms.InputTag("reducedEcalRecHitsEE"),
+
                                     #trackTag = cms.InputTag("generalTracks"),
                                     tauTag = cms.InputTag("selectedPatTaus"),
                                     triggerResultsTag = cms.InputTag("TriggerResults::HLT"),
