@@ -634,9 +634,9 @@ process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 
 process.BNproducer = cms.EDProducer('BEANmaker',
                                     pfmetTag = cms.InputTag("patMETs"),
-                                    pfmetTag_type1correctedRECO = cms.InputTag("pfType1CorrectedMet"),
-                                    pfmetTag_uncorrectedPF2PAT  = cms.InputTag("patPFMet"),
-                                    pfmetTag_uncorrectedRECO    = cms.InputTag("pfMET"),
+#                                    pfmetTag_type1correctedRECO = cms.InputTag("pfType1CorrectedMet"),
+#                                    pfmetTag_uncorrectedPF2PAT  = cms.InputTag("patPFMet"),
+#                                    pfmetTag_uncorrectedRECO    = cms.InputTag("pfMET"),
                                     eleTag = cms.InputTag("selectedPatElectrons"),
                                     genParticleTag = cms.InputTag("genParticles"),
                                     pfjetTag = cms.InputTag("selectedPatJets"),
