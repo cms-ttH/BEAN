@@ -239,7 +239,7 @@ private:
   //edm::InputTag EEsuperclusterTag_;
   //edm::InputTag trackTag_;
   edm::InputTag genParticleTag_;
-  edm::InputTag triggerSummaryTag_;
+  //  edm::InputTag triggerSummaryTag_;
   edm::InputTag triggerResultsTag_;
   //  edm::InputTag gtSource_;
   edm::InputTag pvTag_;
@@ -387,7 +387,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   triggerResultsTag_ = iConfig.getParameter<edm::InputTag>("triggerResultsTag");
   //  gtSource_ = iConfig.getParameter<edm::InputTag>("gtSource");
   pvTag_ = iConfig.getParameter<edm::InputTag>("pvTag");
-  triggerSummaryTag_ = iConfig.getParameter<edm::InputTag>("triggerSummaryTag");
+  //  triggerSummaryTag_ = iConfig.getParameter<edm::InputTag>("triggerSummaryTag");
   //dcsTag_ = iConfig.getParameter<edm::InputTag>("dcsTag");
   tauTag_ = iConfig.getParameter<edm::InputTag>("tauTag");
   photonTag_ = iConfig.getParameter<edm::InputTag>("photonTag");
@@ -3257,68 +3257,71 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   /// HLTrigger/Configuration/python/HLT_8E29_cff.py
   //  hltL1NonIsoHLTNonIsoSingleElectronLWEt15PixelMatchFilter
   edm::Handle< trigger::TriggerEvent > hltHandle;
-  iEvent.getByLabel(triggerSummaryTag_, hltHandle);
+  //iEvent.getByLabel(triggerSummaryTag_, hltHandle);
 
   std::auto_ptr<BNtrigobjCollection> bnhltobjs(new BNtrigobjCollection);
 
   std::vector<trigger::size_type> filtKeys;
   std::vector<std::string> filtKeys_string;
-  for(unsigned int i=0; i<hltHandle->sizeFilters(); i++) {
-    const edm::InputTag filterTag = hltHandle->filterTag(i);
-    const std::string filt = filterTag.encode();
+  // for(unsigned int i=0; i<hltHandle->sizeFilters(); i++) {
+//     const edm::InputTag filterTag = hltHandle->filterTag(i);
+//     const std::string filt = filterTag.encode();
 
-    // if( filt.find("Electron")!=std::string::npos ){
-    //   std::cout << "  filt string = " << filt << std::endl;
-    // }
-    //hltSingleMu or hltSingleMuIso
-    //if( filt == electronTriggerFilter_.encode() ) {
-    if( ( (filt.find("Electron")!=std::string::npos) ||
-	  (filt.find("hltSingleMu")!=std::string::npos) ||
-	  (filt.find("hltL1IsoL1sMu")!=std::string::npos) ||
-	  (filt.find("hltL2IsoL1sMu")!=std::string::npos) ||
-	  (filt.find("hltL3IsoL1sMu")!=std::string::npos) ||
-	  (filt.find("hltL1fL1sMu")!=std::string::npos) ||
-	  (filt.find("hltL2fL1sMu")!=std::string::npos) ||
-	  (filt.find("hltL3fL1sMu")!=std::string::npos) ||
-	  (filt.find("hltIsoMu17")!=std::string::npos) ||
-	  (filt.find("hltMuEta2p1")!=std::string::npos) ||
-	  (filt.find("hltL1Mu0HTT")!=std::string::npos) ||
-	  (filt.find("hltHT300")!=std::string::npos) ||
-	  (filt.find("hlt")!=std::string::npos) ||
-	  (filt.find("hltEle32WP70PFMT50PFMTFilter")!=std::string::npos) ||
-	  (filt.find("HLTEle65CaloIdVTTrkIdTSequence")!=std::string::npos) )
-	){
-      const trigger::size_type filtIndex = hltHandle->filterIndex(filterTag);
-      const std::vector<trigger::size_type>& theseKeys = hltHandle->filterKeys(filtIndex);
-      int numKeys = theseKeys.size();
-      for(int i=0; i<numKeys; i++) {
-	filtKeys.push_back(theseKeys.at(i));
-	filtKeys_string.push_back(filt);
-      }
-    }
-  }
+//     // if( filt.find("Electron")!=std::string::npos ){
+//     //   std::cout << "  filt string = " << filt << std::endl;
+//     // }
+//     //hltSingleMu or hltSingleMuIso
+//     //if( filt == electronTriggerFilter_.encode() ) {
+//     if( ( (filt.find("Electron")!=std::string::npos) ||
+// 	  (filt.find("hltSingleMu")!=std::string::npos) ||
+// 	  (filt.find("hltL1IsoL1sMu")!=std::string::npos) ||
+// 	  (filt.find("hltL2IsoL1sMu")!=std::string::npos) ||
+// 	  (filt.find("hltL3IsoL1sMu")!=std::string::npos) ||
+// 	  (filt.find("hltL1fL1sMu")!=std::string::npos) ||
+// 	  (filt.find("hltL2fL1sMu")!=std::string::npos) ||
+// 	  (filt.find("hltL3fL1sMu")!=std::string::npos) ||
+// 	  (filt.find("hltIsoMu17")!=std::string::npos) ||
+// 	  (filt.find("hltMuEta2p1")!=std::string::npos) ||
+// 	  (filt.find("hltL1Mu0HTT")!=std::string::npos) ||
+// 	  (filt.find("hltHT300")!=std::string::npos) ||
+// 	  (filt.find("hlt")!=std::string::npos) ||
+// 	  (filt.find("hltEle32WP70PFMT50PFMTFilter")!=std::string::npos) ||
+// 	  (filt.find("HLTEle65CaloIdVTTrkIdTSequence")!=std::string::npos) )
+// 	){
+//       const trigger::size_type filtIndex = hltHandle->filterIndex(filterTag);
+//       const std::vector<trigger::size_type>& theseKeys = hltHandle->filterKeys(filtIndex);
+//       int numKeys = theseKeys.size();
+//       for(int i=0; i<numKeys; i++) {
+// 	filtKeys.push_back(theseKeys.at(i));
+// 	filtKeys_string.push_back(filt);
+//       }
+//     }
+//   }
 
-  const trigger::TriggerObjectCollection& hltObjects = hltHandle->getObjects();
-  for(size_t i=0; i<filtKeys.size(); i++) {
-    size_t key = filtKeys.at(i);
-    const trigger::TriggerObject obj = hltObjects[key];
+//   const trigger::TriggerObjectCollection& hltObjects = hltHandle->getObjects();
+//   for(size_t i=0; i<filtKeys.size(); i++) {
+//     size_t key = filtKeys.at(i);
+//     const trigger::TriggerObject obj = hltObjects[key];
 
-    BNtrigobj MyTrigobj;
+//     BNtrigobj MyTrigobj;
 
-    MyTrigobj.id  = obj.id();
-    MyTrigobj.px  = obj.px();
-    MyTrigobj.py  = obj.py();
-    MyTrigobj.pz  = obj.pz();
-    MyTrigobj.pt  = obj.pt();
-    MyTrigobj.eta = obj.eta();
-    MyTrigobj.phi = obj.phi();
-    MyTrigobj.et  = obj.et();
-    MyTrigobj.energy = obj.energy();
-    MyTrigobj.filter = filtKeys_string[i];
+//     MyTrigobj.id  = obj.id();
+//     MyTrigobj.px  = obj.px();
+//     MyTrigobj.py  = obj.py();
+//     MyTrigobj.pz  = obj.pz();
+//     MyTrigobj.pt  = obj.pt();
+//     MyTrigobj.eta = obj.eta();
+//     MyTrigobj.phi = obj.phi();
+//     MyTrigobj.et  = obj.et();
+//     MyTrigobj.energy = obj.energy();
+//     MyTrigobj.filter = filtKeys_string[i];
 
-    //std::cout << " ===> HLT: filter = " << filtKeys_string[i] << ",\t id = " << obj.id() << ",\t pt = " << obj.pt() << ",\t eta = " << obj.eta() << ",\t phi = " << obj.phi() << std::endl;
-    bnhltobjs->push_back(MyTrigobj);
-  }
+//     //std::cout << " ===> HLT: filter = " << filtKeys_string[i] << ",\t id = " << obj.id() << ",\t pt = " << obj.pt() << ",\t eta = " << obj.eta() << ",\t phi = " << obj.phi() << std::endl;
+//     bnhltobjs->push_back(MyTrigobj);
+//   }
+
+
+
 
 
 
