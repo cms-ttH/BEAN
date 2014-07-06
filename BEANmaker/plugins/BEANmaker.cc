@@ -241,7 +241,7 @@ private:
   edm::InputTag genParticleTag_;
   edm::InputTag triggerSummaryTag_;
   edm::InputTag triggerResultsTag_;
-  edm::InputTag gtSource_;
+  //  edm::InputTag gtSource_;
   edm::InputTag pvTag_;
   edm::InputTag dcsTag_;
   edm::TriggerNames trigNames;
@@ -385,7 +385,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   trackTag_ = iConfig.getParameter<edm::InputTag>("trackTag");
   genParticleTag_ = iConfig.getParameter<edm::InputTag>("genParticleTag");
   triggerResultsTag_ = iConfig.getParameter<edm::InputTag>("triggerResultsTag");
-  gtSource_ = iConfig.getParameter<edm::InputTag>("gtSource");
+  //  gtSource_ = iConfig.getParameter<edm::InputTag>("gtSource");
   pvTag_ = iConfig.getParameter<edm::InputTag>("pvTag");
   triggerSummaryTag_ = iConfig.getParameter<edm::InputTag>("triggerSummaryTag");
   dcsTag_ = iConfig.getParameter<edm::InputTag>("dcsTag");
@@ -3354,24 +3354,24 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
   // open main GT (DAQ) readout record - exit if failed
-  Handle<L1GlobalTriggerReadoutRecord> gtReadoutRecord;
-  iEvent.getByLabel(gtSource_, gtReadoutRecord);
+  //Handle<L1GlobalTriggerReadoutRecord> gtReadoutRecord;
+  //iEvent.getByLabel(gtSource_, gtReadoutRecord);
 
   std::auto_ptr<BNtriggerCollection> bntriggerl1talgo(new BNtriggerCollection);
   std::auto_ptr<BNtriggerCollection> bntriggerl1ttech(new BNtriggerCollection);
 
-  if (!gtReadoutRecord.isValid()) {
-    std::cout << "  error ====> can't find L1GlobalTriggerReadoutRecord with label " << gtSource_.label();
-    return;
-  }
+//   if (!gtReadoutRecord.isValid()) {
+//     std::cout << "  error ====> can't find L1GlobalTriggerReadoutRecord with label " << gtSource_.label();
+//     return;
+//   }
 
-  // initialize bx's to invalid value
+  // Initialize bx's to invalid value
   //int gtfeBx = -1;
 
   // get info from GTFE DAQ record
-  const L1GtfeWord& gtfeWord = gtReadoutRecord->gtfeWord();
+  //const L1GtfeWord& gtfeWord = gtReadoutRecord->gtfeWord();
   //gtfeBx = gtfeWord.bxNr();
-  int gtfeActiveBoards = gtfeWord.activeBoards();
+  //int gtfeActiveBoards = gtfeWord.activeBoards();
 
   ///////////
   unsigned int pfIndexAlgo = 0;
@@ -3390,48 +3390,48 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   /////////////
 
   // get info from FDL if active (including decision word)
-  if( isActive(gtfeActiveBoards,FDL) ) {
-    /// get Global Trigger algo and technical triger bit statistics
-    const DecisionWord& gtDecisionWord = gtReadoutRecord->decisionWord();
-    const TechnicalTriggerWord& gtTTWord = gtReadoutRecord->technicalTriggerWord();
-    //
-    const std::vector<int>& prescaleFactorsAlgoTrig = ( *m_prescaleFactorsAlgoTrig ).at(pfIndexAlgo);
+  // if( isActive(gtfeActiveBoards,FDL) ) {
+//     /// get Global Trigger algo and technical triger bit statistics
+//     const DecisionWord& gtDecisionWord = gtReadoutRecord->decisionWord();
+//     const TechnicalTriggerWord& gtTTWord = gtReadoutRecord->technicalTriggerWord();
+//     //
+//     const std::vector<int>& prescaleFactorsAlgoTrig = ( *m_prescaleFactorsAlgoTrig ).at(pfIndexAlgo);
 
-    // L1 algos
-    for( CItAlgo algo = menu->gtAlgorithmMap().begin(); algo!=menu->gtAlgorithmMap().end(); ++algo) {
-      BNtrigger MyTriggerL1TAlgo;
-      int algoBitNumber = (algo->second).algoBitNumber();
+//     // L1 algos
+//     for( CItAlgo algo = menu->gtAlgorithmMap().begin(); algo!=menu->gtAlgorithmMap().end(); ++algo) {
+//       BNtrigger MyTriggerL1TAlgo;
+//       int algoBitNumber = (algo->second).algoBitNumber();
 
-      int prescaleFactor = prescaleFactorsAlgoTrig.at(algoBitNumber);
+//       int prescaleFactor = prescaleFactorsAlgoTrig.at(algoBitNumber);
 
-      MyTriggerL1TAlgo.pass = gtDecisionWord.at(algoBitNumber);
-      MyTriggerL1TAlgo.name = (algo->second).algoName();
-      MyTriggerL1TAlgo.prescale = prescaleFactor;
+//       MyTriggerL1TAlgo.pass = gtDecisionWord.at(algoBitNumber);
+//       MyTriggerL1TAlgo.name = (algo->second).algoName();
+//       MyTriggerL1TAlgo.prescale = prescaleFactor;
 
-      //std::cout << " =====>  L1T algo: path name = " << (algo->second).algoName() << ",\t prescale = " << prescaleFactor << ",\t pass = " << gtDecisionWord.at(algoBitNumber) << std::endl; 
+//       //std::cout << " =====>  L1T algo: path name = " << (algo->second).algoName() << ",\t prescale = " << prescaleFactor << ",\t pass = " << gtDecisionWord.at(algoBitNumber) << std::endl; 
 
-      bntriggerl1talgo->push_back(MyTriggerL1TAlgo);
-    }
+//       bntriggerl1talgo->push_back(MyTriggerL1TAlgo);
+//     }
 
-    // L1 technical
-    char trigname[100];
-    int tbitNumber = 0;
-    TechnicalTriggerWord::const_iterator GTtbitItr;
-    for(GTtbitItr = gtTTWord.begin(); GTtbitItr != gtTTWord.end(); GTtbitItr++) {
-      BNtrigger MyTriggerL1TTech;
-      int pass_l1t_tech = 0;
-      if (*GTtbitItr) pass_l1t_tech = 1;
+//     // L1 technical
+//     char trigname[100];
+//     int tbitNumber = 0;
+//     TechnicalTriggerWord::const_iterator GTtbitItr;
+//     for(GTtbitItr = gtTTWord.begin(); GTtbitItr != gtTTWord.end(); GTtbitItr++) {
+//       BNtrigger MyTriggerL1TTech;
+//       int pass_l1t_tech = 0;
+//       if (*GTtbitItr) pass_l1t_tech = 1;
 
-      sprintf(trigname, "L1_TechBit_%03d", tbitNumber);
+//       sprintf(trigname, "L1_TechBit_%03d", tbitNumber);
 
-      MyTriggerL1TTech.pass = pass_l1t_tech;
-      MyTriggerL1TTech.name = trigname;
+//       MyTriggerL1TTech.pass = pass_l1t_tech;
+//       MyTriggerL1TTech.name = trigname;
 
-      bntriggerl1ttech->push_back(MyTriggerL1TTech);
+//       bntriggerl1ttech->push_back(MyTriggerL1TTech);
 
-      tbitNumber++; 
-    }
-  }
+//       tbitNumber++; 
+//     }
+//   }
 
   ////////////////////////////////////
   ///////////////////////////////////
