@@ -246,8 +246,8 @@ private:
   //edm::InputTag dcsTag_;
   edm::TriggerNames trigNames;
 
-  edm::InputTag reducedBarrelRecHitCollection_;
-  edm::InputTag reducedEndcapRecHitCollection_;
+  //  edm::InputTag reducedBarrelRecHitCollection_;
+  //  edm::InputTag reducedEndcapRecHitCollection_;
 
   edm::ParameterSet caloExtractorPSet;
   edm::ParameterSet trackExtractorPSet; 
@@ -392,8 +392,8 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   tauTag_ = iConfig.getParameter<edm::InputTag>("tauTag");
   photonTag_ = iConfig.getParameter<edm::InputTag>("photonTag");
 
-  reducedBarrelRecHitCollection_ = iConfig.getParameter<edm::InputTag>("reducedBarrelRecHitCollection");
-  reducedEndcapRecHitCollection_ = iConfig.getParameter<edm::InputTag>("reducedEndcapRecHitCollection");
+//   reducedBarrelRecHitCollection_ = iConfig.getParameter<edm::InputTag>("reducedBarrelRecHitCollection");
+//   reducedEndcapRecHitCollection_ = iConfig.getParameter<edm::InputTag>("reducedEndcapRecHitCollection");
 
   hltProcessName_ = iConfig.getParameter<std::string>("hltProcessName");
   
@@ -594,13 +594,13 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   bool produceGenParticle = ( (genParticleTag_.label() == "none") ) ? false : true;
 
   // // remove all cluster tools for now
-  EcalClusterLazyTools lazyTools( iEvent, iSetup, reducedBarrelRecHitCollection_, reducedEndcapRecHitCollection_ );
-  Handle<EcalRecHitCollection> Brechit;//barrel
-  Handle<EcalRecHitCollection> Erechit;//endcap
-  iEvent.getByLabel(reducedBarrelRecHitCollection_,Brechit);
-  iEvent.getByLabel(reducedEndcapRecHitCollection_,Erechit);
-  const EcalRecHitCollection* barrelRecHits= Brechit.product();
-  const EcalRecHitCollection* endcapRecHits= Erechit.product();
+//   EcalClusterLazyTools lazyTools( iEvent, iSetup, reducedBarrelRecHitCollection_, reducedEndcapRecHitCollection_ );
+//   Handle<EcalRecHitCollection> Brechit;//barrel
+//   Handle<EcalRecHitCollection> Erechit;//endcap
+//   iEvent.getByLabel(reducedBarrelRecHitCollection_,Brechit);
+//   iEvent.getByLabel(reducedEndcapRecHitCollection_,Erechit);
+//   const EcalRecHitCollection* barrelRecHits= Brechit.product();
+//   const EcalRecHitCollection* endcapRecHits= Erechit.product();
 
 
   // Get Trigger and Event Handles
@@ -1006,64 +1006,64 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       double eleEta = ele->eta();
 
 
-      if( (ele->superCluster().isAvailable()) ){
-	double eMax    = lazyTools.eMax(    *(ele->superCluster()) );
-	double eLeft   = lazyTools.eLeft(   *(ele->superCluster()) );
-	double eRight  = lazyTools.eRight(  *(ele->superCluster()) );
-	double eTop    = lazyTools.eTop(    *(ele->superCluster()) );
-	double eBottom = lazyTools.eBottom( *(ele->superCluster()) );
-	double e3x3    = lazyTools.e3x3(    *(ele->superCluster()) );
-	double swissCross = -99;
+//       if( (ele->superCluster().isAvailable()) ){
+// 	double eMax    = lazyTools.eMax(    *(ele->superCluster()) );
+// 	double eLeft   = lazyTools.eLeft(   *(ele->superCluster()) );
+// 	double eRight  = lazyTools.eRight(  *(ele->superCluster()) );
+// 	double eTop    = lazyTools.eTop(    *(ele->superCluster()) );
+// 	double eBottom = lazyTools.eBottom( *(ele->superCluster()) );
+// 	double e3x3    = lazyTools.e3x3(    *(ele->superCluster()) );
+// 	double swissCross = -99;
 	
-	if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
+// 	if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
 
-	MyElectron.eMax = eMax;
-	MyElectron.eLeft = eLeft;
-	MyElectron.eRight = eRight;
-	MyElectron.eTop = eTop;
-	MyElectron.eBottom = eBottom;
-	MyElectron.e3x3 = e3x3;
-	MyElectron.swissCross = swissCross;
+// 	MyElectron.eMax = eMax;
+// 	MyElectron.eLeft = eLeft;
+// 	MyElectron.eRight = eRight;
+// 	MyElectron.eTop = eTop;
+// 	MyElectron.eBottom = eBottom;
+// 	MyElectron.e3x3 = e3x3;
+// 	MyElectron.swissCross = swissCross;
 
-	caloenergy = ele->caloEnergy();
+// 	caloenergy = ele->caloEnergy();
 
-	MyElectron.scEt = ele->caloEnergy() * sin( ele->superCluster()->position().theta() );
-	MyElectron.scRawEnergy = ele->superCluster()->rawEnergy();
-	MyElectron.scEta = ele->superCluster()->position().eta();
-	MyElectron.scPhi = ele->superCluster()->position().phi();
-	MyElectron.scZ = ele->superCluster()->position().Z();
+// 	MyElectron.scEt = ele->caloEnergy() * sin( ele->superCluster()->position().theta() );
+// 	MyElectron.scRawEnergy = ele->superCluster()->rawEnergy();
+// 	MyElectron.scEta = ele->superCluster()->position().eta();
+// 	MyElectron.scPhi = ele->superCluster()->position().phi();
+// 	MyElectron.scZ = ele->superCluster()->position().Z();
 	
-	eleEta = ele->superCluster()->position().eta();
+// 	eleEta = ele->superCluster()->position().eta();
 
-	double seedE = -999, seedTime = -999;
-	int seedRecoFlag = -999;
+// 	double seedE = -999, seedTime = -999;
+// 	int seedRecoFlag = -999;
        
-	if( (ele->isEB()) ){
-	  DetId idEB = EcalClusterTools::getMaximum( ele->superCluster()->hitsAndFractions(), &(*barrelRecHits) ).first;
-	  EcalRecHitCollection::const_iterator thisHitEB = barrelRecHits->find(idEB);
+// // 	if( (ele->isEB()) ){
+// // 	  DetId idEB = EcalClusterTools::getMaximum( ele->superCluster()->hitsAndFractions(), &(*barrelRecHits) ).first;
+// // 	  EcalRecHitCollection::const_iterator thisHitEB = barrelRecHits->find(idEB);
 
-	  seedE = thisHitEB->energy();
-	  seedTime = thisHitEB->time();
-	  seedRecoFlag = thisHitEB->recoFlag();
-	}
-	else if( (ele->isEE()) ){
-	  DetId idEE = EcalClusterTools::getMaximum( ele->superCluster()->hitsAndFractions(), &(*endcapRecHits) ).first;
-	  EcalRecHitCollection::const_iterator thisHitEE = endcapRecHits->find(idEE);
+// // 	  seedE = thisHitEB->energy();
+// // 	  seedTime = thisHitEB->time();
+// // 	  seedRecoFlag = thisHitEB->recoFlag();
+// // 	}
+// // 	else if( (ele->isEE()) ){
+// // 	  DetId idEE = EcalClusterTools::getMaximum( ele->superCluster()->hitsAndFractions(), &(*endcapRecHits) ).first;
+// // 	  EcalRecHitCollection::const_iterator thisHitEE = endcapRecHits->find(idEE);
 
-	  seedE = thisHitEE->energy();
-	  seedTime = thisHitEE->time();
-	  seedRecoFlag = thisHitEE->recoFlag();
-	}
+// // 	  seedE = thisHitEE->energy();
+// // 	  seedTime = thisHitEE->time();
+// // 	  seedRecoFlag = thisHitEE->recoFlag();
+// // 	}
 
-	MyElectron.seedEnergy   = seedE;
-	MyElectron.seedTime     = seedTime;
-	MyElectron.seedRecoFlag = seedRecoFlag;
+// 	MyElectron.seedEnergy   = seedE;
+// 	MyElectron.seedTime     = seedTime;
+// 	MyElectron.seedRecoFlag = seedRecoFlag;
 
-	// MyElectron.swissCrossNoI85 = swissCrossNoI85;
-	// MyElectron.swissCrossI85   = swissCrossI85;
-	// MyElectron.E2overE9NoI85 = e2overe9NoI85;
-	// MyElectron.E2overE9I85 = e2overe9I85;
-      }
+// 	// MyElectron.swissCrossNoI85 = swissCrossNoI85;
+// 	// MyElectron.swissCrossI85   = swissCrossI85;
+// 	// MyElectron.E2overE9NoI85 = e2overe9NoI85;
+// 	// MyElectron.E2overE9I85 = e2overe9I85;
+//       }
 
       double heepEt = ( caloenergy<0 || ele->energy()==0. ) ? 0 : ele->et()/ele->energy()*caloenergy;
       MyElectron.et = heepEt;
@@ -1332,14 +1332,14 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       // MyElectron.fMVAVar_dphicalo        =  ele->deltaPhiSeedClusterTrackAtCalo();   //  save also this in your ntuple 
       // Pure ECAL -> shower shapes
       MyElectron.fMVAVar_see             =  ele->sigmaIetaIeta();    //EleSigmaIEtaIEta
-      std::vector<float> vCov = lazyTools.localCovariances(*(ele->superCluster()->seed())) ;
-      if (!isnan(vCov[2])) MyElectron.fMVAVar_spp = sqrt (vCov[2]);   //EleSigmaIPhiIPhi
-      else MyElectron.fMVAVar_spp = 0.;    
+      //      std::vector<float> vCov = lazyTools.localCovariances(*(ele->superCluster()->seed())) ;
+      //if (!isnan(vCov[2])) MyElectron.fMVAVar_spp = sqrt (vCov[2]);   //EleSigmaIPhiIPhi
+      //else MyElectron.fMVAVar_spp = 0.;    
       // MyElectron.fMVAVar_sigmaIEtaIPhi = vCov[1];  //  save also this in your ntuple 
       MyElectron.fMVAVar_etawidth        =  ele->superCluster()->etaWidth();
       MyElectron.fMVAVar_phiwidth        =  ele->superCluster()->phiWidth();
       MyElectron.fMVAVar_e1x5e5x5        =  (ele->e5x5()) !=0. ? 1.-(ele->e1x5()/ele->e5x5()) : -1. ;
-      MyElectron.fMVAVar_R9              =  lazyTools.e3x3(*(ele->superCluster()->seed())) / ele->superCluster()->rawEnergy();
+      //MyElectron.fMVAVar_R9              =  lazyTools.e3x3(*(ele->superCluster()->seed())) / ele->superCluster()->rawEnergy();
       //MyElectron.fMVAVar_nbrems          =  fabs(ele->numberOfBrems());    //  save also this in your ntuple 
       // Energy matching
       MyElectron.fMVAVar_HoE             =  ele->hadronicOverEm();
@@ -2197,61 +2197,61 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       MyPhoton.hasPixelSeed = ( photon->hasPixelSeed() ) ? 1 : 0;
       
       // Get photon supercluster information
-      if( (photon->superCluster().isAvailable()) ){
-	double eMax    = lazyTools.eMax(    *(photon->superCluster()) );
-	double eLeft   = lazyTools.eLeft(   *(photon->superCluster()) );
-	double eRight  = lazyTools.eRight(  *(photon->superCluster()) );
-	double eTop    = lazyTools.eTop(    *(photon->superCluster()) );
-	double eBottom = lazyTools.eBottom( *(photon->superCluster()) );
-	double e3x3    = lazyTools.e3x3(    *(photon->superCluster()) );
-	double swissCross = -99;
+//       if( (photon->superCluster().isAvailable()) ){
+// 	double eMax    = lazyTools.eMax(    *(photon->superCluster()) );
+// 	double eLeft   = lazyTools.eLeft(   *(photon->superCluster()) );
+// 	double eRight  = lazyTools.eRight(  *(photon->superCluster()) );
+// 	double eTop    = lazyTools.eTop(    *(photon->superCluster()) );
+// 	double eBottom = lazyTools.eBottom( *(photon->superCluster()) );
+// 	double e3x3    = lazyTools.e3x3(    *(photon->superCluster()) );
+// 	double swissCross = -99;
 
-	if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
+// 	if( eMax>0.000001 ) swissCross = 1 - (eLeft+eRight+eTop+eBottom)/eMax;
 
-	MyPhoton.eMax = eMax;
-	MyPhoton.eLeft = eLeft;
-	MyPhoton.eRight = eRight;
-	MyPhoton.eTop = eTop;
-	MyPhoton.eBottom = eBottom;
-	MyPhoton.e3x3 = e3x3;
-	MyPhoton.swissCross = swissCross;
+// 	MyPhoton.eMax = eMax;
+// 	MyPhoton.eLeft = eLeft;
+// 	MyPhoton.eRight = eRight;
+// 	MyPhoton.eTop = eTop;
+// 	MyPhoton.eBottom = eBottom;
+// 	MyPhoton.e3x3 = e3x3;
+// 	MyPhoton.swissCross = swissCross;
 
-	MyPhoton.scEnergy = photon->superCluster()->energy();
-	MyPhoton.scRawEnergy = photon->superCluster()->rawEnergy();
-	MyPhoton.scEta = photon->superCluster()->position().eta();
-	MyPhoton.scPhi = photon->superCluster()->position().phi();
-	MyPhoton.scZ = photon->superCluster()->position().Z();
+// 	MyPhoton.scEnergy = photon->superCluster()->energy();
+// 	MyPhoton.scRawEnergy = photon->superCluster()->rawEnergy();
+// 	MyPhoton.scEta = photon->superCluster()->position().eta();
+// 	MyPhoton.scPhi = photon->superCluster()->position().phi();
+// 	MyPhoton.scZ = photon->superCluster()->position().Z();
 
-	double seedE = -999, seedTime = -999;
-	int seedRecoFlag = -999;
+// 	double seedE = -999, seedTime = -999;
+// 	int seedRecoFlag = -999;
        
-	if( (photon->isEB()) ){
-	  DetId idEB = EcalClusterTools::getMaximum( photon->superCluster()->hitsAndFractions(), &(*barrelRecHits) ).first;
-	  EcalRecHitCollection::const_iterator thisHitEB = barrelRecHits->find(idEB);
+// // 	if( (photon->isEB()) ){
+// // 	  DetId idEB = EcalClusterTools::getMaximum( photon->superCluster()->hitsAndFractions(), &(*barrelRecHits) ).first;
+// // 	  EcalRecHitCollection::const_iterator thisHitEB = barrelRecHits->find(idEB);
 
-	  seedE = thisHitEB->energy();
-	  seedTime = thisHitEB->time();
-	  seedRecoFlag = thisHitEB->recoFlag();
-	}
+// // 	  seedE = thisHitEB->energy();
+// // 	  seedTime = thisHitEB->time();
+// // 	  seedRecoFlag = thisHitEB->recoFlag();
+// // 	}
 	
-	else if( (photon->isEE()) ){
-	  DetId idEE = EcalClusterTools::getMaximum( photon->superCluster()->hitsAndFractions(), &(*endcapRecHits) ).first;
-	  EcalRecHitCollection::const_iterator thisHitEE = endcapRecHits->find(idEE);
+// // 	else if( (photon->isEE()) ){
+// // 	  DetId idEE = EcalClusterTools::getMaximum( photon->superCluster()->hitsAndFractions(), &(*endcapRecHits) ).first;
+// // 	  EcalRecHitCollection::const_iterator thisHitEE = endcapRecHits->find(idEE);
 
-	  seedE = thisHitEE->energy();
-	  seedTime = thisHitEE->time();
-	  seedRecoFlag = thisHitEE->recoFlag();
-	}
+// // 	  seedE = thisHitEE->energy();
+// // 	  seedTime = thisHitEE->time();
+// // 	  seedRecoFlag = thisHitEE->recoFlag();
+// // 	}
 
-	MyPhoton.seedEnergy   = seedE;
-	MyPhoton.seedTime     = seedTime;
-	MyPhoton.seedRecoFlag = seedRecoFlag;
+// 	MyPhoton.seedEnergy   = seedE;
+// 	MyPhoton.seedTime     = seedTime;
+// 	MyPhoton.seedRecoFlag = seedRecoFlag;
 
-	// MyPhoton.swissCrossNoI85 = swissCrossNoI85;
-	// MyPhoton.swissCrossI85   = swissCrossI85;
-	// MyPhoton.E2overE9NoI85 = e2overe9NoI85;
-	// MyPhoton.E2overE9I85 = e2overe9I85;
-      }
+// 	// MyPhoton.swissCrossNoI85 = swissCrossNoI85;
+// 	// MyPhoton.swissCrossI85   = swissCrossI85;
+// 	// MyPhoton.E2overE9NoI85 = e2overe9NoI85;
+// 	// MyPhoton.E2overE9I85 = e2overe9I85;
+//       }
 
       MyPhoton.isEB = photon->isEB();
       MyPhoton.isEE = photon->isEE();
