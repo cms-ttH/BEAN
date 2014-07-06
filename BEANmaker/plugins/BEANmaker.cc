@@ -1,4 +1,4 @@
-//// -*- C++ -*-
+/// -*- C++ -*-
 //
 // Package:    BEANmaker
 // Class:      BEANmaker
@@ -237,7 +237,7 @@ private:
   edm::InputTag photonTag_;
   //edm::InputTag EBsuperclusterTag_;
   //edm::InputTag EEsuperclusterTag_;
-  edm::InputTag trackTag_;
+  //edm::InputTag trackTag_;
   edm::InputTag genParticleTag_;
   edm::InputTag triggerSummaryTag_;
   edm::InputTag triggerResultsTag_;
@@ -382,7 +382,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   muonTag_ = iConfig.getParameter<edm::InputTag>("muonTag");
   //  EBsuperclusterTag_ = iConfig.getParameter<edm::InputTag>("EBsuperclusterTag");
   //  EEsuperclusterTag_ = iConfig.getParameter<edm::InputTag>("EEsuperclusterTag");
-  trackTag_ = iConfig.getParameter<edm::InputTag>("trackTag");
+  //trackTag_ = iConfig.getParameter<edm::InputTag>("trackTag");
   genParticleTag_ = iConfig.getParameter<edm::InputTag>("genParticleTag");
   triggerResultsTag_ = iConfig.getParameter<edm::InputTag>("triggerResultsTag");
   //  gtSource_ = iConfig.getParameter<edm::InputTag>("gtSource");
@@ -419,7 +419,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
 //   produces<BNmetCollection>(std::string(pfmetTag_uncorrectedRECO_.label() + "BN")).setBranchAlias("pfmet_uncorrectedRECO");
   produces<BNmuonCollection>(muonTag_.label()).setBranchAlias("muons");
   produces<BNsuperclusterCollection>(kSC).setBranchAlias("superclusters");
-  produces<BNtrackCollection>(trackTag_.label()).setBranchAlias("tracks");
+  //  produces<BNtrackCollection>(trackTag_.label()).setBranchAlias("tracks");
   produces<BNtriggerCollection>(kHLT).setBranchAlias("trigger");
   produces<BNtriggerCollection>(kL1Talgo).setBranchAlias("L1Talgo");
   produces<BNtriggerCollection>(kL1Ttech).setBranchAlias("L1Ttech");
@@ -542,8 +542,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<edm::View<pat::Photon> > photonHandle;
   iEvent.getByLabel(photonTag_,photonHandle);
 
-  edm::Handle<reco::TrackCollection > trackHandle;
-  iEvent.getByLabel(trackTag_,trackHandle);
+  //  edm::Handle<reco::TrackCollection > trackHandle;
+  //  iEvent.getByLabel(trackTag_,trackHandle);
 
 //   edm::Handle<reco::SuperClusterCollection > EBsuperclusterHandle;
 //   iEvent.getByLabel(EBsuperclusterTag_,EBsuperclusterHandle);
@@ -590,7 +590,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   bool producePhoton = ( (photonTag_.label() == "none") ) ? false : true;
   //  bool produceSCsEB = ( (EBsuperclusterTag_.label() == "none") ) ? false : true;
   //  bool produceSCsEE = ( (EEsuperclusterTag_.label() == "none") ) ? false : true;
-  bool produceTrack = ( (trackTag_.label() == "none") ) ? false : true;
+  //  bool produceTrack = ( (trackTag_.label() == "none") ) ? false : true;
   bool produceGenParticle = ( (genParticleTag_.label() == "none") ) ? false : true;
 
   // // remove all cluster tools for now
@@ -1264,20 +1264,20 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       }// end check if genLepton
 
       ConversionFinder convFinder;
-      ConversionInfo convInfo = convFinder.getConversionInfo(*ele, trackHandle, evt_bField);
+      //ConversionInfo convInfo = convFinder.getConversionInfo(*ele, trackHandle, evt_bField);
    
-      double dist = convInfo.dist();
-      double dcot = convInfo.dcot();
-      double convradius = convInfo.radiusOfConversion();
-      math::XYZPoint convPoint = convInfo.pointOfConversion();
+      //double dist = convInfo.dist();
+      //double dcot = convInfo.dcot();
+      //double convradius = convInfo.radiusOfConversion();
+      //math::XYZPoint convPoint = convInfo.pointOfConversion();
 
-      MyElectron.dist = dist;
-      MyElectron.dcot = dcot;
-      MyElectron.convradius = convradius;
-      MyElectron.convPointX = convPoint.x();
-      MyElectron.convPointY = convPoint.y();
-      MyElectron.convPointZ = convPoint.z();
-      MyElectron.passConvVeto = ele->passConversionVeto();
+      //MyElectron.dist = dist;
+      //MyElectron.dcot = dcot;
+      //MyElectron.convradius = convradius;
+      //MyElectron.convPointX = convPoint.x();
+      //MyElectron.convPointY = convPoint.y();
+      //MyElectron.convPointZ = convPoint.z();
+      //MyElectron.passConvVeto = ele->passConversionVeto();
       
 
       bool cutDelEta=false, cutDelPhi=false, cutSigIeta=false, cutE2x5=false, cutEMhad1=false, cutHad2=false, cutTrackIso=false;
@@ -2288,207 +2288,207 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   ///////
   /////////////////////////////////////////////
 
-  std::auto_ptr<BNtrackCollection> bntracks(new BNtrackCollection);
-  int tracksSize = 1;
+//   std::auto_ptr<BNtrackCollection> bntracks(new BNtrackCollection);
+//   int tracksSize = 1;
 
-  if( produceTrack ){
-    reco::TrackCollection tracks = *trackHandle;
+//   if( produceTrack ){
+//     reco::TrackCollection tracks = *trackHandle;
 
-    for(reco::TrackCollection::const_iterator track = tracks.begin(); track!=tracks.end(); ++track ){
+//     for(reco::TrackCollection::const_iterator track = tracks.begin(); track!=tracks.end(); ++track ){
 
-      bool isHighPurity = false;
-      if( track->quality(_trackQuality) ){
-	numhighpurity++;
-	isHighPurity = true;
-      }
+//       bool isHighPurity = false;
+//       if( track->quality(_trackQuality) ){
+// 	numhighpurity++;
+// 	isHighPurity = true;
+//       }
 
-      if( !(track->pt()>minTrackPt_) ) continue;
+//       if( !(track->pt()>minTrackPt_) ) continue;
 
-      BNtrack MyTrack;
+//       BNtrack MyTrack;
 
-      MyTrack.isHighPurity = ( isHighPurity ) ? 1 : 0;
+//       MyTrack.isHighPurity = ( isHighPurity ) ? 1 : 0;
 
-      MyTrack.pt = track->pt();
-      MyTrack.ptError = track->ptError();
-      MyTrack.px = track->px();
-      MyTrack.py = track->py();
-      MyTrack.pz = track->pz();
-      MyTrack.phi = track->phi();
-      MyTrack.eta = track->eta();
-      MyTrack.theta = track->theta();
+//       MyTrack.pt = track->pt();
+//       MyTrack.ptError = track->ptError();
+//       MyTrack.px = track->px();
+//       MyTrack.py = track->py();
+//       MyTrack.pz = track->pz();
+//       MyTrack.phi = track->phi();
+//       MyTrack.eta = track->eta();
+//       MyTrack.theta = track->theta();
 
-      MyTrack.vx = track->vx();
-      MyTrack.vy = track->vy();
-      MyTrack.vz = track->vz();
-      MyTrack.charge = track->charge();
-      MyTrack.numValidHits = track->numberOfValidHits();
+//       MyTrack.vx = track->vx();
+//       MyTrack.vy = track->vy();
+//       MyTrack.vz = track->vz();
+//       MyTrack.charge = track->charge();
+//       MyTrack.numValidHits = track->numberOfValidHits();
 
-      MyTrack.dZ = track->dz();
-      MyTrack.d0 = track->d0();
-      MyTrack.d0err = track->d0Error();
-      double ndof = track->ndof();
-      if( (ndof!=0) ) MyTrack.normChi2 = track->chi2()/ndof;
+//       MyTrack.dZ = track->dz();
+//       MyTrack.d0 = track->d0();
+//       MyTrack.d0err = track->d0Error();
+//       double ndof = track->ndof();
+//       if( (ndof!=0) ) MyTrack.normChi2 = track->chi2()/ndof;
 
-      if( fillTrackHitInfo_ ){
-	for (trackingRecHit_iterator hit = track->recHitsBegin(); hit!=track->recHitsEnd(); hit++) {
-	  DetId detid = (*hit)->geographicalId();
-	  const GeomDetUnit *det = m_tracker->idToDetUnit(detid);  
-	  if (dynamic_cast<const StripGeomDetUnit*>(det)==0 && dynamic_cast<const PixelGeomDetUnit*>(det)==0) {
-	    // std::cout << "this detID doesn't seem to belong to the Tracker" 
-	    // 	       << "; subdetId = " << int(detid.subdetId())
-	    // 	       << "; rawId = " << int(detid.rawId())
-	    // 	       << endl;
-	    continue;
-	  }
-	  GlobalPoint center = det->surface().toGlobal(LocalPoint(0,0,0)); //should be the center of this Det. 
+//       if( fillTrackHitInfo_ ){
+// 	for (trackingRecHit_iterator hit = track->recHitsBegin(); hit!=track->recHitsEnd(); hit++) {
+// 	  DetId detid = (*hit)->geographicalId();
+// 	  const GeomDetUnit *det = m_tracker->idToDetUnit(detid);  
+// 	  if (dynamic_cast<const StripGeomDetUnit*>(det)==0 && dynamic_cast<const PixelGeomDetUnit*>(det)==0) {
+// 	    // std::cout << "this detID doesn't seem to belong to the Tracker" 
+// 	    // 	       << "; subdetId = " << int(detid.subdetId())
+// 	    // 	       << "; rawId = " << int(detid.rawId())
+// 	    // 	       << endl;
+// 	    continue;
+// 	  }
+// 	  GlobalPoint center = det->surface().toGlobal(LocalPoint(0,0,0)); //should be the center of this Det. 
 	  
-	  MyTrack.subDetIdHits.push_back(int(detid.subdetId()));
-	  MyTrack.rawDetIdHits.push_back(int(detid.rawId()));
-	  MyTrack.isValidHits.push_back((*hit)->isValid());
-	  MyTrack.modulePerpHits.push_back(center.perp());
-	  MyTrack.moduleZHits.push_back(center.z());
-	  MyTrack.modulePhiHits.push_back(center.phi());           
-	}  // end loop over hits
+// 	  MyTrack.subDetIdHits.push_back(int(detid.subdetId()));
+// 	  MyTrack.rawDetIdHits.push_back(int(detid.rawId()));
+// 	  MyTrack.isValidHits.push_back((*hit)->isValid());
+// 	  MyTrack.modulePerpHits.push_back(center.perp());
+// 	  MyTrack.moduleZHits.push_back(center.z());
+// 	  MyTrack.modulePhiHits.push_back(center.phi());           
+// 	}  // end loop over hits
 	
-	MyTrack.lastHitOuterRadius = track->outerRadius();
-	MyTrack.lastHitOuterEta    = track->outerEta();
-	MyTrack.lastHitOuterTheta  = track->outerTheta(); 
-	MyTrack.lastHitOuterPhi    = track->outerPhi();   
-      } //ends (fillTrackHitInfo_)
-      MyTrack.nHitsMissingInner      = track->trackerExpectedHitsInner().numberOfHits(); 
-      MyTrack.nHitsMissingOuter      = track->trackerExpectedHitsOuter().numberOfHits(); 
-      MyTrack.nHitsMissingMiddle     = track->hitPattern().trackerLayersWithoutMeasurement();   
-      MyTrack.layersWithMeasurement  = track->hitPattern().trackerLayersWithMeasurement();   
-      MyTrack.numberOfHits           = track->hitPattern().numberOfHits(); 
-      MyTrack.numberOfLostHits       = track->hitPattern().numberOfLostHits();  
-      MyTrack.numberOfValidPixelHits = track->hitPattern().numberOfValidPixelHits();
-      MyTrack.numberOfValidStripHits = track->hitPattern().numberOfValidStripHits();
+// 	MyTrack.lastHitOuterRadius = track->outerRadius();
+// 	MyTrack.lastHitOuterEta    = track->outerEta();
+// 	MyTrack.lastHitOuterTheta  = track->outerTheta(); 
+// 	MyTrack.lastHitOuterPhi    = track->outerPhi();   
+//       } //ends (fillTrackHitInfo_)
+//       MyTrack.nHitsMissingInner      = track->trackerExpectedHitsInner().numberOfHits(); 
+//       MyTrack.nHitsMissingOuter      = track->trackerExpectedHitsOuter().numberOfHits(); 
+//       MyTrack.nHitsMissingMiddle     = track->hitPattern().trackerLayersWithoutMeasurement();   
+//       MyTrack.layersWithMeasurement  = track->hitPattern().trackerLayersWithMeasurement();   
+//       MyTrack.numberOfHits           = track->hitPattern().numberOfHits(); 
+//       MyTrack.numberOfLostHits       = track->hitPattern().numberOfLostHits();  
+//       MyTrack.numberOfValidPixelHits = track->hitPattern().numberOfValidPixelHits();
+//       MyTrack.numberOfValidStripHits = track->hitPattern().numberOfValidStripHits();
 
 
-      // Access info about track isolation (similar to calculation for muon isolation)
-      // Followed example code from http://cmslxr.fnal.gov/lxr/source/RecoMuon/MuonIdentification/plugins/MuonIdProducer.cc
-      // This config file is used:  http://cmslxr.fnal.gov/lxr/source/RecoMuon/MuonIdentification/python/isolation_cff.py
-      // Thresholds are listed in: http://cmssw.cvs.cern.ch/cgi-bin/cmssw.cgi/CMSSW/RecoMuon/MuonIsolationProducers/python/trackExtractorBlocks_cff.py?revision=1.2&view=markup
-      if( fillTrackIsoInfo_ ){
-	reco::isodeposit::IsoDepositExtractor *muIsoExtractorCalo_; 
-	muIsoExtractorCalo_ = IsoDepositExtractorFactory::get()->create( caloExtractorName, caloExtractorPSet); 
-	reco::isodeposit::IsoDepositExtractor *muIsoExtractorTrack_; 
-	muIsoExtractorTrack_ = IsoDepositExtractorFactory::get()->create( trackExtractorName, trackExtractorPSet); 
+//       // Access info about track isolation (similar to calculation for muon isolation)
+//       // Followed example code from http://cmslxr.fnal.gov/lxr/source/RecoMuon/MuonIdentification/plugins/MuonIdProducer.cc
+//       // This config file is used:  http://cmslxr.fnal.gov/lxr/source/RecoMuon/MuonIdentification/python/isolation_cff.py
+//       // Thresholds are listed in: http://cmssw.cvs.cern.ch/cgi-bin/cmssw.cgi/CMSSW/RecoMuon/MuonIsolationProducers/python/trackExtractorBlocks_cff.py?revision=1.2&view=markup
+//       if( fillTrackIsoInfo_ ){
+// 	reco::isodeposit::IsoDepositExtractor *muIsoExtractorCalo_; 
+// 	muIsoExtractorCalo_ = IsoDepositExtractorFactory::get()->create( caloExtractorName, caloExtractorPSet); 
+// 	reco::isodeposit::IsoDepositExtractor *muIsoExtractorTrack_; 
+// 	muIsoExtractorTrack_ = IsoDepositExtractorFactory::get()->create( trackExtractorName, trackExtractorPSet); 
 	 
-	std::vector<reco::IsoDeposit> caloDeps = muIsoExtractorCalo_->deposits(iEvent, iSetup, *track);
-	reco::IsoDeposit::Vetos noVetos; 
+// 	std::vector<reco::IsoDeposit> caloDeps = muIsoExtractorCalo_->deposits(iEvent, iSetup, *track);
+// 	reco::IsoDeposit::Vetos noVetos; 
 	 
-	reco::IsoDeposit depEcal  = caloDeps.at(0);
-	reco::IsoDeposit depHcal  = caloDeps.at(1);
-	reco::IsoDeposit depHo    = caloDeps.at(2);
-	reco::IsoDeposit depTrk   = muIsoExtractorTrack_->deposit(iEvent, iSetup, *track );
-	reco::MuonIsolation isoR03, isoR05;
+// 	reco::IsoDeposit depEcal  = caloDeps.at(0);
+// 	reco::IsoDeposit depHcal  = caloDeps.at(1);
+// 	reco::IsoDeposit depHo    = caloDeps.at(2);
+// 	reco::IsoDeposit depTrk   = muIsoExtractorTrack_->deposit(iEvent, iSetup, *track );
+// 	reco::MuonIsolation isoR03, isoR05;
 
-	isoR03.sumPt          = depTrk.depositWithin(0.3, noVetos, true);
-	isoR03.emEt           = depEcal.depositWithin(0.3, noVetos, true);
-	isoR03.hadEt          = depHcal.depositWithin(0.3, noVetos, true);
-	isoR03.hoEt           = depHo.depositWithin(0.3, noVetos, true);
-	isoR03.nTracks        = depTrk.depositAndCountWithin(0.3, noVetos, true).second;
-	isoR03.trackerVetoPt  = depTrk.candEnergy();
-	isoR03.emVetoEt       = depEcal.candEnergy();
-	isoR03.hadVetoEt      = depHcal.candEnergy();
-	isoR03.hoVetoEt       = depHo.candEnergy();
+// 	isoR03.sumPt          = depTrk.depositWithin(0.3, noVetos, true);
+// 	isoR03.emEt           = depEcal.depositWithin(0.3, noVetos, true);
+// 	isoR03.hadEt          = depHcal.depositWithin(0.3, noVetos, true);
+// 	isoR03.hoEt           = depHo.depositWithin(0.3, noVetos, true);
+// 	isoR03.nTracks        = depTrk.depositAndCountWithin(0.3, noVetos, true).second;
+// 	isoR03.trackerVetoPt  = depTrk.candEnergy();
+// 	isoR03.emVetoEt       = depEcal.candEnergy();
+// 	isoR03.hadVetoEt      = depHcal.candEnergy();
+// 	isoR03.hoVetoEt       = depHo.candEnergy();
 
-	isoR05.sumPt          = depTrk.depositWithin(0.5, noVetos, true);
-	isoR05.emEt           = depEcal.depositWithin(0.5, noVetos, true);
-	isoR05.hadEt          = depHcal.depositWithin(0.5, noVetos, true);
-	isoR05.hoEt           = depHo.depositWithin(0.5, noVetos, true);
-	isoR05.nTracks        = depTrk.depositAndCountWithin(0.5, noVetos, true).second;
-	isoR05.trackerVetoPt  = depTrk.candEnergy();
-	isoR05.emVetoEt       = depEcal.candEnergy();
-	isoR05.hadVetoEt      = depHcal.candEnergy();
-	isoR05.hoVetoEt       = depHo.candEnergy();
+// 	isoR05.sumPt          = depTrk.depositWithin(0.5, noVetos, true);
+// 	isoR05.emEt           = depEcal.depositWithin(0.5, noVetos, true);
+// 	isoR05.hadEt          = depHcal.depositWithin(0.5, noVetos, true);
+// 	isoR05.hoEt           = depHo.depositWithin(0.5, noVetos, true);
+// 	isoR05.nTracks        = depTrk.depositAndCountWithin(0.5, noVetos, true).second;
+// 	isoR05.trackerVetoPt  = depTrk.candEnergy();
+// 	isoR05.emVetoEt       = depEcal.candEnergy();
+// 	isoR05.hadVetoEt      = depHcal.candEnergy();
+// 	isoR05.hoVetoEt       = depHo.candEnergy();
 
-	MyTrack.depTrkRp3         = isoR03.sumPt; 
-	MyTrack.depEcalRp3        = isoR03.emEt; 
-	MyTrack.depHcalRp3        = isoR03.hadEt;
-	MyTrack.depHoRp3          = isoR03.hoEt;
-	MyTrack.nTracksRp3        = isoR03.nTracks;
-	MyTrack.trackerVetoPtRp3  = depTrk.candEnergy();
-	MyTrack.emVetoEtRp3       = depEcal.candEnergy();
-	MyTrack.hadVetoEtRp3      = depHcal.candEnergy();
-	MyTrack.hoVetoEtRp3       = depHo.candEnergy();
+// 	MyTrack.depTrkRp3         = isoR03.sumPt; 
+// 	MyTrack.depEcalRp3        = isoR03.emEt; 
+// 	MyTrack.depHcalRp3        = isoR03.hadEt;
+// 	MyTrack.depHoRp3          = isoR03.hoEt;
+// 	MyTrack.nTracksRp3        = isoR03.nTracks;
+// 	MyTrack.trackerVetoPtRp3  = depTrk.candEnergy();
+// 	MyTrack.emVetoEtRp3       = depEcal.candEnergy();
+// 	MyTrack.hadVetoEtRp3      = depHcal.candEnergy();
+// 	MyTrack.hoVetoEtRp3       = depHo.candEnergy();
        
-	MyTrack.depTrkRp5         = isoR05.sumPt; 
-	MyTrack.depEcalRp5        = isoR05.emEt; 
-	MyTrack.depHcalRp5        = isoR05.hadEt;
-	MyTrack.depHoRp5          = isoR05.hoEt;
-	MyTrack.nTracksRp5        = isoR05.nTracks;
-	MyTrack.trackerVetoPtRp5  = depTrk.candEnergy();
-	MyTrack.emVetoEtRp5       = depEcal.candEnergy();
-	MyTrack.hadVetoEtRp5      = depHcal.candEnergy();
-	MyTrack.hoVetoEtRp5       = depHo.candEnergy();
+// 	MyTrack.depTrkRp5         = isoR05.sumPt; 
+// 	MyTrack.depEcalRp5        = isoR05.emEt; 
+// 	MyTrack.depHcalRp5        = isoR05.hadEt;
+// 	MyTrack.depHoRp5          = isoR05.hoEt;
+// 	MyTrack.nTracksRp5        = isoR05.nTracks;
+// 	MyTrack.trackerVetoPtRp5  = depTrk.candEnergy();
+// 	MyTrack.emVetoEtRp5       = depEcal.candEnergy();
+// 	MyTrack.hadVetoEtRp5      = depHcal.candEnergy();
+// 	MyTrack.hoVetoEtRp5       = depHo.candEnergy();
        
-	if (muIsoExtractorCalo_)  delete muIsoExtractorCalo_;
-	if (muIsoExtractorTrack_) delete muIsoExtractorTrack_;
+// 	if (muIsoExtractorCalo_)  delete muIsoExtractorCalo_;
+// 	if (muIsoExtractorTrack_) delete muIsoExtractorTrack_;
        
-	// Copy code from:  http://cmslxr.fnal.gov/lxr/source/DataFormats/CaloTowers/test/CaloTowersDump.cc
-	// See reference:  https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideCaloTowers  
-	std::vector<edm::Handle<CaloTowerCollection> > prods;
-	try {
-	  iEvent.getManyByType(prods);
-	} catch (...) {
-	  cout << "No CaloTowers." << endl;
-	}  
-	//Access info about Calo Towers
-	double caloEMDeltaRp3  = 0;  
-	double caloHadDeltaRp3 = 0;  
-	double caloEMDeltaRp4  = 0;  
-	double caloHadDeltaRp4 = 0;  
-	double caloEMDeltaRp5  = 0;  
-	double caloHadDeltaRp5 = 0;  
-	std::vector<edm::Handle<CaloTowerCollection> >::iterator i = prods.begin();
-	const CaloTowerCollection& c=*(*i);
-	for (CaloTowerCollection::const_iterator j=c.begin(); j!=c.end(); j++) {
-	  double deltaEta = fabs(track->eta() - j->eta());  
-	  double deltaPhi = fabs(fabs(fabs(track->phi() - j->phi()) - TMath::Pi()) - TMath::Pi()); 
-	  double deltaR   = sqrt(pow(deltaEta, 2) + pow(deltaPhi, 2));
-	  double Eem  = j->emEnergy();  
-	  double Ehad = j->hadEnergy();  
+// 	// Copy code from:  http://cmslxr.fnal.gov/lxr/source/DataFormats/CaloTowers/test/CaloTowersDump.cc
+// 	// See reference:  https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideCaloTowers  
+// 	std::vector<edm::Handle<CaloTowerCollection> > prods;
+// 	try {
+// 	  iEvent.getManyByType(prods);
+// 	} catch (...) {
+// 	  cout << "No CaloTowers." << endl;
+// 	}  
+// 	//Access info about Calo Towers
+// 	double caloEMDeltaRp3  = 0;  
+// 	double caloHadDeltaRp3 = 0;  
+// 	double caloEMDeltaRp4  = 0;  
+// 	double caloHadDeltaRp4 = 0;  
+// 	double caloEMDeltaRp5  = 0;  
+// 	double caloHadDeltaRp5 = 0;  
+// 	std::vector<edm::Handle<CaloTowerCollection> >::iterator i = prods.begin();
+// 	const CaloTowerCollection& c=*(*i);
+// 	for (CaloTowerCollection::const_iterator j=c.begin(); j!=c.end(); j++) {
+// 	  double deltaEta = fabs(track->eta() - j->eta());  
+// 	  double deltaPhi = fabs(fabs(fabs(track->phi() - j->phi()) - TMath::Pi()) - TMath::Pi()); 
+// 	  double deltaR   = sqrt(pow(deltaEta, 2) + pow(deltaPhi, 2));
+// 	  double Eem  = j->emEnergy();  
+// 	  double Ehad = j->hadEnergy();  
 	
-	  if (j->emEt()  < 0.2) Eem  = 0;  
-	  if (j->hadEt() < 0.5) Ehad = 0;  
+// 	  if (j->emEt()  < 0.2) Eem  = 0;  
+// 	  if (j->hadEt() < 0.5) Ehad = 0;  
 	 
-	  if (deltaR<0.3) { 
-	    caloEMDeltaRp3  += Eem;  
-	    caloHadDeltaRp3 += Ehad;  
-	  }      
-	  if (deltaR<0.4) { 
-	    caloEMDeltaRp4  += Eem;  
-	    caloHadDeltaRp4 += Ehad;  
-	  }
-	  if (deltaR<0.5) { 
-	    caloEMDeltaRp5  += Eem;  
-	    caloHadDeltaRp5 += Ehad;  
-	  }
-	}
+// 	  if (deltaR<0.3) { 
+// 	    caloEMDeltaRp3  += Eem;  
+// 	    caloHadDeltaRp3 += Ehad;  
+// 	  }      
+// 	  if (deltaR<0.4) { 
+// 	    caloEMDeltaRp4  += Eem;  
+// 	    caloHadDeltaRp4 += Ehad;  
+// 	  }
+// 	  if (deltaR<0.5) { 
+// 	    caloEMDeltaRp5  += Eem;  
+// 	    caloHadDeltaRp5 += Ehad;  
+// 	  }
+// 	}
        
-	MyTrack.caloEMDeltaRp3  = caloEMDeltaRp3; 
-	MyTrack.caloHadDeltaRp3 = caloHadDeltaRp3; 
-	MyTrack.caloEMDeltaRp4  = caloEMDeltaRp4; 
-	MyTrack.caloHadDeltaRp4 = caloHadDeltaRp4; 
-	MyTrack.caloEMDeltaRp5  = caloEMDeltaRp5; 
-	MyTrack.caloHadDeltaRp5 = caloHadDeltaRp5; 
-      } //ends if(fillTrackIsoInfo_)
+// 	MyTrack.caloEMDeltaRp3  = caloEMDeltaRp3; 
+// 	MyTrack.caloHadDeltaRp3 = caloHadDeltaRp3; 
+// 	MyTrack.caloEMDeltaRp4  = caloEMDeltaRp4; 
+// 	MyTrack.caloHadDeltaRp4 = caloHadDeltaRp4; 
+// 	MyTrack.caloEMDeltaRp5  = caloEMDeltaRp5; 
+// 	MyTrack.caloHadDeltaRp5 = caloHadDeltaRp5; 
+//       } //ends if(fillTrackIsoInfo_)
 
-      bntracks->push_back(MyTrack);
-    }
+//       bntracks->push_back(MyTrack);
+//     }
      
-    tracksSize = int(tracks.size());
-  }
+//     tracksSize = int(tracks.size());
+//   }
 
-  bool FilterOutScraping = false;
-  double FilterOutScrapingFraction = ( tracksSize!=0 ) ? (double)numhighpurity/(double)tracksSize : 0;
+//   bool FilterOutScraping = false;
+//   double FilterOutScrapingFraction = ( tracksSize!=0 ) ? (double)numhighpurity/(double)tracksSize : 0;
 
-  if( tracksSize>numtrack_ ){
-    if( FilterOutScrapingFraction>thresh_ ) FilterOutScraping=true;
-  }
-  else FilterOutScraping = true;
+//   if( tracksSize>numtrack_ ){
+//     if( FilterOutScrapingFraction>thresh_ ) FilterOutScraping=true;
+//   }
+//   else FilterOutScraping = true;
 
 
 
@@ -3007,8 +3007,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   MyEvent.bxLumi   = bxLumi;
 
   MyEvent.GoodVertex = ( GoodVertex ) ? 1 : 0;
-  MyEvent.FilterOutScraping = ( FilterOutScraping ) ? 1 : 0;
-  MyEvent.FilterOutScrapingFraction = FilterOutScrapingFraction;
+  //MyEvent.FilterOutScraping = ( FilterOutScraping ) ? 1 : 0;
+  //MyEvent.FilterOutScrapingFraction = FilterOutScrapingFraction;
 
   MyEvent.sample = sample_;
   MyEvent.numPV = numPVs;
@@ -3748,7 +3748,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   ////
 
   if( GoodVertex ) numGoodVertexEvents++;
-  if( FilterOutScraping ) numFilterOutScrapingEvents++;
+  //if( FilterOutScraping ) numFilterOutScrapingEvents++;
 
 
   // Put the collections into the event
@@ -3766,7 +3766,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   if( produceTau ) iEvent.put(bntaus,tauTag_.label());
   if( producePhoton ) iEvent.put(bnphotons,photonTag_.label());
   //if( produceSCsEB || produceSCsEE ) iEvent.put(bnsuperclusters,kSC);
-  if( produceTrack ) iEvent.put(bntracks,trackTag_.label());
+  //  if( produceTrack ) iEvent.put(bntracks,trackTag_.label());
   iEvent.put(bntrigger,kHLT);
   if( produceGenParticle ) iEvent.put(bnmcparticles,kMCpar);
   if( produceGenParticle ) iEvent.put(bnmcelectrons,kMCele);
