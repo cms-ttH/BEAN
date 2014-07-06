@@ -243,7 +243,7 @@ private:
   edm::InputTag triggerResultsTag_;
   //  edm::InputTag gtSource_;
   edm::InputTag pvTag_;
-  edm::InputTag dcsTag_;
+  //edm::InputTag dcsTag_;
   edm::TriggerNames trigNames;
 
   edm::InputTag reducedBarrelRecHitCollection_;
@@ -388,7 +388,7 @@ BEANmaker::BEANmaker(const edm::ParameterSet& iConfig):
   //  gtSource_ = iConfig.getParameter<edm::InputTag>("gtSource");
   pvTag_ = iConfig.getParameter<edm::InputTag>("pvTag");
   triggerSummaryTag_ = iConfig.getParameter<edm::InputTag>("triggerSummaryTag");
-  dcsTag_ = iConfig.getParameter<edm::InputTag>("dcsTag");
+  //dcsTag_ = iConfig.getParameter<edm::InputTag>("dcsTag");
   tauTag_ = iConfig.getParameter<edm::InputTag>("tauTag");
   photonTag_ = iConfig.getParameter<edm::InputTag>("photonTag");
 
@@ -609,8 +609,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   const L1GtTriggerMenu* menu = menuRcd.product();
 
   // Get DCS information
-  edm::Handle<DcsStatusCollection> dcsHandle;
-  bool gotDCSinfo = iEvent.getByLabel(dcsTag_, dcsHandle);
+  //  edm::Handle<DcsStatusCollection> dcsHandle;
+  bool gotDCSinfo = false;//iEvent.getByLabel(dcsTag_, dcsHandle);
 
   double evt_bField;
 
@@ -690,20 +690,20 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 
-  if( gotDCSinfo && sample_<0 && dcsHandle->size()>0 ){
-    // scale factor = 3.801/18166.0 which are
-    // average values taken over a stable two
-    // week period
-    float currentToBFieldScaleFactor = 2.09237036221512717e-04;
-    float current = (*dcsHandle)[0].magnetCurrent();
-    evt_bField = current*currentToBFieldScaleFactor;
-  }
-  else {
-    ESHandle<MagneticField> magneticField;
-    iSetup.get<IdealMagneticFieldRecord>().get(magneticField);
-
-    evt_bField = magneticField->inTesla(GlobalPoint(0.,0.,0.)).z();
-  }
+//   if( gotDCSinfo && sample_<0 && dcsHandle->size()>0 ){
+//     // scale factor = 3.801/18166.0 which are
+//     // average values taken over a stable two
+//     // week period
+//     float currentToBFieldScaleFactor = 2.09237036221512717e-04;
+//     float current = (*dcsHandle)[0].magnetCurrent();
+//     evt_bField = current*currentToBFieldScaleFactor;
+//   }
+  //else {
+  ESHandle<MagneticField> magneticField;
+  iSetup.get<IdealMagneticFieldRecord>().get(magneticField);
+  
+  evt_bField = magneticField->inTesla(GlobalPoint(0.,0.,0.)).z();
+    //}
    
   math::XYZPoint beamSpotPosition;
   beamSpotPosition.SetCoordinates(0,0,0);
