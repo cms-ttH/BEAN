@@ -555,20 +555,20 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByLabel(genParticleTag_,genParticles);
 
   edm::Handle< double > rhoHandle;
-  iEvent.getByLabel(edm::InputTag("kt6PFJets","rho"), rhoHandle);
-  double rho_event = *rhoHandle;   
+  iEvent.getByLabel(edm::InputTag("fixedGridRhoFastjetAll",""), rhoHandle);
+  double rho_event = *rhoHandle;
 
   edm::Handle< double > rhoHandle_CentralChargedPileUp;
-  iEvent.getByLabel(edm::InputTag("kt6PFJetsCentralChargedPileUp","rho"), rhoHandle_CentralChargedPileUp);
-  double rho_event_CentralChargedPileUp = ( (rhoHandle_CentralChargedPileUp.isValid()) ) ? *rhoHandle_CentralChargedPileUp : -99;   
+  iEvent.getByLabel(edm::InputTag("fixedGridRhoFastjetCentralChargedPileUp",""), rhoHandle_CentralChargedPileUp);
+  double rho_event_CentralChargedPileUp = ( (rhoHandle_CentralChargedPileUp.isValid()) ) ? *rhoHandle_CentralChargedPileUp : -99;
 
   edm::Handle< double > rhoHandle_CentralNeutral;
-  iEvent.getByLabel(edm::InputTag("kt6PFJetsCentralNeutral","rho"), rhoHandle_CentralNeutral);
+  iEvent.getByLabel(edm::InputTag("fixedGridRhoFastjetCentralNeutral",""), rhoHandle_CentralNeutral);
   double rho_event_CentralNeutral = ( (rhoHandle_CentralNeutral.isValid()) ) ? *rhoHandle_CentralNeutral : -99;
 
-  edm::Handle< double > rhoHandle_CentralNeutralTight;
-  iEvent.getByLabel(edm::InputTag("kt6PFJetsCentralNeutralTight","rho"), rhoHandle_CentralNeutralTight);
-  double rho_event_CentralNeutralTight = ( (rhoHandle_CentralNeutralTight.isValid()) ) ? *rhoHandle_CentralNeutralTight : -99;
+//   edm::Handle< double > rhoHandle_CentralNeutralTight;
+//   iEvent.getByLabel(edm::InputTag("kt6PFJetsCentralNeutralTight","rho"), rhoHandle_CentralNeutralTight);
+//   double rho_event_CentralNeutralTight = ( (rhoHandle_CentralNeutralTight.isValid()) ) ? *rhoHandle_CentralNeutralTight : -99;
 
   edm::Handle<reco::ConversionCollection> conversionsHandle;
   iEvent.getByLabel("allConversions", conversionsHandle);
@@ -983,8 +983,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       MyElectron.caloIsoDR04 = ele->dr04EcalRecHitSumEt()+ele->dr04HcalTowerSumEt();
 
       MyElectron.mva = ele->mva();
-      MyElectron.mvaTrigV0 = ele->electronID("mvaTrigV0");
-      MyElectron.mvaNonTrigV0 = ele->electronID("mvaNonTrigV0");
+      //MyElectron.mvaTrigV0 = ele->electronID("mvaTrigV0");
+      //MyElectron.mvaNonTrigV0 = ele->electronID("mvaNonTrigV0");
       MyElectron.numberOfLostHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
       MyElectron.numberOfExpectedInnerHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfHits();
       MyElectron.numberOfValidPixelHits = ele->gsfTrack()->trackerExpectedHitsInner().numberOfValidPixelHits();
@@ -1004,6 +1004,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       double caloenergy = -1;
       double eleEta = ele->eta();
+      
 
 
 //       if( (ele->superCluster().isAvailable()) ){
@@ -1067,7 +1068,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       double heepEt = ( caloenergy<0 || ele->energy()==0. ) ? 0 : ele->et()/ele->energy()*caloenergy;
       MyElectron.et = heepEt;
-
+      
       if( (ele->closestCtfTrackRef().isAvailable()) ) MyElectron.tkCharge = ele->closestCtfTrackRef()->charge();
       if( (ele->gsfTrack().isAvailable()) ){
 	double tkvx = ele->gsfTrack()->vx();
@@ -1102,6 +1103,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       MyElectron.isEEGap = ele->isEEGap();
       MyElectron.isEcalDriven = ele->ecalDrivenSeed();
       MyElectron.isTrackerDriven = ele->trackerDrivenSeed();
+      
+
 
       if( (ele->genLepton()) ){
 	int genId = ele->genLepton()->pdgId();
@@ -1257,6 +1260,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	      MyElectron.genGrandMother10Id = gmother0id;
 	      MyElectron.genGrandMother11Id = gmother1id;
+	      
 	    }
 	  }
 	}
@@ -1314,7 +1318,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       }
       
       ///////////       new ele vars     //////////////////////////
-      
+
       bool validKF= false; 
       reco::TrackRef myTrackRef = ele->closestCtfTrackRef();
       validKF = (myTrackRef.isAvailable());
@@ -1353,7 +1357,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       // Spectators
       MyElectron.fMVAVar_eta             =  ele->superCluster()->eta();         
-      
+
       // for triggering electrons get the impact parameteres
 //       if(fMVAType == kTrig) {
 // 	//d0
@@ -1397,7 +1401,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	MyElectron.AEffDr04 = ElectronEffectiveArea::GetElectronEffectiveArea(ElectronEffectiveArea::kEleGammaAndNeutralHadronIso04, eleEta, ElectronEffectiveArea::kEleEAFall11MC); 
       }
       
-      
+
 
       MyElectron.isHEEP = ( isHEEP ) ? 1 : 0;
       MyElectron.isHEEPnoEt = ( isHEEPnoEt ) ? 1 : 0;
@@ -1405,7 +1409,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       MyElectron.isGsfCtfScPixChargeConsistent = ele->isGsfCtfScPixChargeConsistent();
       
       bnelectrons->push_back(MyElectron);
-      
+
     }
   }
   
@@ -1432,8 +1436,8 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   std::auto_ptr<BNjetCollection> bnpfjets(new BNjetCollection);
   if( producePFJet ){
     edm::View<pat::Jet> pfjets = *pfjetHandle;
-    std::vector<PFCandidatePtr> PFJetPart;
-
+    //std::vector<PFCandidatePtr> PFJetPart;
+   
     //full
 //     Handle<ValueMap<float> > puJetIdMVA_full;
 //     iEvent.getByLabel("puJetMvaChs","fullDiscriminant",puJetIdMVA_full);
@@ -1463,7 +1467,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     Handle<ValueMap<float> >  QGMLPHandle;    
     iEvent.getByLabel("QGTaggerPFlow","qgLikelihood", QGLikelihoodDiscriminantHandle);
     iEvent.getByLabel("QGTaggerPFlow","qgMLP", QGMLPHandle);
-
+    
     for( edm::View<pat::Jet>::const_iterator pfjet = pfjets.begin(); pfjet != pfjets.end(); ++ pfjet ) {
 
       if( !(pfjet->pt()>minJetPt_) ) continue;
@@ -1473,20 +1477,20 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       unsigned int idx = pfjet-pfjets.begin();
 
       double rawpt = pfjet->correctedJet(0).pt();
-
-      PFJetPart = pfjet->getPFConstituents();
-
+      //cout<<"here 10.5"<<endl;
+      //PFJetPart = pfjet->getPFConstituents();
+      //cout<<"here 10.6"<<endl;
       double maxCandPt=0;
       double leadCandVx=-99,leadCandVy=-99,leadCandVz=-99;
-      for(UInt_t j=0;j<PFJetPart.size();j++){
-	double pTcand = PFJetPart[j]->pt();
-	if( pTcand>maxCandPt ){
-	  maxCandPt = pTcand;
-	  leadCandVx = PFJetPart[j]->vx();
-	  leadCandVy = PFJetPart[j]->vy();
-	  leadCandVz = PFJetPart[j]->vz();
-	}
-      }
+//       for(UInt_t j=0;j<PFJetPart.size();j++){
+// 	double pTcand = PFJetPart[j]->pt();
+// 	if( pTcand>maxCandPt ){
+// 	  maxCandPt = pTcand;
+// 	  leadCandVx = PFJetPart[j]->vx();
+// 	  leadCandVy = PFJetPart[j]->vy();
+// 	  leadCandVz = PFJetPart[j]->vz();
+// 	}
+//       }
 
       double leadCandDistFromPV = sqrt( (leadCandVx-PVx)*(leadCandVx-PVx) + (leadCandVy-PVy)*(leadCandVy-PVy) + (leadCandVz-PVz)*(leadCandVz-PVz) );
 
@@ -1500,18 +1504,18 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       double sumMomentum = 0;
       double sumMomentumQ = 0;
 
-      for(std::vector<reco::PFCandidatePtr>::const_iterator i_candidate = PFJetPart.begin(); i_candidate != PFJetPart.end(); ++i_candidate){
-	const int charge = (*i_candidate)->charge();
-	if(charge == 0) continue;
+//       for(std::vector<reco::PFCandidatePtr>::const_iterator i_candidate = PFJetPart.begin(); i_candidate != PFJetPart.end(); ++i_candidate){
+// 	const int charge = (*i_candidate)->charge();
+// 	if(charge == 0) continue;
 
-	const double constituentPx = (*i_candidate)->px();
-	const double constituentPy = (*i_candidate)->py();
-	const double constituentPz = (*i_candidate)->pz();
-	const double product = constituentPx*pfjet->px() + constituentPy*pfjet->py() + constituentPz*pfjet->pz();
+// 	const double constituentPx = (*i_candidate)->px();
+// 	const double constituentPy = (*i_candidate)->py();
+// 	const double constituentPz = (*i_candidate)->pz();
+// 	const double product = constituentPx*pfjet->px() + constituentPy*pfjet->py() + constituentPz*pfjet->pz();
 
-	sumMomentum += product;
-	sumMomentumQ += static_cast<double>(charge)*product;
-      }
+// 	sumMomentum += product;
+// 	sumMomentumQ += static_cast<double>(charge)*product;
+//       }
       
       const double jetChargeRelativePtWeighted(sumMomentum>0 ? sumMomentumQ/sumMomentum : 0);
       MyPfjet.jetChargeRelativePtWeighted = jetChargeRelativePtWeighted;
@@ -1538,7 +1542,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	jecUnc_PF->setJetPt(pfjet->pt());// the uncertainty is a function of the corrected pt
 	JECuncDown = jecUnc_PF->getUncertainty(false); //up variation
       }
-      
+
       // general kinematic variables
       MyPfjet.energy = pfjet->energy();
       MyPfjet.et = pfjet->et();
@@ -1577,13 +1581,13 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       MyPfjet.JECuncUp = JECuncUp;
       MyPfjet.JECuncDown = JECuncDown;
 
-      if( (pfjet->genJet()) ){ // if there is a matched genjet, fill variables
-	MyPfjet.genJetET = pfjet->genJet()->et();
-	MyPfjet.genJetPT = pfjet->genJet()->pt();
-	MyPfjet.genJetEta = pfjet->genJet()->eta();
-	MyPfjet.genJetPhi = pfjet->genJet()->phi();
-      }
-      
+//       if( (pfjet->genJet()) ){ // if there is a matched genjet, fill variables
+// 	MyPfjet.genJetET = pfjet->genJet()->et();
+// 	MyPfjet.genJetPT = pfjet->genJet()->pt();
+// 	MyPfjet.genJetEta = pfjet->genJet()->eta();
+// 	MyPfjet.genJetPhi = pfjet->genJet()->phi();
+//       }
+
       if( (pfjet->genParton()) ){ // if there is a matched parton, fill variables
 	MyPfjet.genPartonET = pfjet->genParton()->et();
 	MyPfjet.genPartonPT = pfjet->genParton()->pt();
@@ -2125,7 +2129,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   int numhighpurity=0;
   reco::TrackBase::TrackQuality _trackQuality = reco::TrackBase::qualityByName("highPurity");
 
-
+  cout<<"after the muon collection"<<endl;
 
   /////////////////////////////////////////////
   ///////
@@ -2136,11 +2140,13 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   std::auto_ptr<BNtauCollection> bntaus(new BNtauCollection);
   if( produceTau ){
     edm::View<pat::Tau> taus = *tauHandle;
+    cout<<"tau 1"<<endl;
     for( edm::View<pat::Tau>::const_iterator tau = taus.begin(); tau!=taus.end(); ++tau ){
-      bntaus->push_back(BNtau(*tau, vertexPosition));
+      cout<<"tau2"<<endl;
+      bntaus->push_back(BNtau(*tau));
     }
   }
-
+  cout<<"filled the taus"<<endl;
   /////////////////////////////////////////////
   ///////
   ///////   Fill the photon collection
@@ -3047,7 +3053,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   MyEvent.rho_kt6PFJets = rho_event;
   MyEvent.rho_kt6PFJetsCentralChargedPileUp = rho_event_CentralChargedPileUp;
   MyEvent.rho_kt6PFJetsCentralNeutral       = rho_event_CentralNeutral;
-  MyEvent.rho_kt6PFJetsCentralNeutralTight  = rho_event_CentralNeutralTight;
+  //  MyEvent.rho_kt6PFJetsCentralNeutralTight  = rho_event_CentralNeutralTight;
 
 
   if( (vecWdecay.size()>0) ){
@@ -3584,7 +3590,7 @@ BEANmaker::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
   std::auto_ptr<BNtrigobjCollection> bnl1taujetobjs(new BNtrigobjCollection);
-
+  
   Handle< l1extra::L1JetParticleCollection > tauColl ;
   iEvent.getByLabel( "l1extraParticles","Tau", tauColl ) ;
   // std::cout << "Number of tau jets " << tauColl->size() << std::endl ;

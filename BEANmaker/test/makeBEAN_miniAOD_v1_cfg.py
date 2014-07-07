@@ -24,8 +24,9 @@ op_maxEvents = 10#
     
 if op_inputScript != '':
     #process.load(op_inputScript)
-    inputFiles = cms.untracked.vstring('file:/afs/crc.nd.edu/user/c/cmuelle2/merge_v1/CMSSW_5_3_11/src/TopAnalysis/Configuration/analysis/common/ttH_MC.root')
+    #inputFiles = cms.untracked.vstring('file:/afs/crc.nd.edu/user/c/cmuelle2/merge_v1/CMSSW_5_3_11/src/TopAnalysis/Configuration/analysis/common/ttH_MC.root')
     #inputFiles = cms.untracked.vstring('file:/afs/crc.nd.edu/user/c/cmuelle2/merge_v1/CMSSW_5_3_11/src/TopAnalysis/Configuration/analysis/common/SingleMu_DATA_v1.root')
+    inputFiles = cms.untracked.vstring('file:TTbarH_HToWWTo2LAndTauNu_M-125_13TeV_pythia6_PU_S14_PAT.root')
     process.source = cms.Source("PoolSource",
             fileNames = inputFiles,
             secondaryFileNames = cms.untracked.vstring(),
@@ -633,14 +634,14 @@ from RecoMuon.MuonIsolationProducers.trackExtractorBlocks_cff import *
 process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 
 process.BNproducer = cms.EDProducer('BEANmaker',
-                                    pfmetTag = cms.InputTag("patMETs"),#patMETs"),
+                                    pfmetTag = cms.InputTag("slimmedMETs"),#patMETs"),
 #                                    pfmetTag_type1correctedRECO = cms.InputTag("pfType1CorrectedMet"),
 #                                    pfmetTag_uncorrectedPF2PAT  = cms.InputTag("patPFMet"),
 #                                    pfmetTag_uncorrectedRECO    = cms.InputTag("pfMET"),
-                                    eleTag = cms.InputTag("selectedPatElectrons"),#selectedPatElectrons"),
-                                    genParticleTag = cms.InputTag("genParticles"),
-                                    pfjetTag = cms.InputTag("selectedPatJets"),
-                                    genjetTag = cms.InputTag(genjetTag_),
+                                    eleTag = cms.InputTag("slimmedElectrons"),#selectedPatElectrons"),
+                                    genParticleTag = cms.InputTag("prunedGenParticles"),
+                                    pfjetTag = cms.InputTag("slimmedJets"),
+                                    genjetTag = cms.InputTag("slimmedGenJets"),
 #                                     pfsfpatfatjetsTag = cms.InputTag('selectedPatJetsCA12FatPF'),
 #                                     pfsfpatsubjetsTag = cms.InputTag('selectedPatJetsCA3SubPF'),
 #                                     pfsfpatfilterjetsTag = cms.InputTag('selectedPatJetsCA12FatCA3FilterPF'),
@@ -657,17 +658,17 @@ process.BNproducer = cms.EDProducer('BEANmaker',
 #                                     pfttsubjettiness2Tag = cms.InputTag('HEPTopJetsPF','tau2'),
 #                                     pfttsubjettiness3Tag = cms.InputTag('HEPTopJetsPF','tau3'),
 #                                     pfttsubjettiness4Tag = cms.InputTag('HEPTopJetsPF','tau4'),
-                                    muonTag = cms.InputTag("selectedPatMuons"),
+                                    muonTag = cms.InputTag("slimmedMuons"),
                                     photonTag = cms.InputTag("none"),
                                     #EBsuperclusterTag = cms.InputTag("correctedHybridSuperClusters"),
                                     #EEsuperclusterTag = cms.InputTag("correctedMulti5x5SuperClustersWithPreshower"),
-                                    reducedBarrelRecHitCollection = cms.InputTag("reducedEcalRecHitsEB"),
-                                    reducedEndcapRecHitCollection = cms.InputTag("reducedEcalRecHitsEE"),
+                                 #   reducedBarrelRecHitCollection = cms.InputTag("reducedEBRecHits"),#BRecHits"),
+                                 #   reducedEndcapRecHitCollection = cms.InputTag("reducedEERecHits"),#ERecHits"),
                                     #trackTag = cms.InputTag("generalTracks"),
-                                    tauTag = cms.InputTag("selectedPatTaus"),
+                                    tauTag = cms.InputTag("slimmedTaus"),
                                     triggerResultsTag = cms.InputTag("TriggerResults::HLT"),
                                     #gtSource = cms.InputTag("gtDigis"),
-                                    pvTag = cms.InputTag("offlinePrimaryVertices"),
+                                    pvTag = cms.InputTag("offlineSlimmedPrimaryVertices"),
                                     #triggerSummaryTag = cms.InputTag("hltTriggerSummaryAOD"),
                                     #dcsTag = cms.InputTag("scalersRawToDigi"),
                                     hltProcessName = cms.string("HLT"),
@@ -699,13 +700,13 @@ process.content = cms.EDAnalyzer("EventContentAnalyzer")
 
 if signal or higgsSignal or zGenInfo:
     process.pNtuple = cms.Path(
-        process.goodOfflinePrimaryVertices *
-        process.q2weights *
+        #process.goodOfflinePrimaryVertices *
+        #process.q2weights *
         #jet_gen_seq *
-        getattr(process,'patPF2PATSequence'+pfpostfix) *
-        process.metseq *
-        process.pfTausBase *
-        process.PFTau *
+        #getattr(process,'patPF2PATSequence'+pfpostfix) *
+        #process.metseq *
+        #process.pfTausBase *
+        #process.PFTau *
         process.BNproducer
         )
 
