@@ -94,12 +94,6 @@ BNtau::BNtau(const pat::Tau& tau, math::XYZPoint& pv) {
   HPSbyVVTightIsolationMVA3oldDMwoLT = tau.tauID("byVVTightIsolationMVA3oldDMwoLT");
   HPSbyIsolationMVA3oldDMwoLTraw = tau.tauID("byIsolationMVA3oldDMwoLTraw");
 
-  HPSbyLooseCombinedIsolationDeltaBetaCorr = tau.tauID("byLooseCombinedIsolationDeltaBetaCorr");
-  HPSbyMediumCombinedIsolationDeltaBetaCorr = tau.tauID("byMediumCombinedIsolationDeltaBetaCorr");
-  HPSbyTightCombinedIsolationDeltaBetaCorr = tau.tauID("byTightCombinedIsolationDeltaBetaCorr");
-  HPSbyVLooseCombinedIsolationDeltaBetaCorr = tau.tauID("byVLooseCombinedIsolationDeltaBetaCorr");
-  HPSbyCombinedIsolationDeltaBetaCorrRaw = tau.tauID("byCombinedIsolationDeltaBetaCorrRaw");
-
   HPSbyLooseCombinedIsolationDeltaBetaCorr3Hits = tau.tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits");
   HPSbyMediumCombinedIsolationDeltaBetaCorr3Hits = tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits");
   HPSbyTightCombinedIsolationDeltaBetaCorr3Hits = tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits");

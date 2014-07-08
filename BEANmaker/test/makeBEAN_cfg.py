@@ -353,6 +353,102 @@ process.selectedPatTaus.cut = tauCut
 
 process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
 
+process.patHPSPFTauDiscrimination.remove(process.hpsPFTauDiscriminationByChargedIsolationSeq)
+process.patHPSPFTauDiscrimination.remove(process.hpsPFTauDiscriminationByIsolationSeq)
+process.patHPSPFTauDiscrimination.remove(process.hpsPFTauDiscriminationByIsolationSeqDBSumPtCorr)
+process.recoTauClassicHPSSequence.remove(process.hpsPFTauDiscriminationByIsolationSeqDBSumPtCorr)
+
+process.patHPSPFTauDiscrimination.remove(process.hpsPFTauDiscriminationByCombinedIsolationSeqDBSumPtCorr)
+process.produceAndDiscriminateHPSPFTaus.remove(process.hpsPFTauDiscriminationByCombinedIsolationSeqDBSumPtCorr)
+process.recoTauClassicHPSSequence.remove(process.hpsPFTauDiscriminationByCombinedIsolationSeqDBSumPtCorr)
+
+process.produceAndDiscriminateHPSPFTaus.remove(process.hpsPFTauDiscriminationByIsolationSeq)
+process.recoTauClassicHPSSequence.remove(      process.hpsPFTauDiscriminationByIsolationSeq)
+
+process.produceAndDiscriminateHPSPFTaus.remove(process.hpsPFTauDiscriminationByChargedIsolationSeq)
+process.recoTauClassicHPSSequence.remove(      process.hpsPFTauDiscriminationByChargedIsolationSeq)
+
+process.patHPSPFTauDiscrimination.remove(      process.hpsPFTauDiscriminationByRawCombinedIsolationDBSumPtCorr)
+process.produceAndDiscriminateHPSPFTaus.remove(process.hpsPFTauDiscriminationByRawCombinedIsolationDBSumPtCorr)
+process.recoTauClassicHPSSequence.remove(      process.hpsPFTauDiscriminationByRawCombinedIsolationDBSumPtCorr)
+
+process.patHPSPFTauDiscrimination.remove(      process.hpsPFTauDiscriminationByRawChargedIsolationDBSumPtCorr)
+process.produceAndDiscriminateHPSPFTaus.remove(process.hpsPFTauDiscriminationByRawChargedIsolationDBSumPtCorr)
+process.recoTauClassicHPSSequence.remove(      process.hpsPFTauDiscriminationByRawChargedIsolationDBSumPtCorr)
+
+process.patHPSPFTauDiscrimination.remove(      process.hpsPFTauDiscriminationByRawGammaIsolationDBSumPtCorr)
+process.produceAndDiscriminateHPSPFTaus.remove(process.hpsPFTauDiscriminationByRawGammaIsolationDBSumPtCorr)
+process.recoTauClassicHPSSequence.remove(      process.hpsPFTauDiscriminationByRawGammaIsolationDBSumPtCorr)
+
+process.patTaus.tauIDSources = cms.PSet(
+        decayModeFindingNewDMs = cms.InputTag("hpsPFTauDiscriminationByDecayModeFindingNewDMs"),
+        decayModeFindingOldDMs = cms.InputTag("hpsPFTauDiscriminationByDecayModeFindingOldDMs"),
+        decayModeFinding = cms.InputTag("hpsPFTauDiscriminationByDecayModeFinding"),
+        # byLooseIsolation = cms.InputTag("hpsPFTauDiscriminationByLooseIsolation"),
+        # byVLooseCombinedIsolationDeltaBetaCorr = cms.InputTag("hpsPFTauDiscriminationByVLooseCombinedIsolationDBSumPtCorr"),
+        # byLooseCombinedIsolationDeltaBetaCorr = cms.InputTag("hpsPFTauDiscriminationByLooseCombinedIsolationDBSumPtCorr"),
+        # byMediumCombinedIsolationDeltaBetaCorr = cms.InputTag("hpsPFTauDiscriminationByMediumCombinedIsolationDBSumPtCorr"),
+        # byTightCombinedIsolationDeltaBetaCorr = cms.InputTag("hpsPFTauDiscriminationByTightCombinedIsolationDBSumPtCorr"),
+        # byCombinedIsolationDeltaBetaCorrRaw = cms.InputTag("hpsPFTauDiscriminationByRawCombinedIsolationDBSumPtCorr"),
+        byLooseCombinedIsolationDeltaBetaCorr3Hits = cms.InputTag("hpsPFTauDiscriminationByLooseCombinedIsolationDBSumPtCorr3Hits"),
+        byMediumCombinedIsolationDeltaBetaCorr3Hits = cms.InputTag("hpsPFTauDiscriminationByMediumCombinedIsolationDBSumPtCorr3Hits"),
+        byTightCombinedIsolationDeltaBetaCorr3Hits = cms.InputTag("hpsPFTauDiscriminationByTightCombinedIsolationDBSumPtCorr3Hits"),
+        byCombinedIsolationDeltaBetaCorrRaw3Hits = cms.InputTag("hpsPFTauDiscriminationByRawCombinedIsolationDBSumPtCorr3Hits"),
+        chargedIsoPtSum = cms.InputTag("hpsPFTauMVA3IsolationChargedIsoPtSum"),
+        neutralIsoPtSum = cms.InputTag("hpsPFTauMVA3IsolationNeutralIsoPtSum"),
+        puCorrPtSum = cms.InputTag("hpsPFTauMVA3IsolationPUcorrPtSum"),
+        byIsolationMVA3oldDMwoLTraw = cms.InputTag("hpsPFTauDiscriminationByIsolationMVA3oldDMwoLTraw"),
+        byVLooseIsolationMVA3oldDMwoLT = cms.InputTag("hpsPFTauDiscriminationByVLooseIsolationMVA3oldDMwoLT"),
+        byLooseIsolationMVA3oldDMwoLT = cms.InputTag("hpsPFTauDiscriminationByLooseIsolationMVA3oldDMwoLT"),
+        byMediumIsolationMVA3oldDMwoLT = cms.InputTag("hpsPFTauDiscriminationByMediumIsolationMVA3oldDMwoLT"),
+        byTightIsolationMVA3oldDMwoLT = cms.InputTag("hpsPFTauDiscriminationByTightIsolationMVA3oldDMwoLT"),
+        byVTightIsolationMVA3oldDMwoLT = cms.InputTag("hpsPFTauDiscriminationByVTightIsolationMVA3oldDMwoLT"),
+        byVVTightIsolationMVA3oldDMwoLT = cms.InputTag("hpsPFTauDiscriminationByVVTightIsolationMVA3oldDMwoLT"),
+        byIsolationMVA3oldDMwLTraw = cms.InputTag("hpsPFTauDiscriminationByIsolationMVA3oldDMwLTraw"),
+        byVLooseIsolationMVA3oldDMwLT = cms.InputTag("hpsPFTauDiscriminationByVLooseIsolationMVA3oldDMwLT"),
+        byLooseIsolationMVA3oldDMwLT = cms.InputTag("hpsPFTauDiscriminationByLooseIsolationMVA3oldDMwLT"),
+        byMediumIsolationMVA3oldDMwLT = cms.InputTag("hpsPFTauDiscriminationByMediumIsolationMVA3oldDMwLT"),
+        byTightIsolationMVA3oldDMwLT = cms.InputTag("hpsPFTauDiscriminationByTightIsolationMVA3oldDMwLT"),
+        byVTightIsolationMVA3oldDMwLT = cms.InputTag("hpsPFTauDiscriminationByVTightIsolationMVA3oldDMwLT"),
+        byVVTightIsolationMVA3oldDMwLT = cms.InputTag("hpsPFTauDiscriminationByVVTightIsolationMVA3oldDMwLT"),
+        byIsolationMVA3newDMwoLTraw = cms.InputTag("hpsPFTauDiscriminationByIsolationMVA3newDMwoLTraw"),
+        byVLooseIsolationMVA3newDMwoLT = cms.InputTag("hpsPFTauDiscriminationByVLooseIsolationMVA3newDMwoLT"),
+        byLooseIsolationMVA3newDMwoLT = cms.InputTag("hpsPFTauDiscriminationByLooseIsolationMVA3newDMwoLT"),
+        byMediumIsolationMVA3newDMwoLT = cms.InputTag("hpsPFTauDiscriminationByMediumIsolationMVA3newDMwoLT"),
+        byTightIsolationMVA3newDMwoLT = cms.InputTag("hpsPFTauDiscriminationByTightIsolationMVA3newDMwoLT"),
+        byVTightIsolationMVA3newDMwoLT = cms.InputTag("hpsPFTauDiscriminationByVTightIsolationMVA3newDMwoLT"),
+        byVVTightIsolationMVA3newDMwoLT = cms.InputTag("hpsPFTauDiscriminationByVVTightIsolationMVA3newDMwoLT"),
+        byIsolationMVA3newDMwLTraw = cms.InputTag("hpsPFTauDiscriminationByIsolationMVA3newDMwLTraw"),
+        byVLooseIsolationMVA3newDMwLT = cms.InputTag("hpsPFTauDiscriminationByVLooseIsolationMVA3newDMwLT"),
+        byLooseIsolationMVA3newDMwLT = cms.InputTag("hpsPFTauDiscriminationByLooseIsolationMVA3newDMwLT"),
+        byMediumIsolationMVA3newDMwLT = cms.InputTag("hpsPFTauDiscriminationByMediumIsolationMVA3newDMwLT"),
+        byTightIsolationMVA3newDMwLT = cms.InputTag("hpsPFTauDiscriminationByTightIsolationMVA3newDMwLT"),
+        byVTightIsolationMVA3newDMwLT = cms.InputTag("hpsPFTauDiscriminationByVTightIsolationMVA3newDMwLT"),
+        byVVTightIsolationMVA3newDMwLT = cms.InputTag("hpsPFTauDiscriminationByVVTightIsolationMVA3newDMwLT"),
+        againstElectronLoose = cms.InputTag("hpsPFTauDiscriminationByLooseElectronRejection"),
+        againstElectronMedium = cms.InputTag("hpsPFTauDiscriminationByMediumElectronRejection"),
+        againstElectronTight = cms.InputTag("hpsPFTauDiscriminationByTightElectronRejection"),
+        againstElectronMVA5raw = cms.InputTag("hpsPFTauDiscriminationByMVA5rawElectronRejection"),
+        againstElectronMVA5category = cms.InputTag("hpsPFTauDiscriminationByMVA5rawElectronRejection","category"),
+        againstElectronVLooseMVA5 = cms.InputTag("hpsPFTauDiscriminationByMVA5VLooseElectronRejection"),
+        againstElectronLooseMVA5 = cms.InputTag("hpsPFTauDiscriminationByMVA5LooseElectronRejection"),
+        againstElectronMediumMVA5 = cms.InputTag("hpsPFTauDiscriminationByMVA5MediumElectronRejection"),
+        againstElectronTightMVA5 = cms.InputTag("hpsPFTauDiscriminationByMVA5TightElectronRejection"),
+        againstElectronVTightMVA5 = cms.InputTag("hpsPFTauDiscriminationByMVA5VTightElectronRejection"),
+        againstElectronDeadECAL = cms.InputTag("hpsPFTauDiscriminationByDeadECALElectronRejection"),
+        againstMuonLoose = cms.InputTag("hpsPFTauDiscriminationByLooseMuonRejection"),
+        againstMuonMedium = cms.InputTag("hpsPFTauDiscriminationByMediumMuonRejection"),
+        againstMuonTight = cms.InputTag("hpsPFTauDiscriminationByTightMuonRejection"),
+        againstMuonLoose2 = cms.InputTag("hpsPFTauDiscriminationByLooseMuonRejection2"),
+        againstMuonMedium2 = cms.InputTag("hpsPFTauDiscriminationByMediumMuonRejection2"),
+        againstMuonTight2 = cms.InputTag("hpsPFTauDiscriminationByTightMuonRejection2"),
+        againstMuonLoose3 = cms.InputTag("hpsPFTauDiscriminationByLooseMuonRejection3"),
+        againstMuonTight3 = cms.InputTag("hpsPFTauDiscriminationByTightMuonRejection3"),
+        againstMuonMVAraw = cms.InputTag("hpsPFTauDiscriminationByMVArawMuonRejection"),
+        againstMuonLooseMVA = cms.InputTag("hpsPFTauDiscriminationByMVALooseMuonRejection"),
+        againstMuonMediumMVA = cms.InputTag("hpsPFTauDiscriminationByMVAMediumMuonRejection"),
+        againstMuonTightMVA = cms.InputTag("hpsPFTauDiscriminationByMVATightMuonRejection")
+)
 
 ####################################################################
 ## Basic debugging analyzer

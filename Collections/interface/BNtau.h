@@ -73,11 +73,6 @@ struct BNtau {
     HPSbyVTightIsolationMVA3oldDMwoLT(-99),
     HPSbyVVTightIsolationMVA3oldDMwoLT(-99),
     HPSbyIsolationMVA3oldDMwoLTraw(-99),
-    HPSbyVLooseCombinedIsolationDeltaBetaCorr(-99),
-    HPSbyLooseCombinedIsolationDeltaBetaCorr(-99),
-    HPSbyMediumCombinedIsolationDeltaBetaCorr(-99),
-    HPSbyTightCombinedIsolationDeltaBetaCorr(-99),
-    HPSbyCombinedIsolationDeltaBetaCorrRaw(-99),
     HPSbyLooseCombinedIsolationDeltaBetaCorr3Hits(-99),
     HPSbyMediumCombinedIsolationDeltaBetaCorr3Hits(-99),
     HPSbyTightCombinedIsolationDeltaBetaCorr3Hits(-99),
@@ -156,12 +151,6 @@ struct BNtau {
   int HPSbyVTightIsolationMVA3oldDMwoLT;
   int HPSbyVVTightIsolationMVA3oldDMwoLT;
   double HPSbyIsolationMVA3oldDMwoLTraw;
-
-  int HPSbyVLooseCombinedIsolationDeltaBetaCorr;
-  int HPSbyLooseCombinedIsolationDeltaBetaCorr;
-  int HPSbyMediumCombinedIsolationDeltaBetaCorr;
-  int HPSbyTightCombinedIsolationDeltaBetaCorr;
-  double HPSbyCombinedIsolationDeltaBetaCorrRaw;
 
   int HPSbyLooseCombinedIsolationDeltaBetaCorr3Hits;
   int HPSbyMediumCombinedIsolationDeltaBetaCorr3Hits;
