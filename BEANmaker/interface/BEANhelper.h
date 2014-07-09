@@ -116,7 +116,7 @@ class BEANhelper{
 		template <typename BNobject> BNmcparticle GetMatchedGentau(const BNmcparticleCollection&, const BNobject&, const double);
 		template <typename BNobject> BNmcparticle GetMatchedVisGentau(const BNmcparticleCollection&, const BNobject&, const double);
 		template <typename BNobject> BNtau GetMatchedTau(const BNtauCollection&, const BNobject&, const double);
-		template <typename BNobject> BNjet GetClosestJet(const BNjetCollection&, const BNobject&, const double);
+		template <typename BNobject> BNjet GetClosestJet(const BNjetCollection&, const BNobject&, const double) const;
 		template <typename BNobject> BNtrack GetClosestTrack(const BNtrackCollection&, const BNobject&, const double);
 
 		// Union, intersection, difference
@@ -467,7 +467,10 @@ template <typename BNobject> BNtau BEANhelper::GetMatchedTau(const BNtauCollecti
 	return result;
 }
 
-template <typename BNobject> BNjet BEANhelper::GetClosestJet(const BNjetCollection& iJets, const BNobject& iObject, const double iMaxDeltaR){
+template <typename BNobject>
+BNjet
+BEANhelper::GetClosestJet(const BNjetCollection& iJets, const BNobject& iObject, const double iMaxDeltaR) const
+{
 	BNjet result;
 	double minDeltaR = 999;
 	for( BNjetCollection::const_iterator Jet = iJets.begin(); Jet != iJets.end(); ++Jet){
