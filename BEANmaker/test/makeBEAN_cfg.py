@@ -312,6 +312,10 @@ process.selectedPatElectrons.cut = ''#'electronID("mvaTrigV0") > 0.5 && passConv
             #cant do this on python level :-(
             #' && abs(gsfTrack().dxy(vertex_.position())) < 0.04'
 
+## Set up selections for PF objects: Electrons for Jet Cleaning
+process.load("CommonTools.ParticleFlow.pfElectronsForFatJets_cff")
+process.pfElectronSequence.replace(process.pfElectrons,process.pfElectrons*process.pfElectronForFatJetsSequence)
+
 ####################################################################
 ## Set up selections for PF2PAT & PAT objects: Muons
 
@@ -339,7 +343,9 @@ process.patMuons.isolationValues = cms.PSet(
 
 process.selectedPatMuons.cut = ''#'isGlobalMuon && pt > 20 && abs(eta) < 2.5'
 
-
+## Set up selections for PF objects: Muons for Jet Cleaning
+process.load("CommonTools.ParticleFlow.pfMuonsForFatJets_cff")
+process.pfMuonSequence.replace(process.pfMuons,process.pfMuons*process.pfMuonForFatJetsSequence)
 
 ####################################################################
 ## Set up selections for PF2PAT & PAT objects: Jets
@@ -476,7 +482,23 @@ else:
 	jet_gen_seq = cms.Sequence()
 
 process.load("RecoJets.JetProducers.SubjetsFilterjets_cfi")
-process.CA12JetsCA3FilterjetsPF.src = getattr(process,'pfJets'+pfpostfix).src
+process.pfNoElectronForFatJets = process.pfNoElectron.clone()
+process.pfNoElectronForFatJets.enable=True
+process.pfNoElectronForFatJets.bottomCollection=cms.InputTag("pfNoMuonForFatJets")
+process.pfNoElectronForFatJets.topCollection=cms.InputTag("pfIsolatedElectronsForFatJets")
+process.pfNoElectronForFatJets.verbose=False            
+
+process.pfNoMuonForFatJets = process.pfNoMuon.clone()
+process.pfNoMuonForFatJets.enable=True
+process.pfNoMuonForFatJets.verbose=False
+process.pfNoMuonForFatJets.topCollection=cms.InputTag("pfIsolatedMuonsForFatJets")
+
+process.patPF2PATSequence.replace(process.pfNoMuon,process.pfNoMuon*process.pfNoMuonForFatJets)
+
+process.patPF2PATSequence.replace(process.pfNoElectron,process.pfNoElectron*process.pfNoElectronForFatJets)
+
+process.CA12JetsCA3FilterjetsPF.src =  cms.InputTag("pfNoElectronForFatJets")
+
 getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'pfJets'+pfpostfix),getattr(process,'pfJets'+pfpostfix)*process.filtjet_pf_seq)
 
 if runOnMC:
@@ -581,10 +603,9 @@ else:
                                                             *process.selectedPatJetsCA3SubPF
                                                             *process.selectedPatJetsCA12FatPF
                                                             )
-
 process.load("RecoJets.JetProducers.HEPTopJetParameters_cfi")
-process.HEPTopJetsPF.src = getattr(process,'pfJets'+pfpostfix).src
-getattr(process, 'patPF2PATSequence'+pfpostfix).replace(getattr(process,'pfJets'+pfpostfix),getattr(process,'pfJets'+pfpostfix)*process.heptopjet_pf_seq)
+process.HEPTopJetsPF.src =  cms.InputTag("pfNoElectronForFatJets")
+getattr(process, 'patPF2PATSequence'+pfpostfix).replace(process.filtjet_pf_seq,process.filtjet_pf_seq*process.heptopjet_pf_seq)
 	
 if runOnMC:
     process.load("RecoJets.Configuration.GenJetParticles_cff")
