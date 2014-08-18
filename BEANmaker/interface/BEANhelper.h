@@ -224,6 +224,9 @@ class BEANhelper{
 		bool					ttPlusHFKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);
 		int						ttPlusBBClassifyEvent(const BNmcparticleCollection&, const BNjetCollection&);
 		int						ttPlusCCClassifyEvent(const BNmcparticleCollection&, const BNjetCollection&);
+		bool					dibosonPlusHFKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);
+		int						dibosonPlusBBClassifyEvent(const BNmcparticleCollection&, const BNjetCollection&);
+		int						dibosonPlusCCClassifyEvent(const BNmcparticleCollection&, const BNjetCollection&);
 		unsigned int			GetNumExtraPartons(const BNmcparticleCollection&);
 		hdecayType::hdecayType	GetHdecayType(const BNmcparticleCollection&);
 		bool					keepHdecayType(const BNmcparticleCollection&, const hdecayType::hdecayType);

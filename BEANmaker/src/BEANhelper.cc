@@ -540,13 +540,22 @@ void BEANhelper::SetUpCSVreshaping(){
     if (samplename == "ttbarG" || samplename == "ttbarGStar_ee" || samplename == "ttbarGStar_mm" ||
         samplename == "ttbarGStar_tt" || samplename == "ttbarWW" || samplename == "tttt" ||
         samplename == "tbZ_ll")                                                samplename = "ttbarZ";
-    if (samplename == "ww_ll" || samplename == "wz_lll" ||
-        samplename == "wz_lljj" || samplename == "wz_ljj" )                    samplename = "wz";
+    if (samplename == "wz_lll" || samplename == "wz_lljj" || samplename == "wz_ljj" ||
+        samplename == "wz_lf_lll" || samplename == "wz_lf_lljj" || samplename == "wz_lf_ljj" ||
+        samplename == "wz_cc_lll" || samplename == "wz_cc_lljj" || samplename == "wz_cc_ljj" ||
+        samplename == "wz_b_lll" || samplename == "wz_b_lljj" || samplename == "wz_b_ljj" ||
+        samplename == "wz_bb_lll" || samplename == "wz_bb_lljj" || samplename == "wz_bb_ljj" ||
+        samplename == "ww" || samplename == "ww_ll")                           samplename = "wz";
     if (samplename == "www" || samplename == "wwz" || samplename == "wzz"
         || samplename == "zzz" )                                               samplename = "wz";
     if (samplename == "WpWpqq" || samplename == "WmWmqq" ||
         samplename == "WWDPI" )                                                samplename = "wz";
-    if (samplename == "zz_llll" || samplename == "zz_lljj" )                   samplename = "zz";
+    if (samplename == "zz_llll" || samplename == "zz_lljj" || samplename == "zz_lljj" ||
+        samplename == "zz_lf_llll" || samplename == "zz_lf_lljj" || samplename == "zz_lf_lljj" ||
+        samplename == "zz_cc_llll" || samplename == "zz_cc_lljj" || samplename == "zz_cc_lljj" ||
+        samplename == "zz_b_llll" || samplename == "zz_b_lljj" || samplename == "zz_b_lljj" ||
+        samplename == "zz_bb_llll" || samplename == "zz_bb_lljj" ||
+        samplename == "zz_bb_lljj")                                            samplename = "zz";
     
 	// Set charm scale factor
 	double charmFactor = 2.0 - 1.0;
@@ -607,13 +616,22 @@ void BEANhelper::SetUpJetSF(){
     if (samplename == "ttbarG" || samplename == "ttbarGStar_ee" || samplename == "ttbarGStar_mm" ||
         samplename == "ttbarGStar_tt" || samplename == "ttbarWW" || samplename == "tttt" ||
         samplename == "tbZ_ll")                                                samplename = "ttbarZ";
-    if (samplename == "ww_ll" || samplename == "wz_lll" ||
-        samplename == "wz_lljj" || samplename == "wz_ljj" )                    samplename = "wz";
+    if (samplename == "wz_lll" || samplename == "wz_lljj" || samplename == "wz_ljj" ||
+        samplename == "wz_lf_lll" || samplename == "wz_lf_lljj" || samplename == "wz_lf_ljj" ||
+        samplename == "wz_cc_lll" || samplename == "wz_cc_lljj" || samplename == "wz_cc_ljj" ||
+        samplename == "wz_b_lll" || samplename == "wz_b_lljj" || samplename == "wz_b_ljj" ||
+        samplename == "wz_bb_lll" || samplename == "wz_bb_lljj" || samplename == "wz_bb_ljj" ||
+        samplename == "ww" || samplename == "ww_ll")                           samplename = "wz";
     if (samplename == "www" || samplename == "wwz" || samplename == "wzz"
         || samplename == "zzz" )                                               samplename = "wz";
     if (samplename == "WpWpqq" || samplename == "WmWmqq" ||
         samplename == "WWDPI" )                                                samplename = "wz";
-    if (samplename == "zz_llll" || samplename == "zz_lljj" )                   samplename = "zz";
+    if (samplename == "zz_llll" || samplename == "zz_lljj" || samplename == "zz_lljj" ||
+        samplename == "zz_lf_llll" || samplename == "zz_lf_lljj" || samplename == "zz_lf_lljj" ||
+        samplename == "zz_cc_llll" || samplename == "zz_cc_lljj" || samplename == "zz_cc_lljj" ||
+        samplename == "zz_b_llll" || samplename == "zz_b_lljj" || samplename == "zz_b_lljj" ||
+        samplename == "zz_bb_llll" || samplename == "zz_bb_lljj" ||
+        samplename == "zz_bb_lljj")                                            samplename = "zz";
 
     
 	h_b_eff_ = (TH2D*)jetSFfile->Get(string( samplename + com_suffix + "_jet_pt_eta_b_eff" ).c_str())->Clone();
@@ -786,13 +804,41 @@ string BEANhelper::GetSampleName(){
 		else if( sampleNumber==2710 ){	samplename = "www";					}
 		else if( sampleNumber==2720 ){	samplename = "wwz";					}
 		else if( sampleNumber==2701 ){	samplename = "wz";					}
+		else if( sampleNumber==27011){	samplename = "wz_lf";				}
+		else if( sampleNumber==27012){	samplename = "wz_cc";				}
+		else if( sampleNumber==27013){	samplename = "wz_b";				}
+		else if( sampleNumber==27014){	samplename = "wz_bb";				}
         else if( sampleNumber==2731 ){  samplename = "wz_lll";              }
+		else if( sampleNumber==27311){	samplename = "wz_lf_lll"; 			}
+		else if( sampleNumber==27312){	samplename = "wz_cc_lll";  			}
+		else if( sampleNumber==27313){	samplename = "wz_b_lll";   			}
+		else if( sampleNumber==27314){	samplename = "wz_bb_lll";  			}
         else if( sampleNumber==2761 ){  samplename = "wz_lljj";             }
+        else if( sampleNumber==27611){  samplename = "wz_lf_lljj";          }
+        else if( sampleNumber==27612){  samplename = "wz_cc_lljj";          }
+        else if( sampleNumber==27613){  samplename = "wz_b_lljj";           }
+        else if( sampleNumber==27614){  samplename = "wz_bb_lljj";          }
         else if( sampleNumber==2791 ){  samplename = "wz_ljj";              }
+        else if( sampleNumber==27911){  samplename = "wz_lf_ljj";           }
+        else if( sampleNumber==27912){  samplename = "wz_cc_ljj";           }
+        else if( sampleNumber==27913){  samplename = "wz_b_ljj";            }
+        else if( sampleNumber==27914){  samplename = "wz_bb_ljj";           }
 		else if( sampleNumber==2721 ){	samplename = "wzz";					}
 		else if( sampleNumber==2702 ){	samplename = "zz";					}
+		else if( sampleNumber==27021){	samplename = "zz_lf";		   		}
+		else if( sampleNumber==27022){	samplename = "zz_cc";		   		}
+		else if( sampleNumber==27023){	samplename = "zz_b";		   		}
+		else if( sampleNumber==27024){	samplename = "zz_bb";		   		}
 		else if( sampleNumber==2732 ){	samplename = "zz_llll";				}
+		else if( sampleNumber==27321){	samplename = "zz_lf_llll";	   		}
+		else if( sampleNumber==27322){	samplename = "zz_cc_llll";	   		}
+		else if( sampleNumber==27323){	samplename = "zz_b_llll";	   		}
+		else if( sampleNumber==27324){	samplename = "zz_bb_llll";	   		}
 		else if( sampleNumber==2762 ){	samplename = "zz_lljj";				}
+		else if( sampleNumber==27621){	samplename = "zz_lf_lljj";	   		}
+		else if( sampleNumber==27622){	samplename = "zz_cc_lljj";		   	}
+		else if( sampleNumber==27623){	samplename = "zz_b_lljj";		   	}
+		else if( sampleNumber==27624){	samplename = "zz_bb_lljj";		   	}
 		else if( sampleNumber==2722 ){	samplename = "zzz";					}
 		else if( sampleNumber==2560 ){	samplename = "ttbarG";				}
 		else if( sampleNumber==2567 ){	samplename = "ttbarGStar_ee";  	   	}
@@ -1177,6 +1223,7 @@ float BEANhelper::GetMuonEleTriggerSF ( const BNmuon & firstMuon, const BNelectr
   float useLep1Eta = std::min (fabs(firstMuon.eta), 2.49);
   float useLep2Eta = std::min (fabs(secondEle.eta), 2.49);
 
+  //Is this the right order? The x-axis has bins [0, 1.479, 2.5] and the y-axis has bins [0, 0.9, 2.5] -AWB 18/08/14
   SF = h_muonEleTrigSF->GetBinContent(h_muonEleTrigSF->FindBin(useLep1Eta, useLep2Eta));
     
   
@@ -3802,7 +3849,6 @@ bool BEANhelper::ttPlusHeavyKeepEvent( const BNmcparticleCollection& iMCparticle
 
 
 
-
 bool BEANhelper::ttPlusHFKeepEvent( const BNmcparticleCollection& iMCparticles,
 				    const BNjetCollection& iJets ) {
 
@@ -4205,4 +4251,380 @@ int BEANhelper::ttPlusCCClassifyEvent( const BNmcparticleCollection& iMCparticle
   return result;
 
 }
+
+bool BEANhelper::dibosonPlusHFKeepEvent( const BNmcparticleCollection& iMCparticles,
+				    const BNjetCollection& iJets ) {
+
+  CheckSetUp();
+  string samplename = GetSampleName();
+
+  // validate input
+  bool validInput = false;
+  if (samplename == "wz" || samplename == "wz_ljj" || samplename == "wz_llj" || samplename == "wz_lll") return true;
+  if (samplename == "wz_bb" || samplename == "wz_bb_ljj" || samplename == "wz_bb_llj" || samplename == "wz_bb_lll") validInput = true;
+  if (samplename == "wz_b" || samplename == "wz_b_ljj" || samplename == "wz_b_llj" || samplename == "wz_b_lll") validInput = true;
+  if (samplename == "wz_cc" || samplename == "wz_cc_ljj" || samplename == "wz_cc_llj" || samplename == "wz_cc_lll") validInput = true;
+  if (samplename == "wz_lf" || samplename == "wz_lf_ljj" || samplename == "wz_lf_llj" || samplename == "wz_lf_lll") validInput = true;
+  if (samplename == "zz" || samplename == "zz_lljj" || samplename == "zz_llll" || samplename == "zz_lowmll") return true;
+  if (samplename == "zz_bb" || samplename == "zz_bb_lljj" || samplename == "zz_bb_llll" || samplename == "zz_bb_lowmll") validInput = true;
+  if (samplename == "zz_b" || samplename == "zz_b_lljj" || samplename == "zz_b_llll" || samplename == "zz_b_lowmll") validInput = true;
+  if (samplename == "zz_cc" || samplename == "zz_cc_lljj" || samplename == "zz_cc_llll" || samplename == "zz_cc_lowmll") validInput = true;
+  if (samplename == "zz_lf" || samplename == "zz_lf_lljj" || samplename == "zz_lf_llll" || samplename == "zz_lf_lowmll") validInput = true;
+
+  if (!validInput ){
+    cout << "dibosonPlusHeavyKeepEvent: could not recognize samplename " << samplename <<"... failing" <<endl;
+  }
+
+  bool validEra = false;
+  if (era == "2012_53x" ) validEra = true;
+
+  if (!validEra ){
+    cout << "dibosonPlusHeavyKeepEvent: could not recognize era " << era <<"... failing" <<endl;
+  }
+
+  BNjetCollection correctedJets          = BEANhelper::GetCorrectedJets( iJets, sysType::NA );
+  BNjetCollection selectedJets_unsorted  = BEANhelper::GetSelectedJets( correctedJets, 25., 2.4, jetID::jetLoose, '-' ); 
+  BNjetCollection selectedJets           = BEANhelper::GetSortedByPt( selectedJets_unsorted );
+
+
+  bool keepEvent = false;
+  bool debug_ = false;
+
+  int diboson_bb_algo_result = BEANhelper::dibosonPlusBBClassifyEvent( iMCparticles, selectedJets );
+  int diboson_cc_algo_result = BEANhelper::dibosonPlusCCClassifyEvent( iMCparticles, selectedJets );
+
+
+  bool isBBbarEvent = false;  bool isBEvent = false; bool isCCbarEvent = false;
+  if( diboson_bb_algo_result==3 || diboson_bb_algo_result==4 )      isBBbarEvent = true;
+  else if( diboson_bb_algo_result==1 || diboson_bb_algo_result==2 ) isBEvent = true;
+  else if( diboson_cc_algo_result>0 )                               isCCbarEvent = true;
+
+  if ( (samplename == "wz_bb" || samplename == "wz_bb_ljj" || samplename == "wz_bb_llj" || samplename == "wz_bb_lll" ||
+        samplename == "zz_bb" || samplename == "zz_bb_lljj" || samplename == "zz_bb_llll" || samplename == "zz_bb_lowmll")
+       && isBBbarEvent )                                keepEvent = true;
+  else if ( (samplename == "wz_b" || samplename == "wz_b_ljj" || samplename == "wz_b_llj" || samplename == "wz_b_lll" ||
+        samplename == "zz_b" || samplename == "zz_b_lljj" || samplename == "zz_b_llll" || samplename == "zz_b_lowmll")
+       && !isBBbarEvent && isBEvent )                   keepEvent = true;
+  else if ( (samplename == "wz_cc" || samplename == "wz_cc_ljj" || samplename == "wz_cc_llj" || samplename == "wz_cc_lll" ||
+        samplename == "zz_cc" || samplename == "zz_cc_lljj" || samplename == "zz_cc_llll" || samplename == "zz_cc_lowmll")
+       && !isBBbarEvent && !isBEvent && isCCbarEvent )  keepEvent = true;
+  else if ( (samplename == "wz_lf" || samplename == "wz_lf_ljj" || samplename == "wz_lf_llj" || samplename == "wz_lf_lll" ||
+        samplename == "zz_lf" || samplename == "zz_lf_lljj" || samplename == "zz_lf_llll" || samplename == "zz_lf_lowmll")
+       && !isBBbarEvent && !isBEvent && !isCCbarEvent ) keepEvent = true;
+
+  if (debug_) cout << "Filter result = " << keepEvent << endl
+                   << "isBBbarEvent = " << isBBbarEvent << endl
+                   << "isCCbarEvent = " << isCCbarEvent << endl
+                   << "... will we skip this? " << (!keepEvent) << endl;
+
+  return keepEvent;
+}
+
+
+int BEANhelper::dibosonPlusBBClassifyEvent( const BNmcparticleCollection& iMCparticles,
+				       const BNjetCollection& iJets ) {
+
+  bool debug_ = false;
+
+  std::vector<int> list_b;
+  std::vector<int> list_b_from_Z;
+  bool hasW = false;
+  bool hasZ = false;
+  int startHere = -1;
+
+  // Loop over MC particles and get a list of all b quarks that satisfy:
+  // 1) Are b quarks
+  // 2) Have a mother that is not a Z
+  //    or, if they have more than one mother or no mother match
+  //    that one of their two mothers is not a Z
+  // 3) Have a daughter that is 92 or 91, indicates Lund fragmentation string/cluster
+  //    ensures final state parton
+  //
+  for( int i=0; i<int(iMCparticles.size()); i++ ) {
+    int id = iMCparticles.at(i).id;
+    int absId = abs(id);
+    int motherID = iMCparticles.at(i).motherId;
+    int motherAbsID = abs(motherID);
+    int mother0ID = iMCparticles.at(i).mother0Id;
+    int mother0AbsID = abs(mother0ID);
+    int mother1ID = iMCparticles.at(i).mother1Id;
+    int mother1AbsID = abs(mother1ID);
+
+    int daughter0ID = iMCparticles.at(i).daughter0Id;
+    int daughter1ID = iMCparticles.at(i).daughter1Id;
+
+    if (debug_ && absId==5) { std::cout << "Found a b with (pT, eta) = (" << iMCparticles.at(i).pt << ", " << iMCparticles.at(i).eta << ") ";
+      if (motherID!=23 && mother0ID!=23 && mother1ID!=23) std::cout << "not from a Z ";
+      else std::cout << "from a Z ";
+      if (daughter0ID==91 || daughter0ID==92 || daughter0ID==93 || daughter1ID==91 || daughter1ID==92 || daughter1ID==93) std::cout << "with daughters" << std::endl;
+      else std::cout << "without daughters" << std::endl;
+    }
+    
+    if( absId==5 && motherID!=23 && mother0ID!=23 && mother1ID!=23 && 
+	(daughter0ID==91 || daughter0ID==92 || daughter0ID==93 || daughter1ID==91 || daughter1ID==92 || daughter1ID==93) ) list_b.push_back(i);
+    if( absId==5 && (motherID==23 || mother0ID==23 || mother1ID==23) &&
+	(daughter0ID==91 || daughter0ID==92 || daughter0ID==93 || daughter1ID==91 || daughter1ID==92 || daughter1ID==93) ) list_b_from_Z.push_back(i);
+    if( absId==24  ) hasW = true;
+    if( id==23 ) hasZ = true;
+    if( (hasW || hasZ) && startHere<0 ) startHere = i;
+  }
+
+
+  // Loop over those b's that ARE from Z
+  std::vector<int> list_matched_jets_from_Z;
+  std::vector<int> list_b_match_from_Z;
+  for( int i=0; i<int(list_b_from_Z.size()); i++ ){
+    int ind = list_b_from_Z[i];
+
+    bool isMatched = false;
+    int matchedJet = -1;
+    int myJet = -1;
+    double minDR = 99;
+    // Get the jet that is closest in dR
+    for( BNjetCollection::const_iterator iJet = iJets.begin(); iJet != iJets.end(); iJet++ ){
+      double dR = reco::deltaR( iJet->eta, iJet->phi, iMCparticles.at(ind).eta, iMCparticles.at(ind).phi );
+      myJet++;
+      if( dR<minDR ){
+	minDR = dR;
+	matchedJet = myJet;
+      }
+    }
+
+    // If dR(b,closest jet) < 0.5, consider matched
+    if( minDR<0.5 ) isMatched=true;
+    // Don't continue if the b is not close to any jet
+    if( !isMatched ) continue;
+
+    // If this b came before the W or Z, it is not going to be a final state particle
+    if( ind<startHere ) continue;
+
+    list_matched_jets_from_Z.push_back(matchedJet);
+    list_b_match_from_Z.push_back(ind);
+
+  } // end loop over list of b's
+
+
+  // Loop over those b's that are not from Z
+  std::vector<int> list_matched_jets;
+  std::vector<int> list_b_match;
+  for( int i=0; i<int(list_b.size()); i++ ) {
+    int ind = list_b[i];
+    
+    bool isMatched = false;
+    int matchedJet = -1;
+    int myJet = -1;
+    double minDR = 99;
+    // Get the jet that is closest in dR
+    for( BNjetCollection::const_iterator iJet = iJets.begin(); iJet != iJets.end(); iJet++ ){
+      double dR = reco::deltaR( iJet->eta, iJet->phi, iMCparticles.at(ind).eta, iMCparticles.at(ind).phi );
+      myJet++;
+      if (debug_) std::cout << "Jet " << myJet << " with pT = " << iJet->pt << " has dR = " << dR << std::endl;
+      if( dR<minDR ){
+        minDR = dR;
+        matchedJet = myJet;
+      }
+    }
+
+    // If dR(b,closest jet) < 0.5, consider matched
+    if( minDR<0.5 ) isMatched=true;
+    // Don't continue if the b is not close to any jet
+    if( debug_ && !isMatched ) std::cout << "Could not find a matched jet" << std::endl;
+    if( !isMatched ) continue;
+
+    // If this b came before the W and Z, it is not going to be a final state particle
+    if( debug_ && ind<startHere ) std::cout << "b came before the W and Z" << std::endl;
+    if( ind<startHere ) continue;
+
+	  
+    // Check if the jet matched to this b is the same as a b from Z matched jet
+    bool previousMatch_from_Z = false;
+    for( int iJet = 0; iJet < int(list_matched_jets_from_Z.size()); iJet++ ){
+      if( matchedJet==list_matched_jets_from_Z[iJet] ){
+	previousMatch_from_Z = true;
+	break;
+      }
+    }
+    if( debug_ && previousMatch_from_Z ) std::cout << "b matches another jet from Z" << std::endl;
+    if( previousMatch_from_Z ) continue;
+
+    // Check if the jet matched to this b is the same as a previous b-matched jet
+    bool previousMatch = false;
+    for( int iJet = 0; iJet < int(list_matched_jets.size()); iJet++ ){
+      if( matchedJet==list_matched_jets[iJet] ){
+        previousMatch = true;
+        break;
+      }
+    }
+
+
+    if (debug_ && previousMatch) std::cout << "b was already mathed to an earlier jet" << std::endl;
+    if( !previousMatch ) list_matched_jets.push_back(matchedJet);
+    list_b_match.push_back(ind);
+
+  } // end loop over list of b's
+
+  int numberOfBs = int(list_b_match.size());
+  int numberOfMatchedJets = int(list_matched_jets.size());
+
+  if (debug_ && list_b.size() > 0) std::cout << "numberOfBs = " << numberOfBs << ", numberOfMatchedJets = " << numberOfMatchedJets << std::endl;
+
+  int result = 0;
+  if( numberOfBs==1 ) result = 1;
+  else if( numberOfBs==2 && numberOfMatchedJets==1 ) result = 2;
+  else if( numberOfBs==2 && numberOfMatchedJets==2 ) result = 3;
+  else if( numberOfBs>=3 ) result = 4;
+
+  return result;
+
+}
+
+
+
+int BEANhelper::dibosonPlusCCClassifyEvent( const BNmcparticleCollection& iMCparticles,
+				       const BNjetCollection& iJets ) {
+
+  bool debug_ = false;
+
+  std::vector<int> list_c;
+  std::vector<int> list_c_from_WZb;
+  bool hasW = false;
+  bool hasZ = false;
+  int startHere = -1;
+
+  // Loop over MC particles and get a list of all c quarks that satisfy:
+  // 1) Are c quarks
+  // 2) Have a mother that is not a W, Z, or b 
+  //    or, if they have more than one mother or no mother match
+  //    that one of their two mothers is not a W, Z, or b
+  // 3) Have a daughter that is 92 or 91, indicates Lund fragmentation string/cluster
+  //    ensures final state parton
+  //
+  for( int i=0; i<int(iMCparticles.size()); i++ ) {
+    int id = iMCparticles.at(i).id;
+    int absId = abs(id);
+    int motherID = iMCparticles.at(i).motherId;
+    int motherAbsID = abs(motherID);
+    int mother0ID = iMCparticles.at(i).mother0Id;
+    int mother0AbsID = abs(mother0ID);
+    int mother1ID = iMCparticles.at(i).mother1Id;
+    int mother1AbsID = abs(mother1ID);
+
+    int daughter0ID = iMCparticles.at(i).daughter0Id;
+    int daughter1ID = iMCparticles.at(i).daughter1Id;
+
+    if( absId==4 && motherAbsID!=5 && mother0AbsID!=5 && mother1AbsID!=5 &&
+        motherAbsID!=24 && mother0AbsID!=24 && mother1AbsID!=24 && 
+        motherID!=23 && mother0ID!=23 && mother1ID!=23 && 
+        (daughter0ID==91 || daughter0ID==92 || daughter0ID==93 || daughter1ID==91 || daughter1ID==92 || daughter1ID==93) ) list_c.push_back(i);
+    if( absId==4 && (motherAbsID==5 || mother0AbsID==5 || mother1AbsID==5 ||
+                     motherAbsID==24 || mother0AbsID==24 || mother1AbsID==24 ||
+                     motherID==23 || mother0ID==23 || mother1ID==23) && 
+        (daughter0ID==91 || daughter0ID==92 || daughter0ID==93 || daughter1ID==91 || daughter1ID==92 || daughter1ID==93) ) list_c_from_WZb.push_back(i);
+    if( absId==24  ) hasW = true;
+    if( id==23 ) hasZ = true;
+    if( (hasW || hasZ) && startHere<0 ) startHere = i;
+  }
+
+  // Loop over those c's that ARE from W or Z or b
+  std::vector<int> list_matched_jets_from_WZb;
+  std::vector<int> list_c_match_from_WZb;
+  for( int i=0; i<int(list_c_from_WZb.size()); i++ ){
+    int ind = list_c_from_WZb[i];
+
+    bool isMatched = false;
+    int matchedJet = -1;
+    int myJet = -1;
+    double minDR = 99;
+    // Get the jet that is closest in dR
+    for( BNjetCollection::const_iterator iJet = iJets.begin(); iJet != iJets.end(); iJet++ ){
+      double dR = reco::deltaR( iJet->eta, iJet->phi, iMCparticles.at(ind).eta, iMCparticles.at(ind).phi );
+      myJet++;
+      if( dR<minDR ){
+	minDR = dR;
+	matchedJet = myJet;
+      }
+    }
+
+    // If dR(b,closest jet) < 0.5, consider matched
+    if( minDR<0.5 ) isMatched=true;
+    // Don't continue if the b is not close to any jet
+    if( !isMatched ) continue;
+
+    // If this b came before the t and tbar, it is not going to be a final state particle
+    if( ind<startHere ) continue;
+
+    list_matched_jets_from_WZb.push_back(matchedJet);
+    list_c_match_from_WZb.push_back(ind);
+
+  } // end loop over list of c's
+
+
+  // Loop over those c's that are not W or Z or b
+  std::vector<int> list_matched_jets;
+  std::vector<int> list_c_match;
+  for( int i=0; i<int(list_c.size()); i++ ){
+    int ind = list_c[i];
+
+    bool isMatched = false;
+    int matchedJet = -1;
+    int myJet = -1;
+    double minDR = 99;
+    // Get the jet that is closest in dR
+    for( BNjetCollection::const_iterator iJet = iJets.begin(); iJet != iJets.end(); iJet++ ){
+      double dR = reco::deltaR( iJet->eta, iJet->phi, iMCparticles.at(ind).eta, iMCparticles.at(ind).phi );
+      myJet++;
+      if( dR<minDR ){
+        minDR = dR;
+        matchedJet = myJet;
+      }
+    }
+
+    // If dR(b,closest jet) < 0.5, consider matched
+    if( minDR<0.5 ) isMatched=true;
+    // Don't continue if the c is not close to any jet
+    if( !isMatched ) continue;
+
+    // If this c came before the W or Z, it is not going to be a final state particle
+    if( ind<startHere ) continue;
+	  
+    // Check if the jet matched to this c is the same as a c from a W, Z, or b
+    bool previousMatch_from_WZb = false;
+    for( int iJet = 0; iJet < int(list_matched_jets_from_WZb.size()); iJet++ ){
+      if( matchedJet==list_matched_jets_from_WZb[iJet] ){
+        previousMatch_from_WZb = true;
+        break;
+      }
+    }
+    if( previousMatch_from_WZb ) continue;
+	  
+    // Check if the jet matched to this c is the same as a previous c-matched jet
+    bool previousMatch = false;
+    for( int iJet = 0; iJet < int(list_matched_jets.size()); iJet++ ){
+      if( matchedJet==list_matched_jets[iJet] ){
+	previousMatch = true;
+	break;
+      }
+    }
+    if( !previousMatch ) list_matched_jets.push_back(matchedJet);
+    list_c_match.push_back(ind);
+
+  } // end loop over list of c's
+
+
+  int numberOfCs = int(list_c_match.size());
+  int numberOfMatchedJets = int(list_matched_jets.size());
+
+
+  int result = 0;
+  if( numberOfCs==1 ) result = 1;
+  else if( numberOfCs==2 && numberOfMatchedJets==1 ) result = 2;
+  else if( numberOfCs==2 && numberOfMatchedJets==2 ) result = 3;
+  else if( numberOfCs>=3 ) result = 4;
+
+
+  return result;
+
+}
+
+
 
