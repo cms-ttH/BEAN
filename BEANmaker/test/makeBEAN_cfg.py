@@ -3,7 +3,7 @@ import copy
 import FWCore.ParameterSet.Config as cms
 
 # === Give values to some basic parameters === #
-maxEvents   = -1
+maxEvents   = 50
 reportEvery = 1000
 
 # === Python process === #
@@ -238,7 +238,7 @@ if runOnMC and sampleNumber<0:
   sys.exit( 'ERROR: Expecting to run on MC with sampleNumber<0.  The sampleNumber must be positive when running on MC.' )
 
 # maximum number of events
-maxInputEvents = 10 # reduce for testing
+maxInputEvents = 20 # reduce for testing
 
 ### Conditions
 
@@ -300,7 +300,9 @@ if useRelVals:
 #inputFiles = cms.untracked.vstring('/store/relval/CMSSW_5_2_3_patch3/RelValTTbar/GEN-SIM-RECO/START52_V9_special_120410-v1/0122/0EF8CDEB-1083-E111-846C-002618943937.root')
 inputFiles = cms.untracked.vstring(
 	#	'/store/mc/Summer12/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S6_START52_V9-v1/0000/FEFAA4F3-63B8-E111-A65A-00304867924A.root',
-	'/store/user/puigh/TTH_HToAll_M_120_8TeV_FastSim_pythia6/TTH_HToAll_M_120_8TeV_FastSim_pythia6/95111b4e2be5b1aa536a508d15d97f92/TTH_HToAll_M_120_8TeV_FastSim_v1_12_1_gDX.root'
+	'/store/mc/Summer12_DR53X/TTH_Inclusive_M-115_8TeV_pythia6/AODSIM/PU_S10_START53_V7A-v1/00000/0078C0C1-D90B-E211-83A4-001E67396E32.root',
+	#'/store/user/puigh/TTH_HToAll_M_120_8TeV_FastSim_pythia6/TTH_HToAll_M_120_8TeV_FastSim_pythia6/95111b4e2be5b1aa536a508d15d97f92/TTH_HToAll_M_120_8TeV_FastSim_v1_12_1_gDX.root'
+	#'file:/afs/cern.ch/user/m/muell149/BEANmaking_v2/CMSSW_5_3_15_patch1/src/BEAN/BEANmaker/test/TTbarH_HToWWTo2LAndTauNu_M-125_13TeV_pythia6_PU_S14_PAT.root'
 )
 
 process.source.fileNames = inputFiles
@@ -325,6 +327,12 @@ process.out.SelectEvents.SelectEvents = []
 ### Cleaning and trigger selection configuration
 ###
 
+
+# process.inclusiveMergedVertices = cms.EDProducer("VertexMerger",
+#     minSignificance = cms.double(10.0),
+#     secondaryVertices = cms.InputTag("trackVertexArbitrator"),
+#     maxFraction = cms.double(0.2)
+# )
 ### Trigger selection
 if runOnMC:
   triggerSelection = triggerSelectionMC
@@ -1640,4 +1648,4 @@ if runPF2PAT:
 
 
 ## Dump python config if wished
-#outfile = open('dumpedConfig.py','w'); print >> outfile,process.dumpPython(); outfile.close()
+outfile = open('dumpedConfig.py','w'); print >> outfile,process.dumpPython(); outfile.close()
