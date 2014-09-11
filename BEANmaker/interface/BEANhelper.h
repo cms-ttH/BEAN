@@ -85,8 +85,8 @@ namespace analysisType{ enum analysisType{ LJ, DIL, TauLJ, TauDIL }; }
 namespace sysType{enum sysType{NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup, TESup, TESdown, CSVLFup, CSVLFdown, CSVHFup, CSVHFdown, CSVHFStats1up, CSVHFStats1down, CSVLFStats1up, CSVLFStats1down, CSVHFStats2up, CSVHFStats2down, CSVLFStats2up, CSVLFStats2down, CSVCErr1up, CSVCErr1down, CSVCErr2up, CSVCErr2down }; }
 namespace jetID{		enum jetID{			none, jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
 namespace tauID { enum tauID{ tauNonIso, tauLoose, tauMedium, tauTight }; }
-namespace muonID{		enum muonID{		muonSide, muonSideLooseMVA, muonSideTightMVA, muonLoose, muonTight, muonPtOnly, muonPtEtaOnly, muonPtEtaIsoOnly, muonPtEtaIsoTrackerOnly, muonNoCuts }; }
-namespace electronID{	enum electronID{	electronSide, electronSideLooseMVA, electronSideTightMVA, electronLoose, electronTight, electronTightMinusTrigPresel, electronLooseMinusTrigPresel, electronNoCuts }; }
+namespace muonID{		enum muonID{		muonSide, muonSideLooseMVA, muonSideTightMVA, muonSideLooseCut, muonSideTightCut, muonLoose, muonTight, muonPtOnly, muonPtEtaOnly, muonPtEtaIsoOnly, muonPtEtaIsoTrackerOnly, muonNoCuts }; }
+namespace electronID{	enum electronID{	electronSide, electronSideLooseMVA, electronSideTightMVA, electronSideLooseCut, electronSideTightCut, electronLoose, electronTight, electronTightMinusTrigPresel, electronLooseMinusTrigPresel, electronNoCuts }; }
 namespace hdecayType{	enum hdecayType{ hbb, hcc, hww, hzz, htt, hgg, hjj, hzg }; }
 
 
@@ -164,6 +164,8 @@ class BEANhelper{
 		bool IsSideMuon(const BNmuon&);
 		bool IsSideMuonLooseMVA(const BNmuon&, const BNjetCollection* = 0);
 		bool IsSideMuonTightMVA(const BNmuon&, const BNjetCollection* = 0);
+		bool IsSideMuonLooseCut(const BNmuon&);
+		bool IsSideMuonTightCut(const BNmuon&);
 		bool IsLooseMuon(const BNmuon&);
 		bool IsTightMuon(const BNmuon&);
 		bool IsGoodMuon(const BNmuon&, const muonID::muonID, const BNjetCollection* = 0);
@@ -172,6 +174,7 @@ class BEANhelper{
 		float GetDoubleMuonTriggerSF ( const BNmuon&, const BNmuon& );
 		float GetMuonEleTriggerSF ( const BNmuon&, const BNelectron & );
 		float GetMuonLepMVA( const BNmuon&, const BNjetCollection* = 0);
+		int GetMuonLepCut( const BNmuon&);
 
   // Test only
   float TestSingleMuonTriggerNew ( const BNmuon& );
@@ -186,6 +189,8 @@ class BEANhelper{
 		bool IsSideElectron(const BNelectron&);
 		bool IsSideElectronLooseMVA(const BNelectron&);
 		bool IsSideElectronTightMVA(const BNelectron&);
+		bool IsSideElectronLooseCut(const BNelectron&);
+		bool IsSideElectronTightCut(const BNelectron&);
 		bool IsLooseElectron(const BNelectron&);
 		bool IsTightElectron(const BNelectron&);
 		float GetElectronRelIso(const BNelectron&) const;
@@ -195,6 +200,7 @@ class BEANhelper{
 		bool IsGoodElectron(const BNelectron&, const electronID::electronID);
 		BNelectronCollection GetSelectedElectrons(const BNelectronCollection&, const electronID::electronID);
 		float GetElectronLepMVA(const BNelectron&);
+		int GetElectronLepCut(const BNelectron&);
 
 		// General lepton functions
 		float GetDBCorrectedRelIsoDR04(const BNlepton& iLepton, const float& dBeta_factor) const;

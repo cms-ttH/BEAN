@@ -1139,6 +1139,8 @@ float BEANhelper::GetMuonSF( const BNmuon& iMuon, const muonID::muonID inputID )
   case muonID::muonSide:
   case muonID::muonSideLooseMVA:
   case muonID::muonSideTightMVA:
+  case muonID::muonSideLooseCut:
+  case muonID::muonSideTightCut:
   case muonID::muonPtOnly:
   case muonID::muonPtEtaOnly:
   case muonID::muonPtEtaIsoOnly:
@@ -1418,6 +1420,10 @@ bool BEANhelper::IsSideMuonLooseMVA(const BNmuon& iMuon, const BNjetCollection* 
 
 bool BEANhelper::IsSideMuonTightMVA(const BNmuon& iMuon, const BNjetCollection* iJets){ return IsGoodMuon(iMuon, muonID::muonSideTightMVA, iJets); }
 
+bool BEANhelper::IsSideMuonLooseCut(const BNmuon& iMuon){ return IsGoodMuon(iMuon, muonID::muonSideLooseCut); }
+
+bool BEANhelper::IsSideMuonTightCut(const BNmuon& iMuon){ return IsGoodMuon(iMuon, muonID::muonSideTightCut); }
+
 float BEANhelper::GetMuonLepMVA(const BNmuon& iMuon, const BNjetCollection* iJets){
   CheckSetUp();
 
@@ -1458,6 +1464,23 @@ float BEANhelper::GetMuonLepMVA(const BNmuon& iMuon, const BNjetCollection* iJet
     //       std::cout << "LepMVA: " <<  mu_reader_low_e->EvaluateMVA( "BDTG method" ) << std::endl;
     return mu_reader_low_e->EvaluateMVA( "BDTG method" );
   }
+}
+
+int BEANhelper::GetMuonLepCut(const BNmuon& iMuon){
+//   //For some reason, CheckSetUp() causes a segfault
+//   //where isSetUp = 176 -AWB 10/09/14
+//   CheckSetUp();
+
+  if ( iMuon.jetBTagCSV < 0.679 &&
+       iMuon.chargedHadronIsoDR04/iMuon.pt < 0.10 &&
+       fabs(iMuon.SIP) < 4 &&
+       iMuon.jetPtRatio > 0.6 ) return 2;
+  else if ( iMuon.jetBTagCSV < 0.679 &&
+            iMuon.chargedHadronIsoDR04/iMuon.pt < 0.20 &&
+            fabs(iMuon.SIP) < 4 ) return 1;
+  else if ( iMuon.jetBTagCSV < 0.679 ) return 0;
+  else return -1;
+
 }
 
 
@@ -1529,6 +1552,8 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
 	bool passesSIP          = false;
     bool passesLooseMVA     = false;
     bool passesTightMVA     = false;
+    bool passesLooseCut     = false;
+    bool passesTightCut     = false;
 
     float dBeta_factor = 0.5;
 
@@ -1605,6 +1630,20 @@ bool BEANhelper::IsGoodMuon(const BNmuon& iMuon, const muonID::muonID iMuonID, c
         passesSIP               = (fabs(iMuon.SIP) < 10.0 && fabs(iMuon.correctedD0Vertex) < 0.5 && fabs(iMuon.correctedDZ) < 1.0);
         passesTightMVA          = (GetMuonLepMVA(iMuon) > 0.7);
         passesID                = (iMuon.isPFMuon==1 && (iMuon.isGlobalMuon==1 || iMuon.isTrackerMuon==1) && passesSIP && passesTightMVA);
+        break;
+      case muonID::muonSideLooseCut:
+        passesKinematics        = ((iMuon.pt >= minSideMuonPt) && (fabs(iMuon.eta) <= maxSideMuonAbsEta));
+        passesIso               = (GetDBCorrectedRelIsoDR04(iMuon, dBeta_factor) < 0.400);
+        passesSIP               = (fabs(iMuon.SIP) < 10.0 && fabs(iMuon.correctedD0Vertex) < 0.5 && fabs(iMuon.correctedDZ) < 1.0);
+        passesLooseCut          = (GetMuonLepCut(iMuon) >= 0);
+        passesID                = (iMuon.isPFMuon==1 && (iMuon.isGlobalMuon==1 || iMuon.isTrackerMuon==1) && passesSIP && passesLooseCut);
+        break;
+      case muonID::muonSideTightCut:
+        passesKinematics        = ((iMuon.pt >= minSideMuonPt) && (fabs(iMuon.eta) <= maxSideMuonAbsEta));
+        passesIso               = (GetDBCorrectedRelIsoDR04(iMuon, dBeta_factor) < 0.400);
+        passesSIP               = (fabs(iMuon.SIP) < 10.0 && fabs(iMuon.correctedD0Vertex) < 0.5 && fabs(iMuon.correctedDZ) < 1.0);
+        passesTightCut          = (GetMuonLepCut(iMuon) == 2);
+        passesID                = (iMuon.isPFMuon==1 && (iMuon.isGlobalMuon==1 || iMuon.isTrackerMuon==1) && passesSIP && passesTightCut);
         break;
       case muonID::muonLoose:
         passesKinematics		= ((iMuon.pt >= minLooseMuonPt) && (fabs(iMuon.eta) <= maxLooseMuonAbsEta));
@@ -2038,6 +2077,10 @@ bool BEANhelper::IsSideElectronLooseMVA(const BNelectron& iElectron){ return IsG
 
 bool BEANhelper::IsSideElectronTightMVA(const BNelectron& iElectron){ return IsGoodElectron(iElectron, electronID::electronSideTightMVA); }
 
+bool BEANhelper::IsSideElectronLooseCut(const BNelectron& iElectron){ return IsGoodElectron(iElectron, electronID::electronSideLooseCut); }
+
+bool BEANhelper::IsSideElectronTightCut(const BNelectron& iElectron){ return IsGoodElectron(iElectron, electronID::electronSideTightCut); }
+
 float BEANhelper::GetElectronRelIso(const BNelectron& iElectron) const
 {
 	CheckSetUp();
@@ -2097,6 +2140,8 @@ float BEANhelper::GetElectronSF(const BNelectron& iElectron, const electronID::e
   case electronID::electronSide:
   case electronID::electronSideLooseMVA:
   case electronID::electronSideTightMVA:
+  case electronID::electronSideLooseCut:
+  case electronID::electronSideTightCut:
   case electronID::electronLooseMinusTrigPresel:
     usePT = std::min (iElectron.pt, 199.0);
     usePT = std::max (usePT, 15.1);
@@ -2270,6 +2315,8 @@ bool BEANhelper::GetElectronIDresult(const BNelectron& iElectron, const electron
 		if(iElectronID==electronID::electronSide){			return cernID; }
         else if(iElectronID==electronID::electronSideLooseMVA){return cernID; }
         else if(iElectronID==electronID::electronSideTightMVA){return cernID; }
+        else if(iElectronID==electronID::electronSideLooseCut){return cernID; }
+        else if(iElectronID==electronID::electronSideTightCut){return cernID; }
 		else if(iElectronID==electronID::electronLoose){  	return (passMVAId53x && no_exp_inner_trkr_hits && d04 && notConv && myTrigPresel); }
 		else if(iElectronID==electronID::electronTight){	return (id && no_exp_inner_trkr_hits && myTrigPresel);}
         else if ( iElectronID == electronID::electronTightMinusTrigPresel ){
@@ -2337,6 +2384,24 @@ float BEANhelper::GetElectronLepMVA(const BNelectron& iElectron){
   }
 
 
+}
+
+int BEANhelper::GetElectronLepCut(const BNelectron& iElectron){
+//   //For some reason, CheckSetUp() causes a segfault
+//   //where isSetUp = 176 -AWB 10/09/14
+//   CheckSetUp();
+
+  if ( iElectron.jetBTagCSV < 0.679 &&
+       iElectron.chargedHadronIsoDR04/iElectron.pt >= 0 &&
+       iElectron.chargedHadronIsoDR04/iElectron.pt < 0.05 &&
+       fabs(iElectron.IP) < 0.015 &&
+       iElectron.jetPtRatio > 0.6 ) return 2;
+  else if ( iElectron.jetBTagCSV < 0.679 &&
+            iElectron.chargedHadronIsoDR04/iElectron.pt >= 0 &&
+            iElectron.chargedHadronIsoDR04/iElectron.pt < 0.15 ) return 1;
+  else if ( iElectron.jetBTagCSV < 0.679 ) return 0;
+  else return -1;
+  
 }
 
 
@@ -2410,6 +2475,8 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
 	bool passesID			= false;
     bool passesLooseMVA     = false;
     bool passesTightMVA     = false;
+    bool passesLooseCut     = false;
+    bool passesTightCut     = false;
     
 	// Check if this electron is good enough
 	bool inCrack			= ((fabs(iElectron.scEta) > 1.4442) && (fabs(iElectron.scEta) < 1.5660));
@@ -2471,6 +2538,18 @@ bool BEANhelper::IsGoodElectron(const BNelectron& iElectron, const electronID::e
         passesIso           = (GetDBCorrectedRelIsoDR04(iElectron, dBeta_factor) < 0.400);
         passesTightMVA      = (GetElectronLepMVA(iElectron) > 0.7);
         passesID            = (GetElectronIDresult(iElectron, iElectronID) && passesTightMVA);
+        break;
+      case electronID::electronSideLooseCut:
+        passesKinematics    = ((iElectron.pt >= minSideElectronPt) && (fabs(iElectron.eta) <= maxSideElectronAbsEta));
+        passesIso           = (GetDBCorrectedRelIsoDR04(iElectron, dBeta_factor) < 0.400);
+        passesLooseCut      = (GetElectronLepCut(iElectron) >= 0);
+        passesID            = (GetElectronIDresult(iElectron, iElectronID) && passesLooseCut);
+        break;
+      case electronID::electronSideTightCut:
+        passesKinematics    = ((iElectron.pt >= minSideElectronPt) && (fabs(iElectron.eta) <= maxSideElectronAbsEta));
+        passesIso           = (GetDBCorrectedRelIsoDR04(iElectron, dBeta_factor) < 0.400);
+        passesTightCut      = (GetElectronLepCut(iElectron) == 2);
+        passesID            = (GetElectronIDresult(iElectron, iElectronID) && passesTightCut);
         break;
 
       case electronID::electronLoose:
