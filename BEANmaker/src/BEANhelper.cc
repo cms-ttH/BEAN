@@ -27,19 +27,21 @@ BEANhelper::BEANhelper(){
 
 	// PU reweighing
 	puFile			= NULL;
+	puFileSim		= NULL;
 	h_PU_ratio		= NULL;
+	h_PU_ratio_Sim	= NULL;
 	h_PUup_ratio	= NULL;
 	h_PUdown_ratio	= NULL;
 
 	// CSV reweighting
 	for( int iSys=0; iSys<9; iSys++ ){
-	  for( int iPt=0; iPt<5; iPt++ ) h_csv_wgt_hf[iSys][iPt] = NULL;
-	  for( int iPt=0; iPt<3; iPt++ ){
+	  for( int iPt=0; iPt<6; iPt++ ) h_csv_wgt_hf[iSys][iPt] = NULL;
+	  for( int iPt=0; iPt<4; iPt++ ){
 	    for( int iEta=0; iEta<3; iEta++ )h_csv_wgt_lf[iSys][iPt][iEta] = NULL;
 	  }
 	}
     for( int iSys=0; iSys<5; iSys++ ){
-      for( int iPt=0; iPt<5; iPt++ ) c_csv_wgt_hf[iSys][iPt] = NULL;
+      for( int iPt=0; iPt<6; iPt++ ) c_csv_wgt_hf[iSys][iPt] = NULL;
     }
     f_CSVwgt_HF = NULL;
     f_CSVwgt_LF = NULL;
@@ -84,6 +86,7 @@ BEANhelper::~BEANhelper(){
 	if(h_l_eff_ != NULL){ delete h_l_eff_; h_l_eff_ = NULL; }
 	if(h_o_eff_ != NULL){ delete h_o_eff_; h_o_eff_ = NULL; }
 	if(h_PU_ratio != NULL){ delete h_PU_ratio; h_PU_ratio = NULL; }
+	if(h_PU_ratio_Sim != NULL){ delete h_PU_ratio_Sim; h_PU_ratio_Sim = NULL; }
 	if(h_PUup_ratio != NULL){ delete h_PUup_ratio; h_PUup_ratio = NULL; }
 	if(h_PUdown_ratio != NULL){ delete h_PUdown_ratio; h_PUdown_ratio = NULL; }
 	if(h_ele_SF_ != NULL){ delete h_ele_SF_; h_ele_SF_ = NULL; }
@@ -102,15 +105,15 @@ BEANhelper::~BEANhelper(){
 
 	// CSV reweighting
 	for( int iSys=0; iSys<9; iSys++ ){
-	  for( int iPt=0; iPt<5; iPt++ ){ if(h_csv_wgt_hf[iSys][iPt] != NULL){ delete h_csv_wgt_hf[iSys][iPt]; h_csv_wgt_hf[iSys][iPt] = NULL;} }
-	  for( int iPt=0; iPt<3; iPt++ ){
+	  for( int iPt=0; iPt<6; iPt++ ){ if(h_csv_wgt_hf[iSys][iPt] != NULL){ delete h_csv_wgt_hf[iSys][iPt]; h_csv_wgt_hf[iSys][iPt] = NULL;} }
+	  for( int iPt=0; iPt<4; iPt++ ){
 	    for( int iEta=0; iEta<3; iEta++ ){
 	      if(h_csv_wgt_lf[iSys][iPt][iEta] != NULL){ delete h_csv_wgt_lf[iSys][iPt][iEta]; h_csv_wgt_lf[iSys][iPt][iEta] = NULL;}
 	    }
 	  }
 	}
     for( int iSys=0; iSys<5; iSys++ ){
-      for( int iPt=0; iPt<5; iPt++ ){ if(c_csv_wgt_hf[iSys][iPt] != NULL){ delete c_csv_wgt_hf[iSys][iPt]; c_csv_wgt_hf[iSys][iPt] = NULL;} }
+      for( int iPt=0; iPt<6; iPt++ ){ if(c_csv_wgt_hf[iSys][iPt] != NULL){ delete c_csv_wgt_hf[iSys][iPt]; c_csv_wgt_hf[iSys][iPt] = NULL;} }
     }
     
 	// CSV reshaping
@@ -123,6 +126,7 @@ BEANhelper::~BEANhelper(){
 	if(leptonSFfile != NULL){ leptonSFfile->Close(); leptonSFfile = NULL; }
 	if(jetSFfile != NULL){ jetSFfile->Close(); jetSFfile = NULL; }
 	if(puFile != NULL){ puFile->Close(); puFile = NULL; }
+	if(puFileSim != NULL){ puFileSim->Close(); puFileSim = NULL; }
 	if(f_CSVwgt_HF != NULL){ f_CSVwgt_HF->Close(); f_CSVwgt_HF = NULL; }
 	if(f_CSVwgt_LF != NULL){ f_CSVwgt_LF->Close(); f_CSVwgt_LF = NULL; }
 
@@ -315,6 +319,7 @@ void BEANhelper::SetUpPUreweighing(string const iCollisionsDS){
 
 	// Get PU file path
 	puFile = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/pu_distributions.root").c_str());
+	puFileSim = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/PU_dists/pu_distributions_SimGeneral.root").c_str());
 
 	// Set up mc histo pointer
 	TH1D* h_pu_mc = NULL;
@@ -351,27 +356,39 @@ void BEANhelper::SetUpPUreweighing(string const iCollisionsDS){
 		
 		for(unsigned int h=0; h<datasetNames.size(); h++){
 				string histoName		= era + "/" + "puDist_" + datasetNames.at(h) + "_69300xSec";
+                string histoNameSim		= "puDist_2012";
 				string histoUpName		= era + "/" + "puDist_" + datasetNames.at(h) + "_71795xSec";
 				string histoDownName	= era + "/" + "puDist_" + datasetNames.at(h) + "_66805xSec";
 
 				TH1D* h_PU_ratio_temp		= (TH1D*)puFile->Get(histoName.c_str());
+				TH1D* h_PU_ratio_Sim_temp	= (TH1D*)puFileSim->Get(histoNameSim.c_str());
 				TH1D* h_PUup_ratio_temp		= (TH1D*)puFile->Get(histoUpName.c_str());
 				TH1D* h_PUdown_ratio_temp	= (TH1D*)puFile->Get(histoDownName.c_str());
 				if(h_PU_ratio_temp		== NULL){ cerr << "ERROR: '" + histoName		+ "' cannot be found in the PU distributions file." << endl; exit(1); }
+				if(h_PU_ratio_Sim_temp	== NULL){ cerr << "ERROR: '" + histoNameSim		+ "' cannot be found in the PU distributions file." << endl; exit(1); }
 				if(h_PUup_ratio_temp	== NULL){ cerr << "ERROR: '" + histoUpName		+ "' cannot be found in the PU distributions file." << endl; exit(1); }
 				if(h_PUdown_ratio_temp	== NULL){ cerr << "ERROR: '" + histoDownName	+ "' cannot be found in the PU distributions file." << endl; exit(1); }
 
 			if(h==0){
 				h_PU_ratio		= (TH1D*)h_PU_ratio_temp->Clone();
+				h_PU_ratio_Sim	= (TH1D*)h_PU_ratio_Sim_temp->Clone();
 				h_PUup_ratio	= (TH1D*)h_PUup_ratio_temp->Clone();  
 				h_PUdown_ratio	= (TH1D*)h_PUdown_ratio_temp->Clone();
 			}else{
 				h_PU_ratio		->Add((TH1D*)puFile->Get(histoName.c_str()));
+				h_PU_ratio_Sim	->Add((TH1D*)puFileSim->Get(histoNameSim.c_str()));
 				h_PUup_ratio	->Add((TH1D*)puFile->Get(histoUpName.c_str()));
 				h_PUdown_ratio	->Add((TH1D*)puFile->Get(histoDownName.c_str()));
 			}
 		}
 
+        //Correct PU distributions to SimGeneral/MixingModule
+        h_PUup_ratio	->Divide( h_PU_ratio );
+        h_PUup_ratio    ->Multiply( h_PU_ratio_Sim );
+        h_PUdown_ratio	->Divide( h_PU_ratio );
+        h_PUdown_ratio  ->Multiply( h_PU_ratio_Sim );
+        h_PU_ratio		->Divide( h_PU_ratio );
+        h_PU_ratio		->Multiply( h_PU_ratio_Sim );
 		
 	}else if( era=="2012_52x" ){ // === 2012 === //
 
@@ -445,8 +462,8 @@ void BEANhelper::SetUpCSVreweighting(){
 
   // Do not set it up if we're running on collision data
   if(isData){ return; }
-  f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/csv_rwt_hf_IT.root").c_str());
-  f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/csv_rwt_lf_IT.root").c_str());
+  f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/csv_rwt_hf.root").c_str());
+  f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/csv_rwt_lf.root").c_str());
 
 
   // CSV reweighting
@@ -497,19 +514,18 @@ void BEANhelper::SetUpCSVreweighting(){
       break;
     }
 
-    for( int iPt=0; iPt<5; iPt++ ) h_csv_wgt_hf[iSys][iPt] = (TH1D*)f_CSVwgt_HF->Get( Form("csv_ratio_Pt%i_Eta0_%s",iPt,syst_csv_suffix_hf.Data()) );
+    for( int iPt=0; iPt<6; iPt++ ) h_csv_wgt_hf[iSys][iPt] = (TH1D*)f_CSVwgt_HF->Get( Form("csv_ratio_Pt%i_Eta0_%s",iPt,syst_csv_suffix_hf.Data()) );
 
     if( iSys<5 ){
-      for( int iPt=0; iPt<5; iPt++ ) c_csv_wgt_hf[iSys][iPt] = (TH1D*)f_CSVwgt_HF->Get( Form("c_csv_ratio_Pt%i_Eta0_%s",iPt,syst_csv_suffix_c.Data()) );
+      for( int iPt=0; iPt<6; iPt++ ) c_csv_wgt_hf[iSys][iPt] = (TH1D*)f_CSVwgt_HF->Get( Form("c_csv_ratio_Pt%i_Eta0_%s",iPt,syst_csv_suffix_c.Data()) );
     }
-    
-    for( int iPt=0; iPt<3; iPt++ ){
+
+    for( int iPt=0; iPt<4; iPt++ ){
       for( int iEta=0; iEta<3; iEta++ )h_csv_wgt_lf[iSys][iPt][iEta] = (TH1D*)f_CSVwgt_LF->Get( Form("csv_ratio_Pt%i_Eta%i_%s",iPt,iEta,syst_csv_suffix_lf.Data()) );
     }
   }
 
 }
-
 
 // Set up CSV reshaping
 void BEANhelper::SetUpCSVreshaping(){
@@ -528,6 +544,14 @@ void BEANhelper::SetUpCSVreshaping(){
         samplename == "wjets_4p")                                              samplename = "wjets";
 	if (samplename == "zjets_1p" || samplename == "zjets_2p" || samplename == "zjets_3p" ||
         samplename == "zjets_4p" || samplename == "zjets_lowmass" ||
+        samplename == "zjets_lf" || samplename == "zjets_lf_1p" || samplename == "zjets_lf_2p" ||
+        samplename == "zjets_lf_3p" || samplename == "zjets_lf_4p" || samplename == "zjets_lf_lowmass" ||
+        samplename == "zjets_cc" || samplename == "zjets_cc_1p" || samplename == "zjets_cc_2p" ||
+        samplename == "zjets_cc_3p" || samplename == "zjets_cc_4p" || samplename == "zjets_cc_lowmass" ||
+        samplename == "zjets_b" || samplename == "zjets_b_1p" || samplename == "zjets_b_2p" ||
+        samplename == "zjets_b_3p" || samplename == "zjets_b_4p" || samplename == "zjets_b_lowmass" ||
+        samplename == "zjets_bb" || samplename == "zjets_bb_1p" || samplename == "zjets_bb_2p" ||
+        samplename == "zjets_bb_3p" || samplename == "zjets_bb_4p" || samplename == "zjets_bb_lowmass" ||
         samplename == "zjets_lowmass_1p" || samplename == "zjets_lowmass_2p")  samplename = "zjets";
     if (samplename == "t_schannel_ll")                                         samplename = "t_schannel";
     if (samplename == "t_tchannel_ll")                                         samplename = "t_tchannel";
@@ -604,6 +628,14 @@ void BEANhelper::SetUpJetSF(){
         samplename == "wjets_4p")                                              samplename = "wjets";
 	if (samplename == "zjets_1p" || samplename == "zjets_2p" || samplename == "zjets_3p" ||
         samplename == "zjets_4p" || samplename == "zjets_lowmass" ||
+        samplename == "zjets_lf" || samplename == "zjets_lf_1p" || samplename == "zjets_lf_2p" ||
+        samplename == "zjets_lf_3p" || samplename == "zjets_lf_4p" || samplename == "zjets_lf_lowmass" ||
+        samplename == "zjets_cc" || samplename == "zjets_cc_1p" || samplename == "zjets_cc_2p" ||
+        samplename == "zjets_cc_3p" || samplename == "zjets_cc_4p" || samplename == "zjets_cc_lowmass" ||
+        samplename == "zjets_b" || samplename == "zjets_b_1p" || samplename == "zjets_b_2p" ||
+        samplename == "zjets_b_3p" || samplename == "zjets_b_4p" || samplename == "zjets_b_lowmass" ||
+        samplename == "zjets_bb" || samplename == "zjets_bb_1p" || samplename == "zjets_bb_2p" ||
+        samplename == "zjets_bb_3p" || samplename == "zjets_bb_4p" || samplename == "zjets_bb_lowmass" ||
         samplename == "zjets_lowmass_1p" || samplename == "zjets_lowmass_2p")  samplename = "zjets";
     if (samplename == "t_schannel_ll")                                         samplename = "t_schannel";
     if (samplename == "t_tchannel_ll")                                         samplename = "t_tchannel";
@@ -777,13 +809,37 @@ string BEANhelper::GetSampleName(){
 		else if( sampleNumber==2403 ){	samplename = "wjets_3p";			}
 		else if( sampleNumber==2404 ){	samplename = "wjets_4p";			}
 		else if( sampleNumber==2850 ){	samplename = "zjets_lowmass";		}
+		else if( sampleNumber==28501 ){	samplename = "zjets_lf_lowmass";		}
+		else if( sampleNumber==28502 ){	samplename = "zjets_cc_lowmass";		}
+		else if( sampleNumber==28503 ){	samplename = "zjets_b_lowmass";		}
+		else if( sampleNumber==28504 ){	samplename = "zjets_bb_lowmass";		}
 		else if( sampleNumber==2851 ){	samplename = "zjets_lowmass_1p";	}
 		else if( sampleNumber==2852 ){	samplename = "zjets_lowmass_2p";	}
 		else if( sampleNumber==2800 ){	samplename = "zjets";				}
+		else if( sampleNumber==28001 ){	samplename = "zjets_lf";				}
+		else if( sampleNumber==28002 ){	samplename = "zjets_cc";				}
+		else if( sampleNumber==28003 ){	samplename = "zjets_b";				}
+		else if( sampleNumber==28004 ){	samplename = "zjets_bb";				}
 		else if( sampleNumber==2801 ){	samplename = "zjets_1p";			}
+		else if( sampleNumber==28011 ){	samplename = "zjets_lf_1p";			}
+		else if( sampleNumber==28012 ){	samplename = "zjets_cc_1p";			}
+		else if( sampleNumber==28013 ){	samplename = "zjets_b_1p";			}
+		else if( sampleNumber==28014 ){	samplename = "zjets_bb_1p";			}
 		else if( sampleNumber==2802 ){	samplename = "zjets_2p";			}
+		else if( sampleNumber==28021 ){	samplename = "zjets_lf_2p";			}
+		else if( sampleNumber==28022 ){	samplename = "zjets_cc_2p";			}
+		else if( sampleNumber==28023 ){	samplename = "zjets_b_2p";			}
+		else if( sampleNumber==28024 ){	samplename = "zjets_bb_2p";			}
 		else if( sampleNumber==2803 ){	samplename = "zjets_3p";			}
+		else if( sampleNumber==28031 ){	samplename = "zjets_lf_3p";			}
+		else if( sampleNumber==28032 ){	samplename = "zjets_cc_3p";			}
+		else if( sampleNumber==28033 ){	samplename = "zjets_b_3p";			}
+		else if( sampleNumber==28034 ){	samplename = "zjets_bb_3p";			}
 		else if( sampleNumber==2804 ){	samplename = "zjets_4p";			}
+		else if( sampleNumber==28041 ){	samplename = "zjets_lf_4p";			}
+		else if( sampleNumber==28042 ){	samplename = "zjets_cc_4p";			}
+		else if( sampleNumber==28043 ){	samplename = "zjets_b_4p";			}
+		else if( sampleNumber==28044 ){	samplename = "zjets_bb_4p";			}
 		else if( sampleNumber==2600 ){	samplename = "t_schannel";			}
 		else if( sampleNumber==2630 ){	samplename = "t_schannel_ll";		}
 		else if( sampleNumber==2601 ){	samplename = "tbar_schannel";		}
@@ -1064,6 +1120,7 @@ bool BEANhelper::IsGoodJet(const BNjet& iJet, const float iMinPt, const float iM
 		case jetID::jetLooseAOD:	if(!iJet.jetIDLooseAOD){ return false; }	break;
 		case jetID::jetLoose:		if(!iJet.jetIDLoose){ return false; }	break;
 		case jetID::jetTight:		if(!iJet.jetIDTight){ return false; }	break;
+		case jetID::jetLoosePU:		if(!iJet.jetIDLoose || !iJet.puJetId_loose_full){ return false; }	break;
 		default:					return false;	break;
 
 	}
@@ -3216,16 +3273,17 @@ double BEANhelper::GetCSVweight(const BNjetCollection& iJets, const sysType::sys
   for( BNjetCollection::const_iterator iJet = iJets.begin(); iJet != iJets.end(); ++iJet ){ 
 
     double csv = iJet->btagCombinedSecVertex;
-    double jetPt = std::max(iJet->pt, 29.99);
+    double jetPt = std::max(iJet->pt, 19.99);
     double jetAbsEta = fabs( iJet->eta );
     int flavor = abs( iJet->flavour );
 
     int iPt = -1; int iEta = -1;
-    if (jetPt >=29.99 && jetPt<40) iPt = 0;
-    else if (jetPt >=40 && jetPt<60) iPt = 1;
-    else if (jetPt >=60 && jetPt<100) iPt = 2;
-    else if (jetPt >=100 && jetPt<160) iPt = 3;
-    else if (jetPt >=160 && jetPt<10000) iPt = 4;
+    if (jetPt >=19.99 && jetPt<30) iPt = 0;
+    else if (jetPt >=30 && jetPt<40) iPt = 1;
+    else if (jetPt >=40 && jetPt<60) iPt = 2;
+    else if (jetPt >=60 && jetPt<100) iPt = 3;
+    else if (jetPt >=100 && jetPt<160) iPt = 4;
+    else if (jetPt >=160 && jetPt<10000) iPt = 5;
 
     if (jetAbsEta >=0 &&  jetAbsEta<0.8) iEta = 0;
     else if ( jetAbsEta>=0.8 && jetAbsEta<1.6) iEta = 1;
@@ -3251,7 +3309,7 @@ double BEANhelper::GetCSVweight(const BNjetCollection& iJets, const sysType::sys
       //      flavor, jetPt, iJet->eta, csv, iCSVWgtC );
     }
     else {
-      if (iPt >=2) iPt=2;       /// [30-40], [40-60] and [60-10000] only 3 Pt bins for lf
+      if (iPt >=3) iPt=3;       /// [>60]
       int useCSVBin = (csv>=0.) ? h_csv_wgt_lf[iSysLF][iPt][iEta]->FindBin(csv) : 1;
       double iCSVWgtLF = h_csv_wgt_lf[iSysLF][iPt][iEta]->GetBinContent(useCSVBin);
       if( iCSVWgtLF!=0 ) csvWgtlf *= iCSVWgtLF;
@@ -3324,16 +3382,17 @@ vdouble BEANhelper::GetCSVweights(const BNjetCollection& iJets, const sysType::s
   for( BNjetCollection::const_iterator iJet = iJets.begin(); iJet != iJets.end(); ++iJet ){ 
 
     double csv = iJet->btagCombinedSecVertex;
-    double jetPt = std::max(iJet->pt, 29.99);
+    double jetPt = std::max(iJet->pt, 19.99);
     double jetAbsEta = fabs( iJet->eta );
     int flavor = abs( iJet->flavour );
 
     int iPt = -1; int iEta = -1;
-    if (jetPt >=29.99 && jetPt<40) iPt = 0;
-    else if (jetPt >=40 && jetPt<60) iPt = 1;
-    else if (jetPt >=60 && jetPt<100) iPt = 2;
-    else if (jetPt >=100 && jetPt<160) iPt = 3;
-    else if (jetPt >=160 && jetPt<10000) iPt = 4;
+    if (jetPt >=19.99 && jetPt<30) iPt = 0;
+    else if (jetPt >=30 && jetPt<40) iPt = 1;
+    else if (jetPt >=40 && jetPt<60) iPt = 2;
+    else if (jetPt >=60 && jetPt<100) iPt = 3;
+    else if (jetPt >=100 && jetPt<160) iPt = 4;
+    else if (jetPt >=160 && jetPt<10000) iPt = 5;
 
     if (jetAbsEta >=0 &&  jetAbsEta<0.8) iEta = 0;
     else if ( jetAbsEta>=0.8 && jetAbsEta<1.6) iEta = 1;
@@ -3358,7 +3417,7 @@ vdouble BEANhelper::GetCSVweights(const BNjetCollection& iJets, const sysType::s
       // 			     flavor, jetPt, iJet->eta, csv, iCSVWgtC );
     }
     else {
-      if (iPt >=2) iPt=2;       /// [30-40], [40-60] and [60-10000] only 3 Pt bins for lf
+      if (iPt >=3) iPt=3;       /// [>60]
       int useCSVBin = (csv>=0.) ? h_csv_wgt_lf[iSysLF][iPt][iEta]->FindBin(csv) : 1;
       double iCSVWgtLF = h_csv_wgt_lf[iSysLF][iPt][iEta]->GetBinContent(useCSVBin);
       if( iCSVWgtLF!=0 ) csvWgtlf *= iCSVWgtLF;
@@ -3929,7 +3988,7 @@ bool BEANhelper::ttPlusHeavyKeepEvent( const BNmcparticleCollection& iMCparticle
 
 
 bool BEANhelper::ttPlusHFKeepEvent( const BNmcparticleCollection& iMCparticles,
-				    const BNjetCollection& iJets ) {
+                                    const BNjetCollection& iJets, double jetPt, const jetID::jetID iJetID ) {
 
   CheckSetUp();
   string samplename = GetSampleName();
@@ -3954,7 +4013,8 @@ bool BEANhelper::ttPlusHFKeepEvent( const BNmcparticleCollection& iMCparticles,
   }
 
   BNjetCollection correctedJets          = BEANhelper::GetCorrectedJets( iJets, sysType::NA );
-  BNjetCollection selectedJets_unsorted  = BEANhelper::GetSelectedJets( correctedJets, 30., 2.4, jetID::jetLoose, '-' ); 
+  // pT/jetID should be variable -AWB 20/10/2014
+  BNjetCollection selectedJets_unsorted  = BEANhelper::GetSelectedJets( correctedJets, jetPt, 2.4, iJetID, '-' ); 
   BNjetCollection selectedJets           = BEANhelper::GetSortedByPt( selectedJets_unsorted );
 
 
@@ -4332,7 +4392,7 @@ int BEANhelper::ttPlusCCClassifyEvent( const BNmcparticleCollection& iMCparticle
 }
 
 bool BEANhelper::dibosonPlusHFKeepEvent( const BNmcparticleCollection& iMCparticles,
-				    const BNjetCollection& iJets ) {
+                                         const BNjetCollection& iJets, double jetPt, const jetID::jetID iJetID ) {
 
   CheckSetUp();
   string samplename = GetSampleName();
@@ -4349,6 +4409,15 @@ bool BEANhelper::dibosonPlusHFKeepEvent( const BNmcparticleCollection& iMCpartic
   if (samplename == "zz_b" || samplename == "zz_b_lljj" || samplename == "zz_b_llll" || samplename == "zz_b_lowmll") validInput = true;
   if (samplename == "zz_cc" || samplename == "zz_cc_lljj" || samplename == "zz_cc_llll" || samplename == "zz_cc_lowmll") validInput = true;
   if (samplename == "zz_lf" || samplename == "zz_lf_lljj" || samplename == "zz_lf_llll" || samplename == "zz_lf_lowmll") validInput = true;
+  if (samplename == "zjets_lf" || samplename == "zjets_lf_1p" || samplename == "zjets_lf_2p") validInput = true;
+  if (samplename == "zjets_lf_3p" || samplename == "zjets_lf_4p" || samplename == "zjets_lf_lowmass") validInput = true;
+  if (samplename == "zjets_cc" || samplename == "zjets_cc_1p" || samplename == "zjets_cc_2p") validInput = true;
+  if (samplename == "zjets_cc_3p" || samplename == "zjets_cc_4p" || samplename == "zjets_cc_lowmass") validInput = true;
+  if (samplename == "zjets_b" || samplename == "zjets_b_1p" || samplename == "zjets_b_2p") validInput = true;
+  if (samplename == "zjets_b_3p" || samplename == "zjets_b_4p" || samplename == "zjets_b_lowmass") validInput = true;
+  if (samplename == "zjets_bb" || samplename == "zjets_bb_1p" || samplename == "zjets_bb_2p") validInput = true;
+  if (samplename == "zjets_bb_3p" || samplename == "zjets_bb_4p" || samplename == "zjets_bb_lowmass") validInput = true;
+  
 
   if (!validInput ){
     cout << "dibosonPlusHeavyKeepEvent: could not recognize samplename " << samplename <<"... failing" <<endl;
@@ -4362,7 +4431,7 @@ bool BEANhelper::dibosonPlusHFKeepEvent( const BNmcparticleCollection& iMCpartic
   }
 
   BNjetCollection correctedJets          = BEANhelper::GetCorrectedJets( iJets, sysType::NA );
-  BNjetCollection selectedJets_unsorted  = BEANhelper::GetSelectedJets( correctedJets, 25., 2.4, jetID::jetLoose, '-' ); 
+  BNjetCollection selectedJets_unsorted  = BEANhelper::GetSelectedJets( correctedJets, jetPt, 2.4, iJetID, '-' ); 
   BNjetCollection selectedJets           = BEANhelper::GetSortedByPt( selectedJets_unsorted );
 
 
@@ -4379,16 +4448,24 @@ bool BEANhelper::dibosonPlusHFKeepEvent( const BNmcparticleCollection& iMCpartic
   else if( diboson_cc_algo_result>0 )                               isCCbarEvent = true;
 
   if ( (samplename == "wz_bb" || samplename == "wz_bb_ljj" || samplename == "wz_bb_llj" || samplename == "wz_bb_lll" ||
-        samplename == "zz_bb" || samplename == "zz_bb_lljj" || samplename == "zz_bb_llll" || samplename == "zz_bb_lowmll")
+        samplename == "zz_bb" || samplename == "zz_bb_lljj" || samplename == "zz_bb_llll" || samplename == "zz_bb_lowmll" ||
+        samplename == "zjets_bb" || samplename == "zjets_bb_1p" || samplename == "zjets_bb_2p" ||
+        samplename == "zjets_bb_3p" || samplename == "zjets_bb_4p" || samplename == "zjets_bb_lowmass")
        && isBBbarEvent )                                keepEvent = true;
   else if ( (samplename == "wz_b" || samplename == "wz_b_ljj" || samplename == "wz_b_llj" || samplename == "wz_b_lll" ||
-        samplename == "zz_b" || samplename == "zz_b_lljj" || samplename == "zz_b_llll" || samplename == "zz_b_lowmll")
+        samplename == "zz_b" || samplename == "zz_b_lljj" || samplename == "zz_b_llll" || samplename == "zz_b_lowmll" ||
+        samplename == "zjets_b" || samplename == "zjets_b_1p" || samplename == "zjets_b_2p" ||
+        samplename == "zjets_b_3p" || samplename == "zjets_b_4p" || samplename == "zjets_b_lowmass")
        && !isBBbarEvent && isBEvent )                   keepEvent = true;
   else if ( (samplename == "wz_cc" || samplename == "wz_cc_ljj" || samplename == "wz_cc_llj" || samplename == "wz_cc_lll" ||
-        samplename == "zz_cc" || samplename == "zz_cc_lljj" || samplename == "zz_cc_llll" || samplename == "zz_cc_lowmll")
+        samplename == "zz_cc" || samplename == "zz_cc_lljj" || samplename == "zz_cc_llll" || samplename == "zz_cc_lowmll" ||
+        samplename == "zjets_cc" || samplename == "zjets_cc_1p" || samplename == "zjets_cc_2p" ||
+        samplename == "zjets_cc_3p" || samplename == "zjets_cc_4p" || samplename == "zjets_cc_lowmass")
        && !isBBbarEvent && !isBEvent && isCCbarEvent )  keepEvent = true;
   else if ( (samplename == "wz_lf" || samplename == "wz_lf_ljj" || samplename == "wz_lf_llj" || samplename == "wz_lf_lll" ||
-        samplename == "zz_lf" || samplename == "zz_lf_lljj" || samplename == "zz_lf_llll" || samplename == "zz_lf_lowmll")
+        samplename == "zz_lf" || samplename == "zz_lf_lljj" || samplename == "zz_lf_llll" || samplename == "zz_lf_lowmll" ||
+        samplename == "zjets_lf" || samplename == "zjets_lf_1p" || samplename == "zjets_lf_2p" ||
+        samplename == "zjets_lf_3p" || samplename == "zjets_lf_4p" || samplename == "zjets_lf_lowmass")
        && !isBBbarEvent && !isBEvent && !isCCbarEvent ) keepEvent = true;
 
   if (debug_) cout << "Filter result = " << keepEvent << endl

@@ -17,7 +17,7 @@ BNleptonCollection::BNleptonCollection(const BNleptonCollection& collection) : s
 
 BNleptonCollection& BNleptonCollection::operator=(const BNleptonCollection& collection) {
 
-  for (auto it = begin(); it != end(); ++it) { delete *it; }
+  //for (auto it = begin(); it != end(); ++it) { delete *it; }
   clear();
 
   for (auto& particle: collection) {
@@ -25,6 +25,12 @@ BNleptonCollection& BNleptonCollection::operator=(const BNleptonCollection& coll
   }
 
   return *this;
+}
+
+void BNleptonCollection::clear(){
+  for(auto it = begin(); it != end(); ++it){ delete *it; }
+  //Equivalent to clear();
+  erase(begin(), end());
 }
 
 void BNleptonCollection::sort(){

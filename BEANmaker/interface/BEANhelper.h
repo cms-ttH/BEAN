@@ -83,7 +83,7 @@ typedef BNtrigobjCollection::const_iterator		  TrigObjIter;
 
 namespace analysisType{ enum analysisType{ LJ, DIL, TauLJ, TauDIL }; }
 namespace sysType{enum sysType{NA, JERup, JERdown, JESup, JESdown, hfSFup, hfSFdown, lfSFdown, lfSFup, TESup, TESdown, CSVLFup, CSVLFdown, CSVHFup, CSVHFdown, CSVHFStats1up, CSVHFStats1down, CSVLFStats1up, CSVLFStats1down, CSVHFStats2up, CSVHFStats2down, CSVLFStats2up, CSVLFStats2down, CSVCErr1up, CSVCErr1down, CSVCErr2up, CSVCErr2down }; }
-namespace jetID{		enum jetID{			none, jetMinimal, jetLooseAOD, jetLoose, jetTight }; }
+namespace jetID{		enum jetID{			none, jetMinimal, jetLooseAOD, jetLoose, jetTight, jetLoosePU }; }
 namespace tauID { enum tauID{ tauNonIso, tauLoose, tauMedium, tauTight }; }
 namespace muonID{		enum muonID{		muonSide, muonSideLooseMVA, muonSideTightMVA, muonSideLooseCut, muonSideTightCut, muonLoose, muonTight, muonPtOnly, muonPtEtaOnly, muonPtEtaIsoOnly, muonPtEtaIsoTrackerOnly, muonNoCuts }; }
 namespace electronID{	enum electronID{	electronSide, electronSideLooseMVA, electronSideTightMVA, electronSideLooseCut, electronSideTightCut, electronLoose, electronTight, electronTightMinusTrigPresel, electronLooseMinusTrigPresel, electronNoCuts }; }
@@ -227,10 +227,10 @@ class BEANhelper{
 		BNmcparticleCollection	GetHadronicGenTaus(const BNmcparticleCollection&);
 		BNmcparticle			GetVisGenTau(const BNmcparticle&, const BNmcparticleCollection&);
 		bool					ttPlusHeavyKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);
-		bool					ttPlusHFKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);
+        bool					ttPlusHFKeepEvent(const BNmcparticleCollection&, const BNjetCollection&, double jetPt=30.0, const jetID::jetID iJetID=jetID::jetLoose);
 		int						ttPlusBBClassifyEvent(const BNmcparticleCollection&, const BNjetCollection&);
 		int						ttPlusCCClassifyEvent(const BNmcparticleCollection&, const BNjetCollection&);
-		bool					dibosonPlusHFKeepEvent(const BNmcparticleCollection&, const BNjetCollection&);
+        bool					dibosonPlusHFKeepEvent(const BNmcparticleCollection&, const BNjetCollection&, double jetPt=30.0, const jetID::jetID iJetID=jetID::jetLoose);
 		int						dibosonPlusBBClassifyEvent(const BNmcparticleCollection&, const BNjetCollection&);
 		int						dibosonPlusCCClassifyEvent(const BNmcparticleCollection&, const BNjetCollection&);
 		unsigned int			GetNumExtraPartons(const BNmcparticleCollection&);
@@ -325,7 +325,9 @@ class BEANhelper{
 
 		// PU reweighing
 		TFile*			puFile;
+		TFile*			puFileSim;
 		TH1D*			h_PU_ratio;
+		TH1D*			h_PU_ratio_Sim;
 		TH1D*			h_PUup_ratio;
 		TH1D*			h_PUdown_ratio;
 
@@ -386,9 +388,9 @@ class BEANhelper{
 		float			CSVLwp, CSVMwp, CSVTwp;
 
 		// CSV reweighting
-		TH1D* h_csv_wgt_hf[9][5];
-		TH1D* c_csv_wgt_hf[9][5];
-		TH1D* h_csv_wgt_lf[9][3][3];
+		TH1D* h_csv_wgt_hf[9][6];
+		TH1D* c_csv_wgt_hf[9][6];
+		TH1D* h_csv_wgt_lf[9][4][3];
 
 
 		// Old parameters

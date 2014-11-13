@@ -18,6 +18,8 @@ class BNleptonCollection : public std::vector<BNlepton*>{
         BNleptonCollection(const BNleptonCollection& collection);
 
         BNleptonCollection& operator=(const BNleptonCollection& collection);
+
+		void clear();
 		void sort();
 		void push_back(BNelectron*);
 		void push_back(BNmuon*);
