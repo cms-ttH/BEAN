@@ -637,7 +637,7 @@ template <typename BNcollection> BNcollection BEANhelper::GetDifference(const BN
 
 		// Look for Object1 in the second collection
 		bool presentInSecondCollection = false;
-		for(typename BNcollection::const_iterator Object2 = iBNcollection2.begin(); Object2 != iBNcollection2.end(); ++Object2 ){
+        for(typename BNcollection::const_iterator Object2 = iBNcollection2.begin(); Object2 != iBNcollection2.end(); ++Object2 ){
 
 			// If two objects match in deltaR, check that they have virtually the same momentum. Throw fatal error
 			// if we get two matching objects with different momenta, as this probably mean that we're mixing corrected and uncorrected
@@ -650,6 +650,12 @@ template <typename BNcollection> BNcollection BEANhelper::GetDifference(const BN
 				if(!sameMomentum){ cerr << "ERROR: found two objects with same eta and phi, but different momenta. This may be caused by mixing corrected and uncorrected collections." << endl; 
 				cout << setprecision(7) << "Eta1: " << ptr(*Object1)->eta << "\tPhi1: " << ptr(*Object1)->phi << "\tpT1: " << ptr(*Object1)->pt << endl;
 				cout << setprecision(7) << "Eta2: " << ptr(*Object2)->eta << "\tPhi2: " << ptr(*Object2)->phi << "\tpT2: " << ptr(*Object2)->pt << endl;
+                for(typename BNcollection::const_iterator Object1a = iBNcollection1.begin(); Object1a != iBNcollection1.end(); ++Object1a ){
+                  cout << setprecision(7) << "Eta1a: " << ptr(*Object1a)->eta << "\tPhi1a: " << ptr(*Object1a)->phi << "\tpT1a: " << ptr(*Object1a)->pt << endl;
+                }
+                for(typename BNcollection::const_iterator Object2a = iBNcollection2.begin(); Object2a != iBNcollection2.end(); ++Object2a ){
+                  cout << setprecision(7) << "Eta2a: " << ptr(*Object2a)->eta << "\tPhi2a: " << ptr(*Object2a)->phi << "\tpT2a: " << ptr(*Object2a)->pt << endl;
+                }
 				throw std::logic_error("Inside GetDifference"); }
 
 				break;

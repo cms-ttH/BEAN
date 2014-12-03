@@ -35,16 +35,17 @@ def main():
                     value = value.replace(',','')
             except:
                 print 'In bin %d no line - filling with 0' % bin
-                hists[era].SetBinContent(bin, 0.0)
+                hists[era].SetBinContent(bin+1, 0.0)
                 continue
 
             try:
                 #print 'Filling bin %d with value %0.15f' % (bin, float(value))
-                hists[era].SetBinContent(bin, float(value))
+                hists[era].SetBinContent(bin+1, float(value))
             except:
                 print 'In bin %d value is %s - filling with 0' % (bin, value)
-                hists[era].SetBinContent(bin, 0.0)
+                hists[era].SetBinContent(bin+1, 0.0)
 
+        #print 'Hist for era %s has integral %0.3f' % (era, hists[era].Integral())
         hists[era].Scale(1.0/hists[era].Integral())
 
         hists[era].Scale(era_lumis[era]/19.46)

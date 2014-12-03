@@ -382,13 +382,13 @@ void BEANhelper::SetUpPUreweighing(string const iCollisionsDS){
 			}
 		}
 
-        //Correct PU distributions to SimGeneral/MixingModule
-        h_PUup_ratio	->Divide( h_PU_ratio );
-        h_PUup_ratio    ->Multiply( h_PU_ratio_Sim );
-        h_PUdown_ratio	->Divide( h_PU_ratio );
-        h_PUdown_ratio  ->Multiply( h_PU_ratio_Sim );
-        h_PU_ratio		->Divide( h_PU_ratio );
-        h_PU_ratio		->Multiply( h_PU_ratio_Sim );
+//         //Correct PU distributions to SimGeneral/MixingModule
+//         h_PUup_ratio	->Divide( h_PU_ratio );
+//         h_PUup_ratio    ->Multiply( h_PU_ratio_Sim );
+//         h_PUdown_ratio	->Divide( h_PU_ratio );
+//         h_PUdown_ratio  ->Multiply( h_PU_ratio_Sim );
+//         h_PU_ratio		->Divide( h_PU_ratio );
+//         h_PU_ratio		->Multiply( h_PU_ratio_Sim );
 		
 	}else if( era=="2012_52x" ){ // === 2012 === //
 
@@ -3209,17 +3209,17 @@ BEANhelper::IsTauTauLeptonEvent(const BNtauCollection& iTaus, const BNjetCollect
 // === PU reweighing === //
 double BEANhelper::GetPUweight(const double iNumBX0){
   if (isData) return 1.0;
-  return h_PU_ratio->GetBinContent( h_PU_ratio->FindBin( iNumBX0 ) );
+  return h_PU_ratio->GetBinContent( h_PU_ratio->FindBin( iNumBX0 + 0.5 ) );
  }
 
 double BEANhelper::GetPUweightUp(const double iNumBX0){
   if (isData) return 1.0;
-  return h_PUup_ratio->GetBinContent( h_PUup_ratio->FindBin( iNumBX0 ) );
+  return h_PUup_ratio->GetBinContent( h_PUup_ratio->FindBin( iNumBX0 + 0.5 ) );
 }
 
 double BEANhelper::GetPUweightDown(const double iNumBX0){
   if (isData) return 1.0;
-  return h_PUdown_ratio->GetBinContent( h_PUdown_ratio->FindBin( iNumBX0 ) );
+  return h_PUdown_ratio->GetBinContent( h_PUdown_ratio->FindBin( iNumBX0 + 0.5 ) );
 }
 
 
